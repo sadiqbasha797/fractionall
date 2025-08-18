@@ -6,6 +6,8 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   phone: { type: String },
+  dateofbirth: { type: Date },
+  address: { type: String },
   kycStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   kycDocs: [{ type: String }],
   kycApprovedBy: {
@@ -14,9 +16,6 @@ const UserSchema = new mongoose.Schema({
     name: { type: String },
     email: { type: String }
   },
-  tickets: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' }],
-  resaleRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Resale' }],
-  transactions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' }],
   createdAt: { type: Date, default: Date.now }
 });
 

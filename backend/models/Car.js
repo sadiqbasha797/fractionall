@@ -26,15 +26,15 @@ const carSchema = new mongoose.Schema({
         required: true
     },
     price: {
-        type: Number,
+        type: String,
         required: true
     },
     fractionprice: {
-        type: Number,
+        type: String,
         required: true
     },
     tokenprice: {
-        type: Number,
+        type: String,
         required: true
     },
     expectedpurchasedate: {
@@ -57,6 +57,16 @@ const carSchema = new mongoose.Schema({
     tokensavailble: {
         type: Number,
         required: true
+    },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        refPath: 'createdByModel'
+    },
+    createdByModel: {
+        type: String,
+        required: true,
+        enum: ['Admin', 'SuperAdmin']
     }
 });
 

@@ -1,0 +1,114 @@
+const Contract = require('../models/contract');
+const logger = require('../utils/logger');
+
+// Create a new contract (Admin/SuperAdmin)
+const createContract = async (req, res) => {
+  try {
+    const { carid, userid, ticketid, contract_docs } = req.body;
+
+    const contract = new Contract({
+      carid,
+      userid,
+      ticketid,
+      contract_docs,
+      createdby: req.user.id,
+      createdByModel: req.user.role === 'superadmin' ? 'SuperAdmin' : 'Admin'
+    });
+
+    await contract.save();
+    res.status(201).json({ message: 'Contract created successfully', contract });
+  } catch (error) {
+    logger(`Error in createContract: ${error.message}`);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get all contracts (Admin/SuperAdmin)
+const getContracts = async (req, res) => {
+  try {
+    const contracts = await Contract.find()
+      .populate('carid userid ticketid');
+      
+    res.json(contracts);
+  } catch (error) {
+    logger(`Error in getContracts: ${error.message}`);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get a contract by ID (Admin/SuperAdmin)
+const getContractById = async (req, res) => {
+  try {
+    const contract = await Contract.findById(req.params.id)
+      .populate('carid userid ticketid');
+      
+    if (!contract) {
+      return res.status(404).json({ error: 'Contract not found' });
+    }
+    
+    res.json(contract);
+  } catch (error) {
+    logger(`Error in getContractById: ${error.message}`);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Update a contract by ID (Admin/SuperAdmin)
+const updateContract = async (req, res) => {
+  try {
+    const { contract_docs } = req.body;
+    
+    const contract = await Contract.findById(req.params.id);
+    if (!contract) {
+      return res.status(404).json({ error: 'Contract not found' });
+    }
+    
+    // Check if user is authorized to update this contract
+    if (contract.createdby.toString() !== req.user.id && req.user.role !== 'superadmin') {
+      return res.status(403).json({ error: 'Not authorized to update this contract' });
+    }
+    
+    const updatedContract = await Contract.findByIdAndUpdate(
+      req.params.id,
+      { contract_docs },
+      { new: true }
+    ).populate('carid userid ticketid');
+    
+    res.json({ 
+      message: 'Contract updated successfully', 
+      contract: updatedContract 
+    });
+  } catch (error) {
+    logger(`Error in updateContract: ${error.message}`);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Delete a contract by ID (Admin/SuperAdmin)
+const deleteContract = async (req, res) => {
+  try {
+    const contract = await Contract.findById(req.params.id);
+    if (!contract) {
+      return res.status(404).json({ error: 'Contract not found' });
+    }
+    
+    // Check if user is authorized to delete this contract
+    if (contract.createdby.toString() !== req.user.id && req.user.role !== 'superadmin') {
+      return res.status(403).json({ error: 'Not authorized to delete this contract' });
+    }
+    
+    await Contract.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Contract deleted successfully' });
+  } catch (error) {
+    logger(`Error in deleteContract: ${error.message}`);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = {
+  createContract,
+  getContracts,
+  getContractById,
+  updateContract,
+  deleteContract
+};
