@@ -6,7 +6,6 @@ const SuperAdminSchema = new mongoose.Schema({
   password: { type: String, required: true },
   phone: { type: String },
   role: { type: String, default: 'superadmin' },
-  permissions: [{ type: String }],
   createdAt: { type: Date, default: Date.now }
 });
 

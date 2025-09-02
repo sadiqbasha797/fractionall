@@ -1,0 +1,288 @@
+
+
+  <!-- Main Content (with padding for header) -->
+  <main class="flex-1 pt-20 bg-[#101a23]">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="container mx-auto px-4 py-20 text-center">
+      <div class="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
+      <p class="text-text-secondary mt-4">Loading car details...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="container mx-auto px-4 py-20 text-center">
+      <div class="text-red-500 text-xl mb-4">❌ Error</div>
+      <p class="text-text-secondary">{{ error }}</p>
+      <button (click)="loadCarData()" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        Try Again
+      </button>
+    </div>
+
+    <!-- Car Details Content -->
+    <div *ngIf="carData && !loading && !error" class="container mx-auto px-4">
+      <!-- Full-width carousel section -->
+      <div class="w-full max-w-[1920px] mx-auto mb-8" data-aos="fade-up">
+          <div class="px-6 mb-4">
+            <nav class="flex items-center text-sm font-medium text-text-secondary" data-aos="fade-right"
+              data-aos-delay="100">
+              <a class="hover:text-primary-color transition-colors" href="/cars">Cars</a>
+              <span class="mx-2">/</span>
+              <span class="text-text-primary">{{ carData.carname || 'Car Details' }}</span>
+            </nav>
+          </div>
+          <div class="w-full px-4">
+            <!-- Car Image Carousel -->
+            <div class="relative overflow-hidden rounded-lg shadow-2xl h-[600px] group" data-aos="zoom-in" data-aos-delay="200">
+              <div class="carousel-container flex transition-transform duration-500 h-full">
+                <!-- Dynamic Car Images -->
+                <div *ngFor="let image of carData.images; let i = index" class="min-w-full h-full">
+                  <div class="bg-cover bg-center w-full h-full"
+                    [style]="'background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 30%), url(' + image + ')'">
+                  </div>
+                </div>
+                
+                <!-- Fallback image if no images available -->
+                <div *ngIf="!carData.images || carData.images.length === 0" class="min-w-full h-full">
+                  <div class="bg-cover bg-center w-full h-full bg-gray-600 flex items-center justify-center">
+                    <div class="text-white text-center">
+                      <svg class="w-24 h-24 mx-auto mb-4 opacity-50" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17l-3-4 2.5-3.21L11 13.6l2.5-3.2L17 15H9z"/>
+                      </svg>
+                      <p class="text-lg">No images available</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Carousel Navigation (only show if multiple images) -->
+              <button *ngIf="hasMultipleImages()" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-black/70" (click)="moveCarousel(-1)">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+              </button>
+              <button *ngIf="hasMultipleImages()" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-black/70" (click)="moveCarousel(1)">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </button>
+
+
+              <!-- Dynamic Carousel Indicators -->
+              <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-2" *ngIf="carData.images && carData.images.length > 1">
+                <button 
+                  *ngFor="let image of carData.images; let i = index"
+                  (click)="goToSlide(i)" 
+                  class="size-2 rounded-full bg-white transition-all duration-300 hover:bg-opacity-100" 
+                  [class.opacity-60]="currentSlide !== i">
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full-width car description -->
+        <div class="w-full max-w-[1920px] mx-auto px-4 mb-8">
+          <div class="rounded-lg " data-aos="fade-up" data-aos-delay="300">
+            <h1 class="text-4xl font-bold mb-4 text-text-primary">{{ carData.carname || 'Car Details' }}</h1>
+            <div class="flex flex-wrap gap-4 mb-4">
+              <span *ngIf="carData.brandname" class="bg-blue-600/20 text-blue-400 px-3 py-1 rounded-full text-sm">{{ carData.brandname }}</span>
+              <span *ngIf="carData.color" class="bg-gray-600/20 text-gray-400 px-3 py-1 rounded-full text-sm">{{ carData.color }}</span>
+              <span *ngIf="carData.seating" class="bg-green-600/20 text-green-400 px-3 py-1 rounded-full text-sm">{{ carData.seating }} Seater</span>
+              <span *ngIf="carData.milege" class="bg-yellow-600/20 text-yellow-400 px-3 py-1 rounded-full text-sm">{{ carData.milege }} km/l</span>
+            </div>
+            <p class="text-text-secondary text-lg">{{ carData.description || 'This car is a reliable and stylish vehicle, perfect for city driving and weekend getaways. It features a spacious interior, advanced safety features, and excellent fuel efficiency.' }}</p>
+            <div *ngIf="carData.features && carData.features.length > 0" class="mt-4">
+              <h3 class="text-lg font-semibold text-text-primary mb-2">Features:</h3>
+              <div class="flex flex-wrap gap-2">
+                <span *ngFor="let feature of carData.features" class="bg-gray-700/30 text-text-secondary px-2 py-1 rounded text-sm">{{ feature }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Two-column content section -->
+        <div class="w-full max-w-[1920px] mx-auto px-4">
+          <!-- First row: Fraction Details, Book Now, Join Waitlist (3 columns on lg) -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Fraction Car Details -->
+            <div class="bg-gray-800 p-6 rounded-lg shadow-xl" data-aos="fade-up" data-aos-delay="200">
+              <h2 class="text-lg font-bold mb-3 text-text-primary text-center">Fraction Car Details</h2>
+              <div class="bg-gray-700/30 p-3 rounded-md border border-gray-600 mb-4 shadow-inner text-sm">
+                <div class="space-y-2">
+                  <div class="text-center">
+                    <h3 class="text-base font-bold text-text-primary mb-1">One Ticket Price</h3>
+                    <p class="font-bold text-text-primary">On-road price = {{ getFormattedPrice(carData.price) }}*</p>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-text-secondary mb-1">Fraction Car one-ticket price</p>
+                    <p class="text-text-secondary text-sm">= {{ getFormattedPrice(carData.price) }} / {{ carData.totaltickets || 12 }} tickets</p>
+                    <p class="text-lg font-bold text-text-primary mt-1">{{ getFractionPrice() }}</p>
+                  </div>
+                  <div class="text-xs text-text-secondary mt-2">
+                    <p class="font-medium">*T&C apply:</p>
+                    <p class="mt-1">The prices given above are approximate prices. The actual price will depend on the variant, add-on, respective state road tax & registration charges, etc.</p>
+                    <details class="mt-2 group bg-gray-800/20 rounded-md p-2">
+                      <summary class="cursor-pointer list-none font-medium flex items-center justify-between gap-2">
+                        <span>On-road price includes</span>
+                        <svg class="w-4 h-4 transition-transform duration-200 transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/></svg>
+                      </summary>
+                      <ul class="list-disc pl-5 mt-2 space-y-1 text-sm text-text-secondary">
+                        <li>Ex-showroom price.</li>
+                        <li>Respective state road tax & Registration charges.</li>
+                        <li>TCS & Extended warranty.</li>
+                        <li>Insurance for 1st year.</li>
+                        <li>Misc. e.g FastTag, RSA</li>
+                      </ul>
+                    </details>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Book Now -->
+            <div class="bg-gray-800/50 p-3 rounded-lg shadow-2xl relative" data-aos="fade-up" data-aos-delay="400">
+              <div class="absolute inset-0 bg-gray-900/40 rounded-lg z-10 flex items-center justify-center"></div>
+              <h2 class="text-lg font-bold mb-3 text-gray-400 text-center">Book Now</h2>
+              <div class="bg-gray-700/20 p-3 rounded-md border border-gray-700 mb-3 shadow-inner opacity-75">
+                <div class="space-y-2">
+                  <div class="text-center">
+                    <p class="text-xl font-bold text-gray-400">{{ getFormattedPrice(carData.bookNowTokenPrice) || '₹3,999' }}</p>
+                    <p class="text-sm text-gray-500 line-through">₹10,000</p>
+                    <span class="inline-block bg-green-600/50 text-gray-300 px-2 py-0.5 rounded-full text-xs mt-1">Recommended</span>
+                  </div>
+                  <div class="text-center text-xs text-gray-500">
+                    <p class="font-medium">{{ (carData.totaltickets || 12) - (carData.ticketsavilble || 0) }}/{{ carData.totaltickets || 12 }} have booked tickets</p>
+                  </div>
+                  <div class="space-y-1 text-xs text-gray-500">
+                    <p>One time setup fee</p>
+                    <p>3 cars X {{ carData.totaltickets || 12 }} tickets = {{ 3 * (carData.totaltickets || 12) }} Tickets</p>
+                    <p>(Cars will be deployed once {{ carData.totaltickets || 12 }} tickets are booked in your city)</p>
+                    <p *ngIf="carData.location">Available in: {{ carData.location }}</p>
+                    <p>Show your interest by paying the booking amount</p>
+                    <p class="font-medium text-green-400/50">100% Refundable | No question ask refund policy</p>
+                  </div>
+                </div>
+              </div>
+              <button disabled class="w-full h-8 rounded-md border border-gray-600 font-bold text-sm text-gray-400 cursor-not-allowed opacity-50">Proceed to pay</button>
+            </div>
+
+            <!-- Join Waitlist -->
+            <div class="bg-gray-800 p-3 rounded-lg shadow-2xl" data-aos="fade-up" data-aos-delay="500">
+              <h2 class="text-lg font-bold mb-3 text-text-primary text-center">Join Waitlist</h2>
+              <div class="bg-gray-700/30 p-3 rounded-md border border-gray-600 mb-3 shadow-inner">
+                <div class="space-y-2">
+                  <div class="text-center">
+                    <p class="text-xl font-bold text-text-primary">{{ getFormattedPrice(carData.tokenprice) || '₹199' }}</p>
+                    <p class="text-sm text-text-secondary line-through">₹999</p>
+                  </div>
+                  <div class="text-center text-xs text-text-secondary">
+                    <p class="font-medium">{{ 20 - (carData.tokensavailble || 20) }}/20 have joined waitlist</p>
+                    <p class="text-yellow-500 text-lg">☆</p>
+                  </div>
+                  <div class="space-y-1 text-xs text-text-secondary">
+                    <p class="text-green-400/50">Refundable</p>
+                    <p>Get Priority when we launch your dream car in your city</p>
+                    <p>Get 75% discount on Booking amount (one time setup fee)</p>
+                    <p>Get best discount on AMC</p>
+                  </div>
+                </div>
+              </div>
+              <button class="w-full h-8 rounded-md btn-outline-white font-bold text-sm transition-all duration-300 shadow-lg hover:scale-105">Proceed to pay</button>
+            </div>
+          </div>
+
+          <!-- Second row: AMC Charges + Co-owning vs Rent (2 columns on lg) -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6 items-start mb-10">
+            <!-- AMC Charges -->
+            <div>
+              <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden h-full" data-aos="fade-up" data-aos-delay="300">
+                <h2 class="text-xl font-bold text-center p-3 text-blue-400 border-b border-gray-700">AMC Charges</h2>
+                <div class="p-4 border-b border-gray-700">
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center p-3 bg-gray-800/30 rounded-lg border border-blue-500/30">
+                      <p class="text-blue-400 font-medium text-base">(per ticket)</p>
+                      <p class="text-2xl font-bold text-blue-500 mt-2">{{ getFormattedPrice(carData.amcperticket) || '₹55,000' }}</p>
+                    </div>
+                    <div class="text-center p-3 bg-gray-800/30 rounded-lg border border-gray-700/30">
+                      <p class="text-gray-300 font-medium text-base">per year**</p>
+                      <p class="text-2xl font-bold text-gray-300 mt-2">{{ getAMCPerYear() }}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="p-4">
+                  <p class="text-sm text-gray-400 text-center mb-2">(per ticket per year)</p>
+                  <details class="group bg-gray-800/20 rounded-md p-3">
+                    <summary class="cursor-pointer font-medium flex items-center justify-between">
+                      <span>AMC — Ownership, Services, Maintenance, Digital</span>
+                      <svg class="w-4 h-4 transition-transform duration-200 transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/></svg>
+                    </summary>
+                    <div class="mt-3 space-y-3">
+                      <div class="bg-gray-800/30 rounded p-3">
+                        <p class="text-blue-400 font-medium text-base mb-2">Ownership & Management</p>
+                        <ul class="space-y-2 text-sm text-gray-300">
+                          <li class="flex items-center gap-2"><svg class="text-blue-500 w-4 h-4" fill="currentColor" viewBox="0 0 256 256"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>Forming 4-12 co-owners group</li>
+                          <li class="flex items-center gap-2"><svg class="text-blue-500 w-4 h-4" fill="currentColor" viewBox="0 0 256 256"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>LLP management</li>
+                          <li class="flex items-center gap-2"><svg class="text-blue-500 w-4 h-4" fill="currentColor" viewBox="0 0 256 256"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>Platform guidelines</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              </div>
+            </div>
+
+            <!-- Co-owning vs Rent Comparison -->
+            <div>
+              <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden h-full" data-aos="fade-up" data-aos-delay="400">
+                <h2 class="text-xl font-bold text-center p-3 text-blue-400 border-b border-gray-700">Co-owning vs Rent</h2>
+                <div class="p-4 border-b border-gray-700">
+                  <div class="grid grid-cols-2 gap-4">
+                    <!-- Co-owning -->
+                    <div class="text-center p-3 bg-gray-800/30 rounded-lg border border-blue-500/30">
+                      <p class="text-blue-400 font-medium text-base">Co-owning</p>
+                      <p class="text-2xl font-bold text-blue-500 mt-2">₹1,833</p>
+                      <p class="text-sm text-gray-400">per day</p>
+                    </div>
+                    
+                    <!-- Rent -->
+                    <div class="text-center p-3 bg-gray-800/30 rounded-lg border border-gray-700/30">
+                      <p class="text-gray-300 font-medium text-base">Rent</p>
+                      <p class="text-2xl font-bold text-gray-300 mt-2">₹15,000</p>
+                      <p class="text-sm text-gray-400">per day***</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="p-4">
+                  <details class="group bg-gray-800/20 rounded-md p-4">
+                    <summary class="cursor-pointer font-medium flex items-center justify-between">
+                      <span>Comparison note & Cost Breakdown</span>
+                      <svg class="w-4 h-4 transition-transform duration-200 transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/></svg>
+                    </summary>
+                    <div class="mt-3 space-y-3">
+                      <div class="bg-gray-800/30 rounded p-3">
+                        <p class="text-base font-medium text-blue-400 mb-3">Cost Breakdown</p>
+                        <div class="space-y-2 text-sm text-gray-300">
+                          <div class="flex items-center gap-2">
+                            <svg class="text-blue-500 w-4 h-4" fill="currentColor" viewBox="0 0 256 256"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>
+                            <p>Ticket ({{ getFractionPrice() }}) + AMC ({{ getFormattedPrice(carData.amcperticket) || '₹55,000' }})</p>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <svg class="text-blue-500 w-4 h-4" fill="currentColor" viewBox="0 0 256 256"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>
+                            <p>Less Resale value (~50% of ticket price)</p>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <svg class="text-blue-500 w-4 h-4" fill="currentColor" viewBox="0 0 256 256"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>
+                            <p>÷ 150 days = Cost effective per day</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+        </div>
+    </div>
+  </main>

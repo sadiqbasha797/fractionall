@@ -14,10 +14,18 @@ const createAMC = async (req, res) => {
     });
 
     await amc.save();
-    res.status(201).json({ message: 'AMC created successfully', amc });
+    res.status(201).json({
+      status: 'success',
+      body: { amc },
+      message: 'AMC created successfully'
+    });
   } catch (error) {
     logger(`Error in createAMC: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -28,10 +36,18 @@ const getAMCs = async (req, res) => {
     const filter = (req.user.role === 'user') ? { userid: req.user.id } : {};
     
     const amcs = await AMC.find(filter).populate('userid carid ticketid');
-    res.json(amcs);
+    res.json({
+      status: 'success',
+      body: { amcs },
+      message: 'AMCs retrieved successfully'
+    });
   } catch (error) {
     logger(`Error in getAMCs: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -40,18 +56,34 @@ const getAMCById = async (req, res) => {
   try {
     const amc = await AMC.findById(req.params.id).populate('userid carid ticketid');
     if (!amc) {
-      return res.status(404).json({ error: 'AMC not found' });
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'AMC not found'
+      });
     }
 
     // If user is not admin/superadmin, check if they own this AMC
     if (req.user.role === 'user' && amc.userid.toString() !== req.user.id) {
-      return res.status(403).json({ error: 'Not authorized to access this AMC' });
+      return res.status(403).json({
+        status: 'failed',
+        body: {},
+        message: 'Not authorized to access this AMC'
+      });
     }
 
-    res.json(amc);
+    res.json({
+      status: 'success',
+      body: { amc },
+      message: 'AMC retrieved successfully'
+    });
   } catch (error) {
     logger(`Error in getAMCById: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -62,12 +94,20 @@ const updateAMC = async (req, res) => {
 
     const amc = await AMC.findById(req.params.id);
     if (!amc) {
-      return res.status(404).json({ error: 'AMC not found' });
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'AMC not found'
+      });
     }
 
     // If user is not admin/superadmin, check if they own this AMC
     if (req.user.role === 'user' && amc.userid.toString() !== req.user.id) {
-      return res.status(403).json({ error: 'Not authorized to update this AMC' });
+      return res.status(403).json({
+        status: 'failed',
+        body: {},
+        message: 'Not authorized to update this AMC'
+      });
     }
 
     const updatedAMC = await AMC.findByIdAndUpdate(
@@ -76,10 +116,18 @@ const updateAMC = async (req, res) => {
       { new: true }
     ).populate('userid carid ticketid');
 
-    res.json({ message: 'AMC updated successfully', amc: updatedAMC });
+    res.json({
+      status: 'success',
+      body: { amc: updatedAMC },
+      message: 'AMC updated successfully'
+    });
   } catch (error) {
     logger(`Error in updateAMC: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -88,19 +136,35 @@ const deleteAMC = async (req, res) => {
   try {
     const amc = await AMC.findById(req.params.id);
     if (!amc) {
-      return res.status(404).json({ error: 'AMC not found' });
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'AMC not found'
+      });
     }
 
     // If user is not admin/superadmin, check if they own this AMC
     if (req.user.role === 'user' && amc.userid.toString() !== req.user.id) {
-      return res.status(403).json({ error: 'Not authorized to delete this AMC' });
+      return res.status(403).json({
+        status: 'failed',
+        body: {},
+        message: 'Not authorized to delete this AMC'
+      });
     }
 
     await AMC.findByIdAndDelete(req.params.id);
-    res.json({ message: 'AMC deleted successfully' });
+    res.json({
+      status: 'success',
+      body: {},
+      message: 'AMC deleted successfully'
+    });
   } catch (error) {
     logger(`Error in deleteAMC: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -111,12 +175,20 @@ const updateAMCPaymentStatus = async (req, res) => {
 
     const amc = await AMC.findById(req.params.id);
     if (!amc) {
-      return res.status(404).json({ error: 'AMC not found' });
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'AMC not found'
+      });
     }
 
     // If user is not admin/superadmin, check if they own this AMC
     if (req.user.role === 'user' && amc.userid.toString() !== req.user.id) {
-      return res.status(403).json({ error: 'Not authorized to update this AMC' });
+      return res.status(403).json({
+        status: 'failed',
+        body: {},
+        message: 'Not authorized to update this AMC'
+      });
     }
 
     // Update the specific year's payment status
@@ -128,13 +200,25 @@ const updateAMCPaymentStatus = async (req, res) => {
       await amc.save();
       
       const updatedAMC = await AMC.findById(req.params.id).populate('userid carid ticketid');
-      res.json({ message: 'AMC payment status updated successfully', amc: updatedAMC });
+      res.json({
+        status: 'success',
+        body: { amc: updatedAMC },
+        message: 'AMC payment status updated successfully'
+      });
     } else {
-      res.status(400).json({ error: 'Invalid year index' });
+      res.status(400).json({
+        status: 'failed',
+        body: {},
+        message: 'Invalid year index'
+      });
     }
   } catch (error) {
     logger(`Error in updateAMCPaymentStatus: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 

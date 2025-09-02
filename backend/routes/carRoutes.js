@@ -2,12 +2,19 @@ const express = require('express');
 const router = express.Router();
 const carController = require('../controllers/carController');
 const authMiddleware = require('../middleware/authMiddleware');
+const upload = require('../config/multer');
 
-// All routes require admin or superadmin authentication
+// Public route to get all cars without authentication
+router.get('/public', carController.getPublicCars);
+
+// Public route to get a car by ID without authentication
+router.get('/public/:id', carController.getPublicCarById);
+
+// All routes below this line require admin or superadmin authentication
 router.use(authMiddleware(['admin', 'superadmin']));
 
 // Create a new car
-router.post('/', carController.createCar);
+router.post('/', upload.array('images', 10), carController.createCar);
 
 // Get all cars
 router.get('/', carController.getCars);
@@ -16,7 +23,7 @@ router.get('/', carController.getCars);
 router.get('/:id', carController.getCarById);
 
 // Update a car by ID
-router.put('/:id', carController.updateCar);
+router.put('/:id', upload.array('images', 10), carController.updateCar);
 
 // Delete a car by ID
 router.delete('/:id', carController.deleteCar);

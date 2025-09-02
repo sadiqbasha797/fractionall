@@ -1,0 +1,93 @@
+/* Custom scrollbar styling (default) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1f2937; /* gray-800 track for dark theme */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #374151; /* gray-700 thumb */
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563; /* slightly lighter on hover */
+}
+
+/* Hide scrollbars but keep scrolling for .no-scrollbar containers */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Table header sticky with subtle background */
+thead tr {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #111827; /* gray-900 header */
+  color: #e5e7eb; /* light text */
+}
+
+/* Prevent text from wrapping in table cells where utility class used */
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+
+/* Status badges with clear, accessible colors */
+.status-badge[data-status="active"] {
+  background-color: #ecfdf5; /* green-50 */
+  color: #065f46; /* green-800 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+.status-badge[data-status="pending"] {
+  background-color: #fffbeb; /* yellow-50 */
+  color: #92400e; /* yellow-800 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+.status-badge[data-status="cancelled"],
+.status-badge[data-status="cancel"] {
+  background-color: #fff1f2; /* red-50 */
+  color: #831843; /* red-800 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+/* Focus outlines for keyboard users */
+button:focus, input:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.12);
+  border-color: rgba(59,130,246,0.4);
+}
+
+/* Subtle hover for table rows */
+tbody tr:hover {
+  background-color: #111827; /* dark hover that keeps whole table dark */
+}
+
+/* Responsive tweaks: adjust padding and avatar sizes on small screens */
+@media (max-width: 640px) {
+  .min-w-full td, .min-w-full th, .min-w-max td, .min-w-max th {
+    padding: 0.5rem 0.5rem;
+    font-size: 12px;
+  }
+  .min-w-full img, .min-w-max img { width: 40px; height: 40px; }
+  header .w-72 { width: 160px; }
+}

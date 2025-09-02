@@ -8,8 +8,26 @@ const UserSchema = new mongoose.Schema({
   phone: { type: String },
   dateofbirth: { type: Date },
   address: { type: String },
-  kycStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  location: { type: String },
+  pincode: { type: String },
+  verified: { type: Boolean, default: false },
+  logintoken: { type: String },
+  passwordtoken: { type: String },
+  tokensExpiry: { type: Date },
+  profileimage: { type: String },
+  // Government ID numbers/text values (not image URLs)
+  governmentid: {
+    aadharid: { type: String },
+    panid: { type: String },
+    licenseid: { type: String },
+    income : { type: String }
+  },
+  kycStatus: { type: String, enum: ['pending', 'submitted', 'approved', 'rejected'], default: 'pending' },
   kycDocs: [{ type: String }],
+  rejected_comments: [{
+    comment: { type: String },
+    date: { type: Date, default: Date.now }
+  }],
   kycApprovedBy: {
     id: { type: mongoose.Schema.Types.ObjectId },
     role: { type: String },

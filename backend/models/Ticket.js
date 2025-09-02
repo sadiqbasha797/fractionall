@@ -11,8 +11,8 @@ const TicketSchema = new mongoose.Schema({
     ticketbroughtdate: { type: Date, required: true },
     comments: { type: String },
     paymentid: { type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' },
-    ticketstatus: { type: String, enum: ['active', 'expired', 'cancelled'], required: true },
-    resold: { type: Boolean, required: true },
+    ticketstatus: { type: String, enum: ['active', 'expired', 'cancelled'],  default: 'active' },
+    resold: { type: Boolean, default: false },
     createdby: { type: mongoose.Schema.Types.ObjectId, required: true, refPath: 'createdByModel' },
     createdByModel: { type: String, required: true, enum: ['Admin', 'SuperAdmin'] },
     createdate: { type: Date, default: Date.now }

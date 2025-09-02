@@ -16,10 +16,18 @@ const createContract = async (req, res) => {
     });
 
     await contract.save();
-    res.status(201).json({ message: 'Contract created successfully', contract });
+    res.status(201).json({
+      status: 'success',
+      body: { contract },
+      message: 'Contract created successfully'
+    });
   } catch (error) {
     logger(`Error in createContract: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -29,10 +37,18 @@ const getContracts = async (req, res) => {
     const contracts = await Contract.find()
       .populate('carid userid ticketid');
       
-    res.json(contracts);
+    res.json({
+      status: 'success',
+      body: { contracts },
+      message: 'Contracts retrieved successfully'
+    });
   } catch (error) {
     logger(`Error in getContracts: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -43,13 +59,25 @@ const getContractById = async (req, res) => {
       .populate('carid userid ticketid');
       
     if (!contract) {
-      return res.status(404).json({ error: 'Contract not found' });
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'Contract not found'
+      });
     }
     
-    res.json(contract);
+    res.json({
+      status: 'success',
+      body: { contract },
+      message: 'Contract retrieved successfully'
+    });
   } catch (error) {
     logger(`Error in getContractById: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -60,12 +88,20 @@ const updateContract = async (req, res) => {
     
     const contract = await Contract.findById(req.params.id);
     if (!contract) {
-      return res.status(404).json({ error: 'Contract not found' });
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'Contract not found'
+      });
     }
     
     // Check if user is authorized to update this contract
     if (contract.createdby.toString() !== req.user.id && req.user.role !== 'superadmin') {
-      return res.status(403).json({ error: 'Not authorized to update this contract' });
+      return res.status(403).json({
+        status: 'failed',
+        body: {},
+        message: 'Not authorized to update this contract'
+      });
     }
     
     const updatedContract = await Contract.findByIdAndUpdate(
@@ -74,13 +110,18 @@ const updateContract = async (req, res) => {
       { new: true }
     ).populate('carid userid ticketid');
     
-    res.json({ 
-      message: 'Contract updated successfully', 
-      contract: updatedContract 
+    res.json({
+      status: 'success',
+      body: { contract: updatedContract },
+      message: 'Contract updated successfully'
     });
   } catch (error) {
     logger(`Error in updateContract: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -89,19 +130,35 @@ const deleteContract = async (req, res) => {
   try {
     const contract = await Contract.findById(req.params.id);
     if (!contract) {
-      return res.status(404).json({ error: 'Contract not found' });
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'Contract not found'
+      });
     }
     
     // Check if user is authorized to delete this contract
     if (contract.createdby.toString() !== req.user.id && req.user.role !== 'superadmin') {
-      return res.status(403).json({ error: 'Not authorized to delete this contract' });
+      return res.status(403).json({
+        status: 'failed',
+        body: {},
+        message: 'Not authorized to delete this contract'
+      });
     }
     
     await Contract.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Contract deleted successfully' });
+    res.json({
+      status: 'success',
+      body: {},
+      message: 'Contract deleted successfully'
+    });
   } catch (error) {
     logger(`Error in deleteContract: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 

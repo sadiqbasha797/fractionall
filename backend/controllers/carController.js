@@ -1,5 +1,7 @@
 const Car = require('../models/Car');
 const logger = require('../utils/logger');
+const cloudinary = require('../config/cloudinary');
+const fs = require('fs');
 
 // Create a new car
 const createCar = async (req, res) => {
@@ -14,11 +16,33 @@ const createCar = async (req, res) => {
       price,
       fractionprice,
       tokenprice,
+      amcperticket,
       expectedpurchasedate,
       ticketsavilble,
       totaltickets,
-      tokensavailble
+      tokensavailble,
+      bookNowTokenAvailable,
+      bookNowTokenPrice,
+      location,
+      pincode,
+      description
     } = req.body;
+
+    // Handle image uploads
+    let images = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        try {
+          const result = await cloudinary.uploader.upload(file.path);
+          images.push(result.secure_url);
+          // Delete the temporary file
+          fs.unlinkSync(file.path);
+        } catch (uploadError) {
+          logger(`Error uploading image to Cloudinary: ${uploadError.message}`);
+          // Continue with other images even if one fails
+        }
+      }
+    }
 
     const car = new Car({
       carname,
@@ -30,19 +54,34 @@ const createCar = async (req, res) => {
       price,
       fractionprice,
       tokenprice,
+      amcperticket,
       expectedpurchasedate,
       ticketsavilble,
       totaltickets,
-      tokensavailble,
+      tokensavailble: 20, // Fixed to 20 tokens per car
+      bookNowTokenAvailable,
+      bookNowTokenPrice,
+      images,
+      location,
+      pincode,
+      description,
       createdBy: req.user.id,
       createdByModel: req.user.role === 'superadmin' ? 'SuperAdmin' : 'Admin'
     });
 
     await car.save();
-    res.status(201).json({ message: 'Car created successfully', car });
+    res.status(201).json({
+      status: 'success',
+      body: { car },
+      message: 'Car created successfully'
+    });
   } catch (error) {
     logger(`Error in createCar: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -50,10 +89,37 @@ const createCar = async (req, res) => {
 const getCars = async (req, res) => {
   try {
     const cars = await Car.find();
-    res.json(cars);
+    res.json({
+      status: 'success',
+      body: { cars },
+      message: 'Cars retrieved successfully'
+    });
   } catch (error) {
     logger(`Error in getCars: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Get all cars without authentication
+const getPublicCars = async (req, res) => {
+  try {
+    const cars = await Car.find();
+    res.json({
+      status: 'success',
+      body: { cars },
+      message: 'Cars retrieved successfully'
+    });
+  } catch (error) {
+    logger(`Error in getPublicCars: ${error.message}`);
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -62,12 +128,24 @@ const getCarById = async (req, res) => {
   try {
     const car = await Car.findById(req.params.id);
     if (!car) {
-      return res.status(404).json({ error: 'Car not found' });
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'Car not found'
+      });
     }
-    res.json(car);
+    res.json({
+      status: 'success',
+      body: { car },
+      message: 'Car retrieved successfully'
+    });
   } catch (error) {
     logger(`Error in getCarById: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -84,22 +162,56 @@ const updateCar = async (req, res) => {
       price,
       fractionprice,
       tokenprice,
+      amcperticket,
       expectedpurchasedate,
       status,
       ticketsavilble,
       totaltickets,
-      tokensavailble
+      tokensavailble,
+      bookNowTokenAvailable,
+      bookNowTokenPrice,
+      location,
+      pincode,
+      description
     } = req.body;
 
     const car = await Car.findById(req.params.id);
     if (!car) {
-      return res.status(404).json({ error: 'Car not found' });
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'Car not found'
+      });
     }
 
     // Check if user is authorized to update this car
-    if (car.createdBy.toString() !== req.user.id && req.user.role !== 'superadmin') {
-      return res.status(403).json({ error: 'Not authorized to update this car' });
+    // Admins and SuperAdmins can update any car
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      return res.status(403).json({
+        status: 'failed',
+        body: {},
+        message: 'Not authorized to update this car'
+      });
     }
+
+    // Handle image uploads if provided
+    let images = car.images || [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        try {
+          const result = await cloudinary.uploader.upload(file.path);
+          images.push(result.secure_url);
+          // Delete the temporary file
+          fs.unlinkSync(file.path);
+        } catch (uploadError) {
+          logger(`Error uploading image to Cloudinary: ${uploadError.message}`);
+          // Continue with other images even if one fails
+        }
+      }
+    }
+
+    // Ensure tokensavailble never exceeds 20
+    const updatedTokensAvailable = tokensavailble !== undefined ? Math.min(tokensavailble, 20) : undefined;
 
     const updatedCar = await Car.findByIdAndUpdate(
       req.params.id,
@@ -113,19 +225,34 @@ const updateCar = async (req, res) => {
         price,
         fractionprice,
         tokenprice,
+        amcperticket,
         expectedpurchasedate,
         status,
         ticketsavilble,
         totaltickets,
-        tokensavailble
+        tokensavailble: updatedTokensAvailable,
+        bookNowTokenAvailable,
+        bookNowTokenPrice,
+        images,
+        location,
+        pincode,
+        description
       },
       { new: true }
     );
 
-    res.json({ message: 'Car updated successfully', car: updatedCar });
+    res.json({
+      status: 'success',
+      body: { car: updatedCar },
+      message: 'Car updated successfully'
+    });
   } catch (error) {
     logger(`Error in updateCar: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -134,19 +261,62 @@ const deleteCar = async (req, res) => {
   try {
     const car = await Car.findById(req.params.id);
     if (!car) {
-      return res.status(404).json({ error: 'Car not found' });
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'Car not found'
+      });
     }
 
     // Check if user is authorized to delete this car
-    if (car.createdBy.toString() !== req.user.id && req.user.role !== 'superadmin') {
-      return res.status(403).json({ error: 'Not authorized to delete this car' });
+    // Admins and SuperAdmins can delete any car
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      return res.status(403).json({
+        status: 'failed',
+        body: {},
+        message: 'Not authorized to delete this car'
+      });
     }
 
     await Car.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Car deleted successfully' });
+    res.json({
+      status: 'success',
+      body: {},
+      message: 'Car deleted successfully'
+    });
   } catch (error) {
     logger(`Error in deleteCar: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Get a car by ID without authentication
+const getPublicCarById = async (req, res) => {
+  try {
+    const car = await Car.findById(req.params.id);
+    if (!car) {
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'Car not found'
+      });
+    }
+    res.json({
+      status: 'success',
+      body: { car },
+      message: 'Car retrieved successfully'
+    });
+  } catch (error) {
+    logger(`Error in getPublicCarById: ${error.message}`);
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -155,5 +325,7 @@ module.exports = {
   getCars,
   getCarById,
   updateCar,
-  deleteCar
+  deleteCar,
+  getPublicCars,
+  getPublicCarById
 };

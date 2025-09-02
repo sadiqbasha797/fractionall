@@ -1,0 +1,50 @@
+:root {
+  --primary-color: #3b82f6;
+  --secondary-color: #374151;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --background-color: #111827;
+}
+body {
+  font-family: "Space Grotesk", "Noto Sans", sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-primary);
+}
+.parallax {
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+/* Transparent button with white border and blue glow on hover */
+.btn-outline-white {
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,0.95) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+  transition: box-shadow 0.25s ease, transform 0.15s ease, border-color 0.25s ease;
+}
+.btn-outline-white:focus { outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+.btn-outline-white:hover { border-color: rgba(59,130,246,0.95) !important; box-shadow: 0 6px 18px rgba(59,130,246,0.18), 0 0 10px rgba(59,130,246,0.25); transform: translateY(-1px) scale(1.01); }
+/* Simple per-card carousel styles */
+.carousel { position: relative; overflow: hidden; }
+.carousel-track { display: flex; width: 100%; height: 100%; transition: transform 0.35s ease; }
+.carousel img { width: 100%; height: 100%; object-fit: cover; display: block; flex-shrink: 0; -webkit-user-drag: none; user-select: none; }
+.carousel { cursor: grab; touch-action: pan-y; }
+.carousel.dragging { cursor: grabbing; }
+/* hide nav buttons (we'll autoplay instead) */
+.carousel-button { display: none; background: rgba(3,7,18,0.6); color: #fff; border: 0; width: 36px; height: 36px; border-radius: 999px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+
+.carousel-dots { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; display:flex; gap:8px; }
+.carousel-dots button { width:10px; height:10px; border-radius:50%; background: rgba(255,255,255,0.35); border:0; padding:0; cursor:pointer; }
+.carousel-dots button.active { background: #3b82f6; }
+/* maintain aspect ratio like the original cards */
+.aspect-video { aspect-ratio: 16/9; }
+/* Tiny pagination loader (three dots) placed below pagination */
+.pagination-wrap { position: relative; }
+.tiny-loader { display: none; margin-top: 8px; height: 18px; align-items: center; justify-content: center; }
+.tiny-loader.visible { display: flex; }
+.tiny-loader .dot { width: 6px; height: 6px; background: #3b82f6; border-radius: 50%; margin: 0 4px; opacity: 0.2; transform: translateY(0); animation: dotPulse 1s infinite linear; }
+.tiny-loader .dot:nth-child(2) { animation-delay: 0.12s; }
+.tiny-loader .dot:nth-child(3) { animation-delay: 0.24s; }
+@keyframes dotPulse { 0% { opacity: 0.2; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-4px); } 100% { opacity: 0.2; transform: translateY(0); } }

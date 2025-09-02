@@ -1,0 +1,200 @@
+<header class="fixed left-0 right-0 top-0 z-50 w-full backdrop-blur-md bg-[#101a23]/80 border-b border-solid border-gray-700/50">
+          <div class="w-[98%] max-w-[1800px] mx-auto">
+            <div class="flex items-center justify-between h-20">
+              <div class="flex items-center gap-4">
+                <a routerLink="/"><img src="/car.png" alt="car logo" class="h-12 sm:h-16 hover:scale-105 transition-transform duration-300" /></a>
+              </div>
+              <nav class="hidden lg:flex items-center gap-8">
+                <a class="relative text-sm font-medium text-white btn-outline-white rounded-md px-3 py-2" routerLink="/" routerLinkActive="active">
+                  Home
+                  <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary-color transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                </a>
+                
+                <a class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2" routerLink="/cars" routerLinkActive="text-white">
+                  Cars
+                  <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary-color transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                </a>
+              </nav>
+
+              <!-- Desktop Right Side - Login/Profile -->
+              <div class="hidden lg:flex items-center gap-4">
+                <!-- Not Logged In - Show Login Button -->
+                <div *ngIf="!isLoggedIn" class="flex items-center gap-4">
+                  <button 
+                    (click)="navigateToLogin()"
+                    class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-blue-500/25"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                    </svg>
+                    Login
+                  </button>
+                </div>
+
+                <!-- Logged In - Show Profile -->
+                <div *ngIf="isLoggedIn" class="relative">
+                  <button 
+                    (click)="toggleProfileDropdown()"
+                    class="profile-button flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700/50 transition-all duration-300 group"
+                  >
+                    <!-- Profile Image or Initials -->
+                    <div class="relative">
+                      <img 
+                        *ngIf="getProfileImageUrl()" 
+                        [src]="getProfileImageUrl()" 
+                        [alt]="userData?.name + ' profile'" 
+                        class="w-10 h-10 rounded-full object-cover border-2 border-blue-500/50 group-hover:border-blue-400 transition-colors duration-300"
+                      />
+                      <div 
+                        *ngIf="!getProfileImageUrl()" 
+                        class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm border-2 border-blue-500/50 group-hover:border-blue-400 transition-colors duration-300"
+                      >
+                        {{ getUserInitials() }}
+                      </div>
+                      <!-- Online Status Indicator -->
+                      <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-gray-900 rounded-full"></div>
+                    </div>
+                    
+                    <!-- User First Name -->
+                    <div class="text-left">
+                      <p class="text-white font-medium text-sm">{{ getFirstName() }}</p>
+                      <p class="text-gray-400 text-xs">View Profile</p>
+                    </div>
+                    
+                    <!-- Dropdown Arrow -->
+                    <svg 
+                      class="w-4 h-4 text-gray-400 group-hover:text-white transition-all duration-300" 
+                      [class.rotate-180]="profileDropdownOpen"
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </button>
+
+                  <!-- Dropdown Menu -->
+                  <div 
+                    *ngIf="profileDropdownOpen"
+                    class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-gray-800/95 backdrop-blur-sm border border-gray-700/50 rounded-lg shadow-xl z-50 py-2"
+                    (click)="$event.stopPropagation()"
+                  >
+                    <!-- Profile Option -->
+                    <button 
+                      (click)="navigateToProfile()"
+                      class="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-gray-700/50 transition-all duration-200"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                      </svg>
+                      Profile
+                    </button>
+                    
+                    <!-- Divider -->
+                    <div class="h-px bg-gray-700/50 mx-2 my-1"></div>
+                    
+                    <!-- Logout Option -->
+                    <button 
+                      (click)="logout()"
+                      class="w-full flex items-center gap-3 px-4 py-3 text-left text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                      </svg>
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="lg:hidden">
+                <button (click)="toggleMenu()" class="p-2 rounded-lg text-text-secondary hover:text-white hover:bg-gray-700/50 transition-all duration-300">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+  </header>
+  <!-- spacer to offset fixed header height so content doesn't jump under it -->
+  <div class="h-20 w-full" aria-hidden="true"></div>
+  <div id="mobile-menu" class="fixed inset-0 lg:hidden z-50 transition-all duration-300" [class.opacity-0]="!menuOpen" [class.pointer-events-none]="!menuOpen">
+          <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300" [class.opacity-0]="!menuOpen" [style.opacity]="menuOpen ? '0.6' : '0'"></div>
+          <div class="absolute inset-y-0 right-0 w-64 bg-[#1a2633] shadow-xl transform scale-95 transition-all duration-500 ease-out" [style.transform]="menuOpen ? 'translateX(0%) scale(1)' : 'translateX(100%) scale(.95)'" [style.opacity]="menuOpen ? '1' : '0'">
+            <button (click)="closeMenu()" class="absolute top-4 right-4 p-2 rounded-lg text-text-secondary hover:text-white hover:bg-gray-700/50 transition-all duration-300">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+            <nav class="px-4 pt-20 pb-4 space-y-2">
+              <a class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/" (click)="closeMenu()">Home</a>
+              <a class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/cars" (click)="closeMenu()">Cars</a>
+              
+              <!-- Profile link for logged-in users -->
+              <a *ngIf="isLoggedIn" class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/profile" (click)="closeMenu()">Profile</a>
+            </nav>
+            
+            <!-- Mobile Bottom Section -->
+            <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700/50">
+              <!-- Not Logged In - Show Login Button -->
+              <div *ngIf="!isLoggedIn">
+                <button 
+                  (click)="navigateToLogin()"
+                  class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg transition-all duration-300"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                  </svg>
+                  Login
+                </button>
+              </div>
+
+              <!-- Logged In - Show Profile Info and Logout -->
+              <div *ngIf="isLoggedIn" class="space-y-3">
+                <!-- Profile Section -->
+                <button 
+                  (click)="navigateToProfile()"
+                  class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300"
+                >
+                  <!-- Profile Image or Initials -->
+                  <div class="relative">
+                    <img 
+                      *ngIf="getProfileImageUrl()" 
+                      [src]="getProfileImageUrl()" 
+                      [alt]="userData?.name + ' profile'" 
+                      class="w-10 h-10 rounded-full object-cover border-2 border-blue-500/50"
+                    />
+                    <div 
+                      *ngIf="!getProfileImageUrl()" 
+                      class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm border-2 border-blue-500/50"
+                    >
+                      {{ getUserInitials() }}
+                    </div>
+                    <!-- Online Status Indicator -->
+                    <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-gray-900 rounded-full"></div>
+                  </div>
+                  
+                  <!-- User Info -->
+                  <div class="text-left flex-1">
+                    <p class="text-white font-medium text-sm">{{ userData?.name }}</p>
+                    <p class="text-gray-400 text-xs">View Profile</p>
+                  </div>
+                  
+                  <!-- Arrow -->
+                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </button>
+
+                <!-- Logout Button -->
+                <button 
+                  (click)="logout()"
+                  class="w-full flex items-center justify-center gap-2 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-300 border border-red-500/20"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                  </svg>
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>

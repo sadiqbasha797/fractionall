@@ -1,11 +1,16 @@
 
 const express = require('express');
+const cors = require('cors');
 const connectDB = require('./config/db');
 
 const app = express();
 
 // Middleware
 app.use(express.json());
+app.use(cors({
+  origin: 'http://localhost:4200', // Angular default port
+  credentials: true
+}));
 
 // Connect to database
 connectDB();
@@ -42,6 +47,22 @@ app.use('/api/contracts', contractRoutes);
 // Token routes
 const tokenRoutes = require('./routes/tokenRoutes');
 app.use('/api/tokens', tokenRoutes);
+
+// Book Now Token routes
+const bookNowTokenRoutes = require('./routes/bookNowTokenRoutes');
+app.use('/api/book-now-tokens', bookNowTokenRoutes);
+
+// Home routes (includes Hero Content, Brands, Simple Steps, and FAQs)
+const homeRoutes = require('./routes/homeRoutes');
+app.use('/api/home', homeRoutes);
+
+// KYC routes
+const kycRoutes = require('./routes/kycRoutes');
+app.use('/api/kyc', kycRoutes);
+
+// User routes
+const userRoutes = require('./routes/userRoutes');
+app.use('/api/users', userRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,0 +1,145 @@
+/* Animation helper styles for elements that had data-aos attributes */
+[data-aos] {
+	/* ensure GPU acceleration for transform animations */
+	backface-visibility: hidden;
+	will-change: transform, opacity;
+}
+
+.aos-animated {
+	/* safe defaults for already-animated elements */
+	opacity: 1 !important;
+	transform: none !important;
+}
+
+/* Optional: small fade-in utility if any element relies purely on CSS */
+.fade-in {
+	opacity: 0;
+	transform: translateY(8px);
+	transition: opacity 900ms cubic-bezier(.2,.8,.2,1), transform 900ms cubic-bezier(.2,.8,.2,1);
+}
+.fade-in.show {
+	opacity: 1;
+	transform: none;
+}
+
+/* Carousel styles */
+.carousel-wrapper { position: relative; }
+.carousel-viewport { width: 100%; }
+.carousel-track { will-change: transform; }
+.carousel-nav {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	background: rgba(10,20,30,0.6);
+	color: #fff;
+	border: none;
+	width: 36px;
+	height: 36px;
+	border-radius: 6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+}
+.carousel-nav.left { left: 8px; }
+.carousel-nav.right { right: 8px; }
+.carousel-nav:focus { outline: 2px solid #2563eb; }
+.carousel-nav:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	background: rgba(10,20,30,0.3);
+}
+.carousel-nav:disabled:hover {
+	background: rgba(10,20,30,0.3);
+	transform: translateY(-50%);
+}
+
+@media (min-width: 1200px) {
+	.car-card { max-width: none; }
+}
+
+/* AOS-like class-based animations (used by component TS) */
+[data-aos] { 
+  opacity: 1; 
+  will-change: transform, opacity; 
+  transition: transform 900ms cubic-bezier(.2,.8,.2,1), opacity 900ms cubic-bezier(.2,.8,.2,1);
+}
+
+[data-aos].aos-init { 
+  opacity: 0; 
+  will-change: transform, opacity; 
+}
+
+[data-aos].aos-animate { 
+  opacity: 1; 
+  transform: none; 
+}
+
+[data-aos="fade-up"].aos-init { transform: translateY(20px); }
+[data-aos="fade-right"].aos-init { transform: translateX(-20px); }
+[data-aos="fade-left"].aos-init { transform: translateX(20px); }
+[data-aos="zoom-in"].aos-init { transform: scale(.95); }
+
+[data-aos].aos-animate { 
+  transition: transform 900ms cubic-bezier(.2,.8,.2,1), opacity 900ms cubic-bezier(.2,.8,.2,1); 
+  transition-delay: var(--aos-delay, 0ms); 
+}
+
+/* marker for already-animated items */
+.aos-animated { 
+  opacity: 1 !important; 
+  transform: none !important; 
+}
+
+/* Ensure content is visible even without animations */
+[data-aos]:not(.aos-init) {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Search Bar Styles */
+.search-bar-container {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.search-bar-container input {
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.search-bar-container input:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-bar-container button {
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive search bar */
+@media (max-width: 480px) {
+  .search-bar-container {
+    max-width: 100%;
+  }
+  
+  .search-bar-container input {
+    font-size: 14px;
+    padding: 12px 16px;
+  }
+  
+  .search-bar-container button {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}

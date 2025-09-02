@@ -1,0 +1,56 @@
+/* Custom fonts */
+@import "tailwindcss";
+
+/* Global styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Exo 2', sans-serif;
+  background-color: rgb(55 65 81); /* bg-gray-700 */
+}
+
+/* Ensure full height for the app */
+/* Ensure full height for the app and prevent page-level horizontal scrolling.
+   Table and internal containers should still be scrollable horizontally when needed. */
+html, body {
+  height: 100%;
+  background-color: rgb(55 65 81); /* bg-gray-700 */
+  overflow-x: hidden; /* Prevent horizontal overflow at the page level */
+}
+
+/* Prevent any root-level element from exceeding viewport width */
+#root, app-root, .app-container {
+  
+  overflow-x: hidden;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(31 41 55); /* bg-gray-800 */
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(75 85 99); /* bg-gray-600 */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(107 114 128); /* bg-gray-500 */
+}
+
+/* Utility: hide scrollbars but keep scrolling functional */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}

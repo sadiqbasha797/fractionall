@@ -1,0 +1,434 @@
+<div class="px-4 md:px-8 flex flex-1 justify-center py-5">
+          <div class="layout-content-container flex flex-col w-full max-w-[1600px] mx-auto">
+            <div class="@container">
+              <div class="@[480px]:p-4">
+                <div data-aos="fade-up"
+                  class="flex min-h-[480px] flex-col gap-6 bg-cover bg-center bg-no-repeat @[480px]:gap-8 @[480px]:rounded-xl items-start justify-end px-4 pb-10 @[480px]:px-10"
+                  [style.background-image]="heroContent ? 'linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url(' + heroContent.bgImage + ')' : 'linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url(\'./herocar.jpg\')'">
+                  <div class="flex flex-col gap-2 text-left">
+                    <h1
+                      class="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em]"
+                    >
+                     {{ heroContent?.heroText || 'Own Your Dream Car at Just 8.33% Cost' }}
+                    </h1>
+                    <h2 class="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal">
+                      {{ heroContent?.subText || 'India\'s first fractional car ownership platform' }}
+                    </h2>
+                  </div>
+                  <!-- Search Bar (Hidden by default) -->
+                  <div *ngIf="showSearchBar" class="search-bar-container w-full max-w-md mb-4" data-aos="fade-down" data-aos-delay="100">
+                    <div class="relative">
+                      <input
+                        id="searchInput"
+                        type="text"
+                        [(ngModel)]="searchQuery"
+                        (keypress)="onSearchKeyPress($event)"
+                        (input)="onSearchInputChange()"
+                        [placeholder]="searchPlaceholder"
+                        class="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:border-blue-500 focus:bg-white/20 transition-all duration-300"
+                      />
+                      <button
+                        (click)="performSearch()"
+                        class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg transition-colors duration-300"
+                      >
+                        Search
+                      </button>
+                    </div>
+                    <p class="text-gray-300 text-xs mt-2">
+                      Enter a location (e.g., "Mumbai") or pincode (e.g., "400001") to find cars near you
+                    </p>
+                  </div>
+
+                  <!-- Explore Cars Button -->
+                  <button
+                    (click)="toggleSearchBar()"
+                    class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 btn-outline-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em] transform hover:scale-105 transition-all duration-300"
+                  >
+                    <span class="truncate">{{ showSearchBar ? 'Cancel' : 'Explore cars' }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <h2 data-aos="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full px-4 pb-3 pt-10 text-left">Brands we support</h2>
+            <p data-aos="fade-right" data-aos-delay="100" class="text-[#90adcb] text-base max-w-[900px] mx-0 px-4 pb-6 text-left">We partner with leading manufacturers to bring a curated selection of premium and reliable vehicles.</p>
+            <div class="w-full px-4 mb-12">
+              <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                <div data-aos="zoom-in" data-aos-delay="100" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                   <div class="bg-white/10 rounded-full p-4 mb-4">
+                     <img src="https://www.carlogos.org/car-logos/mercedes-benz-logo.png" alt="Mercedes-Benz" class="h-16 w-16 object-contain" />
+                   </div>
+                   <span class="text-white text-base font-semibold text-center">Mercedes-Benz</span>
+                   <span class="text-gray-400 text-xs mt-2">Luxury Cars</span>
+                 </div>
+                <div data-aos="zoom-in" data-aos-delay="200" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                   <div class="bg-white/10 rounded-full p-4 mb-4">
+                     <img src="https://www.carlogos.org/car-logos/bmw-logo.png" alt="BMW" class="h-16 w-16 object-contain" />
+                   </div>
+                   <span class="text-white text-base font-semibold text-center">BMW</span>
+                   <span class="text-gray-400 text-xs mt-2">Performance Luxury</span>
+                 </div>
+                <div data-aos="zoom-in" data-aos-delay="300" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                   <div class="bg-white/10 rounded-full p-4 mb-4">
+                     <img src="https://www.carlogos.org/car-logos/audi-logo.png" alt="Audi" class="h-16 w-16 object-contain" />
+                   </div>
+                   <span class="text-white text-base font-semibold text-center">Audi</span>
+                   <span class="text-gray-400 text-xs mt-2">Premium Cars</span>
+                 </div>
+                <div data-aos="zoom-in" data-aos-delay="400" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                   <div class="bg-white/10 rounded-full p-4 mb-4">
+                     <img src="https://www.carlogos.org/car-logos/tesla-logo.png" alt="Tesla" class="h-16 w-16 object-contain" />
+                   </div>
+                   <span class="text-white text-base font-semibold text-center">Tesla</span>
+                   <span class="text-gray-400 text-xs mt-2">Electric Vehicles</span>
+                 </div>
+                <div data-aos="zoom-in" data-aos-delay="500" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                   <div class="bg-white/10 rounded-full p-4 mb-4">
+                     <img src="https://www.carlogos.org/car-logos/porsche-logo.png" alt="Porsche" class="h-16 w-16 object-contain" />
+                   </div>
+                   <span class="text-white text-base font-semibold text-center">Porsche</span>
+                   <span class="text-gray-400 text-xs mt-2">Sports Cars</span>
+                 </div>
+                <div data-aos="zoom-in" data-aos-delay="600" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                   <div class="bg-white/10 rounded-full p-4 mb-4">
+                     <img src="https://www.carlogos.org/car-logos/lexus-logo.png" alt="Lexus" class="h-16 w-16 object-contain" />
+                   </div>
+                   <span class="text-white text-base font-semibold text-center">Lexus</span>
+                   <span class="text-gray-400 text-xs mt-2">Premium Luxury</span>
+                 </div>
+                 <!-- added brands -->
+                <div data-aos="zoom-in" data-aos-delay="700" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                   <div class="bg-white/10 rounded-full p-4 mb-4">
+                     <img src="https://www.carlogos.org/car-logos/volvo-logo.png" alt="Volvo" class="h-16 w-16 object-contain" />
+                   </div>
+                   <span class="text-white text-base font-semibold text-center">Volvo</span>
+                   <span class="text-gray-400 text-xs mt-2">Safety & Comfort</span>
+                 </div>
+                <div data-aos="zoom-in" data-aos-delay="800" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                   <div class="bg-white/10 rounded-full p-4 mb-4">
+                     <img src="https://www.carlogos.org/car-logos/ford-logo.png" alt="Ford" class="h-16 w-16 object-contain" />
+                   </div>
+                   <span class="text-white text-base font-semibold text-center">Ford</span>
+                   <span class="text-gray-400 text-xs mt-2">American Classics</span>
+                 </div>
+                <div data-aos="zoom-in" data-aos-delay="900" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                   <div class="bg-white/10 rounded-full p-4 mb-4">
+                     <img src="https://www.carlogos.org/car-logos/honda-logo.png" alt="Honda" class="h-16 w-16 object-contain" />
+                   </div>
+                   <span class="text-white text-base font-semibold text-center">Honda</span>
+                   <span class="text-gray-400 text-xs mt-2">Reliable Cars</span>
+                 </div>
+                <div data-aos="zoom-in" data-aos-delay="1000" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                   <div class="bg-white/10 rounded-full p-4 mb-4">
+                     <img src="https://www.carlogos.org/car-logos/chevrolet-logo.png" alt="Chevrolet" class="h-16 w-16 object-contain" />
+                   </div>
+                   <span class="text-white text-base font-semibold text-center">Chevrolet</span>
+                   <span class="text-gray-400 text-xs mt-2">American SUVs</span>
+                 </div>
+               </div>
+             </div>
+             <!-- Car Carousel Section -->
+            <div class="container mx-auto px-4 mb-12">
+              <div class="flex items-center justify-between pb-3 pt-5">
+                <h2 data-aos="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full text-left">Explore our cars</h2>
+                <a href="cars.html" class="inline-flex items-center gap-1 btn-outline-white font-semibold text-base px-4 py-2 rounded-md transition-colors duration-300">
+                  View More <span class="ml-1">&rarr;</span>
+                </a>
+              </div>
+              <p data-aos="fade-right" data-aos-delay="100" class="text-[#90adcb] text-base max-w-[900px] mx-0 pb-6 text-left">Browse our verified listings and compare token prices. Use filters to find cars by brand, price and availability.</p>
+              <!-- Loading State -->
+              <div *ngIf="carsLoading" class="carousel-wrapper relative" data-aos="fade-up" data-aos-delay="200">
+                <div class="carousel-viewport overflow-hidden">
+                  <div class="carousel-track flex gap-4">
+                    <div *ngFor="let i of [1,2,3]" class="car-card flex flex-col items-stretch justify-between gap-4 rounded-lg border border-gray-700 p-4 animate-pulse" [style.flex]="'0 0 ' + (100 / visibleCount) + '%'">
+                      <div class="flex flex-col gap-2">
+                        <div class="w-full bg-gray-700 aspect-video rounded-lg flex-1"></div>
+                        <div class="flex flex-col gap-1 mt-4">
+                          <div class="h-4 bg-gray-700 rounded w-3/4"></div>
+                          <div class="h-5 bg-gray-700 rounded w-1/2"></div>
+                          <div class="h-4 bg-gray-700 rounded w-full"></div>
+                          <div class="h-4 bg-gray-700 rounded w-2/3"></div>
+                        </div>
+                      </div>
+                      <div class="h-8 bg-gray-700 rounded w-20"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dynamic Carousel -->
+              <div *ngIf="!carsLoading && cars.length > 0" class="carousel-wrapper relative" data-aos="fade-up" data-aos-delay="200">
+                <button aria-label="Previous" class="carousel-nav left" (click)="prev()" [disabled]="currentIndex === 0">&#10094;</button>
+                <div class="carousel-viewport overflow-hidden">
+                  <div #carouselTrack class="carousel-track flex gap-4 transition-transform" [style.transform]="'translateX(-' + (currentIndex * (100 / visibleCount)) + '%)'">
+                    <ng-container *ngFor="let car of cars">
+                      <div class="car-card flex flex-col items-stretch justify-between gap-4 rounded-lg border border-gray-700 p-4 hover:border-blue-500 transform hover:scale-[1.02] transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10" [style.flex]="'0 0 ' + (100 / visibleCount) + '%'">
+                        <div class="flex flex-col gap-2">
+                          <div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg flex-1" [style.backgroundImage]="'url(' + car.image + ')'">
+                          </div>
+                          <div class="flex flex-col gap-1 mt-4">
+                            <p class="text-[#93acc8] text-sm font-normal leading-normal">{{car.ticketsAvailable}} Tickets Available</p>
+                            <p class="text-white text-base font-bold leading-tight">Token Price: ₹{{car.tokenPrice}}</p>
+                            <p class="text-[#93acc8] text-sm font-normal leading-normal">{{car.name}} • {{car.brand}}</p>
+                            <p class="text-[#93acc8] text-sm font-normal leading-normal">{{car.fuel}} • {{car.seats}} Seats • {{car.color}}</p>
+                            <p class="text-[#93acc8] text-xs font-normal leading-normal">{{car.location}}</p>
+                          </div>
+                        </div>
+                        <a [href]="'car-details.html?id=' + car.id" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 flex-row-reverse btn-outline-white pr-2 gap-1 text-sm font-medium leading-normal w-fit">
+                          <div class="text-white" data-icon="ArrowRight" data-size="18px" data-weight="regular">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" fill="currentColor" viewBox="0 0 256 256">
+                              <path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"></path>
+                            </svg>
+                          </div>
+                          <span class="truncate">Details</span>
+                        </a>
+                      </div>
+                    </ng-container>
+                  </div>
+                </div>
+                <button aria-label="Next" class="carousel-nav right" (click)="next()" [disabled]="currentIndex >= cars.length - visibleCount">&#10095;</button>
+              </div>
+
+              <!-- No Cars State -->
+              <div *ngIf="!carsLoading && cars.length === 0" class="text-center py-12" data-aos="fade-up" data-aos-delay="200">
+                <div class="text-[#90adcb] text-lg mb-4">No cars available at the moment</div>
+                <p class="text-gray-400">Please check back later for new car listings.</p>
+              </div>
+            </div>
+            <div class="flex flex-col gap-10 px-4 py-10 @container mb-12">
+              <div class="flex flex-col gap-4">
+                <h1 data-aos="fade-up"
+                  class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-[720px]"
+                >
+                  Simple Steps to Get You on the Road
+                </h1>
+                <p data-aos="fade-up" data-aos-delay="100" class="text-white text-base font-normal leading-normal max-w-[720px]">Your journey to luxury car co-ownership starts here.</p>
+              </div>
+              <div class="timeline-wrapper">
+                <div class="timeline px-0">
+                <div data-aos="fade-right" data-aos-delay="100" class="timeline-item">
+                  <div class="timeline-icon" aria-hidden>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" stroke="#fff"/></svg>
+                  </div>
+                  <div class="timeline-content">
+                    <h3 class="text-white text-base font-bold">Find Your Dream Car</h3>
+                    <p class="text-[#90adcb] text-sm mt-1">Browse our curated fleet of luxury sedans, sports cars, SUVs, and exotic supercars. Each listing comes with complete car specifications, transparent pricing, token plans, and availability calendars, ensuring clarity before you book your car.</p>
+                  </div>
+                </div>
+
+                <div data-aos="fade-right" data-aos-delay="200" class="timeline-item">
+                  <div class="timeline-icon" aria-hidden>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="#fff"/></svg>
+                  </div>
+                  <div class="timeline-content">
+                    <h3 class="text-white text-base font-bold">Book Your Token</h3>
+                    <p class="text-[#90adcb] text-sm mt-1">Select the right ownership token package and confirm your preferred dates. Our real-time booking system with secure payments ensures a smooth process to book luxury cars online.</p>
+                  </div>
+                </div>
+
+                <div data-aos="fade-right" data-aos-delay="300" class="timeline-item">
+                  <div class="timeline-icon" aria-hidden>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-key" viewBox="0 0 16 16">
+                      <path d="M0 8a4 4 0 0 1 7.465-2H14a.5.5 0 0 1 .354.146l1.5 1.5a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0L13 9.207l-.646.647a.5.5 0 0 1-.708 0L11 9.207l-.646.647a.5.5 0 0 1-.708 0L9 9.207l-.646.647A.5.5 0 0 1 8 10h-.535A4 4 0 0 1 0 8m4-3a3 3 0 1 0 2.712 4.285A.5.5 0 0 1 7.163 9h.63l.853-.854a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.793-.793-1-1h-6.63a.5.5 0 0 1-.451-.285A3 3 0 0 0 4 5"/>
+                      <path d="M4 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                    </svg>
+                  </div>
+                  <div class="timeline-content">
+                    <h3 class="text-white text-base font-bold">Pickup & Drive Hassle-Free</h3>
+                    <p class="text-[#90adcb] text-sm mt-1">On your booking date, pick up your verified, insured, and fully serviced car from our premium pickup locations. Whether it's for business, leisure, or a weekend drive, you'll enjoy a safe luxury car pickup and stress-free experience.</p>
+                  </div>
+                </div>
+
+                <div data-aos="fade-right" data-aos-delay="400" class="timeline-item">
+                  <div class="timeline-icon" aria-hidden>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v6m0 0v6m0-6h6m-6 0H6" stroke="#fff"/></svg>
+                  </div>
+                  <div class="timeline-content">
+                    <h3 class="text-white text-base font-bold">Enjoy Luxury Without Commitment</h3>
+                    <p class="text-[#90adcb] text-sm mt-1">Drive BMWs, Audis, and Mercedes without worrying about EMIs or maintenance. With fractional car ownership in India, you get flexibility, affordability, and exclusivity—all in one.</p>
+                  </div>
+                </div>
+                </div>
+                <div class="timeline-empty">
+                  <div class="timeline-empty-inner">
+                    <div class="image-card rounded-xl overflow-hidden h-[500px]" data-aos="fade-left" data-aos-delay="200">
+                      <div class="w-full h-full">
+                        <iframe 
+                          width="100%" 
+                          height="100%" 
+                          src="https://www.youtube.com/embed/emGfU6ZOfh8?si=IH3Gu_89lEur1ch1" 
+                          title="YouTube video player" 
+                          frameborder="0" 
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                          referrerpolicy="strict-origin-when-cross-origin" 
+                          allowfullscreen
+                          class="w-full h-full"
+                        ></iframe>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <h2 data-aos="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full px-4 pb-3 pt-5 text-left">Why Choose Fraction Car?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 mb-12">
+              <div data-aos="fade-up" data-aos-delay="100" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+                <div class="text-3xl">🚘</div>
+                <h3 class="text-white text-xl font-bold">Fractional Car Ownership</h3>
+                <p class="text-gray-400">Own part of a luxury car without the full financial burden.</p>
+              </div>
+              <div data-aos="fade-up" data-aos-delay="200" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+                <div class="text-3xl">🔐</div>
+                <h3 class="text-white text-xl font-bold">Complete Transparency</h3>
+                <p class="text-gray-400">Clear breakdown of token pricing, usage rights, and benefits.</p>
+              </div>
+              <div data-aos="fade-up" data-aos-delay="300" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+                <div class="text-3xl">🛠</div>
+                <h3 class="text-white text-xl font-bold">Maintenance-Free Driving</h3>
+                <p class="text-gray-400">We cover insurance, service, and regular upkeep.</p>
+              </div>
+              <div data-aos="fade-up" data-aos-delay="400" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+                <div class="text-3xl">⏱</div>
+                <h3 class="text-white text-xl font-bold">Flexible Usage Plans</h3>
+                <p class="text-gray-400">Daily, weekly, or monthly slots tailored to your lifestyle.</p>
+              </div>
+              <div data-aos="fade-up" data-aos-delay="500" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+                <div class="text-3xl">🌍</div>
+                <h3 class="text-white text-xl font-bold">Eco-Friendly Sharing</h3>
+                <p class="text-gray-400">Reduce unnecessary purchases and embrace sustainable luxury.</p>
+              </div>
+            </div>
+
+            <h2 data-aos="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full px-4 pb-3 pt-5 text-left">Trust & Security Matters</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 mb-12">
+              <div data-aos="fade-up" data-aos-delay="100" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl">✅</span>
+                  <h3 class="text-white text-xl font-bold">All users are KYC-verified</h3>
+                </div>
+                <p class="text-gray-400">We ensure a secure community of verified members.</p>
+              </div>
+              <div data-aos="fade-up" data-aos-delay="200" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl">✅</span>
+                  <h3 class="text-white text-xl font-bold">Cars are fully insured and registered</h3>
+                </div>
+                <p class="text-gray-400">Complete coverage for your peace of mind.</p>
+              </div>
+              <div data-aos="fade-up" data-aos-delay="300" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl">✅</span>
+                  <h3 class="text-white text-xl font-bold">Payments secured via bank-grade encryption</h3>
+                </div>
+                <p class="text-gray-400">Your transactions are always protected.</p>
+              </div>
+              <div data-aos="fade-up" data-aos-delay="400" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl">✅</span>
+                  <h3 class="text-white text-xl font-bold">24/7 assistance in case of emergencies</h3>
+                </div>
+                <p class="text-gray-400">Round-the-clock support when you need it.</p>
+              </div>
+            </div>
+
+            <!-- Co-owning vs Renting Comparison -->
+            <div class="px-4 py-8">
+              <h2 data-aos="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] mb-8">Co-owning vs Renting</h2>
+              
+              <div class="overflow-x-auto">
+                <table class="w-full border-collapse">
+                  <thead>
+                    <tr>
+                      <th class="text-left p-4 bg-[#101a23] border-b border-[#314d68] text-white">Feature</th>
+                      <th class="text-left p-4 bg-[#101a23] border-b border-[#314d68] text-white">Fraction Car (Co-Ownership)</th>
+                      <th class="text-left p-4 bg-[#101a23] border-b border-[#314d68] text-white">Rental Cars</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="p-4 border-b border-[#314d68] text-white font-medium">Cost</td>
+                      <td class="p-4 border-b border-[#314d68] text-blue-400">5x cheaper than rentals</td>
+                      <td class="p-4 border-b border-[#314d68] text-gray-400">Higher daily/weekly costs</td>
+                    </tr>
+                    <tr>
+                      <td class="p-4 border-b border-[#314d68] text-white font-medium">Car Condition</td>
+                      <td class="p-4 border-b border-[#314d68] text-blue-400">Brand-new showroom cars</td>
+                      <td class="p-4 border-b border-[#314d68] text-gray-400">Usually older models</td>
+                    </tr>
+                    <tr>
+                      <td class="p-4 border-b border-[#314d68] text-white font-medium">Ownership</td>
+                      <td class="p-4 border-b border-[#314d68] text-blue-400">You own 8.33% (or more) via LLP</td>
+                      <td class="p-4 border-b border-[#314d68] text-gray-400">Zero ownership rights</td>
+                    </tr>
+                    <tr>
+                      <td class="p-4 border-b border-[#314d68] text-white font-medium">Quality</td>
+                      <td class="p-4 border-b border-[#314d68] text-blue-400">Owners treat it better</td>
+                      <td class="p-4 border-b border-[#314d68] text-gray-400">Worn out due to multiple users</td>
+                    </tr>
+                    <tr>
+                      <td class="p-4 border-b border-[#314d68] text-white font-medium">Branding</td>
+                      <td class="p-4 border-b border-[#314d68] text-blue-400">No logos/branding</td>
+                      <td class="p-4 border-b border-[#314d68] text-gray-400">Often comes with rental branding</td>
+                    </tr>
+                    <tr>
+                      <td class="p-4 border-b border-[#314d68] text-white font-medium">Usage Rights</td>
+                      <td class="p-4 border-b border-[#314d68] text-blue-400">30 days/year per ticket</td>
+                      <td class="p-4 border-b border-[#314d68] text-gray-400">Limited to rental period only</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <h2 data-aos="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full px-4 pb-3 pt-5 text-left">Frequently Asked Questions</h2>
+            
+            <!-- FAQ Categories -->
+            <div class="flex flex-wrap gap-4 px-4 mb-6">
+              <button 
+                *ngFor="let category of Object.keys(faqsByCategory)" 
+                (click)="showFAQSection(category)"
+                [class]="activeFaqCategory === category ? 'btn-outline-white px-4 py-2 rounded-md text-sm bg-blue-600' : 'btn-outline-white px-4 py-2 rounded-md text-sm'"
+              >
+                {{ category }}
+              </button>
+            </div>
+            
+            <!-- Dynamic FAQ Section -->
+            <div *ngIf="!loading" class="flex flex-col p-4 gap-3 mb-12">
+              <h3 class="text-white text-xl font-bold mb-4">{{ activeFaqCategory }}</h3>
+              <div *ngIf="getFAQsForCategory(activeFaqCategory).length === 0" class="text-[#90adcb] text-center py-8">
+                No FAQs available for this category.
+              </div>
+              <details 
+                *ngFor="let faq of getFAQsForCategory(activeFaqCategory); let i = index"
+                data-aos="fade-up" 
+                [attr.data-aos-delay]="(i + 1) * 100"
+                class="flex flex-col rounded-xl border border-[#314d68] bg-[#101a23] px-[15px] py-[7px] group hover:border-blue-500 transition-all duration-300"
+                [open]="i === 0"
+              >
+                <summary class="flex cursor-pointer items-center justify-between gap-6 py-2 hover:text-blue-400 transition-colors duration-300">
+                  <p class="text-white text-sm font-medium leading-normal">{{ faq.question }}</p>
+                  <div class="text-white group-open:rotate-180">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
+                      <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path>
+                    </svg>
+                  </div>
+                </summary>
+                <p class="text-[#90adcb] text-sm font-normal leading-normal pb-2">
+                  {{ faq.answer }}
+                </p>
+              </details>
+            </div>
+
+            <!-- Loading State -->
+            <div *ngIf="loading" class="flex flex-col p-4 gap-3 mb-12">
+              <div class="text-center py-8">
+                <div class="text-[#90adcb]">Loading FAQs...</div>
+              </div>
+            </div>
+
+            <script>
+              // This script will be moved to an external file or handled by Angular
+            </script>
+          </div>
+        </div>
+      

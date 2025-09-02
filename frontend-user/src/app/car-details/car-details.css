@@ -1,0 +1,43 @@
+:root {
+  --primary-color: #3b82f6;
+  --secondary-color: #374151;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --background-color: #111827;
+}
+
+:host {
+  display: block;
+  font-family: "Space Grotesk", "Noto Sans", sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-primary);
+  min-height: 100vh;
+  width: 100%;
+}
+
+.parallax {
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* Transparent button with white border and blue glow on hover */
+.btn-outline-white {
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,0.95) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+  transition: box-shadow 0.25s ease, transform 0.15s ease, border-color 0.25s ease;
+}
+
+.btn-outline-white:focus { 
+  outline: none; 
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.12); 
+}
+
+.btn-outline-white:hover { 
+  border-color: rgba(59,130,246,0.95) !important; 
+  box-shadow: 0 6px 18px rgba(59,130,246,0.18), 0 0 10px rgba(59,130,246,0.25); 
+  transform: translateY(-1px) scale(1.01); 
+}

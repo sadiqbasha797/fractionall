@@ -1,10 +1,52 @@
 const Token = require('../models/token');
+const Car = require('../models/Car');
 const logger = require('../utils/logger');
 
-// Create a new token (Admin/SuperAdmin)
+// Create a new token (Admin/SuperAdmin can create for any user, User can create for themselves)
 const createToken = async (req, res) => {
   try {
-    const { carid, customtokenid, userid, amountpaid, expirydate, status } = req.body;
+    const { carid, customtokenid, amountpaid, expirydate, status } = req.body;
+    
+    // Determine userid based on role
+    let userid;
+    if (req.user.role === 'user') {
+      // User can only create tokens for themselves
+      userid = req.user.id;
+    } else if (req.user.role === 'admin' || req.user.role === 'superadmin') {
+      // Admin/SuperAdmin can create tokens for any user
+      userid = req.body.userid;
+      if (!userid) {
+        return res.status(400).json({
+          status: 'failed',
+          body: {},
+          message: 'User ID is required for admin/superadmin token creation'
+        });
+      }
+    } else {
+      return res.status(403).json({
+        status: 'failed',
+        body: {},
+        message: 'Not authorized to create tokens'
+      });
+    }
+
+    // Check if there are available tokens for this car
+    const car = await Car.findById(carid);
+    if (!car) {
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'Car not found'
+      });
+    }
+    
+    if (car.tokensavailble <= 0) {
+      return res.status(400).json({
+        status: 'failed',
+        body: {},
+        message: 'No available tokens for this car'
+      });
+    }
 
     const token = new Token({
       carid,
@@ -16,13 +58,31 @@ const createToken = async (req, res) => {
     });
 
     await token.save();
-    res.status(201).json({ message: 'Token created successfully', token });
+
+    // Decrement tokensavailble in the car document
+    await Car.findByIdAndUpdate(carid, {
+      $inc: { tokensavailble: -1 }
+    });
+
+    res.status(201).json({
+      status: 'success',
+      body: { token },
+      message: 'Token created successfully'
+    });
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(400).json({ error: 'Token with this custom ID already exists' });
+      return res.status(400).json({
+        status: 'failed',
+        body: {},
+        message: 'Token with this custom ID already exists'
+      });
     }
     logger(`Error in createToken: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -40,10 +100,18 @@ const getTokens = async (req, res) => {
       .populate('carid userid')
       .sort({ createdAt: -1 });
       
-    res.json(tokens);
+    res.json({
+      status: 'success',
+      body: { tokens },
+      message: 'Tokens retrieved successfully'
+    });
   } catch (error) {
     logger(`Error in getTokens: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -54,34 +122,67 @@ const getTokenById = async (req, res) => {
       .populate('carid userid');
       
     if (!token) {
-      return res.status(404).json({ error: 'Token not found' });
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'Token not found'
+      });
     }
     
     // If user, check if they own this token
     if (req.user.role === 'user' && token.userid.toString() !== req.user.id) {
-      return res.status(403).json({ error: 'Not authorized to access this token' });
+      return res.status(403).json({
+        status: 'failed',
+        body: {},
+        message: 'Not authorized to access this token'
+      });
     }
     
-    res.json(token);
+    res.json({
+      status: 'success',
+      body: { token },
+      message: 'Token retrieved successfully'
+    });
   } catch (error) {
     logger(`Error in getTokenById: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
-// Update a token by ID (Admin/SuperAdmin)
+// Update a token by ID (User can update own tokens, Admin/SuperAdmin can update any token)
 const updateToken = async (req, res) => {
   try {
     const { carid, customtokenid, userid, amountpaid, expirydate, status } = req.body;
     
     const token = await Token.findById(req.params.id);
     if (!token) {
-      return res.status(404).json({ error: 'Token not found' });
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'Token not found'
+      });
     }
     
-    // Only admin/superadmin can update tokens
-    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
-      return res.status(403).json({ error: 'Not authorized to update this token' });
+    // Check authorization
+    if (req.user.role === 'user') {
+      // User can only update their own tokens
+      if (token.userid.toString() !== req.user.id) {
+        return res.status(403).json({
+          status: 'failed',
+          body: {},
+          message: 'Not authorized to update this token'
+        });
+      }
+    } else if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      return res.status(403).json({
+        status: 'failed',
+        body: {},
+        message: 'Not authorized to update tokens'
+      });
     }
     
     const updatedToken = await Token.findByIdAndUpdate(
@@ -90,16 +191,35 @@ const updateToken = async (req, res) => {
       { new: true, runValidators: true }
     ).populate('carid userid');
     
-    res.json({ 
-      message: 'Token updated successfully', 
-      token: updatedToken 
+    // If token status is updated to "dropped", increment tokensavailble in the car document
+    if (status === 'dropped' && token.status !== 'dropped') {
+      const car = await Car.findById(carid);
+      if (car && car.tokensavailble < 20) {
+        await Car.findByIdAndUpdate(carid, {
+          $inc: { tokensavailble: 1 }
+        });
+      }
+    }
+    
+    res.json({
+      status: 'success',
+      body: { token: updatedToken },
+      message: 'Token updated successfully'
     });
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(400).json({ error: 'Token with this custom ID already exists' });
+      return res.status(400).json({
+        status: 'failed',
+        body: {},
+        message: 'Token with this custom ID already exists'
+      });
     }
     logger(`Error in updateToken: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -108,19 +228,35 @@ const deleteToken = async (req, res) => {
   try {
     const token = await Token.findById(req.params.id);
     if (!token) {
-      return res.status(404).json({ error: 'Token not found' });
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'Token not found'
+      });
     }
     
     // Only admin/superadmin can delete tokens
     if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
-      return res.status(403).json({ error: 'Not authorized to delete this token' });
+      return res.status(403).json({
+        status: 'failed',
+        body: {},
+        message: 'Not authorized to delete this token'
+      });
     }
     
     await Token.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Token deleted successfully' });
+    res.json({
+      status: 'success',
+      body: {},
+      message: 'Token deleted successfully'
+    });
   } catch (error) {
     logger(`Error in deleteToken: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 

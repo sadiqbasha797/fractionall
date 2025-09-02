@@ -3,7 +3,10 @@ const router = express.Router();
 const ticketController = require('../controllers/ticketController');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// All routes require admin or superadmin authentication
+// Route for users to get their own tickets (requires user authentication)
+router.get('/my-tickets', authMiddleware(['user', 'admin', 'superadmin']), ticketController.getUserTickets);
+
+// All routes below require admin or superadmin authentication
 router.use(authMiddleware(['admin', 'superadmin']));
 
 // Create a new ticket

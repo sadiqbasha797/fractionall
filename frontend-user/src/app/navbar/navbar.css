@@ -1,0 +1,4 @@
+/* Navbar mobile menu helpers */
+#mobile-menu { z-index: 60; }
+#mobile-menu .backdrop { transition: opacity 300ms ease; }
+#mobile-menu .panel { transition: transform 400ms ease, opacity 300ms ease; }

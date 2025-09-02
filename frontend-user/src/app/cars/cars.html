@@ -1,0 +1,214 @@
+<div class="flex flex-col min-h-screen">
+  <div class="flex-grow">
+      <div class="px-4 sm:px-6 lg:px-8 flex flex-1 justify-center py-5">
+        <div class="layout-content-container flex flex-col w-[98%] max-w-[1800px] flex-1 mx-auto">
+          <div class="@container">
+            <div class="@[480px]:p-4">
+              <div data-aos="fade-up"
+                class="flex min-h-[480px] flex-col gap-6 bg-cover bg-center bg-no-repeat @[480px]:gap-8 @[480px]:rounded-lg items-start justify-end px-4 pb-10 @[480px]:px-10"
+                style='background-image: linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url("carspage.jpg");'>
+                <div class="flex flex-col gap-2 text-left">
+                  <h1
+                    class="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em]">
+                    Co-own a car in India
+                  </h1>
+                  <h2
+                    class="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal">
+                    Contract for certain years</h2>
+                </div>
+                <label class="flex flex-col min-w-40 h-14 w-full max-w-[480px] @[480px]:h-16">
+                  <div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+                    <div
+                      class="text-[#93acc8] flex border border-[#344b65] bg-[#1a2532] items-center justify-center pl-[15px] rounded-l-lg border-r-0"
+                      data-icon="MagnifyingGlass" data-size="20px" data-weight="regular">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor"
+                        viewBox="0 0 256 256">
+                        <path
+                          d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z">
+                        </path>
+                      </svg>
+                    </div>
+                    <input 
+                      [(ngModel)]="searchQuery"
+                      (keypress)="onSearchKeyPress($event)"
+                      placeholder="Enter location or pincode"
+                      class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-white focus:outline-0 focus:ring-0 border border-[#344b65] bg-[#1a2532] focus:border-[#344b65] h-full placeholder:text-[#93acc8] px-[15px] rounded-r-none border-r-0 pr-2 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal" />
+                    <div
+                      class="flex items-center justify-center rounded-r-lg border-l-0 border border-[#344b65] bg-[#1a2532] pr-[7px]">
+                      <button
+                          (click)="onSearchSubmit()"
+                          class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 @[480px]:h-12 @[480px]:px-5 btn-outline-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]">
+                          <span class="truncate">Search</span>
+                        </button>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-col gap-3 px-4 pb-3 pt-5">
+            <h2 class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">Available Cars</h2>
+            
+            <!-- Search Results Display -->
+            <div *ngIf="isSearchActive && searchQuery" class="flex items-center justify-between bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
+              <div class="flex items-center gap-2">
+                <div class="text-blue-400 text-sm font-medium">
+                  {{ getSearchDisplayText() }}
+                </div>
+                <div class="text-gray-400 text-sm">
+                  ({{ totalItems }} {{ totalItems === 1 ? 'car found' : 'cars found' }})
+                </div>
+              </div>
+              <button 
+                (click)="clearSearch()"
+                class="text-gray-400 hover:text-white text-sm font-medium underline">
+                Clear Search
+              </button>
+            </div>
+            
+            <!-- No Results Message -->
+            <div *ngIf="isSearchActive && searchQuery && totalItems === 0" class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-center">
+              <div class="text-red-400 text-sm font-medium mb-2">No cars found</div>
+              <div class="text-gray-400 text-sm">
+                No cars found for {{ searchType === 'pincode' ? 'pincode' : 'location' }} "{{ searchQuery }}". 
+                Try a different search term or <button (click)="clearSearch()" class="text-blue-400 hover:text-blue-300 underline">clear the search</button> to see all cars.
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-3 p-3 pr-4 mb-16 relative z-10" data-aos="fade-right" data-aos-delay="100">
+            <!-- Sort Dropdown -->
+            <div class="relative" style="overflow:visible;">
+              <button id="sort-dropdown" class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg btn-outline-white pl-4 pr-2 transition-colors">
+                <p class="text-white text-sm font-medium leading-normal">Sort By</p>
+                <div class="text-white" data-icon="CaretDown" data-size="20px" data-weight="regular">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path></svg>
+                </div>
+              </button>
+              <div id="sort-menu" class="absolute top-10 left-0 w-48 bg-[#1a2532] border border-[#344b65] rounded-lg shadow-lg z-40 hidden">
+                <div class="py-2">
+                  <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">A-Z (Sort by Car Name)</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">Newest Arrivals</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">Top Selling</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">Ticket Price (Low-High)</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">Ticket Price (High-Low)</a>
+                </div>
+              </div>
+            </div>
+            <!-- Filter Dropdown -->
+            <div class="relative" style="overflow:visible;">
+              <button id="filter-dropdown" class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg btn-outline-white pl-4 pr-2 transition-colors">
+                <p class="text-white text-sm font-medium leading-normal">Filter By</p>
+                <div class="text-white" data-icon="CaretDown" data-size="20px" data-weight="regular">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path></svg>
+                </div>
+              </button>
+              <div id="filter-menu" class="absolute top-10 left-0 w-48 bg-[#1a2532] border border-[#344b65] rounded-lg shadow-lg z-40 hidden">
+                <div class="py-2">
+                  <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">All</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">Book Now</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">Join Waitlist</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">Relevance</a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-0" id="car-grid">
+            <div *ngFor="let car of cars; let i = index" class="car-card flex flex-col items-stretch justify-between gap-4 rounded-lg border border-gray-700 p-4 relative overflow-hidden"
+              [attr.data-brand]="car.brandname || car.brand" [attr.data-mileage]="car.milege || car.mileage" [attr.data-color]="car.color" [attr.data-seating]="car.seating"
+              data-aos="fade-up" [attr.data-aos-delay]="200 + (i * 200)">
+              <div class="absolute top-0 right-0 w-32 h-32 z-20">
+                <div *ngIf="car.tokensavailble === 0; else waitlist"
+                  class="absolute top-[20px] right-[-30px] bg-green-600 text-white text-xs font-bold py-1 w-[140px] text-center transform rotate-45 shadow-lg">Book Now</div>
+                <ng-template #waitlist>
+                  <div class="absolute top-[20px] right-[-30px] bg-yellow-500 text-white text-xs font-bold py-1 w-[140px] text-center transform rotate-45 shadow-lg">Join Waitlist</div>
+                </ng-template>
+              </div>
+              <div class="flex flex-col gap-2">
+                <div class="w-full aspect-video rounded-lg flex-1 overflow-hidden bg-gray-800 flex items-center justify-center">
+                  <img *ngIf="car.images && car.images.length" [src]="car.images[0]" [alt]="car.carname || car.brandname || 'car'" class="w-full h-full object-cover" />
+                  <div *ngIf="!car.images || !car.images.length" class="text-white">No image</div>
+                </div>
+                <div class="flex flex-col gap-2 mt-4">
+                  <div class="flex items-start justify-between gap-2 w-full">
+                    <div class="flex flex-col flex-1">
+                      <div class="text-white font-bold text-lg">{{ car.carname || 'Unknown Model' }}</div>
+                      <div class="text-gray-400 text-sm">{{ car.brandname || 'Unknown Brand' }}</div>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                      <div *ngIf="car.ticketsavilble === 0" class="text-xs bg-red-600 text-white rounded-full px-2 py-0.5">Sold Out</div>
+                      <div *ngIf="car.fractionprice" class="text-blue-400 font-semibold text-base">₹{{ car.fractionprice }}<span class="text-gray-400 text-sm font-normal">/per ticket</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button (click)="navigateToCarDetails(car._id || car.id)"
+                class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 flex-row-reverse btn-outline-white pr-2 gap-1 text-sm font-medium leading-normal w-fit">
+                <div class="text-white" data-icon="ArrowRight" data-size="18px" data-weight="regular">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" fill="currentColor" viewBox="0 0 256 256">
+                    <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"></path>
+                  </svg>
+                </div>
+                <span class="truncate">Details</span>
+              </button>
+            </div>
+          </div>
+          <div *ngIf="totalPages > 1" id="pagination" class="flex items-center justify-center p-4 pagination-wrap" data-aos="fade-up" data-aos-delay="1400">
+            <!-- Previous button -->
+            <button 
+              (click)="goToPreviousPage()" 
+              [disabled]="currentPage === 1"
+              [class.opacity-50]="currentPage === 1"
+              [class.cursor-not-allowed]="currentPage === 1"
+              class="flex size-10 items-center justify-center">
+              <div class="text-white" data-icon="CaretLeft" data-size="18px" data-weight="regular">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" fill="currentColor"
+                  viewBox="0 0 256 256">
+                  <path
+                    d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z">
+                  </path>
+                </svg>
+              </div>
+            </button>
+
+            <!-- Page numbers -->
+            <button 
+              *ngFor="let page of getPageNumbers()" 
+              (click)="goToPage(page)"
+              [ngClass]="{
+                'text-sm font-bold leading-normal tracking-[0.015em] flex size-10 items-center justify-center text-white rounded-full bg-blue-600': page === currentPage,
+                'text-sm font-normal leading-normal flex size-10 items-center justify-center text-white rounded-full': page !== currentPage
+              }">
+              {{ page }}
+            </button>
+
+            <!-- Next button -->
+            <button 
+              (click)="goToNextPage()" 
+              [disabled]="currentPage === totalPages"
+              [class.opacity-50]="currentPage === totalPages"
+              [class.cursor-not-allowed]="currentPage === totalPages"
+              class="flex size-10 items-center justify-center">
+              <div class="text-white" data-icon="CaretRight" data-size="18px" data-weight="regular">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" fill="currentColor"
+                  viewBox="0 0 256 256">
+                  <path
+                    d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z">
+                  </path>
+                </svg>
+              </div>
+            </button>
+
+            <!-- Tiny pagination loader shown when a page nav button is clicked (non-navigation) -->
+            <div id="pagination-loader" class="tiny-loader" aria-hidden="true" title="Loading">
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+            </div>
+          </div>
+
+
+        </div>
+      </div>
+    </div>
+
+</div>

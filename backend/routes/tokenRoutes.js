@@ -3,8 +3,8 @@ const router = express.Router();
 const tokenController = require('../controllers/tokenController');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// Create token (Admin/SuperAdmin)
-router.post('/', authMiddleware(['admin', 'superadmin']), tokenController.createToken);
+// Create token (User can create for themselves, Admin/SuperAdmin can create for any user)
+router.post('/', authMiddleware(['user', 'admin', 'superadmin']), tokenController.createToken);
 
 // Get tokens (User: own tokens, Admin/SuperAdmin: all tokens)
 router.get('/', authMiddleware(['user', 'admin', 'superadmin']), tokenController.getTokens);
@@ -12,8 +12,8 @@ router.get('/', authMiddleware(['user', 'admin', 'superadmin']), tokenController
 // Get token by ID (User: own tokens, Admin/SuperAdmin: all tokens)
 router.get('/:id', authMiddleware(['user', 'admin', 'superadmin']), tokenController.getTokenById);
 
-// Update token (Admin/SuperAdmin only)
-router.put('/:id', authMiddleware(['admin', 'superadmin']), tokenController.updateToken);
+// Update token (User can update own tokens, Admin/SuperAdmin can update any token)
+router.put('/:id', authMiddleware(['user', 'admin', 'superadmin']), tokenController.updateToken);
 
 // Delete token (Admin/SuperAdmin only)
 router.delete('/:id', authMiddleware(['admin', 'superadmin']), tokenController.deleteToken);

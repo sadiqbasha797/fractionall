@@ -15,10 +15,18 @@ const createBooking = async (req, res) => {
     });
 
     await booking.save();
-    res.status(201).json({ message: 'Booking created successfully', booking });
+    res.status(201).json({
+      status: 'success',
+      body: { booking },
+      message: 'Booking created successfully'
+    });
   } catch (error) {
     logger(`Error in createBooking: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -36,10 +44,18 @@ const getBookings = async (req, res) => {
       .populate('carid userid')
       .sort({ createdAt: -1 });
       
-    res.json(bookings);
+    res.json({
+      status: 'success',
+      body: { bookings },
+      message: 'Bookings retrieved successfully'
+    });
   } catch (error) {
     logger(`Error in getBookings: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -50,18 +66,34 @@ const getBookingById = async (req, res) => {
       .populate('carid userid');
       
     if (!booking) {
-      return res.status(404).json({ error: 'Booking not found' });
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'Booking not found'
+      });
     }
     
     // If user, check if they own this booking
     if (req.user.role === 'user' && booking.userid.toString() !== req.user.id) {
-      return res.status(403).json({ error: 'Not authorized to access this booking' });
+      return res.status(403).json({
+        status: 'failed',
+        body: {},
+        message: 'Not authorized to access this booking'
+      });
     }
     
-    res.json(booking);
+    res.json({
+      status: 'success',
+      body: { booking },
+      message: 'Booking retrieved successfully'
+    });
   } catch (error) {
     logger(`Error in getBookingById: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -72,12 +104,20 @@ const updateBookingStatus = async (req, res) => {
     
     const booking = await Booking.findById(req.params.id);
     if (!booking) {
-      return res.status(404).json({ error: 'Booking not found' });
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'Booking not found'
+      });
     }
     
     // Only admin/superadmin can update booking status
     if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
-      return res.status(403).json({ error: 'Not authorized to update booking status' });
+      return res.status(403).json({
+        status: 'failed',
+        body: {},
+        message: 'Not authorized to update booking status'
+      });
     }
     
     booking.status = status;
@@ -89,13 +129,18 @@ const updateBookingStatus = async (req, res) => {
     const updatedBooking = await Booking.findById(req.params.id)
       .populate('carid userid');
       
-    res.json({ 
-      message: `Booking ${status} successfully`, 
-      booking: updatedBooking 
+    res.json({
+      status: 'success',
+      body: { booking: updatedBooking },
+      message: `Booking ${status} successfully`
     });
   } catch (error) {
     logger(`Error in updateBookingStatus: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 
@@ -104,19 +149,35 @@ const deleteBooking = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id);
     if (!booking) {
-      return res.status(404).json({ error: 'Booking not found' });
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'Booking not found'
+      });
     }
     
     // Users can only delete their own bookings, admin/superadmin can delete any
     if (req.user.role === 'user' && booking.userid.toString() !== req.user.id) {
-      return res.status(403).json({ error: 'Not authorized to delete this booking' });
+      return res.status(403).json({
+        status: 'failed',
+        body: {},
+        message: 'Not authorized to delete this booking'
+      });
     }
     
     await Booking.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Booking deleted successfully' });
+    res.json({
+      status: 'success',
+      body: {},
+      message: 'Booking deleted successfully'
+    });
   } catch (error) {
     logger(`Error in deleteBooking: ${error.message}`);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
   }
 };
 

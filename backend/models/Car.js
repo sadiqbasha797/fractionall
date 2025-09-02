@@ -3,43 +3,47 @@ const mongoose = require('mongoose');
 const carSchema = new mongoose.Schema({
     carname: {
         type: String,
-        required: true
+        required: false
     },
     color: {
         type: String,
-        required: true
+        required: false
     },
     milege: {
         type: String,
-        required: true
+        required: false
     },
     seating: {
         type: Number,
-        required: true
+        required: false
     },
     features: {
         type: [String],
-        required: true
+        required: false
     },
     brandname: {
         type: String,
-        required: true
+        required: false
     },
     price: {
         type: String,
-        required: true
+        required: false
     },
     fractionprice: {
         type: String,
-        required: true
+        required: false
     },
     tokenprice: {
         type: String,
-        required: true
+        required: false
+    },
+    amcperticket: {
+        type: String,
+        required: false
     },
     expectedpurchasedate: {
         type: Date,
-        required: true
+        required: false
     },
     status: {
         type: String,
@@ -48,25 +52,55 @@ const carSchema = new mongoose.Schema({
     },
     ticketsavilble: {
         type: Number,
-        required: true
+        required: false
     },
     totaltickets: {
         type: Number,
-        required: true
-    },
-    tokensavailble: {
+        required: false,
+        default: 12
+      },
+      bookNowTokenAvailable: {
         type: Number,
-        required: true
+        required: false,
+        default: 12
+      },
+      bookNowTokenPrice: {
+        type: String,
+        required: false
+      },
+      tokensavailble: {
+        type: Number,
+        required: false
+      },
+      images: {
+        type: [String],
+        required: false
     },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true,
+        required: false,
         refPath: 'createdByModel'
     },
     createdByModel: {
         type: String,
-        required: true,
+        required: false,
         enum: ['Admin', 'SuperAdmin']
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    location: {
+        type: String,
+        required: false
+    },
+    pincode: {
+        type: String,
+        required: false
+    },
+    description: {
+        type: String,
+        required: false
     }
 });
 
