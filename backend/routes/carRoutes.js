@@ -10,6 +10,9 @@ router.get('/public', carController.getPublicCars);
 // Public route to get a car by ID without authentication
 router.get('/public/:id', carController.getPublicCarById);
 
+// Public route to update bookNowTokenAvailable count (for payment updates)
+router.put('/public/:id/book-now-token-count', carController.updateBookNowTokenCount);
+
 // All routes below this line require admin or superadmin authentication
 router.use(authMiddleware(['admin', 'superadmin']));
 

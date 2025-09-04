@@ -6,6 +6,27 @@ const createBooking = async (req, res) => {
   try {
     const { carid, bookingFrom, bookingTo, comments } = req.body;
 
+    // Check for existing bookings on the selected dates
+    const existingBookings = await Booking.find({
+      carid: carid,
+      status: 'accepted', // Only check accepted bookings
+      $or: [
+        {
+          bookingFrom: { $lte: new Date(bookingTo) },
+          bookingTo: { $gte: new Date(bookingFrom) }
+        }
+      ]
+    });
+
+    // If there are existing bookings, return error
+    if (existingBookings.length > 0) {
+      return res.status(400).json({
+        status: 'failed',
+        body: {},
+        message: 'No vacancy available on the selected dates. Please choose different dates.'
+      });
+    }
+
     const booking = new Booking({
       carid,
       userid: req.user.id,
@@ -181,10 +202,77 @@ const deleteBooking = async (req, res) => {
   }
 };
 
+// Get all bookings for a specific car (Public API for availability checking)
+const getCarBookings = async (req, res) => {
+  try {
+    const { carId } = req.params;
+    
+    // Get all accepted bookings for the specific car
+    const bookings = await Booking.find({ 
+      carid: carId,
+      status: 'accepted' // Only show accepted bookings
+    })
+      .populate('userid', 'name email')
+      .sort({ bookingFrom: 1 });
+    
+    res.json({
+      status: 'success',
+      body: { bookings },
+      message: 'Car bookings retrieved successfully'
+    });
+  } catch (error) {
+    logger(`Error in getCarBookings: ${error.message}`);
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Check booking availability for a specific car and date range
+const checkBookingAvailability = async (req, res) => {
+  try {
+    const { carId, bookingFrom, bookingTo } = req.body;
+    
+    // Check for overlapping bookings
+    const overlappingBookings = await Booking.find({
+      carid: carId,
+      status: 'accepted',
+      $or: [
+        {
+          bookingFrom: { $lte: new Date(bookingTo) },
+          bookingTo: { $gte: new Date(bookingFrom) }
+        }
+      ]
+    });
+    
+    const isAvailable = overlappingBookings.length === 0;
+    
+    res.json({
+      status: 'success',
+      body: { 
+        isAvailable,
+        conflictingBookings: overlappingBookings
+      },
+      message: isAvailable ? 'Date range is available' : 'Date range conflicts with existing bookings'
+    });
+  } catch (error) {
+    logger(`Error in checkBookingAvailability: ${error.message}`);
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   createBooking,
   getBookings,
   getBookingById,
   updateBookingStatus,
-  deleteBooking
+  deleteBooking,
+  getCarBookings,
+  checkBookingAvailability
 };

@@ -1,0 +1,265 @@
+<main class="flex-1 p-8">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+      <div class="lg:col-span-1 space-y-6 lg:space-y-8">
+        <h1 class="text-2xl lg:text-3xl font-bold text-white tracking-tight">Book a Car</h1>
+        <form class="space-y-4 lg:space-y-6" (ngSubmit)="onBookingSubmit($event)" [class.opacity-50]="!isUserAuthenticated() || userCars().length === 0">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <label class="flex flex-col">
+              <p class="text-white text-sm font-medium pb-2">From Date</p>
+              <input 
+                class="form-input w-full rounded-lg border border-gray-600 bg-gray-700 text-white h-12 px-4 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                placeholder="Select Date" 
+                type="date"
+                [(ngModel)]="bookingForm.fromDate"
+                [min]="todayDate"
+                name="fromDate"/>
+            </label>
+            <label class="flex flex-col">
+              <p class="text-white text-sm font-medium pb-2">To Date</p>
+              <input 
+                class="form-input w-full rounded-lg border border-gray-600 bg-gray-700 text-white h-12 px-4 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                placeholder="Select Date" 
+                type="date"
+                [(ngModel)]="bookingForm.toDate"
+                [min]="todayDate"
+                name="toDate"/>
+            </label>
+          </div>
+          <label class="flex flex-col">
+            <p class="text-white text-sm font-medium pb-2">Select Car</p>
+            <select 
+              class="form-select w-full rounded-lg border border-gray-600 bg-gray-700 text-white h-12 px-4 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              [(ngModel)]="bookingForm.selectedCar"
+              name="selectedCar">
+              <option value="">Choose a car</option>
+              <option *ngFor="let car of userCars()" [value]="car.carid._id">
+                {{car.carid.carname}} - {{car.carid.brandname}} ({{car.carid.tokenprice}}/token)
+              </option>
+            </select>
+          </label>
+          <label class="flex flex-col">
+            <p class="text-white text-sm font-medium pb-2">Comments</p>
+            <textarea 
+              class="form-textarea w-full rounded-lg border border-gray-600 bg-gray-700 text-white min-h-24 lg:min-h-32 p-4 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none" 
+              placeholder="Add any special requests or comments"
+              [(ngModel)]="bookingForm.comments"
+              name="comments"></textarea>
+          </label>
+          <button class="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2" type="submit" [disabled]="!isUserAuthenticated() || userCars().length === 0">
+            <span>Book Now</span>
+            <svg fill="currentColor" height="18" viewBox="0 0 256 256" width="18" xmlns="http://www.w3.org/2000/svg">
+              <path d="M224.49,136.49l-72,72a12,12,0,0,1-17-17L187,140H40a12,12,0,0,1,0-24H187L135.51,64.49a12,12,0,0,1,17-17l72,72A12,12,0,0,1,224.49,136.49Z"></path>
+            </svg>
+          </button>
+        </form>
+      </div>
+      <div class="lg:col-span-2 space-y-6 lg:space-y-8">
+        <div class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h2 class="text-xl lg:text-2xl font-bold text-white tracking-tight">Availability Calendar</h2>
+            <div class="flex items-center gap-2">
+            <button 
+              class="flex size-9 items-center justify-center rounded-lg border border-gray-600 bg-gray-700 hover:bg-gray-600 transition-colors text-gray-300"
+              (click)="previousMonth()">
+              <svg fill="currentColor" height="18px" viewBox="0 0 256 256" width="18px" xmlns="http://www.w3.org/2000/svg">
+                <path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"></path>
+              </svg>
+            </button>
+            <p class="text-white text-lg font-bold text-center w-32 sm:w-36">{{currentMonthDisplay}}</p>
+            <button 
+              class="flex size-9 items-center justify-center rounded-lg border border-gray-600 bg-gray-700 hover:bg-gray-600 transition-colors text-gray-300"
+              (click)="nextMonth()">
+              <svg fill="currentColor" height="18px" viewBox="0 0 256 256" width="18px" xmlns="http://www.w3.org/2000/svg">
+                <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"></path>
+              </svg>
+            </button>
+            </div>
+          </div>
+          
+          <!-- Car Selection Dropdown -->
+          <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+            <label class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="text-sm font-medium text-white whitespace-nowrap">Select Car for Availability:</span>
+              <select 
+                class="form-select w-full sm:w-64 rounded-lg border border-gray-600 bg-gray-700 text-white h-10 px-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                [(ngModel)]="selectedCarForAvailability"
+                (ngModelChange)="onCarSelectionChange()"
+                name="selectedCarForAvailability"
+                [disabled]="userCars().length === 0">
+                <option value="">Choose a car</option>
+                <option *ngFor="let car of userCars()" [value]="car.carid._id">
+                  {{car.carid.carname}} - {{car.carid.brandname}}
+                </option>
+              </select>
+            </label>
+            <div *ngIf="loading()" class="flex items-center gap-2 text-sm text-gray-400">
+              <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Loading bookings...
+            </div>
+          </div>
+          
+          
+          <!-- Initial Loading State -->
+          <div *ngIf="initialLoading()" class="bg-blue-900/20 border border-blue-600/30 rounded-lg p-4">
+            <div class="flex items-center gap-3">
+              <svg class="animate-spin h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <div>
+                <h3 class="text-sm font-medium text-blue-200">Loading Your Cars</h3>
+                <p class="text-sm text-blue-300 mt-1">Please wait while we load your active car tickets...</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- No Cars Message -->
+          <div *ngIf="!initialLoading() && userCars().length === 0 && !loading() && isUserAuthenticated()" class="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-4">
+            <div class="flex items-center gap-3">
+              <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+              </svg>
+              <div>
+                <h3 class="text-sm font-medium text-yellow-200">No Cars Available</h3>
+                <p class="text-sm text-yellow-300 mt-1">You don't have any active car tickets. Please purchase a car ticket to make bookings.</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Legend -->
+          <div class="flex flex-wrap items-center gap-4 text-sm">
+            <div class="flex items-center gap-2">
+              <div class="w-4 h-4 bg-sky-400 rounded"></div>
+              <span class="text-white">Available</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-4 h-4 bg-green-600 rounded"></div>
+              <span class="text-white">Your Booking</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-4 h-4 bg-red-600 rounded"></div>
+              <span class="text-white">Booked by Others</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-4 h-4 bg-gray-600 rounded opacity-50"></div>
+              <span class="text-white">Past Dates</span>
+            </div>
+          </div>
+        </div>
+        <div class="bg-gray-800 p-4 rounded-lg border border-gray-600 overflow-x-auto">
+          <div class="grid grid-cols-7 gap-1 text-center min-w-[280px]">
+            <p class="text-xs font-bold uppercase text-gray-400 py-2" *ngFor="let day of weekDays">{{day}}</p>
+            <div *ngFor="let day of calendarDays" 
+                 [ngClass]="{
+                   'h-10 flex items-center justify-center text-sm font-medium': true,
+                   'text-gray-500': day.isEmpty,
+                   'bg-sky-400 text-white hover:bg-sky-500 rounded cursor-pointer transition': day.isAvailable && !day.isEmpty,
+                   'bg-green-600 text-white': day.isBookedByUser && !day.isEmpty,
+                   'bg-red-600 text-white': day.isBookedByOthers && !day.isEmpty,
+                   'text-gray-600 cursor-not-allowed opacity-50': !day.isAvailable && !day.isEmpty && !day.isBooked,
+                   'rounded': day.isFirstOrLast
+                 }"
+                 (click)="selectDate(day)">
+              {{day.isEmpty ? '' : day.number}}
+            </div>
+          </div>
+        </div>
+        <div class="pt-4 lg:pt-6">
+          <h2 class="text-xl lg:text-2xl font-bold text-white tracking-tight">Previous & Upcoming Bookings</h2>
+          <div class="mt-4 flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-4">
+            <div class="relative">
+              <button 
+                class="flex items-center gap-2 rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ring-offset-gray-900 transition"
+                (click)="toggleStatusFilter()">
+                <span>{{statusFilter() === 'all' ? 'All Bookings' : statusFilter() === 'previous' ? 'Previous Bookings' : 'Upcoming Bookings'}}</span>
+                <svg class="h-4 w-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path clip-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" fill-rule="evenodd"></path>
+                </svg>
+              </button>
+              <div 
+                class="absolute z-10 mt-2 w-48 origin-top-right rounded-lg bg-gray-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                [ngClass]="{'hidden': !showStatusFilter()}">
+                <div aria-labelledby="options-menu" aria-orientation="vertical" class="py-1" role="menu">
+                  <button class="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-600" role="menuitem" (click)="filterByStatus('all', $event)">All Bookings</button>
+                  <button class="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-600" role="menuitem" (click)="filterByStatus('previous', $event)">Previous</button>
+                  <button class="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-600" role="menuitem" (click)="filterByStatus('upcoming', $event)">Upcoming</button>
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+              <label class="flex items-center gap-2">
+                <span class="text-sm font-medium text-white">From</span>
+                <input 
+                  class="form-input w-full rounded-lg border border-gray-600 bg-gray-700 text-white h-10 px-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                  type="date"
+                  [(ngModel)]="dateFilter.from"
+                  (ngModelChange)="onDateFilterChange()"/>
+              </label>
+              <label class="flex items-center gap-2">
+                <span class="text-sm font-medium text-white">To</span>
+                <input 
+                  class="form-input w-full rounded-lg border border-gray-600 bg-gray-700 text-white h-10 px-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                  type="date"
+                  [(ngModel)]="dateFilter.to"
+                  (ngModelChange)="onDateFilterChange()"/>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-600 mt-4">
+          <!-- Loading State -->
+          <div *ngIf="initialLoading() || loading()" class="flex items-center justify-center py-8">
+            <div class="flex items-center gap-3 text-gray-400">
+              <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>{{initialLoading() ? 'Loading your data...' : 'Loading bookings...'}}</span>
+            </div>
+          </div>
+          
+          <!-- No Bookings Message -->
+          <div *ngIf="!initialLoading() && !loading() && filteredBookings().length === 0" class="text-center py-8">
+            <div class="flex flex-col items-center gap-3">
+              <svg class="h-12 w-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+              <h3 class="text-lg font-medium text-white">No Bookings Found</h3>
+              <p class="text-gray-400">You don't have any bookings yet. Create your first booking above!</p>
+            </div>
+          </div>
+          
+          <!-- Bookings Table -->
+          <table *ngIf="!initialLoading() && !loading() && filteredBookings().length > 0" class="w-full text-sm text-left text-gray-300 min-w-[600px]">
+            <thead class="text-xs text-white uppercase bg-gray-700">
+              <tr>
+                <th class="px-4 lg:px-6 py-3" scope="col">Car</th>
+                <th class="px-4 lg:px-6 py-3" scope="col">Booking Dates</th>
+                <th class="px-4 lg:px-6 py-3" scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let booking of filteredBookings()" 
+                  class="bg-gray-800 border-b border-gray-600">
+                <th class="px-4 lg:px-6 py-4 font-medium text-white whitespace-nowrap" scope="row">{{booking.carName}}</th>
+                <td class="px-4 lg:px-6 py-4">{{booking.dateRange}}</td>
+                <td class="px-4 lg:px-6 py-4">
+                  <span 
+                    [ngClass]="{
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium': true,
+                      'bg-green-900 text-green-200': booking.status === 'Completed',
+                      'bg-yellow-900 text-yellow-200': booking.status === 'Upcoming'
+                    }">
+                    {{booking.status}}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>

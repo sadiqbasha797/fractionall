@@ -14,6 +14,24 @@
                   Cars
                   <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary-color transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
                 </a>
+
+                <a class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2" routerLink="/about" routerLinkActive="text-white">
+                  About
+                  <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary-color transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                </a>
+
+                <a class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2" routerLink="/contact-us" routerLinkActive="text-white">
+                  Contact
+                  <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary-color transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                </a>
+
+                <button 
+                  (click)="navigateToInvestor()"
+                  class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2"
+                >
+                  Become an Investor
+                  <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary-color transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                </button>
               </nav>
 
               <!-- Desktop Right Side - Login/Profile -->
@@ -127,6 +145,9 @@
             <nav class="px-4 pt-20 pb-4 space-y-2">
               <a class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/" (click)="closeMenu()">Home</a>
               <a class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/cars" (click)="closeMenu()">Cars</a>
+              <a class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/about" (click)="closeMenu()">About</a>
+              <a class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/contact-us" (click)="closeMenu()">Contact</a>
+              <button class="block w-full text-left px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" (click)="navigateToInvestor()">Become an Investor</button>
               
               <!-- Profile link for logged-in users -->
               <a *ngIf="isLoggedIn" class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/profile" (click)="closeMenu()">Profile</a>

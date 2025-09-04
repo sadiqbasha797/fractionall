@@ -130,4 +130,38 @@ export class BookingService {
     const diffTime = Math.abs(to.getTime() - from.getTime());
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end days
   }
+
+  // Get all bookings for a specific car (Public API)
+  getCarBookings(carId: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/car/${carId}`);
+  }
+
+  // Check booking availability for a specific car and date range (Public API)
+  checkBookingAvailability(carId: string, bookingFrom: string, bookingTo: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/check-availability`, {
+      carId,
+      bookingFrom,
+      bookingTo
+    });
+  }
+
+  // Helper method to check if a date is booked by current user
+  isBookedByCurrentUser(bookings: Booking[], date: Date, currentUserId: string): boolean {
+    const dateStr = date.toISOString().split('T')[0];
+    return bookings.some(booking => {
+      const fromDate = new Date(booking.bookingFrom).toISOString().split('T')[0];
+      const toDate = new Date(booking.bookingTo).toISOString().split('T')[0];
+      return dateStr >= fromDate && dateStr <= toDate && booking.userid._id === currentUserId;
+    });
+  }
+
+  // Helper method to check if a date is booked by other users
+  isBookedByOthers(bookings: Booking[], date: Date, currentUserId: string): boolean {
+    const dateStr = date.toISOString().split('T')[0];
+    return bookings.some(booking => {
+      const fromDate = new Date(booking.bookingFrom).toISOString().split('T')[0];
+      const toDate = new Date(booking.bookingTo).toISOString().split('T')[0];
+      return dateStr >= fromDate && dateStr <= toDate && booking.userid._id !== currentUserId;
+    });
+  }
 }

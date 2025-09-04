@@ -7,6 +7,7 @@ import { Cars } from './cars/cars';
 import { Tickets } from './tickets/tickets';
 import { Users } from './users/users';
 import { Waitlist } from './waitlist/waitlist';
+import { ContactForms } from './contact-forms/contact-forms';
 import { AdminPanel } from './admin-panel'; // Import the AdminPanel component
 import { AuthGuard } from '../services/auth.guard';
 
@@ -24,6 +25,7 @@ export const adminPanelRoutes: Routes = [
       { path: 'tickets', component: Tickets },
       { path: 'users', component: Users },
       { path: 'waitlist', component: Waitlist },
+      { path: 'contact-forms', component: ContactForms },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' } // Default route for AdminPanel
     ]
   },

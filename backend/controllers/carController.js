@@ -320,11 +320,58 @@ const getPublicCarById = async (req, res) => {
   }
 };
 
+// Update bookNowTokenAvailable count (public route for payment updates)
+const updateBookNowTokenCount = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { bookNowTokenAvailable } = req.body;
+
+    if (bookNowTokenAvailable === undefined || bookNowTokenAvailable < 0) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'bookNowTokenAvailable is required and must be >= 0'
+      });
+    }
+
+    const car = await Car.findByIdAndUpdate(
+      id,
+      { bookNowTokenAvailable },
+      { new: true, runValidators: true }
+    );
+
+    if (!car) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Car not found'
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Book now token count updated successfully',
+      body: {
+        car: {
+          _id: car._id,
+          bookNowTokenAvailable: car.bookNowTokenAvailable
+        }
+      }
+    });
+  } catch (error) {
+    logger(`Error updating bookNowTokenAvailable: ${error.message}`);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to update book now token count',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createCar,
   getCars,
   getCarById,
   updateCar,
+  updateBookNowTokenCount,
   deleteCar,
   getPublicCars,
   getPublicCarById

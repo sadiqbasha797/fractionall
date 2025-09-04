@@ -21,4 +21,12 @@ export class CarPublicService {
   getPublicCarById(id: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/${id}`);
   }
+
+  updateCar(id: string, updateData: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/${id}`, updateData);
+  }
+
+  updateBookNowTokenCount(id: string, bookNowTokenAvailable: number): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/${id}/book-now-token-count`, { bookNowTokenAvailable });
+  }
 }

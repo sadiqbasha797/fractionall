@@ -29,7 +29,8 @@
                       </svg>
                     </div>
                     <input 
-                      [(ngModel)]="searchQuery"
+                      [ngModel]="searchQuery()"
+                      (ngModelChange)="searchQuery.set($event)"
                       (keypress)="onSearchKeyPress($event)"
                       placeholder="Enter location or pincode"
                       class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-white focus:outline-0 focus:ring-0 border border-[#344b65] bg-[#1a2532] focus:border-[#344b65] h-full placeholder:text-[#93acc8] px-[15px] rounded-r-none border-r-0 pr-2 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal" />
@@ -50,13 +51,13 @@
             <h2 class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">Available Cars</h2>
             
             <!-- Search Results Display -->
-            <div *ngIf="isSearchActive && searchQuery" class="flex items-center justify-between bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
+            <div *ngIf="isSearchActive() && searchQuery()" class="flex items-center justify-between bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
               <div class="flex items-center gap-2">
                 <div class="text-blue-400 text-sm font-medium">
                   {{ getSearchDisplayText() }}
                 </div>
                 <div class="text-gray-400 text-sm">
-                  ({{ totalItems }} {{ totalItems === 1 ? 'car found' : 'cars found' }})
+                  ({{ totalItems() }} {{ totalItems() === 1 ? 'car found' : 'cars found' }})
                 </div>
               </div>
               <button 
@@ -67,10 +68,10 @@
             </div>
             
             <!-- No Results Message -->
-            <div *ngIf="isSearchActive && searchQuery && totalItems === 0" class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-center">
+            <div *ngIf="isSearchActive() && searchQuery() && totalItems() === 0" class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-center">
               <div class="text-red-400 text-sm font-medium mb-2">No cars found</div>
               <div class="text-gray-400 text-sm">
-                No cars found for {{ searchType === 'pincode' ? 'pincode' : 'location' }} "{{ searchQuery }}". 
+                No cars found for {{ searchType() === 'pincode' ? 'pincode' : 'location' }} "{{ searchQuery() }}". 
                 Try a different search term or <button (click)="clearSearch()" class="text-blue-400 hover:text-blue-300 underline">clear the search</button> to see all cars.
               </div>
             </div>
@@ -112,8 +113,25 @@
               </div>
             </div>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-0" id="car-grid">
-            <div *ngFor="let car of cars; let i = index" class="car-card flex flex-col items-stretch justify-between gap-4 rounded-lg border border-gray-700 p-4 relative overflow-hidden"
+          <!-- Loading State -->
+          <div *ngIf="isLoading()" class="flex items-center justify-center py-12">
+            <div class="flex flex-col items-center gap-4">
+              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+              <div class="text-gray-400 text-sm">Loading cars...</div>
+            </div>
+          </div>
+
+          <!-- No Cars Message -->
+          <div *ngIf="!isLoading() && cars().length === 0" class="flex items-center justify-center py-12">
+            <div class="text-center">
+              <div class="text-gray-400 text-lg mb-2">No cars available</div>
+              <div class="text-gray-500 text-sm">Please check back later or try adjusting your filters.</div>
+            </div>
+          </div>
+
+          <!-- Cars Grid -->
+          <div *ngIf="!isLoading() && cars().length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-0" id="car-grid">
+            <div *ngFor="let car of cars(); let i = index" class="car-card flex flex-col items-stretch justify-between gap-4 rounded-lg border border-gray-700 p-4 relative overflow-hidden"
               [attr.data-brand]="car.brandname || car.brand" [attr.data-mileage]="car.milege || car.mileage" [attr.data-color]="car.color" [attr.data-seating]="car.seating"
               data-aos="fade-up" [attr.data-aos-delay]="200 + (i * 200)">
               <div class="absolute top-0 right-0 w-32 h-32 z-20">
@@ -152,13 +170,13 @@
               </button>
             </div>
           </div>
-          <div *ngIf="totalPages > 1" id="pagination" class="flex items-center justify-center p-4 pagination-wrap" data-aos="fade-up" data-aos-delay="1400">
+          <div *ngIf="!isLoading() && totalPages() > 1" id="pagination" class="flex items-center justify-center p-4 pagination-wrap" data-aos="fade-up" data-aos-delay="1400">
             <!-- Previous button -->
             <button 
               (click)="goToPreviousPage()" 
-              [disabled]="currentPage === 1"
-              [class.opacity-50]="currentPage === 1"
-              [class.cursor-not-allowed]="currentPage === 1"
+              [disabled]="currentPage() === 1"
+              [class.opacity-50]="currentPage() === 1"
+              [class.cursor-not-allowed]="currentPage() === 1"
               class="flex size-10 items-center justify-center">
               <div class="text-white" data-icon="CaretLeft" data-size="18px" data-weight="regular">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" fill="currentColor"
@@ -175,8 +193,8 @@
               *ngFor="let page of getPageNumbers()" 
               (click)="goToPage(page)"
               [ngClass]="{
-                'text-sm font-bold leading-normal tracking-[0.015em] flex size-10 items-center justify-center text-white rounded-full bg-blue-600': page === currentPage,
-                'text-sm font-normal leading-normal flex size-10 items-center justify-center text-white rounded-full': page !== currentPage
+                'text-sm font-bold leading-normal tracking-[0.015em] flex size-10 items-center justify-center text-white rounded-full bg-blue-600': page === currentPage(),
+                'text-sm font-normal leading-normal flex size-10 items-center justify-center text-white rounded-full': page !== currentPage()
               }">
               {{ page }}
             </button>
@@ -184,9 +202,9 @@
             <!-- Next button -->
             <button 
               (click)="goToNextPage()" 
-              [disabled]="currentPage === totalPages"
-              [class.opacity-50]="currentPage === totalPages"
-              [class.cursor-not-allowed]="currentPage === totalPages"
+              [disabled]="currentPage() === totalPages()"
+              [class.opacity-50]="currentPage() === totalPages()"
+              [class.cursor-not-allowed]="currentPage() === totalPages()"
               class="flex size-10 items-center justify-center">
               <div class="text-white" data-icon="CaretRight" data-size="18px" data-weight="regular">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" fill="currentColor"

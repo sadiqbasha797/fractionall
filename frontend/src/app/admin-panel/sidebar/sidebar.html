@@ -46,6 +46,14 @@
             <span class="text-sm font-medium">Tickets</span>
           </a>
 
+          <a class="flex items-center px-3 py-2 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="contact-forms" [class.bg-gray-800]="isActive('contact-forms')" [class.text-white]="isActive('contact-forms')">
+            <svg class="w-6 h-6 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <span class="text-sm font-medium">Contact Forms</span>
+          </a>
+
           <a class="flex items-center px-3 py-2 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="users" [class.bg-gray-800]="isActive('users')" [class.text-white]="isActive('users')">
             <svg class="w-6 h-6 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>

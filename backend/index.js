@@ -20,6 +20,16 @@ app.get('/', (req, res) => {
   res.json({ message: 'Server is running', status: 'OK' });
 });
 
+// Serve test page
+app.get('/test-razorpay', (req, res) => {
+  res.sendFile(__dirname + '/test-razorpay.html');
+});
+
+// Get Razorpay Key ID for frontend
+app.get('/api/razorpay-key', (req, res) => {
+  res.json({ key: process.env.RAZOR_PAY_KEY_ID });
+});
+
 // Authentication routes
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
@@ -63,6 +73,14 @@ app.use('/api/kyc', kycRoutes);
 // User routes
 const userRoutes = require('./routes/userRoutes');
 app.use('/api/users', userRoutes);
+
+// Contact routes
+const contactRoutes = require('./routes/contactRoutes');
+app.use('/api/contact', contactRoutes);
+
+// Payment routes
+const paymentRoutes = require('./routes/paymentRoutes');
+app.use('/api/payments', paymentRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

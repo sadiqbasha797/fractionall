@@ -74,6 +74,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.router.navigate(['/profile']);
   }
 
+  navigateToInvestor() {
+    this.closeMenu();
+    this.router.navigate(['/contact-us'], { queryParams: { type: 'investor' } });
+  }
+
   logout() {
     this.authService.logout();
     this.checkAuthState();

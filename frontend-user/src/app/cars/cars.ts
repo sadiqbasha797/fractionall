@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, OnInit, Renderer2, ElementRef } from '@angular/core';
+import { Component, AfterViewInit, OnInit, Renderer2, ElementRef, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -15,27 +15,51 @@ import { CarPublicService } from '../services/car-public.service';
   styleUrls: ['./cars.css']
 })
 export class Cars implements OnInit, AfterViewInit {
-  cars: any[] = [];
-  allCars: any[] = []; // Store all cars
-  filteredCars: any[] = []; // Store filtered and sorted cars
-  currentPage: number = 1;
-  itemsPerPage: number = 9;
-  totalPages: number = 0;
-  totalItems: number = 0;
-  paginatedCars: any[] = [];
-  
-  // Filter and Sort properties
-  currentFilter: string = 'All';
-  currentSort: string = 'A-Z (Sort by Car Name)';
+  // Convert to signals for proper reactivity with zoneless change detection
+  protected allCars = signal<any[]>([]);
+  protected currentPage = signal<number>(1);
+  protected itemsPerPage = signal<number>(9);
+  protected currentFilter = signal<string>('All');
+  protected currentSort = signal<string>('A-Z (Sort by Car Name)');
+  protected searchQuery = signal<string>('');
+  protected searchType = signal<string>('');
+  protected isSearchActive = signal<boolean>(false);
+  protected isLoading = signal<boolean>(true);
   private dropdownsInitialized: boolean = false;
-  
-  // Search properties
-  searchQuery: string = '';
-  searchType: string = '';
-  isSearchActive: boolean = false;
   
   // Make Math available to template
   Math = Math;
+
+  // Computed signals for derived data
+  protected filteredCars = computed(() => {
+    console.log('Computing filtered cars...');
+    let cars = this.allCars();
+    
+    // Apply search filter first
+    if (this.isSearchActive() && this.searchQuery()) {
+      cars = this.applySearchFilter(cars, this.searchQuery(), this.searchType());
+    }
+    
+    // Apply other filters
+    cars = this.applyFilter(cars, this.currentFilter());
+    
+    // Then apply sorting
+    cars = this.applySort(cars, this.currentSort());
+    
+    console.log('Filtered cars computed:', cars.length);
+    return cars;
+  });
+
+  protected totalItems = computed(() => this.filteredCars().length);
+  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.itemsPerPage()));
+
+  protected cars = computed(() => {
+    const startIndex = (this.currentPage() - 1) * this.itemsPerPage();
+    const endIndex = startIndex + this.itemsPerPage();
+    const paginatedCars = this.filteredCars().slice(startIndex, endIndex);
+    console.log('Paginated cars computed:', paginatedCars.length);
+    return paginatedCars;
+  });
 
   constructor(
     private carService: CarPublicService,
@@ -43,7 +67,25 @@ export class Cars implements OnInit, AfterViewInit {
     private elementRef: ElementRef,
     private router: Router,
     private route: ActivatedRoute
-  ) {}
+  ) {
+    // Effect to reinitialize AOS when cars data changes
+    effect(() => {
+      const carsData = this.cars();
+      const isLoading = this.isLoading();
+      
+      if (!isLoading && carsData.length > 0 && this.isBrowser()) {
+        // Delay AOS refresh to ensure DOM is updated
+        setTimeout(() => {
+          AOS.refresh();
+        }, 200);
+        
+        // Also refresh after a longer delay to catch any late DOM updates
+        setTimeout(() => {
+          AOS.refresh();
+        }, 1000);
+      }
+    });
+  }
 
   private isBrowser(): boolean {
     return typeof window !== 'undefined' && typeof document !== 'undefined';
@@ -53,10 +95,10 @@ export class Cars implements OnInit, AfterViewInit {
     // Check for search parameters in URL
     this.route.queryParams.subscribe(params => {
       if (params['search']) {
-        this.searchQuery = params['search'];
-        this.searchType = params['type'] || 'location';
-        this.isSearchActive = true;
-        console.log('Search parameters found:', { search: this.searchQuery, type: this.searchType });
+        this.searchQuery.set(params['search']);
+        this.searchType.set(params['type'] || 'location');
+        this.isSearchActive.set(true);
+        console.log('Search parameters found:', { search: this.searchQuery(), type: this.searchType() });
       }
     });
 
@@ -64,15 +106,15 @@ export class Cars implements OnInit, AfterViewInit {
     this.carService.getPublicCars().subscribe({
       next: (res: any) => {
         // API returns { status, body: { cars }, message }
-        this.allCars = (res && res.body && res.body.cars) ? res.body.cars : (Array.isArray(res) ? res : []);
-        this.applyFiltersAndSort();
-        this.updatePagination();
+        const carsData = (res && res.body && res.body.cars) ? res.body.cars : (Array.isArray(res) ? res : []);
+        this.allCars.set(carsData);
+        this.isLoading.set(false);
+        console.log('Cars data loaded:', carsData.length);
       },
-      error: () => {
-        this.allCars = [];
-        this.cars = [];
-        this.totalItems = 0;
-        this.totalPages = 0;
+      error: (error) => {
+        console.error('Error loading cars:', error);
+        this.allCars.set([]);
+        this.isLoading.set(false);
       }
     });
   }
@@ -83,7 +125,9 @@ export class Cars implements OnInit, AfterViewInit {
       AOS.init({
         duration: 1000,
         easing: 'ease',
-        once: false
+        once: false,
+        offset: 100,
+        delay: 0
       });
     }
 
@@ -348,34 +392,8 @@ export class Cars implements OnInit, AfterViewInit {
     });
   }
 
-  // Filter and Sort methods
-  applyFiltersAndSort(): void {
-    console.log('applyFiltersAndSort called');
-    console.log('allCars count:', this.allCars.length);
-    console.log('currentFilter:', this.currentFilter);
-    console.log('currentSort:', this.currentSort);
-    console.log('searchQuery:', this.searchQuery);
-    console.log('searchType:', this.searchType);
-    
-    // Apply search filter first
-    let searchFilteredCars = this.allCars;
-    if (this.isSearchActive && this.searchQuery) {
-      searchFilteredCars = this.applySearchFilter(this.allCars, this.searchQuery, this.searchType);
-    }
-    
-    // Apply other filters
-    this.filteredCars = this.applyFilter(searchFilteredCars, this.currentFilter);
-    
-    // Then apply sorting
-    this.filteredCars = this.applySort(this.filteredCars, this.currentSort);
-    
-    // Update pagination info
-    this.totalItems = this.filteredCars.length;
-    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-    this.currentPage = 1; // Reset to first page when filter/sort changes
-    
-    console.log('Final filteredCars count:', this.filteredCars.length);
-  }
+  // Filter and Sort methods - now handled by computed signals
+  // The applyFiltersAndSort method is no longer needed as filtering is handled by computed signals
 
   applySearchFilter(cars: any[], searchQuery: string, searchType: string): any[] {
     console.log('applySearchFilter called with:', { searchQuery, searchType, carsCount: cars.length });
@@ -492,39 +510,24 @@ export class Cars implements OnInit, AfterViewInit {
   // Filter and Sort event handlers
   onFilterChange(filter: string): void {
     console.log('onFilterChange called with:', filter);
-    this.currentFilter = filter;
-    this.applyFiltersAndSort();
-    this.updatePagination();
-    console.log('After filter change - cars count:', this.cars.length);
+    this.currentFilter.set(filter);
+    this.currentPage.set(1); // Reset to first page when filter changes
+    console.log('After filter change - cars count:', this.cars().length);
   }
 
   onSortChange(sort: string): void {
     console.log('onSortChange called with:', sort);
-    this.currentSort = sort;
-    this.applyFiltersAndSort();
-    this.updatePagination();
-    console.log('After sort change - cars count:', this.cars.length);
+    this.currentSort.set(sort);
+    this.currentPage.set(1); // Reset to first page when sort changes
+    console.log('After sort change - cars count:', this.cars().length);
   }
 
-  // Pagination methods
-  updatePagination(): void {
-    console.log('updatePagination called');
-    console.log('currentPage:', this.currentPage);
-    console.log('itemsPerPage:', this.itemsPerPage);
-    console.log('filteredCars count:', this.filteredCars.length);
-    
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    this.cars = this.filteredCars.slice(startIndex, endIndex);
-    
-    console.log('startIndex:', startIndex, 'endIndex:', endIndex);
-    console.log('Final cars to display:', this.cars.length);
-  }
+  // Pagination methods - now handled by computed signals
+  // updatePagination is no longer needed as pagination is handled by computed signals
 
   goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.updatePagination();
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
       // Scroll to top of car grid
       if (this.isBrowser()) {
         const carGrid = document.getElementById('car-grid');
@@ -540,40 +543,42 @@ export class Cars implements OnInit, AfterViewInit {
   }
 
   goToLastPage(): void {
-    this.goToPage(this.totalPages);
+    this.goToPage(this.totalPages());
   }
 
   goToNextPage(): void {
-    if (this.currentPage < this.totalPages) {
-      this.goToPage(this.currentPage + 1);
+    if (this.currentPage() < this.totalPages()) {
+      this.goToPage(this.currentPage() + 1);
     }
   }
 
   goToPreviousPage(): void {
-    if (this.currentPage > 1) {
-      this.goToPage(this.currentPage - 1);
+    if (this.currentPage() > 1) {
+      this.goToPage(this.currentPage() - 1);
     }
   }
 
   getPageNumbers(): number[] {
     const pages: number[] = [];
     const maxVisiblePages = 5;
+    const totalPages = this.totalPages();
+    const currentPage = this.currentPage();
     
-    if (this.totalPages <= maxVisiblePages) {
+    if (totalPages <= maxVisiblePages) {
       // Show all pages if total pages is less than or equal to max visible pages
-      for (let i = 1; i <= this.totalPages; i++) {
+      for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
       // Show pages around current page
-      let start = Math.max(1, this.currentPage - 2);
-      let end = Math.min(this.totalPages, this.currentPage + 2);
+      let start = Math.max(1, currentPage - 2);
+      let end = Math.min(totalPages, currentPage + 2);
       
       // Adjust if we're at the beginning or end
-      if (this.currentPage <= 3) {
+      if (currentPage <= 3) {
         end = maxVisiblePages;
-      } else if (this.currentPage >= this.totalPages - 2) {
-        start = this.totalPages - maxVisiblePages + 1;
+      } else if (currentPage >= totalPages - 2) {
+        start = totalPages - maxVisiblePages + 1;
       }
       
       for (let i = start; i <= end; i++) {
@@ -586,18 +591,17 @@ export class Cars implements OnInit, AfterViewInit {
 
   // Search functionality methods
   onSearchSubmit(): void {
-    if (this.searchQuery.trim()) {
-      this.isSearchActive = true;
-      this.searchType = this.isPincode(this.searchQuery.trim()) ? 'pincode' : 'location';
-      this.applyFiltersAndSort();
-      this.updatePagination();
+    if (this.searchQuery().trim()) {
+      this.isSearchActive.set(true);
+      this.searchType.set(this.isPincode(this.searchQuery().trim()) ? 'pincode' : 'location');
+      this.currentPage.set(1); // Reset to first page when searching
       
       // Update URL with search parameters
       this.router.navigate([], {
         relativeTo: this.route,
         queryParams: {
-          search: this.searchQuery.trim(),
-          type: this.searchType
+          search: this.searchQuery().trim(),
+          type: this.searchType()
         },
         queryParamsHandling: 'merge'
       });
@@ -611,11 +615,10 @@ export class Cars implements OnInit, AfterViewInit {
   }
 
   clearSearch(): void {
-    this.searchQuery = '';
-    this.isSearchActive = false;
-    this.searchType = '';
-    this.applyFiltersAndSort();
-    this.updatePagination();
+    this.searchQuery.set('');
+    this.isSearchActive.set(false);
+    this.searchType.set('');
+    this.currentPage.set(1); // Reset to first page when clearing search
     
     // Remove search parameters from URL
     this.router.navigate([], {
@@ -631,12 +634,12 @@ export class Cars implements OnInit, AfterViewInit {
   }
 
   getSearchDisplayText(): string {
-    if (!this.isSearchActive || !this.searchQuery) {
+    if (!this.isSearchActive() || !this.searchQuery()) {
       return '';
     }
     
-    const typeText = this.searchType === 'pincode' ? 'Pincode' : 'Location';
-    return `Searching by ${typeText}: "${this.searchQuery}"`;
+    const typeText = this.searchType() === 'pincode' ? 'Pincode' : 'Location';
+    return `Searching by ${typeText}: "${this.searchQuery()}"`;
   }
 
   // Navigation method for car details

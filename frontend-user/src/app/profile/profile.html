@@ -13,18 +13,18 @@
   </div>
 
   <!-- Error Message -->
-  <div *ngIf="error" class="error-message" style="color: #ef4444; text-align: center; margin-bottom: 1rem; padding: 1rem; background-color: rgba(239, 68, 68, 0.1); border-radius: 0.5rem;">
-    {{ error }}
+  <div *ngIf="error()" class="error-message" style="color: #ef4444; text-align: center; margin-bottom: 1rem; padding: 1rem; background-color: rgba(239, 68, 68, 0.1); border-radius: 0.5rem;">
+    {{ error() }}
   </div>
 
   <!-- Loading Spinner -->
-  <div *ngIf="loading" class="loading-spinner" style="text-align: center; padding: 2rem;">
+  <div *ngIf="loading()" class="loading-spinner" style="text-align: center; padding: 2rem;">
     <div style="display: inline-block; width: 2rem; height: 2rem; border: 3px solid #4a5568; border-radius: 50%; border-top-color: #3b82f6; animation: spin 1s ease-in-out infinite;"></div>
     <p style="margin-top: 1rem; color: #9ca3af;">Loading profile...</p>
   </div>
 
   <!-- Main Content Grid -->
-  <div class="profile-grid" *ngIf="!loading">
+  <div class="profile-grid" *ngIf="!loading()">
     <!-- Left Column - User Info and Tickets/Tokens -->
     <div class="left-column">
       <!-- User Profile Card -->
@@ -32,35 +32,50 @@
         <div class="profile-info">
           <div class="profile-avatar-section">
             <div class="profile-avatar">
-              <img [src]="user.profileimage || 'public/person_1.jpg'" [alt]="user.name || 'Profile Image'" />
+              <img [src]="user().profileimage || 'public/person_1.jpg'" [alt]="user().name || 'Profile Image'" />
+              <!-- Upload progress overlay -->
+              <div *ngIf="uploadingImage()" class="upload-overlay">
+                <div class="upload-spinner"></div>
+              </div>
             </div>
-            <button class="change-photo-btn">Change Photo</button>
+            <button class="change-photo-btn" (click)="triggerFileInput()" [disabled]="uploadingImage()">
+              <span *ngIf="uploadingImage()">Uploading...</span>
+              <span *ngIf="!uploadingImage()">Change Photo</span>
+            </button>
+            <!-- Success message -->
+            <div *ngIf="imageUploadSuccess()" class="upload-success" style="margin-top: 0.5rem; font-size: 0.75rem; color: #10b981; text-align: center;">
+              {{ imageUploadSuccess() }}
+            </div>
+            <!-- Error message -->
+            <div *ngIf="imageUploadError()" class="upload-error" style="margin-top: 0.5rem; font-size: 0.75rem; color: #ef4444; text-align: center;">
+              {{ imageUploadError() }}
+            </div>
           </div>
           <div class="profile-details">
             <div class="profile-details-grid">
               <div class="detail-item">
                 <label class="detail-label">Full Name</label>
-                <p class="detail-value">{{ user.name || 'Not provided' }}</p>
+                <p class="detail-value">{{ user().name || 'Not provided' }}</p>
               </div>
               <div class="detail-item">
                 <label class="detail-label">Email</label>
-                <p class="detail-value">{{ user.email || 'Not provided' }}</p>
+                <p class="detail-value">{{ user().email || 'Not provided' }}</p>
               </div>
               <div class="detail-item">
                 <label class="detail-label">Mobile Number</label>
-                <p class="detail-value">{{ user.phone || 'Not provided' }}</p>
+                <p class="detail-value">{{ user().phone || 'Not provided' }}</p>
               </div>
               <div class="detail-item">
                 <label class="detail-label">Date of Birth</label>
-                <p class="detail-value">{{ formatDate(user.dateofbirth) }}</p>
+                <p class="detail-value">{{ formatDate(user().dateofbirth) }}</p>
               </div>
               <div class="detail-item">
                 <label class="detail-label">Location</label>
-                <p class="detail-value">{{ user.location || 'Not provided' }}</p>
+                <p class="detail-value">{{ user().location || 'Not provided' }}</p>
               </div>
               <div class="detail-item">
                 <label class="detail-label">Pincode</label>
-                <p class="detail-value">{{ user.pincode || 'Not provided' }}</p>
+                <p class="detail-value">{{ user().pincode || 'Not provided' }}</p>
               </div>
               <div class="detail-item">
                 <label class="detail-label">Account Status</label>
@@ -68,12 +83,12 @@
               </div>
               <div class="detail-item">
                 <label class="detail-label">Member Since</label>
-                <p class="detail-value">{{ formatDate(user.createdAt) }}</p>
+                <p class="detail-value">{{ formatDate(user().createdAt) }}</p>
               </div>
             </div>
             <div class="address-section">
               <label class="detail-label">Address</label>
-              <p class="detail-value">{{ user.address || 'Not provided' }}</p>
+              <p class="detail-value">{{ user().address || 'Not provided' }}</p>
             </div>
             
             <!-- Government ID Section -->
@@ -82,19 +97,19 @@
               <div class="government-id-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="detail-item">
                   <label class="detail-label">Aadhar ID</label>
-                  <p class="detail-value">{{ formatGovernmentId('aadharid', user.governmentid?.aadharid) }}</p>
+                  <p class="detail-value">{{ formatGovernmentId('aadharid', user().governmentid?.aadharid) }}</p>
                 </div>
                 <div class="detail-item">
                   <label class="detail-label">PAN ID</label>
-                  <p class="detail-value">{{ formatGovernmentId('panid', user.governmentid?.panid) }}</p>
+                  <p class="detail-value">{{ formatGovernmentId('panid', user().governmentid?.panid) }}</p>
                 </div>
                 <div class="detail-item">
                   <label class="detail-label">License ID</label>
-                  <p class="detail-value">{{ formatGovernmentId('licenseid', user.governmentid?.licenseid) }}</p>
+                  <p class="detail-value">{{ formatGovernmentId('licenseid', user().governmentid?.licenseid) }}</p>
                 </div>
                 <div class="detail-item">
                   <label class="detail-label">Income</label>
-                  <p class="detail-value">{{ user.governmentid?.income || 'Not provided' }}</p>
+                  <p class="detail-value">{{ user().governmentid?.income || 'Not provided' }}</p>
                 </div>
               </div>
             </div>
@@ -116,7 +131,7 @@
           </div>
         </div>
         <p class="kyc-description">Please submit the required documents to get your account verified and access all features.</p>
-        <button class="submit-docs-btn" (click)="openDocModal()" *ngIf="user.kycStatus === 'pending'">Submit Documents</button>
+        <button class="submit-docs-btn" (click)="openDocModal()" *ngIf="user().kycStatus === 'pending'">Submit Documents</button>
       </div>
 
       <!-- My Tickets Section -->
@@ -124,26 +139,26 @@
         <h2 class="section-title">My Tickets</h2>
         
         <!-- Loading state -->
-        <div *ngIf="ticketsLoading" class="loading-spinner" style="text-align: center; padding: 1rem;">
+        <div *ngIf="ticketsLoading()" class="loading-spinner" style="text-align: center; padding: 1rem;">
           <div style="display: inline-block; width: 1.5rem; height: 1.5rem; border: 2px solid #4a5568; border-radius: 50%; border-top-color: #3b82f6; animation: spin 1s ease-in-out infinite;"></div>
           <p style="margin-top: 0.5rem; color: #9ca3af; font-size: 0.875rem;">Loading tickets...</p>
         </div>
 
         <!-- Error state -->
-        <div *ngIf="ticketsError && !ticketsLoading" class="error-message" style="color: #ef4444; text-align: center; margin: 1rem 0; padding: 1rem; background-color: rgba(239, 68, 68, 0.1); border-radius: 0.5rem;">
-          {{ ticketsError }}
+        <div *ngIf="ticketsError() && !ticketsLoading()" class="error-message" style="color: #ef4444; text-align: center; margin: 1rem 0; padding: 1rem; background-color: rgba(239, 68, 68, 0.1); border-radius: 0.5rem;">
+          {{ ticketsError() }}
         </div>
 
 
 
         <!-- No tickets state -->
-        <div *ngIf="!ticketsLoading && !ticketsError && tickets.length === 0" class="no-tickets" style="text-align: center; padding: 2rem; color: #9ca3af;">
+        <div *ngIf="!ticketsLoading() && !ticketsError() && tickets().length === 0" class="no-tickets" style="text-align: center; padding: 2rem; color: #9ca3af;">
           <p>No tickets found. You haven't purchased any tickets yet.</p>
         </div>
 
         <!-- Tickets grid -->
-        <div class="tickets-grid" *ngIf="!ticketsLoading && !ticketsError && tickets.length > 0">
-          <div *ngFor="let ticket of tickets" class="ticket-item" [class.expired]="ticket.ticketstatus === 'expired'">
+        <div class="tickets-grid" *ngIf="!ticketsLoading() && !ticketsError() && tickets().length > 0">
+          <div *ngFor="let ticket of tickets()" class="ticket-item" [class.expired]="ticket.ticketstatus === 'expired'">
             <div class="ticket-header">
               <span class="ticket-type">TICKET #{{ ticket.ticketcustomid }}</span>
               <span class="ticket-status" [class.active]="ticket.ticketstatus === 'active'" [class.expired]="ticket.ticketstatus === 'expired'">
@@ -174,24 +189,24 @@
         <h2 class="section-title">My Tokens</h2>
         
         <!-- Loading state -->
-        <div *ngIf="tokensLoading" class="loading-spinner" style="text-align: center; padding: 1rem;">
+        <div *ngIf="tokensLoading()" class="loading-spinner" style="text-align: center; padding: 1rem;">
           <div style="display: inline-block; width: 1.5rem; height: 1.5rem; border: 2px solid #4a5568; border-radius: 50%; border-top-color: #3b82f6; animation: spin 1s ease-in-out infinite;"></div>
           <p style="margin-top: 0.5rem; color: #9ca3af; font-size: 0.875rem;">Loading tokens...</p>
         </div>
 
         <!-- Error state -->
-        <div *ngIf="tokensError && !tokensLoading" class="error-message" style="color: #ef4444; text-align: center; margin: 1rem 0; padding: 1rem; background-color: rgba(239, 68, 68, 0.1); border-radius: 0.5rem;">
-          {{ tokensError }}
+        <div *ngIf="tokensError() && !tokensLoading()" class="error-message" style="color: #ef4444; text-align: center; margin: 1rem 0; padding: 1rem; background-color: rgba(239, 68, 68, 0.1); border-radius: 0.5rem;">
+          {{ tokensError() }}
         </div>
 
         <!-- No tokens state -->
-        <div *ngIf="!tokensLoading && !tokensError && tokens.length === 0" class="no-tokens" style="text-align: center; padding: 2rem; color: #9ca3af;">
+        <div *ngIf="!tokensLoading() && !tokensError() && tokens().length === 0" class="no-tokens" style="text-align: center; padding: 2rem; color: #9ca3af;">
           <p>No tokens found. You haven't purchased any tokens yet.</p>
         </div>
 
         <!-- Tokens grid -->
-        <div class="tokens-grid" *ngIf="!tokensLoading && !tokensError && tokens.length > 0">
-          <div *ngFor="let token of tokens" class="token-item" [class.expired]="token.status === 'expired'">
+        <div class="tokens-grid" *ngIf="!tokensLoading() && !tokensError() && tokens().length > 0">
+          <div *ngFor="let token of tokens()" class="token-item" [class.expired]="token.status === 'expired'">
             <div class="ticket-header">
               <span class="ticket-type">TOKEN #{{ token.customtokenid }}</span>
               <span class="ticket-status" [class.active]="token.status === 'active'" [class.expired]="token.status === 'expired'">
@@ -207,6 +222,49 @@
             </div>
             <div class="ticket-pricing">
               <div class="price-item">Amount Paid: <span>₹{{ token.amountpaid }}</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- My Book Now Tokens Section -->
+      <div class="booknow-tokens-card">
+        <h2 class="section-title">My Book Now Tokens</h2>
+        
+        <!-- Loading state -->
+        <div *ngIf="bookNowTokensLoading()" class="loading-spinner" style="text-align: center; padding: 1rem;">
+          <div style="display: inline-block; width: 1.5rem; height: 1.5rem; border: 2px solid #4a5568; border-radius: 50%; border-top-color: #3b82f6; animation: spin 1s ease-in-out infinite;"></div>
+          <p style="margin-top: 0.5rem; color: #9ca3af; font-size: 0.875rem;">Loading book now tokens...</p>
+        </div>
+
+        <!-- Error state -->
+        <div *ngIf="bookNowTokensError() && !bookNowTokensLoading()" class="error-message" style="color: #ef4444; text-align: center; margin: 1rem 0; padding: 1rem; background-color: rgba(239, 68, 68, 0.1); border-radius: 0.5rem;">
+          {{ bookNowTokensError() }}
+        </div>
+
+        <!-- No book now tokens state -->
+        <div *ngIf="!bookNowTokensLoading() && !bookNowTokensError() && bookNowTokens().length === 0" class="no-booknow-tokens" style="text-align: center; padding: 2rem; color: #9ca3af;">
+          <p>No book now tokens found. You haven't purchased any book now tokens yet.</p>
+        </div>
+
+        <!-- Book now tokens grid -->
+        <div class="booknow-tokens-grid" *ngIf="!bookNowTokensLoading() && !bookNowTokensError() && bookNowTokens().length > 0">
+          <div *ngFor="let bookNowToken of bookNowTokens()" class="booknow-token-item" [class.expired]="bookNowToken.status === 'expired'">
+            <div class="ticket-header">
+              <span class="ticket-type">BOOK NOW TOKEN #{{ bookNowToken.customtokenid }}</span>
+              <span class="ticket-status" [class.active]="bookNowToken.status === 'active'" [class.expired]="bookNowToken.status === 'expired'" [class.dropped]="bookNowToken.status === 'dropped'">
+                {{ bookNowToken.status | titlecase }}
+              </span>
+            </div>
+            <p class="ticket-id">Token ID: {{ bookNowToken._id }}</p>
+            <p class="ticket-model" *ngIf="bookNowToken.carid">{{ bookNowToken.carid.carname }}</p>
+            <p class="ticket-brand" *ngIf="bookNowToken.carid">{{ bookNowToken.carid.brandname }} - {{ bookNowToken.carid.color }}</p>
+            <div class="ticket-dates">
+              <div class="date-item">Expires: <span>{{ formatDate(bookNowToken.expirydate) }}</span></div>
+              <div class="date-item">Purchased: <span>{{ formatDate(bookNowToken.date) }}</span></div>
+            </div>
+            <div class="ticket-pricing">
+              <div class="price-item">Amount Paid: <span>₹{{ bookNowToken.amountpaid }}</span></div>
             </div>
           </div>
         </div>
@@ -229,7 +287,7 @@
           </div>
         </div>
         <p class="kyc-description">Please submit the required documents to get your account verified and access all features.</p>
-        <button class="submit-docs-btn" (click)="openDocModal()" *ngIf="user.kycStatus === 'pending'">Submit Documents</button>
+        <button class="submit-docs-btn" (click)="openDocModal()" *ngIf="user().kycStatus === 'pending'">Submit Documents</button>
       </div>
 
       <!-- Calendar/Bookings Card -->
@@ -237,18 +295,18 @@
         <h2 class="section-title">My Bookings</h2>
         
         <!-- Loading state -->
-        <div *ngIf="bookingsLoading" class="loading-spinner" style="text-align: center; padding: 1rem;">
+        <div *ngIf="bookingsLoading()" class="loading-spinner" style="text-align: center; padding: 1rem;">
           <div style="display: inline-block; width: 1.5rem; height: 1.5rem; border: 2px solid #4a5568; border-radius: 50%; border-top-color: #3b82f6; animation: spin 1s ease-in-out infinite;"></div>
           <p style="margin-top: 0.5rem; color: #9ca3af; font-size: 0.875rem;">Loading bookings...</p>
         </div>
 
         <!-- Error state -->
-        <div *ngIf="bookingsError && !bookingsLoading" class="error-message" style="color: #ef4444; text-align: center; margin: 1rem 0; padding: 1rem; background-color: rgba(239, 68, 68, 0.1); border-radius: 0.5rem;">
-          {{ bookingsError }}
+        <div *ngIf="bookingsError() && !bookingsLoading()" class="error-message" style="color: #ef4444; text-align: center; margin: 1rem 0; padding: 1rem; background-color: rgba(239, 68, 68, 0.1); border-radius: 0.5rem;">
+          {{ bookingsError() }}
         </div>
 
         <!-- Calendar -->
-        <div class="calendar-container" *ngIf="!bookingsLoading && !bookingsError">
+        <div class="calendar-container" *ngIf="!bookingsLoading() && !bookingsError()">
           <div class="calendar-header">
             <button class="calendar-nav-btn" (click)="goToPreviousMonth()">
               <svg fill="currentColor" viewBox="0 0 256 256">
@@ -266,7 +324,7 @@
             <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
           </div>
           <div class="calendar-days">
-            <div *ngFor="let day of calendarDays" 
+            <div *ngFor="let day of calendarDays()" 
                  [class]="getCalendarDayClass(day)"
                  [title]="getBookingTooltip(day)">
               {{ day.day }}
@@ -275,15 +333,117 @@
         </div>
 
         <!-- No bookings state -->
-        <div *ngIf="!bookingsLoading && !bookingsError && bookings.length === 0" class="no-bookings" style="text-align: center; padding: 2rem; color: #9ca3af;">
+        <div *ngIf="!bookingsLoading() && !bookingsError() && bookings().length === 0" class="no-bookings" style="text-align: center; padding: 2rem; color: #9ca3af;">
           <p>No bookings found. You haven't made any bookings yet.</p>
+        </div>
+      </div>
+
+      <!-- AMC Section -->
+      <div class="amc-card">
+        <h2 class="section-title">AMC Records</h2>
+        
+        <!-- Loading state -->
+        <div *ngIf="amcsLoading()" class="loading-spinner" style="text-align: center; padding: 1rem;">
+          <div style="display: inline-block; width: 1.5rem; height: 1.5rem; border: 2px solid #4a5568; border-radius: 50%; border-top-color: #3b82f6; animation: spin 1s ease-in-out infinite;"></div>
+          <p style="margin-top: 0.5rem; color: #9ca3af; font-size: 0.875rem;">Loading AMC records...</p>
+        </div>
+
+        <!-- Error state -->
+        <div *ngIf="amcsError() && !amcsLoading()" class="error-message" style="color: #ef4444; text-align: center; margin: 1rem 0; padding: 1rem; background-color: rgba(239, 68, 68, 0.1); border-radius: 0.5rem;">
+          {{ amcsError() }}
+        </div>
+
+        <!-- No AMC state -->
+        <div *ngIf="!amcsLoading() && !amcsError() && amcs().length === 0" class="no-amcs" style="text-align: center; padding: 2rem; color: #9ca3af;">
+          <p>No AMC records found. You don't have any AMC contracts yet.</p>
+        </div>
+
+        <!-- AMC cards -->
+        <div class="amc-cards" *ngIf="!amcsLoading() && !amcsError() && amcs().length > 0">
+          <div *ngFor="let amc of amcs()" class="amc-card-item" [class.expanded]="isAMCExpanded(amc._id!)">
+            <!-- AMC Card Header -->
+            <div class="amc-card-header" (click)="toggleAMCExpansion(amc._id!)">
+              <div class="amc-car-info">
+                <div class="amc-car-image">
+                  <img [src]="amc.carid.images && amc.carid.images[0] || 'public/car.png'" [alt]="amc.carid.carname" />
+                </div>
+                <div class="amc-car-details">
+                  <h3 class="amc-car-name">{{ amc.carid.carname }}</h3>
+                  <p class="amc-car-brand">{{ amc.carid.brandname }} - {{ amc.carid.color }}</p>
+                  <p class="amc-ticket-info">Ticket: #{{ amc.ticketid.ticketcustomid }}</p>
+                </div>
+              </div>
+              <div class="amc-amount-info">
+                <div class="amc-total-amount">
+                  <span class="amount-label">Total AMC:</span>
+                  <span class="amount-value">₹{{ getTotalAMCAmount(amc) }}</span>
+                </div>
+                <div class="amc-paid-amount">
+                  <span class="amount-label">Paid:</span>
+                  <span class="amount-value paid">₹{{ getPaidAMCAmount(amc) }}</span>
+                </div>
+                <div class="amc-pending-amount">
+                  <span class="amount-label">Pending:</span>
+                  <span class="amount-value pending">₹{{ getPendingAMCAmount(amc) }}</span>
+                </div>
+                <div class="amc-expand-icon">
+                  <svg [class.rotated]="isAMCExpanded(amc._id!)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- AMC Details (Expandable) -->
+            <div class="amc-details" *ngIf="isAMCExpanded(amc._id!)">
+              <div class="amc-details-header">
+                <h4>AMC Payment History</h4>
+                <div class="amc-next-due" *ngIf="getNextDueAMC(amc)">
+                  <span class="next-due-label">Next Due:</span>
+                  <span class="next-due-amount">₹{{ getNextDueAMC(amc).amount }}</span>
+                  <span class="next-due-date" *ngIf="getNextDueAMC(amc).duedate">by {{ formatDate(getNextDueAMC(amc).duedate) }}</span>
+                </div>
+              </div>
+              
+              <div class="amc-records">
+                <div *ngFor="let amount of amc.amcamount; let i = index" class="amc-record" [class.paid]="amount.paid" [class.overdue]="isAMCAmountOverdue(amount)">
+                  <div class="amc-record-header">
+                    <div class="amc-year">
+                      <span class="year-label">Year {{ amount.year }}</span>
+                      <span class="amount">₹{{ amount.amount }}</span>
+                    </div>
+                    <div class="amc-status">
+                      <span class="status-badge" [class.paid]="amount.paid" [class.pending]="!amount.paid">
+                        {{ amount.paid ? 'Paid' : 'Pending' }}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div class="amc-record-details">
+                    <div class="amc-due-date" *ngIf="amount.duedate">
+                      <span class="detail-label">Due Date:</span>
+                      <span class="detail-value">{{ formatDate(amount.duedate) }}</span>
+                    </div>
+                    <div class="amc-paid-date" *ngIf="amount.paiddate">
+                      <span class="detail-label">Paid Date:</span>
+                      <span class="detail-value">{{ formatDate(amount.paiddate) }}</span>
+                    </div>
+                    <div class="amc-penalty" *ngIf="amount.penality > 0">
+                      <span class="detail-label">Penalty:</span>
+                      <span class="detail-value penalty">₹{{ amount.penality }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- KYC Document Modal -->
-  <div *ngIf="showDocModal" class="modal-overlay" (click)="closeDocModal()">
+  <div *ngIf="showDocModal()" class="modal-overlay" (click)="closeDocModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h3 class="modal-title">Submit Documents</h3>
@@ -296,31 +456,31 @@
       <form class="kyc-form" (ngSubmit)="onSubmitKyc()">
         <div class="form-group">
           <label class="form-label">Aadhar ID</label>
-          <input type="text" class="form-input" [(ngModel)]="kycForm.aadharId" name="aadharId" placeholder="Enter your 12-digit Aadhar number" maxlength="12" (input)="onAadharIdChange()" required>
-          <div *ngIf="aadharError" class="field-error">{{ aadharError }}</div>
+          <input type="text" class="form-input" [ngModel]="kycForm().aadharId" (ngModelChange)="updateKycAadharId($event)" name="aadharId" placeholder="Enter your 12-digit Aadhar number" maxlength="12" (input)="onAadharIdChange()" required>
+          <div *ngIf="aadharError()" class="field-error">{{ aadharError() }}</div>
         </div>
         <div class="form-group">
           <label class="form-label">PAN ID</label>
-          <input type="text" class="form-input" [(ngModel)]="kycForm.panId" name="panId" placeholder="Enter your PAN number (e.g., ABCDE1234F)" maxlength="10" (input)="onPanIdChange()" required>
-          <div *ngIf="panError" class="field-error">{{ panError }}</div>
+          <input type="text" class="form-input" [ngModel]="kycForm().panId" (ngModelChange)="updateKycPanId($event)" name="panId" placeholder="Enter your PAN number (e.g., ABCDE1234F)" maxlength="10" (input)="onPanIdChange()" required>
+          <div *ngIf="panError()" class="field-error">{{ panError() }}</div>
         </div>
         <div class="form-group">
           <label class="form-label">Upload Documents (PDF)</label>
           <input type="file" class="form-file" (change)="onFileSelect($event)" accept=".pdf" required>
           <div class="file-help-text">Upload a single PDF containing both Aadhar and PAN card images</div>
-          <div *ngIf="fileInfo" class="file-info">{{ fileInfo }}</div>
-          <div *ngIf="fileError" class="file-error">{{ fileError }}</div>
+          <div *ngIf="fileInfo()" class="file-info">{{ fileInfo() }}</div>
+          <div *ngIf="fileError()" class="file-error">{{ fileError() }}</div>
         </div>
-        <button type="submit" class="submit-btn" [disabled]="submittingKyc">
-          <span *ngIf="submittingKyc">Submitting...</span>
-          <span *ngIf="!submittingKyc">Submit Documents</span>
+        <button type="submit" class="submit-btn" [disabled]="submittingKyc()">
+          <span *ngIf="submittingKyc()">Submitting...</span>
+          <span *ngIf="!submittingKyc()">Submit Documents</span>
         </button>
       </form>
     </div>
   </div>
 
   <!-- Edit Profile Modal -->
-  <div *ngIf="showEditModal" class="modal-overlay" (click)="closeEditModal()">
+  <div *ngIf="showEditModal()" class="modal-overlay" (click)="closeEditModal()">
     <div class="edit-modal-content" (click)="$event.stopPropagation()">
       <div class="edit-modal-header">
         <h3 class="edit-modal-title">Edit Profile</h3>
@@ -334,8 +494,8 @@
       <div class="edit-modal-body">
         <form class="edit-form" (ngSubmit)="saveProfile()">
           <!-- Alert Messages -->
-          <div *ngIf="editErrorMessage" class="alert-error">{{ editErrorMessage }}</div>
-          <div *ngIf="editSuccessMessage" class="alert-success">{{ editSuccessMessage }}</div>
+          <div *ngIf="editErrorMessage()" class="alert-error">{{ editErrorMessage() }}</div>
+          <div *ngIf="editSuccessMessage()" class="alert-success">{{ editSuccessMessage() }}</div>
 
           <!-- Personal Information Section -->
           <div class="form-row">
@@ -343,13 +503,13 @@
               <label class="form-label-enhanced">
                 <span>👤</span> Full Name
               </label>
-              <input type="text" class="form-input-enhanced" [(ngModel)]="editForm.name" name="name" placeholder="Enter your full name" required>
+              <input type="text" class="form-input-enhanced" [ngModel]="editForm().name" (ngModelChange)="updateEditFormName($event)" name="name" placeholder="Enter your full name" required>
             </div>
             <div class="form-group-enhanced">
               <label class="form-label-enhanced">
                 <span>📧</span> Email Address
               </label>
-              <input type="email" class="form-input-enhanced" [(ngModel)]="editForm.email" name="email" placeholder="Enter your email" required>
+              <input type="email" class="form-input-enhanced" [ngModel]="editForm().email" (ngModelChange)="updateEditFormEmail($event)" name="email" placeholder="Enter your email" required>
               <div class="form-help-text">Changing email requires verification</div>
             </div>
           </div>
@@ -359,13 +519,13 @@
               <label class="form-label-enhanced">
                 <span>📱</span> Mobile Number
               </label>
-              <input type="tel" class="form-input-enhanced" [(ngModel)]="editForm.phone" name="phone" placeholder="Enter mobile number">
+              <input type="tel" class="form-input-enhanced" [ngModel]="editForm().phone" (ngModelChange)="updateEditFormPhone($event)" name="phone" placeholder="Enter mobile number">
             </div>
             <div class="form-group-enhanced">
               <label class="form-label-enhanced">
                 <span>🎂</span> Date of Birth
               </label>
-              <input type="date" class="form-input-enhanced" [(ngModel)]="editForm.dateofbirth" name="dateofbirth">
+              <input type="date" class="form-input-enhanced" [ngModel]="editForm().dateofbirth" (ngModelChange)="updateEditFormDateOfBirth($event)" name="dateofbirth">
             </div>
           </div>
 
@@ -375,13 +535,13 @@
               <label class="form-label-enhanced">
                 <span>📍</span> Location
               </label>
-              <input type="text" class="form-input-enhanced" [(ngModel)]="editForm.location" name="location" placeholder="City, State">
+              <input type="text" class="form-input-enhanced" [ngModel]="editForm().location" (ngModelChange)="updateEditFormLocation($event)" name="location" placeholder="City, State">
             </div>
             <div class="form-group-enhanced">
               <label class="form-label-enhanced">
                 <span>📮</span> Pincode
               </label>
-              <input type="text" class="form-input-enhanced" [(ngModel)]="editForm.pincode" name="pincode" placeholder="Enter pincode" maxlength="6">
+              <input type="text" class="form-input-enhanced" [ngModel]="editForm().pincode" (ngModelChange)="updateEditFormPincode($event)" name="pincode" placeholder="Enter pincode" maxlength="6">
             </div>
           </div>
 
@@ -389,7 +549,7 @@
             <label class="form-label-enhanced">
               <span>🏠</span> Address
             </label>
-            <textarea class="form-input-enhanced" [(ngModel)]="editForm.address" name="address" placeholder="Enter your full address" rows="2" style="resize: vertical; min-height: 3rem;"></textarea>
+            <textarea class="form-input-enhanced" [ngModel]="editForm().address" (ngModelChange)="updateEditFormAddress($event)" name="address" placeholder="Enter your full address" rows="2" style="resize: vertical; min-height: 3rem;"></textarea>
           </div>
 
           <!-- Add some bottom spacing -->
@@ -401,16 +561,16 @@
         <button type="button" class="btn-secondary-enhanced" (click)="openChangePasswordModal()">
           <span>🔐</span> Change Password
         </button>
-        <button type="submit" class="btn-primary-enhanced" (click)="saveProfile()" [disabled]="editSubmitting">
-          <span *ngIf="editSubmitting">💾 Saving...</span>
-          <span *ngIf="!editSubmitting">💾 Save Changes</span>
+        <button type="submit" class="btn-primary-enhanced" (click)="saveProfile()" [disabled]="editSubmitting()">
+          <span *ngIf="editSubmitting()">💾 Saving...</span>
+          <span *ngIf="!editSubmitting()">💾 Save Changes</span>
         </button>
       </div>
     </div>
   </div>
 
   <!-- Verify Email Modal -->
-  <div *ngIf="showVerifyEmailModal" class="modal-overlay" (click)="closeVerifyEmailModal()">
+  <div *ngIf="showVerifyEmailModal()" class="modal-overlay" (click)="closeVerifyEmailModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h3 class="modal-title">Verify New Email</h3>
@@ -421,29 +581,29 @@
         </button>
       </div>
       <form class="kyc-form" (ngSubmit)="verifyNewEmail()">
-        <div *ngIf="verifyErrorMessage" class="field-error">{{ verifyErrorMessage }}</div>
-        <div *ngIf="verifySuccessMessage" class="file-info" style="color:#10b981">{{ verifySuccessMessage }}</div>
+        <div *ngIf="verifyErrorMessage()" class="field-error">{{ verifyErrorMessage() }}</div>
+        <div *ngIf="verifySuccessMessage()" class="file-info" style="color:#10b981">{{ verifySuccessMessage() }}</div>
         <div class="form-group">
           <label class="form-label">Email</label>
-          <input type="email" class="form-input" [(ngModel)]="verifyForm.email" name="verifyEmail" required>
+          <input type="email" class="form-input" [ngModel]="verifyForm().email" (ngModelChange)="updateVerifyFormEmail($event)" name="verifyEmail" required>
         </div>
         <div class="form-group">
           <label class="form-label">Verification Code</label>
-          <input type="text" class="form-input" [(ngModel)]="verifyForm.code" name="verifyCode" maxlength="6" required>
+          <input type="text" class="form-input" [ngModel]="verifyForm().code" (ngModelChange)="updateVerifyFormCode($event)" name="verifyCode" maxlength="6" required>
         </div>
         <div style="display:flex; gap:0.5rem">
-          <button type="submit" class="submit-btn" [disabled]="verifySubmitting">
-            <span *ngIf="verifySubmitting">Verifying...</span>
-            <span *ngIf="!verifySubmitting">Verify</span>
+          <button type="submit" class="submit-btn" [disabled]="verifySubmitting()">
+            <span *ngIf="verifySubmitting()">Verifying...</span>
+            <span *ngIf="!verifySubmitting()">Verify</span>
           </button>
-          <button type="button" class="submit-btn" style="background:#374151" (click)="resendVerifyCode()" [disabled]="verifySubmitting">Resend Code</button>
+          <button type="button" class="submit-btn" style="background:#374151" (click)="resendVerifyCode()" [disabled]="verifySubmitting()">Resend Code</button>
         </div>
       </form>
     </div>
   </div>
 
   <!-- Change Password Modal -->
-  <div *ngIf="showChangePasswordModal" class="modal-overlay" (click)="closeChangePasswordModal()">
+  <div *ngIf="showChangePasswordModal()" class="modal-overlay" (click)="closeChangePasswordModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h3 class="modal-title">Change Password</h3>
@@ -454,22 +614,22 @@
         </button>
       </div>
       <form class="kyc-form" (ngSubmit)="submitNewPassword()">
-        <div *ngIf="passwordErrorMessage" class="field-error">{{ passwordErrorMessage }}</div>
-        <div *ngIf="passwordSuccessMessage" class="file-info" style="color:#10b981">{{ passwordSuccessMessage }}</div>
+        <div *ngIf="passwordErrorMessage()" class="field-error">{{ passwordErrorMessage() }}</div>
+        <div *ngIf="passwordSuccessMessage()" class="file-info" style="color:#10b981">{{ passwordSuccessMessage() }}</div>
         <div class="form-group">
           <label class="form-label">Email</label>
-          <input type="email" class="form-input" [ngModel]="user.email" name="resetEmail" disabled>
+          <input type="email" class="form-input" [ngModel]="user().email" name="resetEmail" disabled>
         </div>
         <div class="form-group" style="display:flex; gap:0.5rem; align-items:center">
           <div style="flex:1">
             <label class="form-label">Reset Code</label>
-            <input type="text" class="form-input" [(ngModel)]="resetForm.code" name="resetCode" maxlength="6" required>
+            <input type="text" class="form-input" [ngModel]="resetForm().code" (ngModelChange)="updateResetFormCode($event)" name="resetCode" maxlength="6" required>
           </div>
-          <button type="button" class="submit-btn" style="margin-top:1.6rem" (click)="requestPasswordCode()" [disabled]="passwordRequesting">{{ passwordRequesting ? 'Sending...' : 'Send Code' }}</button>
+          <button type="button" class="submit-btn" style="margin-top:1.6rem" (click)="requestPasswordCode()" [disabled]="passwordRequesting()">{{ passwordRequesting() ? 'Sending...' : 'Send Code' }}</button>
         </div>
         <div class="form-group">
           <label class="form-label">New Password</label>
-          <input type="password" class="form-input" [(ngModel)]="resetForm.newPassword" name="newPassword" minlength="6" required>
+          <input type="password" class="form-input" [ngModel]="resetForm().newPassword" (ngModelChange)="updateResetFormPassword($event)" name="newPassword" minlength="6" required>
         </div>
         <button type="submit" class="submit-btn" [disabled]="passwordSubmitting">
           <span *ngIf="passwordSubmitting">Changing...</span>

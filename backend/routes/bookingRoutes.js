@@ -18,4 +18,11 @@ router.put('/:id/status', authMiddleware(['admin', 'superadmin']), bookingContro
 // Delete booking (User: own bookings, Admin/SuperAdmin: all bookings)
 router.delete('/:id', authMiddleware(['user', 'admin', 'superadmin']), bookingController.deleteBooking);
 
+// Public routes for availability checking
+// Get all bookings for a specific car (Public API)
+router.get('/car/:carId', bookingController.getCarBookings);
+
+// Check booking availability for a specific car and date range (Public API)
+router.post('/check-availability', bookingController.checkBookingAvailability);
+
 module.exports = router;

@@ -76,7 +76,9 @@
 .kyc-card,
 .tickets-card,
 .tokens-card,
-.calendar-card {
+.booknow-tokens-card,
+.calendar-card,
+.amc-card {
   background-color: #2d3748;
   border-radius: 0.75rem;
   padding: 1.5rem;
@@ -101,12 +103,39 @@
   border-radius: 50%;
   overflow: hidden;
   margin-bottom: 1rem;
+  position: relative;
 }
 
 .profile-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.upload-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #3b82f6;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .change-photo-btn {
@@ -116,6 +145,17 @@
   border: none;
   cursor: pointer;
   text-decoration: underline;
+  transition: all 0.3s ease;
+}
+
+.change-photo-btn:hover:not(:disabled) {
+  color: #2563eb;
+}
+
+.change-photo-btn:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+  text-decoration: none;
 }
 
 .profile-details {
@@ -242,14 +282,16 @@
 
 /* Tickets and Tokens Grid */
 .tickets-grid,
-.tokens-grid {
+.tokens-grid,
+.booknow-tokens-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
 .ticket-item,
-.token-item {
+.token-item,
+.booknow-token-item {
   border: 1px solid #4a5568;
   border-radius: 0.5rem;
   padding: 1rem;
@@ -301,6 +343,11 @@
 .token-status.expired {
   color: #9ca3af;
   background-color: rgba(107, 114, 128, 0.2);
+}
+
+.ticket-status.dropped {
+  color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.2);
 }
 
 .ticket-id,
@@ -980,7 +1027,29 @@ textarea.form-input-enhanced:hover {
   }
 
   .tickets-grid,
-  .tokens-grid {
+  .tokens-grid,
+  .booknow-tokens-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* AMC responsive styles */
+  .amc-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .amc-amount-info {
+    align-items: flex-start;
+    min-width: auto;
+    width: 100%;
+  }
+
+  .amc-car-info {
+    width: 100%;
+  }
+
+  .amc-record-details {
     grid-template-columns: 1fr;
   }
 
@@ -1092,13 +1161,299 @@ textarea.form-input-enhanced:hover {
 .kyc-card,
 .tickets-card,
 .tokens-card,
-.calendar-card {
+.booknow-tokens-card,
+.calendar-card,
+.amc-card {
   animation: fadeIn 0.5s ease-out;
 }
 
 .ticket-item,
-.token-item {
+.token-item,
+.booknow-token-item {
   animation: fadeIn 0.5s ease-out;
+}
+
+/* AMC Card Styles */
+.amc-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.amc-card-item {
+  border: 1px solid #4a5568;
+  border-radius: 0.75rem;
+  background-color: #374151;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.amc-card-item:hover {
+  border-color: #6b7280;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.amc-card-item.expanded {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.amc-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  gap: 1rem;
+}
+
+.amc-car-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.amc-car-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.amc-car-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.amc-car-details {
+  flex: 1;
+}
+
+.amc-car-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 0.25rem 0;
+}
+
+.amc-car-brand {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin: 0 0 0.25rem 0;
+}
+
+.amc-ticket-info {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.amc-amount-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  min-width: 200px;
+}
+
+.amc-total-amount,
+.amc-paid-amount,
+.amc-pending-amount {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+.amount-label {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.amount-value {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.amount-value.paid {
+  color: #10b981;
+}
+
+.amount-value.pending {
+  color: #f59e0b;
+}
+
+.amc-expand-icon {
+  margin-top: 0.5rem;
+  transition: transform 0.3s ease;
+}
+
+.amc-expand-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #9ca3af;
+}
+
+.amc-expand-icon.rotated svg,
+.amc-card-item.expanded .amc-expand-icon svg {
+  transform: rotate(180deg);
+}
+
+/* AMC Details (Expandable) */
+.amc-details {
+  border-top: 1px solid #4a5568;
+  background-color: #1f2937;
+  padding: 1rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+.amc-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #374151;
+}
+
+.amc-details-header h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.amc-next-due {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.next-due-label {
+  color: #9ca3af;
+}
+
+.next-due-amount {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.next-due-date {
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+/* AMC Records */
+.amc-records {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.amc-record {
+  border: 1px solid #374151;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  background-color: #111827;
+  transition: all 0.2s ease;
+}
+
+.amc-record.paid {
+  border-color: #10b981;
+  background-color: rgba(16, 185, 129, 0.05);
+}
+
+.amc-record.overdue {
+  border-color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.amc-record-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.amc-year {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.year-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.amount {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.amc-status {
+  display: flex;
+  align-items: center;
+}
+
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.paid {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.status-badge.pending {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.amc-record-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.detail-label {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.detail-value {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.detail-value.penalty {
+  color: #ef4444;
+}
+
+/* Animations */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+    transform: translateY(0);
+  }
 }
 
 .modal-content {

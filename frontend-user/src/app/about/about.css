@@ -1,0 +1,46 @@
+/* About page specific styles */
+.about-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.about-card {
+  background: rgba(16, 26, 35, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(49, 77, 104, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .about-hero h1 {
+    font-size: 2.5rem;
+    line-height: 1.2;
+  }
+  
+  .about-hero p {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .about-card {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-hero h1 {
+    font-size: 2rem;
+  }
+  
+  .about-hero p {
+    font-size: 0.9rem;
+  }
+  
+  .about-card {
+    padding: 1rem;
+  }
+}

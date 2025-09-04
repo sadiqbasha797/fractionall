@@ -1,0 +1,224 @@
+<div class="contact-forms-container">
+  <!-- Header -->
+  <div class="header">
+    <h1>Contact Forms</h1>
+    <div class="stats-grid" *ngIf="stats">
+      <div class="stat-card">
+        <div class="stat-number">{{ stats.total }}</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{ stats.byStatus.new }}</div>
+        <div class="stat-label">New</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{ stats.byStatus.replied }}</div>
+        <div class="stat-label">Replied</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{ stats.recent }}</div>
+        <div class="stat-label">Last 7 Days</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filter-group">
+      <label for="statusFilter">Status:</label>
+      <select id="statusFilter" [(ngModel)]="statusFilter" (change)="onFilterChange()">
+        <option value="">All</option>
+        <option value="new">New</option>
+        <option value="read">Read</option>
+        <option value="replied">Replied</option>
+        <option value="closed">Closed</option>
+      </select>
+    </div>
+    
+    <div class="filter-group">
+      <label for="priorityFilter">Priority:</label>
+      <select id="priorityFilter" [(ngModel)]="priorityFilter" (change)="onFilterChange()">
+        <option value="">All</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+    
+    <div class="filter-group">
+      <label for="searchQuery">Search:</label>
+      <input 
+        type="text" 
+        id="searchQuery" 
+        [(ngModel)]="searchQuery" 
+        placeholder="Search by name, email, or subject..."
+        (keyup.enter)="onSearch()"
+      />
+      <button (click)="onSearch()">Search</button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    Loading contact forms...
+  </div>
+
+  <!-- Contact Forms Table -->
+  <div *ngIf="!loading" class="table-container">
+    <table class="contact-forms-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Subject</th>
+          <th>Status</th>
+          <th>Priority</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let form of contactForms" class="contact-form-row">
+          <td>{{ form.name }}</td>
+          <td>{{ form.email }}</td>
+          <td class="subject-cell">{{ form.subject }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(form.status)">
+              {{ form.status | titlecase }}
+            </span>
+          </td>
+          <td>
+            <span class="priority-badge" [ngClass]="getPriorityClass(form.priority)">
+              {{ form.priority | titlecase }}
+            </span>
+          </td>
+          <td>{{ formatDate(form.createdAt) }}</td>
+          <td class="actions">
+            <button class="btn btn-primary" (click)="viewDetails(form)">
+              View
+            </button>
+            <button class="btn btn-danger" (click)="deleteContactForm(form)">
+              Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button 
+        [disabled]="currentPage === 1" 
+        (click)="onPageChange(currentPage - 1)"
+        class="btn btn-secondary"
+      >
+        Previous
+      </button>
+      
+      <span class="page-info">
+        Page {{ currentPage }} of {{ totalPages }}
+      </span>
+      
+      <button 
+        [disabled]="currentPage === totalPages" 
+        (click)="onPageChange(currentPage + 1)"
+        class="btn btn-secondary"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+
+  <!-- Details Modal -->
+  <div *ngIf="showDetailsModal && selectedContactForm" class="modal-overlay" (click)="closeDetailsModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Contact Form Details</h2>
+        <button class="close-btn" (click)="closeDetailsModal()">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="form-details">
+          <div class="detail-row">
+            <label>Name:</label>
+            <span>{{ selectedContactForm.name }}</span>
+          </div>
+          <div class="detail-row">
+            <label>Email:</label>
+            <span>{{ selectedContactForm.email }}</span>
+          </div>
+          <div class="detail-row">
+            <label>Subject:</label>
+            <span>{{ selectedContactForm.subject }}</span>
+          </div>
+          <div class="detail-row">
+            <label>Message:</label>
+            <div class="message-content">{{ selectedContactForm.message }}</div>
+          </div>
+          <div class="detail-row">
+            <label>Submitted:</label>
+            <span>{{ formatDate(selectedContactForm.createdAt) }}</span>
+          </div>
+        </div>
+
+        <!-- Admin Notes -->
+        <div class="admin-notes" *ngIf="selectedContactForm.adminNotes.length > 0">
+          <h3>Admin Notes</h3>
+          <div *ngFor="let note of selectedContactForm.adminNotes" class="note-item">
+            <div class="note-content">{{ note.note }}</div>
+            <div class="note-meta">
+              Added by {{ note.addedBy.name }} ({{ note.addedBy.role }}) on {{ formatDate(note.addedAt) }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Update Form -->
+        <div class="update-form">
+          <h3>Update Status</h3>
+          <div class="form-group">
+            <label for="updateStatus">Status:</label>
+            <select id="updateStatus" [(ngModel)]="updateStatus">
+              <option value="new">New</option>
+              <option value="read">Read</option>
+              <option value="replied">Replied</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="updatePriority">Priority:</label>
+            <select id="updatePriority" [(ngModel)]="updatePriority">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="adminNote">Add Note:</label>
+            <textarea 
+              id="adminNote" 
+              [(ngModel)]="adminNote" 
+              placeholder="Add a note about this contact form..."
+              rows="3"
+            ></textarea>
+          </div>
+          
+          <div class="form-actions">
+            <button class="btn btn-primary" (click)="updateContactForm()">
+              Update
+            </button>
+            <button class="btn btn-secondary" (click)="closeDetailsModal()">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
