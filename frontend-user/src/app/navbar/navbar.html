@@ -1,41 +1,53 @@
 <header class="fixed left-0 right-0 top-0 z-50 w-full backdrop-blur-md bg-[#101a23]/80 border-b border-solid border-gray-700/50">
           <div class="w-[98%] max-w-[1800px] mx-auto">
             <div class="flex items-center justify-between h-20">
-              <div class="flex items-center gap-4">
-                <a routerLink="/"><img src="/car.png" alt="car logo" class="h-12 sm:h-16 hover:scale-105 transition-transform duration-300" /></a>
+              <div class="flex items-center gap-4 ml-4">
+                <a routerLink="/home"><img src="/car.png" alt="car logo" class="h-14 sm:h-20 hover:scale-105 transition-transform duration-300" /></a>
               </div>
               <nav class="hidden lg:flex items-center gap-8">
-                <a class="relative text-sm font-medium text-white btn-outline-white rounded-md px-3 py-2" routerLink="/" routerLinkActive="active">
+                <a class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2" routerLink="/home" routerLinkActive="nav-link-active" [routerLinkActiveOptions]="{exact: true}">
                   Home
                   <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary-color transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
                 </a>
                 
-                <a class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2" routerLink="/cars" routerLinkActive="text-white">
+                <a class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2" routerLink="/cars" routerLinkActive="nav-link-active">
                   Cars
                   <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary-color transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
                 </a>
 
-                <a class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2" routerLink="/about" routerLinkActive="text-white">
+                <a class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2" routerLink="/about" routerLinkActive="nav-link-active">
                   About
                   <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary-color transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
                 </a>
 
-                <a class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2" routerLink="/contact-us" routerLinkActive="text-white">
+                <a class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2" routerLink="/contact-us" routerLinkActive="nav-link-active">
                   Contact
                   <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary-color transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
                 </a>
 
-                <button 
-                  (click)="navigateToInvestor()"
-                  class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2"
-                >
-                  Become an Investor
+                <a *ngIf="isLoggedIn" class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2" routerLink="/bookings" routerLinkActive="nav-link-active">
+                  Bookings
                   <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary-color transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
-                </button>
+                </a>
+
               </nav>
 
               <!-- Desktop Right Side - Login/Profile -->
               <div class="hidden lg:flex items-center gap-4">
+                <!-- Become an Investor Button - Always visible -->
+                <button 
+                  (click)="navigateToInvestor()"
+                  class="flex items-center gap-1 px-3 py-1.5 border border-white text-white font-medium rounded-lg transition-all duration-300 hover:border-blue-500 hover:text-blue-500"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  Become an Investor
+                </button>
+
+                <!-- Notification Bell - Only for logged in users -->
+                <app-notification-bell *ngIf="isLoggedIn"></app-notification-bell>
+
                 <!-- Not Logged In - Show Login Button -->
                 <div *ngIf="!isLoggedIn" class="flex items-center gap-4">
                   <button 
@@ -122,7 +134,22 @@
                   </div>
                 </div>
               </div>
-              <div class="lg:hidden">
+              <div class="lg:hidden flex items-center gap-2">
+                <!-- Become an Investor Button for Mobile -->
+                <button 
+                  (click)="navigateToInvestor()"
+                  class="flex items-center gap-1 px-2 py-1.5 border border-white text-white font-medium rounded-lg transition-all duration-300 hover:border-blue-500 hover:text-blue-500 text-sm"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  Investor
+                </button>
+
+                <!-- Notification Bell for Mobile - Only for logged in users -->
+                <app-notification-bell *ngIf="isLoggedIn"></app-notification-bell>
+                
+                <!-- Mobile Menu Toggle -->
                 <button (click)="toggleMenu()" class="p-2 rounded-lg text-text-secondary hover:text-white hover:bg-gray-700/50 transition-all duration-300">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
@@ -143,14 +170,14 @@
               </svg>
             </button>
             <nav class="px-4 pt-20 pb-4 space-y-2">
-              <a class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/" (click)="closeMenu()">Home</a>
-              <a class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/cars" (click)="closeMenu()">Cars</a>
-              <a class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/about" (click)="closeMenu()">About</a>
-              <a class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/contact-us" (click)="closeMenu()">Contact</a>
-              <button class="block w-full text-left px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" (click)="navigateToInvestor()">Become an Investor</button>
+              <a class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/home" routerLinkActive="nav-link-active-mobile" [routerLinkActiveOptions]="{exact: true}" (click)="closeMenu()">Home</a>
+              <a class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/cars" routerLinkActive="nav-link-active-mobile" (click)="closeMenu()">Cars</a>
+              <a class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/about" routerLinkActive="nav-link-active-mobile" (click)="closeMenu()">About</a>
+              <a class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/contact-us" routerLinkActive="nav-link-active-mobile" (click)="closeMenu()">Contact</a>
+              <a *ngIf="isLoggedIn" class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/bookings" routerLinkActive="nav-link-active-mobile" (click)="closeMenu()">Bookings</a>
               
               <!-- Profile link for logged-in users -->
-              <a *ngIf="isLoggedIn" class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/profile" (click)="closeMenu()">Profile</a>
+              <a *ngIf="isLoggedIn" class="block px-4 py-3 rounded-lg text-base font-medium text-text-secondary hover:text-white hover:bg-primary-color/10 transition-all duration-300" routerLink="/profile" routerLinkActive="nav-link-active-mobile" (click)="closeMenu()">Profile</a>
             </nav>
             
             <!-- Mobile Bottom Section -->

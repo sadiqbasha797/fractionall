@@ -1,16 +1,25 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection, ErrorHandler } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withFetch } from '@angular/common/http';
 
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+
+// Custom error handler
+class CustomErrorHandler implements ErrorHandler {
+  handleError(error: any): void {
+    console.error('Global error caught:', error);
+    // You can add additional error handling logic here
+  }
+}
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
-  provideRouter(routes),
-  provideHttpClient(),
-  provideClientHydration(withEventReplay())
+    provideRouter(routes),
+    provideHttpClient(withFetch()),
+    provideClientHydration(withEventReplay()),
+    { provide: ErrorHandler, useClass: CustomErrorHandler }
   ]
 };

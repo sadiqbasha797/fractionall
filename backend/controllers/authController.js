@@ -5,6 +5,7 @@ const Admin = require('../models/Admin');
 const SuperAdmin = require('../models/SuperAdmin');
 const logger = require('../utils/logger');
 const { sendVerificationEmail, sendPasswordResetEmailWithCode } = require('../utils/emailService');
+const NotificationService = require('../utils/notificationService');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
@@ -502,6 +503,13 @@ const verifyEmail = async (req, res) => {
     user.logintoken = undefined;
     user.tokensExpiry = undefined;
     await user.save();
+
+    // Create welcome notification
+    try {
+      await NotificationService.createWelcomeNotification(user._id, user.name);
+    } catch (notificationError) {
+      logger(`Error creating welcome notification: ${notificationError.message}`);
+    }
 
     // Generate JWT token
     const token = jwt.sign(

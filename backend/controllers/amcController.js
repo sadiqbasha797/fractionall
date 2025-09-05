@@ -1,5 +1,12 @@
 const AMC = require('../models/amc');
+const User = require('../models/User');
+const Car = require('../models/Car');
 const logger = require('../utils/logger');
+const { 
+  sendAMCPaymentConfirmationEmail, 
+  sendSuperAdminAMCPaymentNotification 
+} = require('../utils/emailService');
+const NotificationService = require('../utils/notificationService');
 
 // Create a new AMC
 const createAMC = async (req, res) => {
@@ -14,6 +21,31 @@ const createAMC = async (req, res) => {
     });
 
     await amc.save();
+
+    // Send emails and create notifications after successful AMC creation
+    try {
+      // Get user and car details for email
+      const user = await User.findById(userid);
+      const car = await Car.findById(carid);
+      
+      if (user && car) {
+        // Send confirmation email to user
+        await sendAMCPaymentConfirmationEmail(user, amc, car);
+        
+        // Send notification email to superadmin
+        await sendSuperAdminAMCPaymentNotification(user, amc, car);
+        
+        // Create notifications
+        await NotificationService.createAMCPaymentNotification(user._id, amc, car);
+        await NotificationService.createUserPaidAMCNotification(user, amc, car);
+        
+        logger(`Emails and notifications sent successfully for AMC creation: ${amc._id}`);
+      }
+    } catch (emailError) {
+      // Log email error but don't fail the AMC creation
+      logger(`Error sending emails/notifications for AMC creation: ${emailError.message}`);
+    }
+
     res.status(201).json({
       status: 'success',
       body: { amc },
@@ -200,6 +232,32 @@ const updateAMCPaymentStatus = async (req, res) => {
       await amc.save();
       
       const updatedAMC = await AMC.findById(req.params.id).populate('userid carid ticketid');
+      
+      // Send emails and create notifications if payment is marked as paid
+      if (paid) {
+        try {
+          const user = updatedAMC.userid;
+          const car = updatedAMC.carid;
+          
+          if (user && car) {
+            // Send confirmation email to user
+            await sendAMCPaymentConfirmationEmail(user, updatedAMC, car);
+            
+            // Send notification email to superadmin
+            await sendSuperAdminAMCPaymentNotification(user, updatedAMC, car);
+            
+            // Create notifications
+            await NotificationService.createAMCPaymentNotification(user._id, updatedAMC, car);
+            await NotificationService.createUserPaidAMCNotification(user, updatedAMC, car);
+            
+            logger(`Emails and notifications sent successfully for AMC payment: ${updatedAMC._id}`);
+          }
+        } catch (emailError) {
+          // Log email error but don't fail the payment update
+          logger(`Error sending emails/notifications for AMC payment: ${emailError.message}`);
+        }
+      }
+      
       res.json({
         status: 'success',
         body: { amc: updatedAMC },

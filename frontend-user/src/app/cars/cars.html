@@ -1,12 +1,35 @@
 <div class="flex flex-col min-h-screen">
   <div class="flex-grow">
-      <div class="px-4 sm:px-6 lg:px-8 flex flex-1 justify-center py-5">
+      <div class="px-4 sm:px-6 lg:px-8 flex flex-1 justify-center py-2">
         <div class="layout-content-container flex flex-col w-[98%] max-w-[1800px] flex-1 mx-auto">
           <div class="@container">
-            <div class="@[480px]:p-4">
-              <div data-aos="fade-up"
-                class="flex min-h-[480px] flex-col gap-6 bg-cover bg-center bg-no-repeat @[480px]:gap-8 @[480px]:rounded-lg items-start justify-end px-4 pb-10 @[480px]:px-10"
+            <div class="@[480px]:p-2">
+              <!-- Location Search Bar (top right, outside image) -->
+              <div class="flex justify-end mb-4">
+                <div class="w-auto">
+                  <div class="flex items-center gap-2">
+                    <input 
+                      [ngModel]="locationSearchQuery()"
+                      (ngModelChange)="locationSearchQuery.set($event)"
+                      (keypress)="onLocationSearchKeyPress($event)"
+                      placeholder="Select location or pincode"
+                      class="form-input location-search-input w-64 h-10 px-4 text-white focus:outline-0 focus:ring-0 border border-[#344b65] bg-[#1a2532] focus:border-[#344b65] placeholder:text-[#93acc8] text-sm font-normal leading-normal rounded-full" />
+                    <button
+                        (click)="onLocationSearchSubmit()"
+                        class="flex items-center justify-center location-search-button w-10 h-10 rounded-full border border-[#344b65] bg-[#1a2532] hover:bg-[#344b65] transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" fill="currentColor" viewBox="0 0 256 256" class="text-[#93acc8]">
+                          <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
+                        </svg>
+                      </button>
+                  </div>
+                </div>
+              </div>
+
+              <div data-animation="fade-up"
+                class="relative flex min-h-[480px] flex-col gap-6 bg-cover bg-center bg-no-repeat @[480px]:gap-8 @[480px]:rounded-lg items-start justify-end px-4 pb-10 @[480px]:px-10"
                 style='background-image: linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url("carspage.jpg");'>
+                
+                <!-- Hero Content -->
                 <div class="flex flex-col gap-2 text-left">
                   <h1
                     class="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em]">
@@ -16,34 +39,40 @@
                     class="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal">
                     Contract for certain years</h2>
                 </div>
-                <label class="flex flex-col min-w-40 h-14 w-full max-w-[480px] @[480px]:h-16">
-                  <div class="flex w-full flex-1 items-stretch rounded-lg h-full">
-                    <div
-                      class="text-[#93acc8] flex border border-[#344b65] bg-[#1a2532] items-center justify-center pl-[15px] rounded-l-lg border-r-0"
-                      data-icon="MagnifyingGlass" data-size="20px" data-weight="regular">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor"
-                        viewBox="0 0 256 256">
-                        <path
-                          d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z">
-                        </path>
-                      </svg>
-                    </div>
-                    <input 
-                      [ngModel]="searchQuery()"
-                      (ngModelChange)="searchQuery.set($event)"
-                      (keypress)="onSearchKeyPress($event)"
-                      placeholder="Enter location or pincode"
-                      class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-white focus:outline-0 focus:ring-0 border border-[#344b65] bg-[#1a2532] focus:border-[#344b65] h-full placeholder:text-[#93acc8] px-[15px] rounded-r-none border-r-0 pr-2 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal" />
-                    <div
-                      class="flex items-center justify-center rounded-r-lg border-l-0 border border-[#344b65] bg-[#1a2532] pr-[7px]">
-                      <button
-                          (click)="onSearchSubmit()"
-                          class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 @[480px]:h-12 @[480px]:px-5 btn-outline-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]">
-                          <span class="truncate">Search</span>
-                        </button>
-                    </div>
+                
+                <!-- Main Search Bar (below hero text) -->
+                <div class="px-0 @[480px]:px-0 -mt-4 @[480px]:-mt-6">
+                  <div class="max-w-3xl">
+                    <label class="flex flex-col min-w-40 h-12 w-full @[480px]:h-14">
+                      <div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+                        <div
+                          class="text-[#93acc8] flex border border-[#344b65] bg-[#1a2532] items-center justify-center pl-[15px] rounded-l-lg border-r-0"
+                          data-icon="MagnifyingGlass" data-size="20px" data-weight="regular">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor"
+                            viewBox="0 0 256 256">
+                            <path
+                              d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z">
+                            </path>
+                          </svg>
+                        </div>
+                        <input 
+                          [ngModel]="searchQuery()"
+                          (ngModelChange)="searchQuery.set($event)"
+                          (keypress)="onSearchKeyPress($event)"
+                          placeholder="Enter any feature"
+                          class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-white focus:outline-0 focus:ring-0 border border-[#344b65] bg-[#1a2532] focus:border-[#344b65] h-full placeholder:text-[#93acc8] px-[15px] rounded-r-none border-r-0 pr-2 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal" />
+                        <div
+                          class="flex items-center justify-center rounded-r-lg border-l-0 border border-[#344b65] bg-[#1a2532] pr-[7px]">
+                          <button
+                              (click)="onSearchSubmit()"
+                              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-3 @[480px]:h-10 @[480px]:px-4 btn-outline-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]">
+                              <span class="truncate">Search</span>
+                            </button>
+                        </div>
+                      </div>
+                    </label>
                   </div>
-                </label>
+                </div>
               </div>
             </div>
           </div>
@@ -51,32 +80,69 @@
             <h2 class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">Available Cars</h2>
             
             <!-- Search Results Display -->
-            <div *ngIf="isSearchActive() && searchQuery()" class="flex items-center justify-between bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
-              <div class="flex items-center gap-2">
-                <div class="text-blue-400 text-sm font-medium">
-                  {{ getSearchDisplayText() }}
+            <div *ngIf="(isSearchActive() && searchQuery()) || (isLocationSearchActive() && locationSearchQuery()) || (isBrandFilterActive() && brandFilter())" class="space-y-3">
+              <!-- Brand Filter Results -->
+              <div *ngIf="isBrandFilterActive() && brandFilter()" class="flex items-center justify-between bg-purple-900/20 border border-purple-500/30 rounded-lg p-3">
+                <div class="flex items-center gap-2">
+                  <div class="text-purple-400 text-sm font-medium">
+                    Filtering by brand: "{{ brandFilter() }}"
+                  </div>
+                  <div class="text-gray-400 text-sm">
+                    ({{ totalItems() }} {{ totalItems() === 1 ? 'car found' : 'cars found' }})
+                  </div>
                 </div>
-                <div class="text-gray-400 text-sm">
-                  ({{ totalItems() }} {{ totalItems() === 1 ? 'car found' : 'cars found' }})
-                </div>
+                <button 
+                  (click)="clearBrandFilter()"
+                  class="text-gray-400 hover:text-white text-sm font-medium underline">
+                  Clear Brand Filter
+                </button>
               </div>
-              <button 
-                (click)="clearSearch()"
-                class="text-gray-400 hover:text-white text-sm font-medium underline">
-                Clear Search
-              </button>
-            </div>
-            
-            <!-- No Results Message -->
-            <div *ngIf="isSearchActive() && searchQuery() && totalItems() === 0" class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-center">
-              <div class="text-red-400 text-sm font-medium mb-2">No cars found</div>
-              <div class="text-gray-400 text-sm">
-                No cars found for {{ searchType() === 'pincode' ? 'pincode' : 'location' }} "{{ searchQuery() }}". 
-                Try a different search term or <button (click)="clearSearch()" class="text-blue-400 hover:text-blue-300 underline">clear the search</button> to see all cars.
+              
+              <!-- Main Search Results -->
+              <div *ngIf="isSearchActive() && searchQuery()" class="flex items-center justify-between bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
+                <div class="flex items-center gap-2">
+                  <div class="text-blue-400 text-sm font-medium">
+                    Searching by car name/brand: "{{ searchQuery() }}"
+                  </div>
+                  <div class="text-gray-400 text-sm">
+                    ({{ totalItems() }} {{ totalItems() === 1 ? 'car found' : 'cars found' }})
+                  </div>
+                </div>
+                <button 
+                  (click)="clearSearch()"
+                  class="text-gray-400 hover:text-white text-sm font-medium underline">
+                  Clear Search
+                </button>
+              </div>
+              
+              <!-- Location Search Results -->
+              <div *ngIf="isLocationSearchActive() && locationSearchQuery()" class="flex items-center justify-between bg-green-900/20 border border-green-500/30 rounded-lg p-3">
+                <div class="flex items-center gap-2">
+                  <div class="text-green-400 text-sm font-medium">
+                    Searching by {{ locationSearchType() === 'pincode' ? 'pincode' : 'location' }}: "{{ locationSearchQuery() }}"
+                  </div>
+                  <div class="text-gray-400 text-sm">
+                    ({{ totalItems() }} {{ totalItems() === 1 ? 'car found' : 'cars found' }})
+                  </div>
+                </div>
+                <button 
+                  (click)="clearLocationSearch()"
+                  class="text-gray-400 hover:text-white text-sm font-medium underline">
+                  Clear Location Search
+                </button>
+              </div>
+              
+              <!-- No Results Message -->
+              <div *ngIf="totalItems() === 0" class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-center">
+                <div class="text-red-400 text-sm font-medium mb-2">No cars found</div>
+                <div class="text-gray-400 text-sm">
+                  No cars found matching your search criteria. 
+                  Try different search terms or <button (click)="clearAllSearches()" class="text-blue-400 hover:text-blue-300 underline">clear all searches</button> to see all cars.
+                </div>
               </div>
             </div>
           </div>
-          <div class="flex flex-wrap gap-3 p-3 pr-4 mb-16 relative z-10" data-aos="fade-right" data-aos-delay="100">
+          <div class="flex flex-wrap gap-3 p-3 pr-4 mb-16 relative z-10" data-animation="fade-right" data-delay="100">
             <!-- Sort Dropdown -->
             <div class="relative" style="overflow:visible;">
               <button id="sort-dropdown" class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg btn-outline-white pl-4 pr-2 transition-colors">
@@ -89,9 +155,8 @@
                 <div class="py-2">
                   <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">A-Z (Sort by Car Name)</a>
                   <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">Newest Arrivals</a>
-                  <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">Top Selling</a>
-                  <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">Ticket Price (Low-High)</a>
-                  <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">Ticket Price (High-Low)</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">Share Price (Low-High)</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">Share Price (High-Low)</a>
                 </div>
               </div>
             </div>
@@ -108,7 +173,6 @@
                   <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">All</a>
                   <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">Book Now</a>
                   <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">Join Waitlist</a>
-                  <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors">Relevance</a>
                 </div>
               </div>
             </div>
@@ -121,24 +185,43 @@
             </div>
           </div>
 
+          <!-- Fallback message for debugging -->
+          <div *ngIf="!isLoading() && allCars().length === 0" class="flex items-center justify-center py-12">
+            <div class="text-center">
+              <div class="text-gray-400 text-lg mb-2">No cars data available</div>
+              <div class="text-gray-500 text-sm">Please check the console for errors or try refreshing the page.</div>
+            </div>
+          </div>
+
           <!-- No Cars Message -->
           <div *ngIf="!isLoading() && cars().length === 0" class="flex items-center justify-center py-12">
             <div class="text-center">
               <div class="text-gray-400 text-lg mb-2">No cars available</div>
-              <div class="text-gray-500 text-sm">Please check back later or try adjusting your filters.</div>
+              <div class="text-gray-500 text-sm">
+                <span *ngIf="currentFilter() !== 'All'">No cars found for "{{ currentFilter() }}" filter. </span>
+                <span *ngIf="isBrandFilterActive() && brandFilter()">No cars found for "{{ brandFilter() }}" brand. </span>
+                <span *ngIf="isSearchActive() && searchQuery()">No cars found for "{{ searchQuery() }}" search. </span>
+                <span *ngIf="isLocationSearchActive() && locationSearchQuery()">No cars found for "{{ locationSearchQuery() }}" location. </span>
+                <span *ngIf="currentFilter() === 'All' && !isSearchActive() && !isLocationSearchActive() && !isBrandFilterActive()">Please check back later or try adjusting your filters.</span>
+                <button *ngIf="currentFilter() !== 'All' || isSearchActive() || isLocationSearchActive() || isBrandFilterActive()" 
+                        (click)="clearAllFilters()" 
+                        class="text-blue-400 hover:text-blue-300 underline ml-1">
+                  Clear filters
+                </button>
+              </div>
             </div>
           </div>
 
           <!-- Cars Grid -->
-          <div *ngIf="!isLoading() && cars().length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-0" id="car-grid">
-            <div *ngFor="let car of cars(); let i = index" class="car-card flex flex-col items-stretch justify-between gap-4 rounded-lg border border-gray-700 p-4 relative overflow-hidden"
+          <div *ngIf="!isLoading() && cars().length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-0" id="car-grid mb-4">
+            <div *ngFor="let car of cars(); let i = index" class="car-card flex flex-col items-stretch justify-between gap-4 rounded-lg border border-gray-700 p-4 relative overflow-hidden mb-4"
               [attr.data-brand]="car.brandname || car.brand" [attr.data-mileage]="car.milege || car.mileage" [attr.data-color]="car.color" [attr.data-seating]="car.seating"
-              data-aos="fade-up" [attr.data-aos-delay]="200 + (i * 200)">
+              data-animation="fade-up" [attr.data-delay]="200 + (i * 200)">
               <div class="absolute top-0 right-0 w-32 h-32 z-20">
                 <div *ngIf="car.tokensavailble === 0; else waitlist"
-                  class="absolute top-[20px] right-[-30px] bg-green-600 text-white text-xs font-bold py-1 w-[140px] text-center transform rotate-45 shadow-lg">Book Now</div>
+                  class="slanted-tag book-now">Book Now</div>
                 <ng-template #waitlist>
-                  <div class="absolute top-[20px] right-[-30px] bg-yellow-500 text-white text-xs font-bold py-1 w-[140px] text-center transform rotate-45 shadow-lg">Join Waitlist</div>
+                  <div class="slanted-tag join-waitlist">Join Waitlist</div>
                 </ng-template>
               </div>
               <div class="flex flex-col gap-2">
@@ -151,10 +234,40 @@
                     <div class="flex flex-col flex-1">
                       <div class="text-white font-bold text-lg">{{ car.carname || 'Unknown Model' }}</div>
                       <div class="text-gray-400 text-sm">{{ car.brandname || 'Unknown Brand' }}</div>
+                      <div class="flex items-center gap-2 mt-1">
+                        <div *ngIf="car.location" class="flex items-center gap-1 text-gray-500 text-xs">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12px" height="12px" fill="currentColor" viewBox="0 0 256 256" class="text-gray-500">
+                            <path d="M128,64a40,40,0,1,0,40,40A40,40,0,0,0,128,64Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,128Zm0-112a88,88,0,0,0-88,88c0,31.4,14.51,64.68,42,96.25a254.19,254.19,0,0,0,41.45,38.3,8,8,0,0,0,9.18,0A254.19,254.19,0,0,0,220,136.25c27.45-31.57,42-64.85,42-96.25A88,88,0,0,0,128,16Zm0,206c-16.53-13-72-60.75-72-118a72,72,0,0,1,144,0C200,161.23,144.53,209,128,222Z"></path>
+                          </svg>
+                          <span>{{ car.location }}</span>
+                        </div>
+                        <div *ngIf="car.pincode" class="text-gray-500 text-xs">
+                          {{ car.pincode }}
+                        </div>
+                      </div>
+                      <!-- Additional car details -->
+                      <div class="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                        <div *ngIf="car.seating" class="flex items-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12px" height="12px" fill="currentColor" viewBox="0 0 256 256">
+                            <path d="M120,80a8,8,0,0,1,8-8h0a8,8,0,0,1,8,8v8a8,8,0,0,1-8,8h0a8,8,0,0,1-8-8Zm-32,0a8,8,0,0,1,8-8h0a8,8,0,0,1,8,8v8a8,8,0,0,1-8,8h0a8,8,0,0,1-8-8Zm64,0a8,8,0,0,1,8-8h0a8,8,0,0,1,8,8v8a8,8,0,0,1-8,8h0a8,8,0,0,1-8-8ZM232,80v96a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V80a16,16,0,0,1,16-16H216A16,16,0,0,1,232,80ZM40,80v96H216V80H40Z"></path>
+                          </svg>
+                          <span>{{ car.seating }} seats</span>
+                        </div>
+                        <div *ngIf="car.fuel" class="flex items-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12px" height="12px" fill="currentColor" viewBox="0 0 256 256">
+                            <path d="M240,80v96a16,16,0,0,1-16,16H32a16,16,0,0,1-16-16V80a16,16,0,0,1,16-16H224A16,16,0,0,1,240,80ZM32,80v96H224V80H32Z"></path>
+                          </svg>
+                          <span>{{ car.fuel }}</span>
+                        </div>
+                        <div *ngIf="car.color" class="flex items-center gap-1">
+                          <div class="w-3 h-3 rounded-full border border-gray-600" [style.background-color]="getColorCode(car.color)"></div>
+                          <span>{{ car.color }}</span>
+                        </div>
+                      </div>
                     </div>
                     <div class="flex flex-col items-end gap-1">
-                      <div *ngIf="car.ticketsavilble === 0" class="text-xs bg-red-600 text-white rounded-full px-2 py-0.5">Sold Out</div>
-                      <div *ngIf="car.fractionprice" class="text-blue-400 font-semibold text-base">₹{{ car.fractionprice }}<span class="text-gray-400 text-sm font-normal">/per ticket</span></div>
+                                              <div *ngIf="car.ticketsavilble === 0" class="text-xs bg-red-600 text-white rounded-full px-2 py-0.5">Sold Out</div>
+                        <div *ngIf="car.fractionprice" class="text-blue-400 font-semibold text-base">₹{{ car.fractionprice }}<span class="text-gray-400 text-sm font-normal">/per share</span></div>
                     </div>
                   </div>
                 </div>
@@ -170,7 +283,7 @@
               </button>
             </div>
           </div>
-          <div *ngIf="!isLoading() && totalPages() > 1" id="pagination" class="flex items-center justify-center p-4 pagination-wrap" data-aos="fade-up" data-aos-delay="1400">
+          <div *ngIf="!isLoading() && totalPages() > 1" id="pagination" class="flex items-center justify-center p-4 pagination-wrap" data-animation="fade-up" data-delay="1400">
             <!-- Previous button -->
             <button 
               (click)="goToPreviousPage()" 

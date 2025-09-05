@@ -2,6 +2,7 @@
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const CronService = require('./utils/cronService');
 
 const app = express();
 
@@ -82,5 +83,17 @@ app.use('/api/contact', contactRoutes);
 const paymentRoutes = require('./routes/paymentRoutes');
 app.use('/api/payments', paymentRoutes);
 
+// Notification routes
+const notificationRoutes = require('./routes/notificationRoutes');
+app.use('/api/notifications', notificationRoutes);
+
+// AMC Reminder routes
+const amcReminderRoutes = require('./routes/amcReminderRoutes');
+app.use('/api/amc-reminders', amcReminderRoutes);
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  // Start cron jobs for scheduled tasks
+  CronService.startCronJobs();
+});

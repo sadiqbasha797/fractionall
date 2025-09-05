@@ -48,3 +48,56 @@ body {
 .tiny-loader .dot:nth-child(2) { animation-delay: 0.12s; }
 .tiny-loader .dot:nth-child(3) { animation-delay: 0.24s; }
 @keyframes dotPulse { 0% { opacity: 0.2; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-4px); } 100% { opacity: 0.2; transform: translateY(0); } }
+
+/* Slanted tag styles for Join Waitlist/Book Now */
+.slanted-tag {
+  position: absolute;
+  top: 15px;
+  right: -15px;
+  width: 120px;
+  height: 30px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(45deg);
+  transform-origin: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.slanted-tag.book-now {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.slanted-tag.join-waitlist {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+/* Location search bar styles */
+.location-search-input {
+  transition: all 0.3s ease;
+}
+
+.location-search-input:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.location-search-button {
+  transition: all 0.3s ease;
+}
+
+.location-search-button:hover {
+  background-color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  transform: scale(1.05);
+}
+
+.location-search-button:hover svg {
+  color: #ffffff !important;
+}

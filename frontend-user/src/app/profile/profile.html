@@ -134,14 +134,14 @@
         <button class="submit-docs-btn" (click)="openDocModal()" *ngIf="user().kycStatus === 'pending'">Submit Documents</button>
       </div>
 
-      <!-- My Tickets Section -->
+      <!-- My Shares Section -->
       <div class="tickets-card">
-        <h2 class="section-title">My Tickets</h2>
+        <h2 class="section-title">My Shares</h2>
         
         <!-- Loading state -->
         <div *ngIf="ticketsLoading()" class="loading-spinner" style="text-align: center; padding: 1rem;">
           <div style="display: inline-block; width: 1.5rem; height: 1.5rem; border: 2px solid #4a5568; border-radius: 50%; border-top-color: #3b82f6; animation: spin 1s ease-in-out infinite;"></div>
-          <p style="margin-top: 0.5rem; color: #9ca3af; font-size: 0.875rem;">Loading tickets...</p>
+          <p style="margin-top: 0.5rem; color: #9ca3af; font-size: 0.875rem;">Loading shares...</p>
         </div>
 
         <!-- Error state -->
@@ -149,23 +149,38 @@
           {{ ticketsError() }}
         </div>
 
-
-
-        <!-- No tickets state -->
-        <div *ngIf="!ticketsLoading() && !ticketsError() && tickets().length === 0" class="no-tickets" style="text-align: center; padding: 2rem; color: #9ca3af;">
-          <p>No tickets found. You haven't purchased any tickets yet.</p>
+        <!-- Contract Documents Loading state -->
+        <div *ngIf="contractDocumentsLoading()" class="loading-spinner" style="text-align: center; padding: 1rem;">
+          <div style="display: inline-block; width: 1.5rem; height: 1.5rem; border: 2px solid #4a5568; border-radius: 50%; border-top-color: #3b82f6; animation: spin 1s ease-in-out infinite;"></div>
+          <p style="margin-top: 0.5rem; color: #9ca3af; font-size: 0.875rem;">Loading contract documents...</p>
         </div>
 
-        <!-- Tickets grid -->
+        <!-- Contract Documents Error state -->
+        <div *ngIf="contractDocumentsError() && !contractDocumentsLoading()" class="error-message" style="color: #ef4444; text-align: center; margin: 1rem 0; padding: 1rem; background-color: rgba(239, 68, 68, 0.1); border-radius: 0.5rem;">
+          {{ contractDocumentsError() }}
+        </div>
+
+
+
+        <!-- No shares state -->
+        <div *ngIf="!ticketsLoading() && !ticketsError() && tickets().length === 0" class="no-tickets" style="text-align: center; padding: 2rem; color: #9ca3af;">
+          <p>No shares found. You haven't purchased any shares yet.</p>
+        </div>
+
+        <!-- Shares grid -->
         <div class="tickets-grid" *ngIf="!ticketsLoading() && !ticketsError() && tickets().length > 0">
           <div *ngFor="let ticket of tickets()" class="ticket-item" [class.expired]="ticket.ticketstatus === 'expired'">
+            <!-- Car Image -->
+            <div class="ticket-car-image" *ngIf="ticket.carid">
+              <img [src]="ticket.carid.images && ticket.carid.images.length > 0 ? ticket.carid.images[0] : 'public/car.png'" [alt]="ticket.carid.carname" />
+            </div>
             <div class="ticket-header">
-              <span class="ticket-type">TICKET #{{ ticket.ticketcustomid }}</span>
+              <span class="ticket-type">SHARE #{{ ticket.ticketcustomid }}</span>
               <span class="ticket-status" [class.active]="ticket.ticketstatus === 'active'" [class.expired]="ticket.ticketstatus === 'expired'">
                 {{ ticket.ticketstatus | titlecase }}
               </span>
             </div>
-            <p class="ticket-id">Ticket ID: {{ ticket._id }}</p>
+            <p class="ticket-id">Share ID: {{ ticket._id }}</p>
             <p class="ticket-model" *ngIf="ticket.carid">{{ ticket.carid.carname }}</p>
             <p class="ticket-brand" *ngIf="ticket.carid">{{ ticket.carid.brandname }} - {{ ticket.carid.color }}</p>
             <div class="ticket-dates">
@@ -180,18 +195,41 @@
             <div class="ticket-comments" *ngIf="ticket.comments">
               <p><strong>Comments:</strong> {{ ticket.comments }}</p>
             </div>
+            
+            <!-- Contract Documents Section -->
+            <div class="contract-documents-section" *ngIf="ticket._id && getContractDocumentsForTicket(ticket._id).length > 0">
+              <h4 class="contract-documents-title">Contract Documents</h4>
+              <div class="contract-documents-list">
+                <div *ngFor="let contract of getContractDocumentsForTicket(ticket._id || '')" class="contract-item">
+                  <div *ngFor="let doc of contract.contract_docs; let i = index" class="document-item">
+                    <div class="document-info">
+                      <svg class="document-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                      <span class="document-name">Contract Document {{ i + 1 }}</span>
+                    </div>
+                    <button class="download-btn" (click)="downloadContractDocument(contract._id, i, contract.ticketid.ticketcustomid, contract.carid.carname)" *ngIf="contract._id && contract.ticketid.ticketcustomid && contract.carid.carname">
+                      <svg class="download-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                      Download
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- My Tokens Section -->
+      <!-- My Waitlist Section -->
       <div class="tokens-card">
-        <h2 class="section-title">My Tokens</h2>
+        <h2 class="section-title">My Waitlist</h2>
         
         <!-- Loading state -->
         <div *ngIf="tokensLoading()" class="loading-spinner" style="text-align: center; padding: 1rem;">
           <div style="display: inline-block; width: 1.5rem; height: 1.5rem; border: 2px solid #4a5568; border-radius: 50%; border-top-color: #3b82f6; animation: spin 1s ease-in-out infinite;"></div>
-          <p style="margin-top: 0.5rem; color: #9ca3af; font-size: 0.875rem;">Loading tokens...</p>
+          <p style="margin-top: 0.5rem; color: #9ca3af; font-size: 0.875rem;">Loading waitlist...</p>
         </div>
 
         <!-- Error state -->
@@ -199,21 +237,25 @@
           {{ tokensError() }}
         </div>
 
-        <!-- No tokens state -->
+        <!-- No waitlist state -->
         <div *ngIf="!tokensLoading() && !tokensError() && tokens().length === 0" class="no-tokens" style="text-align: center; padding: 2rem; color: #9ca3af;">
-          <p>No tokens found. You haven't purchased any tokens yet.</p>
+          <p>No waitlist items found. You haven't joined any waitlist yet.</p>
         </div>
 
-        <!-- Tokens grid -->
+        <!-- Waitlist grid -->
         <div class="tokens-grid" *ngIf="!tokensLoading() && !tokensError() && tokens().length > 0">
           <div *ngFor="let token of tokens()" class="token-item" [class.expired]="token.status === 'expired'">
+            <!-- Car Image -->
+            <div class="token-car-image" *ngIf="token.carid">
+              <img [src]="token.carid.images && token.carid.images.length > 0 ? token.carid.images[0] : 'public/car.png'" [alt]="token.carid.carname" />
+            </div>
             <div class="ticket-header">
-              <span class="ticket-type">TOKEN #{{ token.customtokenid }}</span>
+              <span class="ticket-type">WAITLIST #{{ token.customtokenid }}</span>
               <span class="ticket-status" [class.active]="token.status === 'active'" [class.expired]="token.status === 'expired'">
                 {{ token.status | titlecase }}
               </span>
             </div>
-            <p class="ticket-id">Token ID: {{ token._id }}</p>
+            <p class="ticket-id">Waitlist ID: {{ token._id }}</p>
             <p class="ticket-model" *ngIf="token.carid">{{ token.carid.carname }}</p>
             <p class="ticket-brand" *ngIf="token.carid">{{ token.carid.brandname }} - {{ token.carid.color }}</p>
             <div class="ticket-dates">
@@ -250,6 +292,10 @@
         <!-- Book now tokens grid -->
         <div class="booknow-tokens-grid" *ngIf="!bookNowTokensLoading() && !bookNowTokensError() && bookNowTokens().length > 0">
           <div *ngFor="let bookNowToken of bookNowTokens()" class="booknow-token-item" [class.expired]="bookNowToken.status === 'expired'">
+            <!-- Car Image -->
+            <div class="booknow-token-car-image" *ngIf="bookNowToken.carid">
+              <img [src]="bookNowToken.carid.images && bookNowToken.carid.images.length > 0 ? bookNowToken.carid.images[0] : 'public/car.png'" [alt]="bookNowToken.carid.carname" />
+            </div>
             <div class="ticket-header">
               <span class="ticket-type">BOOK NOW TOKEN #{{ bookNowToken.customtokenid }}</span>
               <span class="ticket-status" [class.active]="bookNowToken.status === 'active'" [class.expired]="bookNowToken.status === 'expired'" [class.dropped]="bookNowToken.status === 'dropped'">
@@ -292,7 +338,12 @@
 
       <!-- Calendar/Bookings Card -->
       <div class="calendar-card">
-        <h2 class="section-title">My Bookings</h2>
+        <div class="calendar-header-section">
+          <h2 class="section-title">My Bookings</h2>
+          <button class="book-now-btn" (click)="navigateToBookings()">
+            Book Now
+          </button>
+        </div>
         
         <!-- Loading state -->
         <div *ngIf="bookingsLoading()" class="loading-spinner" style="text-align: center; padding: 1rem;">
@@ -431,6 +482,24 @@
                     <div class="amc-penalty" *ngIf="amount.penality > 0">
                       <span class="detail-label">Penalty:</span>
                       <span class="detail-value penalty">₹{{ amount.penality }}</span>
+                    </div>
+                    
+                    <!-- Payment Button -->
+                    <div class="amc-payment-section" *ngIf="!amount.paid">
+                      <div class="test-mode-notice">
+                        <small class="text-yellow-400">💳 Test Mode - Pay ₹1 (Actual: ₹{{ amount.amount }})</small>
+                      </div>
+                      <button 
+                        class="amc-pay-btn"
+                        (click)="initiateAMCPayment(amc, i)"
+                        [disabled]="isAMCPaymentLoading() || !razorpayKey()"
+                        [class.loading]="isAMCPaymentLoading()">
+                        <span *ngIf="isAMCPaymentLoading()">Processing...</span>
+                        <span *ngIf="!isAMCPaymentLoading()">Pay ₹1 (Test Mode)</span>
+                      </button>
+                      <div class="test-amount-notice">
+                        <small class="text-blue-400">ℹ️ Test payment of ₹1 will mark this AMC as paid</small>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -638,10 +707,192 @@
       </form>
     </div>
   </div>
+
+  <!-- AMC Payment Success Modal -->
+  <div *ngIf="showAMCPaymentModal()" class="modal-overlay" (click)="closeAMCPaymentModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Payment Successful!</h3>
+        <button class="modal-close-btn" (click)="closeAMCPaymentModal()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="success-icon">
+          <svg class="w-16 h-16 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+        <div class="success-message">
+          <h4 class="text-lg font-semibold text-white mb-2">AMC Payment Completed!</h4>
+          <p class="text-gray-300 mb-4">
+            Your AMC payment for <strong>{{ selectedAMC()?.carid?.carname }}</strong> 
+            (Year {{ selectedAMC()?.amcamount?.[selectedAMCYear()]?.year }}) has been processed successfully.
+          </p>
+          <div class="payment-details">
+            <div class="detail-row">
+              <span class="detail-label">Test Payment:</span>
+              <span class="detail-value">₹1 (Test Mode)</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Actual Amount:</span>
+              <span class="detail-value">₹{{ getAMCPaymentAmount(selectedAMC()!, selectedAMCYear()) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Payment Date:</span>
+              <span class="detail-value">{{ getCurrentDate() }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Status:</span>
+              <span class="detail-value success">Paid</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-primary" (click)="closeAMCPaymentModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AMC Payment Error Display -->
+  <div *ngIf="amcPaymentError()" class="error-message" style="position: fixed; top: 20px; right: 20px; z-index: 1000; max-width: 400px; background-color: #ef4444; color: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+        </svg>
+        <span>{{ amcPaymentError() }}</span>
+      </div>
+      <button (click)="amcPaymentError.set('')" class="ml-4 text-white hover:text-gray-200">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
 </div>
 
 <style>
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* AMC Payment Button Styles */
+.amc-payment-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #374151;
+}
+
+.test-mode-notice {
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.amount-limit-notice {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.test-amount-notice {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.amc-pay-btn {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.amc-pay-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+}
+
+.amc-pay-btn:disabled {
+  background: #6b7280;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.amc-pay-btn.loading {
+  background: #6b7280;
+  cursor: not-allowed;
+}
+
+/* Payment Success Modal Styles */
+.success-icon {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.success-message {
+  text-align: center;
+}
+
+.payment-details {
+  background-color: #1f2937;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+.detail-value {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.detail-value.success {
+  color: #10b981;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
 }
 </style>

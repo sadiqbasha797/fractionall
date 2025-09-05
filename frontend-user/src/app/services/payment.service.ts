@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { AuthService } from './auth.service';
 
 export interface PaymentOrder {
   amount: number;
@@ -43,7 +44,27 @@ export interface PaymentVerificationResponse {
 export class PaymentService {
   private baseUrl = 'http://localhost:5000/api/payments';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {}
+
+  // Helper method to get auth headers
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    
+    if (!token) {
+      console.error('No token found in auth service');
+      return new HttpHeaders({
+        'Content-Type': 'application/json'
+      });
+    }
+    
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+  }
 
   // Get Razorpay Key ID
   getRazorpayKey(): Observable<{ key: string }> {
@@ -77,5 +98,18 @@ export class PaymentService {
     if (notes) body.notes = { reason: notes };
     
     return this.http.post(`${this.baseUrl}/refund`, body);
+  }
+
+  // Update AMC payment status after successful payment
+  updateAMCPaymentStatus(amcId: string, yearIndex: number, paid: boolean, paiddate?: string): Observable<any> {
+    const body: any = {
+      yearIndex,
+      paid,
+      paiddate
+    };
+    
+    return this.http.put(`http://localhost:5000/api/amcs/${amcId}/payment-status`, body, {
+      headers: this.getAuthHeaders()
+    });
   }
 }

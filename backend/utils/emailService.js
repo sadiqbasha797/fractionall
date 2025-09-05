@@ -149,38 +149,6 @@ const sendKycRejectedEmail = async (userDetails, rejectionComments) => {
   }
 };
 
-// Booking confirmation email
-const sendBookingConfirmationEmail = async (userDetails, bookingDetails) => {
-  try {
-    const template = readTemplate('booking-confirmation');
-    
-    const templateData = {
-      userName: userDetails.name,
-      bookingId: bookingDetails.bookingId,
-      carName: bookingDetails.carName,
-      carModel: bookingDetails.carModel,
-      pickupDate: new Date(bookingDetails.pickupDate).toLocaleDateString('en-IN'),
-      pickupTime: bookingDetails.pickupTime,
-      returnDate: new Date(bookingDetails.returnDate).toLocaleDateString('en-IN'),
-      returnTime: bookingDetails.returnTime,
-      pickupLocation: bookingDetails.pickupLocation,
-      totalAmount: bookingDetails.totalAmount,
-      paymentStatus: bookingDetails.paymentStatus || 'Confirmed',
-      bookingDetailsLink: `${process.env.FRONTEND_URL || 'http://localhost:4200'}/bookings/${bookingDetails.bookingId}`
-    };
-    
-    const htmlContent = replacePlaceholders(template, templateData);
-    
-    return await sendEmail(
-      userDetails.email,
-      `🚗 Booking Confirmed - ${bookingDetails.carName} (${bookingDetails.bookingId})`,
-      htmlContent
-    );
-  } catch (error) {
-    logger(`Error sending booking confirmation email: ${error.message}`);
-    return { success: false, error: error.message };
-  }
-};
 
 // Password reset email (if needed in future)
 const sendPasswordResetEmail = async (userDetails, resetToken) => {
@@ -262,6 +230,419 @@ const sendPasswordResetEmailWithCode = async (userDetails, resetCode) => {
   }
 };
 
+// Token purchase confirmation email
+const sendTokenPurchaseConfirmationEmail = async (userDetails, tokenDetails, carDetails) => {
+  try {
+    const template = readTemplate('token-purchase-confirmation');
+    
+    const templateData = {
+      userName: userDetails.name,
+      tokenId: tokenDetails._id,
+      customTokenId: tokenDetails.customtokenid,
+      purchaseDate: new Date(tokenDetails.date).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      expiryDate: new Date(tokenDetails.expirydate).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      status: tokenDetails.status,
+      carName: carDetails.name,
+      carBrand: carDetails.brand,
+      carYear: carDetails.year,
+      carLocation: carDetails.location,
+      amountPaid: tokenDetails.amountpaid,
+      dashboardLink: `${process.env.FRONTEND_URL || 'http://localhost:4200'}/dashboard`
+    };
+    
+    const htmlContent = replacePlaceholders(template, templateData);
+    
+    return await sendEmail(
+      userDetails.email,
+      '🎫 Token Purchase Confirmed - Fraction',
+      htmlContent
+    );
+  } catch (error) {
+    logger(`Error sending token purchase confirmation email: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+};
+
+// Book now token purchase confirmation email
+const sendBookNowTokenPurchaseConfirmationEmail = async (userDetails, tokenDetails, carDetails) => {
+  try {
+    const template = readTemplate('booknow-token-purchase-confirmation');
+    
+    const templateData = {
+      userName: userDetails.name,
+      tokenId: tokenDetails._id,
+      customTokenId: tokenDetails.customtokenid,
+      purchaseDate: new Date(tokenDetails.date).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      expiryDate: new Date(tokenDetails.expirydate).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      status: tokenDetails.status,
+      carName: carDetails.name,
+      carBrand: carDetails.brand,
+      carYear: carDetails.year,
+      carLocation: carDetails.location,
+      amountPaid: tokenDetails.amountpaid,
+      bookingLink: `${process.env.FRONTEND_URL || 'http://localhost:4200'}/cars/${carDetails._id}`
+    };
+    
+    const htmlContent = replacePlaceholders(template, templateData);
+    
+    return await sendEmail(
+      userDetails.email,
+      '🚀 Book Now Token Purchased - Fraction',
+      htmlContent
+    );
+  } catch (error) {
+    logger(`Error sending book now token purchase confirmation email: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+};
+
+// AMC payment confirmation email
+const sendAMCPaymentConfirmationEmail = async (userDetails, amcDetails, carDetails) => {
+  try {
+    const template = readTemplate('amc-payment-confirmation');
+    
+    // Calculate total amount from all AMC years
+    const totalAmount = amcDetails.amcamount.reduce((sum, year) => sum + year.amount, 0);
+    
+    // Format AMC years for template
+    const amcYearsHtml = amcDetails.amcamount.map(year => 
+      `<div class="year-details">
+        <p><strong>Year ${year.year}:</strong> ₹${year.amount} - <span style="color: #27ae60;">✓ Paid on ${new Date(year.paiddate || new Date()).toLocaleDateString('en-IN')}</span></p>
+      </div>`
+    ).join('');
+    
+    const templateData = {
+      userName: userDetails.name,
+      amcId: amcDetails._id,
+      paymentDate: new Date().toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      status: 'Paid',
+      ticketId: amcDetails.ticketid,
+      carName: carDetails.name,
+      carBrand: carDetails.brand,
+      carYear: carDetails.year,
+      carRegistration: carDetails.registrationNumber || 'N/A',
+      totalAmount: totalAmount,
+      amcYears: amcYearsHtml,
+      dashboardLink: `${process.env.FRONTEND_URL || 'http://localhost:4200'}/dashboard`
+    };
+    
+    const htmlContent = replacePlaceholders(template, templateData);
+    
+    return await sendEmail(
+      userDetails.email,
+      '🔧 AMC Payment Confirmed - Fraction',
+      htmlContent
+    );
+  } catch (error) {
+    logger(`Error sending AMC payment confirmation email: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+};
+
+// Superadmin notification for token purchase
+const sendSuperAdminTokenPurchaseNotification = async (userDetails, tokenDetails, carDetails) => {
+  try {
+    const template = readTemplate('superadmin-token-purchase-notification');
+    
+    const templateData = {
+      userName: userDetails.name,
+      userEmail: userDetails.email,
+      userPhone: userDetails.phone || 'N/A',
+      userId: userDetails._id,
+      purchaseDate: new Date(tokenDetails.date).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      tokenId: tokenDetails._id,
+      customTokenId: tokenDetails.customtokenid,
+      status: tokenDetails.status,
+      expiryDate: new Date(tokenDetails.expirydate).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      carName: carDetails.name,
+      carBrand: carDetails.brand,
+      carYear: carDetails.year,
+      carLocation: carDetails.location,
+      carId: carDetails._id,
+      amountPaid: tokenDetails.amountpaid,
+      adminDashboardLink: `${process.env.ADMIN_URL || 'http://localhost:4200/admin'}/tokens`
+    };
+    
+    const htmlContent = replacePlaceholders(template, templateData);
+    
+    // Get superadmin email from environment or use a default
+    const superAdminEmail = process.env.SUPERADMIN_EMAIL || 'admin@fraction.com';
+    
+    return await sendEmail(
+      superAdminEmail,
+      '🎫 New Token Purchase - Admin Notification',
+      htmlContent
+    );
+  } catch (error) {
+    logger(`Error sending superadmin token purchase notification: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+};
+
+// Superadmin notification for book now token purchase
+const sendSuperAdminBookNowTokenPurchaseNotification = async (userDetails, tokenDetails, carDetails) => {
+  try {
+    const template = readTemplate('superadmin-booknow-token-purchase-notification');
+    
+    const templateData = {
+      userName: userDetails.name,
+      userEmail: userDetails.email,
+      userPhone: userDetails.phone || 'N/A',
+      userId: userDetails._id,
+      purchaseDate: new Date(tokenDetails.date).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      tokenId: tokenDetails._id,
+      customTokenId: tokenDetails.customtokenid,
+      status: tokenDetails.status,
+      expiryDate: new Date(tokenDetails.expirydate).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      carName: carDetails.name,
+      carBrand: carDetails.brand,
+      carYear: carDetails.year,
+      carLocation: carDetails.location,
+      carId: carDetails._id,
+      amountPaid: tokenDetails.amountpaid,
+      adminDashboardLink: `${process.env.ADMIN_URL || 'http://localhost:4200/admin'}/booknow-tokens`
+    };
+    
+    const htmlContent = replacePlaceholders(template, templateData);
+    
+    // Get superadmin email from environment or use a default
+    const superAdminEmail = process.env.SUPERADMIN_EMAIL || 'admin@fraction.com';
+    
+    return await sendEmail(
+      superAdminEmail,
+      '🚀 New Book Now Token Purchase - Admin Notification',
+      htmlContent
+    );
+  } catch (error) {
+    logger(`Error sending superadmin book now token purchase notification: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+};
+
+// Superadmin notification for AMC payment
+const sendSuperAdminAMCPaymentNotification = async (userDetails, amcDetails, carDetails) => {
+  try {
+    const template = readTemplate('superadmin-amc-payment-notification');
+    
+    // Calculate total amount from all AMC years
+    const totalAmount = amcDetails.amcamount.reduce((sum, year) => sum + year.amount, 0);
+    
+    // Format AMC years for template
+    const amcYearsHtml = amcDetails.amcamount.map(year => 
+      `<div class="year-details">
+        <p><strong>Year ${year.year}:</strong> ₹${year.amount} - <span style="color: #27ae60;">✓ Paid on ${new Date(year.paiddate || new Date()).toLocaleDateString('en-IN')}</span></p>
+      </div>`
+    ).join('');
+    
+    const templateData = {
+      userName: userDetails.name,
+      userEmail: userDetails.email,
+      userPhone: userDetails.phone || 'N/A',
+      userId: userDetails._id,
+      paymentDate: new Date().toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      amcId: amcDetails._id,
+      ticketId: amcDetails.ticketid,
+      status: 'Paid',
+      paymentMethod: 'Online Payment',
+      carName: carDetails.name,
+      carBrand: carDetails.brand,
+      carYear: carDetails.year,
+      carRegistration: carDetails.registrationNumber || 'N/A',
+      carId: carDetails._id,
+      totalAmount: totalAmount,
+      amcYears: amcYearsHtml,
+      adminDashboardLink: `${process.env.ADMIN_URL || 'http://localhost:4200/admin'}/amc`
+    };
+    
+    const htmlContent = replacePlaceholders(template, templateData);
+    
+    // Get superadmin email from environment or use a default
+    const superAdminEmail = process.env.SUPERADMIN_EMAIL || 'admin@fraction.com';
+    
+    return await sendEmail(
+      superAdminEmail,
+      '🔧 New AMC Payment - Admin Notification',
+      htmlContent
+    );
+  } catch (error) {
+    logger(`Error sending superadmin AMC payment notification: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+};
+
+// Booking confirmation email for user
+const sendBookingConfirmationEmail = async (userDetails, bookingDetails, carDetails) => {
+  try {
+    const template = readTemplate('booking-confirmation-user');
+    
+    // Calculate duration
+    const startDate = new Date(bookingDetails.bookingFrom);
+    const endDate = new Date(bookingDetails.bookingTo);
+    const durationMs = endDate - startDate;
+    const durationDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
+    const duration = durationDays === 1 ? '1 day' : `${durationDays} days`;
+    
+    const templateData = {
+      userName: userDetails.name,
+      bookingId: bookingDetails._id,
+      bookingFrom: startDate.toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long'
+      }),
+      bookingTo: endDate.toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long'
+      }),
+      duration: duration,
+      bookingDate: new Date(bookingDetails.createdAt).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      bookingStatus: bookingDetails.status,
+      comments: bookingDetails.comments || '',
+      carName: carDetails.name,
+      carBrand: carDetails.brand,
+      carYear: carDetails.year,
+      carLocation: carDetails.location,
+      bookingDetailsLink: `${process.env.FRONTEND_URL || 'http://localhost:4200'}/bookings/${bookingDetails._id}`
+    };
+    
+    const htmlContent = replacePlaceholders(template, templateData);
+    
+    return await sendEmail(
+      userDetails.email,
+      '🚗 Booking Confirmed - Fraction',
+      htmlContent
+    );
+  } catch (error) {
+    logger(`Error sending booking confirmation email: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+};
+
+// Superadmin notification for booking
+const sendSuperAdminBookingNotification = async (userDetails, bookingDetails, carDetails) => {
+  try {
+    const template = readTemplate('superadmin-booking-notification');
+    
+    // Calculate duration
+    const startDate = new Date(bookingDetails.bookingFrom);
+    const endDate = new Date(bookingDetails.bookingTo);
+    const durationMs = endDate - startDate;
+    const durationDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
+    const duration = durationDays === 1 ? '1 day' : `${durationDays} days`;
+    
+    const templateData = {
+      userName: userDetails.name,
+      userEmail: userDetails.email,
+      userPhone: userDetails.phone || 'N/A',
+      userId: userDetails._id,
+      bookingId: bookingDetails._id,
+      bookingFrom: startDate.toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long'
+      }),
+      bookingTo: endDate.toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long'
+      }),
+      duration: duration,
+      bookingDate: new Date(bookingDetails.createdAt).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      bookingStatus: bookingDetails.status,
+      comments: bookingDetails.comments || '',
+      carName: carDetails.name,
+      carBrand: carDetails.brand,
+      carYear: carDetails.year,
+      carLocation: carDetails.location,
+      carId: carDetails._id,
+      adminDashboardLink: `${process.env.ADMIN_URL || 'http://localhost:4200/admin'}/bookings`
+    };
+    
+    const htmlContent = replacePlaceholders(template, templateData);
+    
+    // Get superadmin email from environment or use a default
+    const superAdminEmail = process.env.SUPERADMIN_EMAIL || 'admin@fraction.com';
+    
+    return await sendEmail(
+      superAdminEmail,
+      '🚗 New Booking Received - Admin Notification',
+      htmlContent
+    );
+  } catch (error) {
+    logger(`Error sending superadmin booking notification: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+};
+
 // Test email function
 const sendTestEmail = async (to) => {
   try {
@@ -296,5 +677,12 @@ module.exports = {
   sendPasswordResetEmail,
   sendVerificationEmail,
   sendPasswordResetEmailWithCode,
+  sendTokenPurchaseConfirmationEmail,
+  sendBookNowTokenPurchaseConfirmationEmail,
+  sendAMCPaymentConfirmationEmail,
+  sendSuperAdminTokenPurchaseNotification,
+  sendSuperAdminBookNowTokenPurchaseNotification,
+  sendSuperAdminAMCPaymentNotification,
+  sendSuperAdminBookingNotification,
   sendTestEmail
 };

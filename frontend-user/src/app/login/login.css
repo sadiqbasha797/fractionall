@@ -1,0 +1,174 @@
+/* Login Page Styles */
+
+/* Mobile responsiveness for the promotional section */
+@media (max-width: 1024px) {
+  .min-h-screen {
+    flex-direction: column;
+  }
+  
+  .lg\:w-1\/2 {
+    width: 100%;
+    min-height: 40vh;
+  }
+}
+
+/* Enhanced background image styling */
+.image-bg {
+  filter: brightness(0.8) contrast(1.1);
+  transition: all 0.5s ease;
+}
+
+.image-bg:hover {
+  filter: brightness(0.9) contrast(1.2);
+}
+
+/* Image background styling */
+.image-bg {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Overlay styling */
+.image-overlay {
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(1px);
+}
+
+/* Form input focus effects */
+.form-input:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #3b82f6;
+}
+
+/* Button hover effects */
+.signin-btn {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.signin-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.signin-btn:hover::before {
+  left: 100%;
+}
+
+/* Remember me checkbox styling */
+.remember-checkbox {
+  accent-color: #3b82f6;
+}
+
+/* Link hover effects */
+.link-hover {
+  position: relative;
+}
+
+.link-hover::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 1px;
+  bottom: -2px;
+  left: 0;
+  background-color: #60a5fa;
+  transition: width 0.3s ease;
+}
+
+.link-hover:hover::after {
+  width: 100%;
+}
+
+/* Error and success message animations */
+.message-slide {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading spinner enhancement */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile menu adjustments */
+@media (max-width: 640px) {
+  .mobile-padding {
+    padding: 1rem;
+  }
+  
+  .mobile-text {
+    font-size: 0.875rem;
+  }
+}
+
+/* Dark theme enhancements */
+.dark-input {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #ffffff;
+}
+
+.dark-input:focus {
+  background-color: #4b5563;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Promotional text styling */
+.promo-text {
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.1));
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  backdrop-filter: blur(2px);
+}
+
+/* Form container styling */
+.form-container {
+  backdrop-filter: blur(10px);
+  background: rgba(17, 24, 39, 0.8);
+}
+
+/* Responsive image sizing */
+@media (max-width: 1024px) {
+  .car-image {
+    width: 80%;
+    height: auto;
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 640px) {
+  .car-image {
+    width: 90%;
+    max-width: 250px;
+  }
+}

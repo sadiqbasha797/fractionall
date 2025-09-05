@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -11,12 +11,12 @@ import { AuthService } from '../services/auth.service';
   templateUrl: './register.html',
   styleUrl: './register.css'
 })
-export class Register {
+export class Register implements OnInit {
   registerData = {
     name: '',
     email: '',
+    mobile: '',
     password: '',
-    address: '',
     location: '',
     pincode: ''
   };
@@ -30,6 +30,22 @@ export class Register {
     private authService: AuthService,
     private router: Router
   ) {}
+
+  // Properties for handling return URL
+  returnUrl = '';
+  pendingPayment = '';
+
+  ngOnInit() {
+    // Get return URL and pending payment from query parameters
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      this.returnUrl = urlParams.get('returnUrl') || '/dashboard';
+      this.pendingPayment = urlParams.get('pending_payment') || '';
+    } else {
+      this.returnUrl = '/dashboard';
+      this.pendingPayment = '';
+    }
+  }
 
   onSubmit() {
     this.errorMessage = '';
@@ -53,9 +69,14 @@ export class Register {
             name: this.registerData.name
           });
           
-          // Redirect to login page after 2 seconds
+          // Redirect to login page with return URL after 2 seconds
           setTimeout(() => {
-            this.router.navigate(['/login']);
+            this.router.navigate(['/login'], { 
+              queryParams: { 
+                returnUrl: this.returnUrl,
+                pending_payment: this.pendingPayment
+              }
+            });
           }, 2000);
         } else {
           this.errorMessage = response.message || 'Registration failed';
@@ -84,6 +105,16 @@ export class Register {
       return false;
     }
 
+    if (!this.registerData.mobile.trim()) {
+      this.errorMessage = 'Mobile number is required';
+      return false;
+    }
+
+    if (!this.isValidMobile(this.registerData.mobile)) {
+      this.errorMessage = 'Please enter a valid 10-digit mobile number';
+      return false;
+    }
+
     if (!this.registerData.password.trim()) {
       this.errorMessage = 'Password is required';
       return false;
@@ -91,11 +122,6 @@ export class Register {
 
     if (this.registerData.password.length < 6) {
       this.errorMessage = 'Password must be at least 6 characters long';
-      return false;
-    }
-
-    if (!this.registerData.address.trim()) {
-      this.errorMessage = 'Address is required';
       return false;
     }
 
@@ -120,6 +146,11 @@ export class Register {
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  }
+
+  private isValidMobile(mobile: string): boolean {
+    const mobileRegex = /^[6-9]\d{9}$/;
+    return mobileRegex.test(mobile);
   }
 
   togglePasswordVisibility() {

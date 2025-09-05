@@ -2,93 +2,77 @@
           <div class="layout-content-container flex flex-col w-full max-w-[1600px] mx-auto">
             <div class="@container">
               <div class="@[480px]:p-4">
-                <div data-aos="fade-up"
+                <div data-animation="fade-up"
                   class="flex min-h-[480px] flex-col gap-6 bg-cover bg-center bg-no-repeat @[480px]:gap-8 @[480px]:rounded-xl items-start justify-end px-4 pb-10 @[480px]:px-10"
-                  [style.background-image]="heroContent ? 'linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url(' + heroContent.bgImage + ')' : 'linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url(\'./herocar.jpg\')'">
+                  [style.background-image]="heroContent() ? 'linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url(' + heroContent()!.bgImage + ')' : 'linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url(\'./herocar.jpg\')'">
                   <div class="flex flex-col gap-2 text-left">
-                    <h1
-                      class="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em]"
-                    >
-                     {{ heroContent?.heroText || 'Own Your Dream Car at Just 8.33% Cost' }}
-                    </h1>
-                    <h2 class="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal">
-                      {{ heroContent?.subText || 'India\'s first fractional car ownership platform' }}
-                    </h2>
-                  </div>
-                  <!-- Search Bar (Hidden by default) -->
-                  <div *ngIf="showSearchBar" class="search-bar-container w-full max-w-md mb-4" data-aos="fade-down" data-aos-delay="100">
-                    <div class="relative">
-                      <input
-                        id="searchInput"
-                        type="text"
-                        [(ngModel)]="searchQuery"
-                        (keypress)="onSearchKeyPress($event)"
-                        (input)="onSearchInputChange()"
-                        [placeholder]="searchPlaceholder"
-                        class="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:border-blue-500 focus:bg-white/20 transition-all duration-300"
-                      />
-                      <button
-                        (click)="performSearch()"
-                        class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg transition-colors duration-300"
+                    <!-- Hero Content or Skeleton Loading -->
+                    <div *ngIf="heroContent(); else heroSkeleton">
+                      <h1
+                        class="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em]"
                       >
-                        Search
-                      </button>
+                       {{ heroContent()?.heroText }}
+                      </h1>
+                      <h2 class="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal">
+                        {{ heroContent()?.subText }}
+                      </h2>
                     </div>
-                    <p class="text-gray-300 text-xs mt-2">
-                      Enter a location (e.g., "Mumbai") or pincode (e.g., "400001") to find cars near you
-                    </p>
+                    
+                    <!-- Hero Skeleton Loading -->
+                    <ng-template #heroSkeleton>
+                      <div class="animate-pulse">
+                        <div class="h-12 bg-gray-600/30 rounded-lg mb-3 @[480px]:h-16 hero-skeleton"></div>
+                        <div class="h-6 bg-gray-600/20 rounded-lg w-3/4 @[480px]:h-7 hero-skeleton"></div>
+                      </div>
+                    </ng-template>
                   </div>
-
                   <!-- Explore Cars Button -->
-                  <button
-                    (click)="toggleSearchBar()"
-                    class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 btn-outline-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em] transform hover:scale-105 transition-all duration-300"
-                  >
-                    <span class="truncate">{{ showSearchBar ? 'Cancel' : 'Explore cars' }}</span>
+                  <button (click)="navigateToCars()" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 btn-outline-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em] transform hover:scale-105 transition-all duration-300">
+                    <span class="truncate">Explore cars</span>
                   </button>
                 </div>
               </div>
             </div>
-            <h2 data-aos="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full px-4 pb-3 pt-10 text-left">Brands we support</h2>
-            <p data-aos="fade-right" data-aos-delay="100" class="text-[#90adcb] text-base max-w-[900px] mx-0 px-4 pb-6 text-left">We partner with leading manufacturers to bring a curated selection of premium and reliable vehicles.</p>
+            <h2 data-animation="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full px-4 pb-3 pt-10 text-left">Brands we support</h2>
+            <p data-animation="fade-right" data-delay="100" class="text-[#90adcb] text-base max-w-[900px] mx-0 px-4 pb-6 text-left">We partner with leading manufacturers to bring a curated selection of premium and reliable vehicles.</p>
             <div class="w-full px-4 mb-12">
               <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                <div data-aos="zoom-in" data-aos-delay="100" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                <div data-animation="zoom-in" data-delay="100" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 cursor-pointer" (click)="navigateToCarsWithBrand('Mercedes-Benz')">
                    <div class="bg-white/10 rounded-full p-4 mb-4">
                      <img src="https://www.carlogos.org/car-logos/mercedes-benz-logo.png" alt="Mercedes-Benz" class="h-16 w-16 object-contain" />
                    </div>
                    <span class="text-white text-base font-semibold text-center">Mercedes-Benz</span>
                    <span class="text-gray-400 text-xs mt-2">Luxury Cars</span>
                  </div>
-                <div data-aos="zoom-in" data-aos-delay="200" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                <div data-animation="zoom-in" data-delay="200" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 cursor-pointer" (click)="navigateToCarsWithBrand('BMW')">
                    <div class="bg-white/10 rounded-full p-4 mb-4">
                      <img src="https://www.carlogos.org/car-logos/bmw-logo.png" alt="BMW" class="h-16 w-16 object-contain" />
                    </div>
                    <span class="text-white text-base font-semibold text-center">BMW</span>
                    <span class="text-gray-400 text-xs mt-2">Performance Luxury</span>
                  </div>
-                <div data-aos="zoom-in" data-aos-delay="300" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                <div data-animation="zoom-in" data-delay="300" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 cursor-pointer" (click)="navigateToCarsWithBrand('Audi')">
                    <div class="bg-white/10 rounded-full p-4 mb-4">
                      <img src="https://www.carlogos.org/car-logos/audi-logo.png" alt="Audi" class="h-16 w-16 object-contain" />
                    </div>
                    <span class="text-white text-base font-semibold text-center">Audi</span>
                    <span class="text-gray-400 text-xs mt-2">Premium Cars</span>
                  </div>
-                <div data-aos="zoom-in" data-aos-delay="400" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                <div data-animation="zoom-in" data-delay="400" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 cursor-pointer" (click)="navigateToCarsWithBrand('Tesla')">
                    <div class="bg-white/10 rounded-full p-4 mb-4">
                      <img src="https://www.carlogos.org/car-logos/tesla-logo.png" alt="Tesla" class="h-16 w-16 object-contain" />
                    </div>
                    <span class="text-white text-base font-semibold text-center">Tesla</span>
                    <span class="text-gray-400 text-xs mt-2">Electric Vehicles</span>
                  </div>
-                <div data-aos="zoom-in" data-aos-delay="500" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                <div data-animation="zoom-in" data-delay="500" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 cursor-pointer" (click)="navigateToCarsWithBrand('Porsche')">
                    <div class="bg-white/10 rounded-full p-4 mb-4">
                      <img src="https://www.carlogos.org/car-logos/porsche-logo.png" alt="Porsche" class="h-16 w-16 object-contain" />
                    </div>
                    <span class="text-white text-base font-semibold text-center">Porsche</span>
                    <span class="text-gray-400 text-xs mt-2">Sports Cars</span>
                  </div>
-                <div data-aos="zoom-in" data-aos-delay="600" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                <div data-animation="zoom-in" data-delay="600" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 cursor-pointer" (click)="navigateToCarsWithBrand('Lexus')">
                    <div class="bg-white/10 rounded-full p-4 mb-4">
                      <img src="https://www.carlogos.org/car-logos/lexus-logo.png" alt="Lexus" class="h-16 w-16 object-contain" />
                    </div>
@@ -96,28 +80,28 @@
                    <span class="text-gray-400 text-xs mt-2">Premium Luxury</span>
                  </div>
                  <!-- added brands -->
-                <div data-aos="zoom-in" data-aos-delay="700" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                <div data-animation="zoom-in" data-delay="700" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 cursor-pointer" (click)="navigateToCarsWithBrand('Volvo')">
                    <div class="bg-white/10 rounded-full p-4 mb-4">
                      <img src="https://www.carlogos.org/car-logos/volvo-logo.png" alt="Volvo" class="h-16 w-16 object-contain" />
                    </div>
                    <span class="text-white text-base font-semibold text-center">Volvo</span>
                    <span class="text-gray-400 text-xs mt-2">Safety & Comfort</span>
                  </div>
-                <div data-aos="zoom-in" data-aos-delay="800" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                <div data-animation="zoom-in" data-delay="800" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 cursor-pointer" (click)="navigateToCarsWithBrand('Ford')">
                    <div class="bg-white/10 rounded-full p-4 mb-4">
                      <img src="https://www.carlogos.org/car-logos/ford-logo.png" alt="Ford" class="h-16 w-16 object-contain" />
                    </div>
                    <span class="text-white text-base font-semibold text-center">Ford</span>
                    <span class="text-gray-400 text-xs mt-2">American Classics</span>
                  </div>
-                <div data-aos="zoom-in" data-aos-delay="900" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                <div data-animation="zoom-in" data-delay="900" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 cursor-pointer" (click)="navigateToCarsWithBrand('Honda')">
                    <div class="bg-white/10 rounded-full p-4 mb-4">
                      <img src="https://www.carlogos.org/car-logos/honda-logo.png" alt="Honda" class="h-16 w-16 object-contain" />
                    </div>
                    <span class="text-white text-base font-semibold text-center">Honda</span>
                    <span class="text-gray-400 text-xs mt-2">Reliable Cars</span>
                  </div>
-                <div data-aos="zoom-in" data-aos-delay="1000" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">
+                <div data-animation="zoom-in" data-delay="1000" class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 cursor-pointer" (click)="navigateToCarsWithBrand('Chevrolet')">
                    <div class="bg-white/10 rounded-full p-4 mb-4">
                      <img src="https://www.carlogos.org/car-logos/chevrolet-logo.png" alt="Chevrolet" class="h-16 w-16 object-contain" />
                    </div>
@@ -129,17 +113,17 @@
              <!-- Car Carousel Section -->
             <div class="container mx-auto px-4 mb-12">
               <div class="flex items-center justify-between pb-3 pt-5">
-                <h2 data-aos="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full text-left">Explore our cars</h2>
-                <a href="cars.html" class="inline-flex items-center gap-1 btn-outline-white font-semibold text-base px-4 py-2 rounded-md transition-colors duration-300">
+                <h2 data-animation="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full text-left">Explore our cars</h2>
+                <button (click)="navigateToCars()" class="inline-flex items-center gap-1 btn-outline-white font-semibold text-base px-4 py-2 rounded-md transition-colors duration-300">
                   View More <span class="ml-1">&rarr;</span>
-                </a>
+                </button>
               </div>
-              <p data-aos="fade-right" data-aos-delay="100" class="text-[#90adcb] text-base max-w-[900px] mx-0 pb-6 text-left">Browse our verified listings and compare token prices. Use filters to find cars by brand, price and availability.</p>
+              <p data-animation="fade-right" data-delay="100" class="text-[#90adcb] text-base max-w-[900px] mx-0 pb-6 text-left">Browse our verified listings and compare share prices. Use filters to find cars by brand, price and availability.</p>
               <!-- Loading State -->
-              <div *ngIf="carsLoading" class="carousel-wrapper relative" data-aos="fade-up" data-aos-delay="200">
+              <div *ngIf="carsLoading()" class="carousel-wrapper relative" data-animation="fade-up" data-delay="200">
                 <div class="carousel-viewport overflow-hidden">
                   <div class="carousel-track flex gap-4">
-                    <div *ngFor="let i of [1,2,3]" class="car-card flex flex-col items-stretch justify-between gap-4 rounded-lg border border-gray-700 p-4 animate-pulse" [style.flex]="'0 0 ' + (100 / visibleCount) + '%'">
+                    <div *ngFor="let i of [1,2,3]" class="car-card flex flex-col items-stretch justify-between gap-4 rounded-lg border border-gray-700 p-4 animate-pulse" [style.flex]="'0 0 ' + (100 / visibleCount()) + '%'">
                       <div class="flex flex-col gap-2">
                         <div class="w-full bg-gray-700 aspect-video rounded-lg flex-1"></div>
                         <div class="flex flex-col gap-1 mt-4">
@@ -156,56 +140,99 @@
               </div>
 
               <!-- Dynamic Carousel -->
-              <div *ngIf="!carsLoading && cars.length > 0" class="carousel-wrapper relative" data-aos="fade-up" data-aos-delay="200">
-                <button aria-label="Previous" class="carousel-nav left" (click)="prev()" [disabled]="currentIndex === 0">&#10094;</button>
+              <div *ngIf="!carsLoading() && cars().length > 0" class="carousel-wrapper relative" data-animation="fade-up" data-delay="200" 
+                   (mouseenter)="pauseAutoScroll()" (mouseleave)="resumeAutoScroll()"
+                   (touchstart)="onTouchStart($event)" (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd($event)">
                 <div class="carousel-viewport overflow-hidden">
-                  <div #carouselTrack class="carousel-track flex gap-4 transition-transform" [style.transform]="'translateX(-' + (currentIndex * (100 / visibleCount)) + '%)'">
-                    <ng-container *ngFor="let car of cars">
-                      <div class="car-card flex flex-col items-stretch justify-between gap-4 rounded-lg border border-gray-700 p-4 hover:border-blue-500 transform hover:scale-[1.02] transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10" [style.flex]="'0 0 ' + (100 / visibleCount) + '%'">
+                  <div #carouselTrack class="carousel-track transition-transform" [style.transform]="'translateX(-' + (currentIndex() * (100 / visibleCount())) + '%)'">
+                    <ng-container *ngFor="let car of cars()">
+                      <div class="car-card flex flex-col items-stretch justify-between gap-4 rounded-lg border border-gray-700 p-4 relative overflow-hidden hover:border-blue-500 transform hover:scale-[1.02] transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10">
+                        <!-- Slanted Tag -->
+                        <div class="absolute top-0 right-0 w-32 h-32 z-20">
+                          <div *ngIf="car.tokensAvailable === 0; else waitlist"
+                            class="slanted-tag book-now">Book Now</div>
+                          <ng-template #waitlist>
+                            <div class="slanted-tag join-waitlist">Join Waitlist</div>
+                          </ng-template>
+                        </div>
+                        
                         <div class="flex flex-col gap-2">
-                          <div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg flex-1" [style.backgroundImage]="'url(' + car.image + ')'">
+                          <div class="w-full aspect-video rounded-lg flex-1 overflow-hidden bg-gray-800 flex items-center justify-center">
+                            <img *ngIf="car.image" [src]="car.image" [alt]="car.name || car.brand || 'car'" class="w-full h-full object-cover" />
+                            <div *ngIf="!car.image" class="text-white">No image</div>
                           </div>
-                          <div class="flex flex-col gap-1 mt-4">
-                            <p class="text-[#93acc8] text-sm font-normal leading-normal">{{car.ticketsAvailable}} Tickets Available</p>
-                            <p class="text-white text-base font-bold leading-tight">Token Price: ₹{{car.tokenPrice}}</p>
-                            <p class="text-[#93acc8] text-sm font-normal leading-normal">{{car.name}} • {{car.brand}}</p>
-                            <p class="text-[#93acc8] text-sm font-normal leading-normal">{{car.fuel}} • {{car.seats}} Seats • {{car.color}}</p>
-                            <p class="text-[#93acc8] text-xs font-normal leading-normal">{{car.location}}</p>
+                          <div class="flex flex-col gap-2 mt-4">
+                            <div class="flex items-start justify-between gap-2 w-full">
+                              <div class="flex flex-col flex-1">
+                                <div class="text-white font-bold text-lg">{{ car.name || 'Unknown Model' }}</div>
+                                <div class="text-gray-400 text-sm">{{ car.brand || 'Unknown Brand' }}</div>
+                                <div class="flex items-center gap-2 mt-1">
+                                  <div *ngIf="car.location" class="flex items-center gap-1 text-gray-500 text-xs">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12px" height="12px" fill="currentColor" viewBox="0 0 256 256" class="text-gray-500">
+                                      <path d="M128,64a40,40,0,1,0,40,40A40,40,0,0,0,128,64Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,128Zm0-112a88,88,0,0,0-88,88c0,31.4,14.51,64.68,42,96.25a254.19,254.19,0,0,0,41.45,38.3,8,8,0,0,0,9.18,0A254.19,254.19,0,0,0,220,136.25c27.45-31.57,42-64.85,42-96.25A88,88,0,0,0,128,16Zm0,206c-16.53-13-72-60.75-72-118a72,72,0,0,1,144,0C200,161.23,144.53,209,128,222Z"></path>
+                                    </svg>
+                                    <span>{{ car.location }}</span>
+                                  </div>
+                                </div>
+                                <!-- Additional car details -->
+                                <div class="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                                  <div *ngIf="car.seats" class="flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12px" height="12px" fill="currentColor" viewBox="0 0 256 256">
+                                      <path d="M120,80a8,8,0,0,1,8-8h0a8,8,0,0,1,8,8v8a8,8,0,0,1-8,8h0a8,8,0,0,1-8-8Zm-32,0a8,8,0,0,1,8-8h0a8,8,0,0,1,8,8v8a8,8,0,0,1-8,8h0a8,8,0,0,1-8-8Zm64,0a8,8,0,0,1,8-8h0a8,8,0,0,1,8,8v8a8,8,0,0,1-8,8h0a8,8,0,0,1-8-8ZM232,80v96a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V80a16,16,0,0,1,16-16H216A16,16,0,0,1,232,80ZM40,80v96H216V80H40Z"></path>
+                                    </svg>
+                                    <span>{{ car.seats }} seats</span>
+                                  </div>
+                                  <div *ngIf="car.fuel" class="flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12px" height="12px" fill="currentColor" viewBox="0 0 256 256">
+                                      <path d="M240,80v96a16,16,0,0,1-16,16H32a16,16,0,0,1-16-16V80a16,16,0,0,1,16-16H224A16,16,0,0,1,240,80ZM32,80v96H224V80H32Z"></path>
+                                    </svg>
+                                    <span>{{ car.fuel }}</span>
+                                  </div>
+                                  <div *ngIf="car.color" class="flex items-center gap-1">
+                                    <div class="w-3 h-3 rounded-full border border-gray-600" [style.background-color]="getColorCode(car.color)"></div>
+                                    <span>{{ car.color }}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="flex flex-col items-end gap-1">
+                                <div *ngIf="car.tokensAvailable === 0" class="text-xs bg-red-600 text-white rounded-full px-2 py-0.5">Sold Out</div>
+                                <div *ngIf="car.tokenPrice" class="text-blue-400 font-semibold text-base">₹{{ car.tokenPrice }}<span class="text-gray-400 text-sm font-normal">/per share</span></div>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <a [href]="'car-details.html?id=' + car.id" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 flex-row-reverse btn-outline-white pr-2 gap-1 text-sm font-medium leading-normal w-fit">
+                        <button (click)="navigateToCarDetails(car.id)" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 flex-row-reverse btn-outline-white pr-2 gap-1 text-sm font-medium leading-normal w-fit">
                           <div class="text-white" data-icon="ArrowRight" data-size="18px" data-weight="regular">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" fill="currentColor" viewBox="0 0 256 256">
-                              <path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"></path>
+                              <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"></path>
                             </svg>
                           </div>
                           <span class="truncate">Details</span>
-                        </a>
+                        </button>
                       </div>
                     </ng-container>
                   </div>
                 </div>
-                <button aria-label="Next" class="carousel-nav right" (click)="next()" [disabled]="currentIndex >= cars.length - visibleCount">&#10095;</button>
               </div>
 
               <!-- No Cars State -->
-              <div *ngIf="!carsLoading && cars.length === 0" class="text-center py-12" data-aos="fade-up" data-aos-delay="200">
+              <div *ngIf="!carsLoading() && cars().length === 0" class="text-center py-12" data-animation="fade-up" data-delay="200">
                 <div class="text-[#90adcb] text-lg mb-4">No cars available at the moment</div>
                 <p class="text-gray-400">Please check back later for new car listings.</p>
               </div>
             </div>
             <div class="flex flex-col gap-10 px-4 py-10 @container mb-12">
               <div class="flex flex-col gap-4">
-                <h1 data-aos="fade-up"
+                <h1 data-animation="fade-up"
                   class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-[720px]"
                 >
                   Simple Steps to Get You on the Road
                 </h1>
-                <p data-aos="fade-up" data-aos-delay="100" class="text-white text-base font-normal leading-normal max-w-[720px]">Your journey to luxury car co-ownership starts here.</p>
+                <p data-animation="fade-up" data-delay="100" class="text-white text-base font-normal leading-normal max-w-[720px]">Your journey to luxury car co-ownership starts here.</p>
               </div>
               <div class="timeline-wrapper">
                 <div class="timeline px-0">
-                <div data-aos="fade-right" data-aos-delay="100" class="timeline-item">
+                <div data-animation="fade-right" data-delay="100" class="timeline-item">
                   <div class="timeline-icon" aria-hidden>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" stroke="#fff"/></svg>
                   </div>
@@ -215,17 +242,17 @@
                   </div>
                 </div>
 
-                <div data-aos="fade-right" data-aos-delay="200" class="timeline-item">
+                <div data-animation="fade-right" data-delay="200" class="timeline-item">
                   <div class="timeline-icon" aria-hidden>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="#fff"/></svg>
                   </div>
                   <div class="timeline-content">
-                    <h3 class="text-white text-base font-bold">Book Your Token</h3>
-                    <p class="text-[#90adcb] text-sm mt-1">Select the right ownership token package and confirm your preferred dates. Our real-time booking system with secure payments ensures a smooth process to book luxury cars online.</p>
+                    <h3 class="text-white text-base font-bold">Book Your Share</h3>
+                    <p class="text-[#90adcb] text-sm mt-1">Select the right ownership share package and confirm your preferred dates. Our real-time booking system with secure payments ensures a smooth process to book luxury cars online.</p>
                   </div>
                 </div>
 
-                <div data-aos="fade-right" data-aos-delay="300" class="timeline-item">
+                <div data-animation="fade-right" data-delay="300" class="timeline-item">
                   <div class="timeline-icon" aria-hidden>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-key" viewBox="0 0 16 16">
                       <path d="M0 8a4 4 0 0 1 7.465-2H14a.5.5 0 0 1 .354.146l1.5 1.5a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0L13 9.207l-.646.647a.5.5 0 0 1-.708 0L11 9.207l-.646.647a.5.5 0 0 1-.708 0L9 9.207l-.646.647A.5.5 0 0 1 8 10h-.535A4 4 0 0 1 0 8m4-3a3 3 0 1 0 2.712 4.285A.5.5 0 0 1 7.163 9h.63l.853-.854a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.793-.793-1-1h-6.63a.5.5 0 0 1-.451-.285A3 3 0 0 0 4 5"/>
@@ -238,7 +265,7 @@
                   </div>
                 </div>
 
-                <div data-aos="fade-right" data-aos-delay="400" class="timeline-item">
+                <div data-animation="fade-right" data-delay="400" class="timeline-item">
                   <div class="timeline-icon" aria-hidden>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v6m0 0v6m0-6h6m-6 0H6" stroke="#fff"/></svg>
                   </div>
@@ -250,7 +277,7 @@
                 </div>
                 <div class="timeline-empty">
                   <div class="timeline-empty-inner">
-                    <div class="image-card rounded-xl overflow-hidden h-[500px]" data-aos="fade-left" data-aos-delay="200">
+                    <div class="image-card rounded-xl overflow-hidden h-[500px]" data-animation="fade-left" data-delay="200">
                       <div class="w-full h-full">
                         <iframe 
                           width="100%" 
@@ -269,59 +296,64 @@
                 </div>
               </div>
             </div>
-            <h2 data-aos="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full px-4 pb-3 pt-5 text-left">Why Choose Fraction Car?</h2>
+            <h2 data-animation="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full px-4 pb-3 pt-5 text-left">Why Choose Fraction Car?</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 mb-12">
-              <div data-aos="fade-up" data-aos-delay="100" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+              <div data-animation="fade-up" data-delay="100" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
                 <div class="text-3xl">🚘</div>
                 <h3 class="text-white text-xl font-bold">Fractional Car Ownership</h3>
                 <p class="text-gray-400">Own part of a luxury car without the full financial burden.</p>
               </div>
-              <div data-aos="fade-up" data-aos-delay="200" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+              <div data-animation="fade-up" data-delay="200" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
                 <div class="text-3xl">🔐</div>
                 <h3 class="text-white text-xl font-bold">Complete Transparency</h3>
-                <p class="text-gray-400">Clear breakdown of token pricing, usage rights, and benefits.</p>
+                <p class="text-gray-400">Clear breakdown of share pricing, usage rights, and benefits.</p>
               </div>
-              <div data-aos="fade-up" data-aos-delay="300" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+              <div data-animation="fade-up" data-delay="300" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
                 <div class="text-3xl">🛠</div>
                 <h3 class="text-white text-xl font-bold">Maintenance-Free Driving</h3>
                 <p class="text-gray-400">We cover insurance, service, and regular upkeep.</p>
               </div>
-              <div data-aos="fade-up" data-aos-delay="400" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+              <div data-animation="fade-up" data-delay="400" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
                 <div class="text-3xl">⏱</div>
                 <h3 class="text-white text-xl font-bold">Flexible Usage Plans</h3>
                 <p class="text-gray-400">Daily, weekly, or monthly slots tailored to your lifestyle.</p>
               </div>
-              <div data-aos="fade-up" data-aos-delay="500" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+              <div data-animation="fade-up" data-delay="500" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
                 <div class="text-3xl">🌍</div>
                 <h3 class="text-white text-xl font-bold">Eco-Friendly Sharing</h3>
                 <p class="text-gray-400">Reduce unnecessary purchases and embrace sustainable luxury.</p>
               </div>
+              <div data-animation="fade-up" data-delay="600" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+                <div class="text-3xl">🤝</div>
+                <h3 class="text-white text-xl font-bold">Dedicated Concierge Support</h3>
+                <p class="text-gray-400">Personal assistance for bookings, pickups, and on-road help.</p>
+              </div>
             </div>
 
-            <h2 data-aos="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full px-4 pb-3 pt-5 text-left">Trust & Security Matters</h2>
+            <h2 data-animation="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full px-4 pb-3 pt-5 text-left">Trust & Security Matters</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 mb-12">
-              <div data-aos="fade-up" data-aos-delay="100" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+              <div data-animation="fade-up" data-delay="100" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
                 <div class="flex items-center gap-3">
                   <span class="text-2xl">✅</span>
                   <h3 class="text-white text-xl font-bold">All users are KYC-verified</h3>
                 </div>
                 <p class="text-gray-400">We ensure a secure community of verified members.</p>
               </div>
-              <div data-aos="fade-up" data-aos-delay="200" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+              <div data-animation="fade-up" data-delay="200" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
                 <div class="flex items-center gap-3">
                   <span class="text-2xl">✅</span>
                   <h3 class="text-white text-xl font-bold">Cars are fully insured and registered</h3>
                 </div>
                 <p class="text-gray-400">Complete coverage for your peace of mind.</p>
               </div>
-              <div data-aos="fade-up" data-aos-delay="300" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+              <div data-animation="fade-up" data-delay="300" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
                 <div class="flex items-center gap-3">
                   <span class="text-2xl">✅</span>
                   <h3 class="text-white text-xl font-bold">Payments secured via bank-grade encryption</h3>
                 </div>
                 <p class="text-gray-400">Your transactions are always protected.</p>
               </div>
-              <div data-aos="fade-up" data-aos-delay="400" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
+              <div data-animation="fade-up" data-delay="400" class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
                 <div class="flex items-center gap-3">
                   <span class="text-2xl">✅</span>
                   <h3 class="text-white text-xl font-bold">24/7 assistance in case of emergencies</h3>
@@ -332,7 +364,7 @@
 
             <!-- Co-owning vs Renting Comparison -->
             <div class="px-4 py-8">
-              <h2 data-aos="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] mb-8">Co-owning vs Renting</h2>
+              <h2 data-animation="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] mb-8">Co-owning vs Renting</h2>
               
               <div class="overflow-x-auto">
                 <table class="w-full border-collapse">
@@ -371,7 +403,7 @@
                     </tr>
                     <tr>
                       <td class="p-4 border-b border-[#314d68] text-white font-medium">Usage Rights</td>
-                      <td class="p-4 border-b border-[#314d68] text-blue-400">30 days/year per ticket</td>
+                      <td class="p-4 border-b border-[#314d68] text-blue-400">30 days/year per share</td>
                       <td class="p-4 border-b border-[#314d68] text-gray-400">Limited to rental period only</td>
                     </tr>
                   </tbody>
@@ -379,48 +411,112 @@
               </div>
             </div>
 
-            <h2 data-aos="fade-right" class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full px-4 pb-3 pt-5 text-left">Frequently Asked Questions</h2>
+            <!-- FAQ Section Header -->
+            <div class="px-4 py-8 text-center">
+              <h2 data-animation="fade-up" class="text-white text-4xl font-bold leading-tight mb-4">Frequently Asked Questions</h2>
+              <p data-animation="fade-up" data-delay="100" class="text-gray-400 text-lg">Everything you need to know about fractional car ownership</p>
+            </div>
             
             <!-- FAQ Categories -->
-            <div class="flex flex-wrap gap-4 px-4 mb-6">
+            <div class="flex flex-wrap justify-center gap-4 px-4 mb-8">
               <button 
-                *ngFor="let category of Object.keys(faqsByCategory)" 
+                *ngFor="let category of Object.keys(faqsByCategory()); let i = index" 
                 (click)="showFAQSection(category)"
-                [class]="activeFaqCategory === category ? 'btn-outline-white px-4 py-2 rounded-md text-sm bg-blue-600' : 'btn-outline-white px-4 py-2 rounded-md text-sm'"
+                [class]="activeFaqCategory() === category ? 'faq-category-btn active' : 'faq-category-btn'"
+                data-animation="fade-up" 
+                [attr.data-delay]="(i + 1) * 100"
               >
+                <div class="faq-category-icon">
+                  <svg *ngIf="getCategoryIcon(category) === 'info'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+                    <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.09,88.09,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176Zm-8-56a12,12,0,1,1,12-12A12,12,0,0,1,136,120Z"></path>
+                  </svg>
+                  <svg *ngIf="getCategoryIcon(category) === 'dollar'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+                    <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.09,88.09,0,0,1,128,216Zm40-88a40,40,0,0,1-40,40V128a8,8,0,0,0-16,0v40a24,24,0,0,1-24-24,8,8,0,0,0-16,0,40,40,0,0,0,40,40V168a8,8,0,0,0,16,0V128a24,24,0,0,1,24,24,8,8,0,0,0,16,0Z"></path>
+                  </svg>
+                  <svg *ngIf="getCategoryIcon(category) === 'calendar'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+                    <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM48,48H72v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h32V80H48ZM208,208H48V96H208V208Z"></path>
+                  </svg>
+                  <svg *ngIf="getCategoryIcon(category) === 'check'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+                    <path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34Z"></path>
+                  </svg>
+                </div>
                 {{ category }}
               </button>
             </div>
             
             <!-- Dynamic FAQ Section -->
-            <div *ngIf="!loading" class="flex flex-col p-4 gap-3 mb-12">
-              <h3 class="text-white text-xl font-bold mb-4">{{ activeFaqCategory }}</h3>
-              <div *ngIf="getFAQsForCategory(activeFaqCategory).length === 0" class="text-[#90adcb] text-center py-8">
-                No FAQs available for this category.
+            <div *ngIf="!loading()" class="faq-container">
+              <div *ngIf="getFAQsForCategory(activeFaqCategory()).length === 0" class="text-center py-12">
+                <div class="text-gray-400 text-lg">No FAQs available for this category.</div>
               </div>
-              <details 
-                *ngFor="let faq of getFAQsForCategory(activeFaqCategory); let i = index"
-                data-aos="fade-up" 
-                [attr.data-aos-delay]="(i + 1) * 100"
-                class="flex flex-col rounded-xl border border-[#314d68] bg-[#101a23] px-[15px] py-[7px] group hover:border-blue-500 transition-all duration-300"
-                [open]="i === 0"
-              >
-                <summary class="flex cursor-pointer items-center justify-between gap-6 py-2 hover:text-blue-400 transition-colors duration-300">
-                  <p class="text-white text-sm font-medium leading-normal">{{ faq.question }}</p>
-                  <div class="text-white group-open:rotate-180">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
-                      <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path>
-                    </svg>
+              <div class="space-y-4 mb-4">
+                <details 
+                  *ngFor="let faq of getFAQsForCategory(activeFaqCategory()); let i = index"
+                  data-animation="fade-up" 
+                  [attr.data-delay]="(i + 1) * 100"
+                  class="faq-item group"
+                  [open]="i === 0"
+                >
+                  <summary class="faq-summary">
+                    <div class="faq-content">
+                      <div class="faq-icon">
+                        <!-- Question Mark Icon -->
+                        <svg *ngIf="getFaqIcon(faq.question) === 'question'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                        </svg>
+                        <!-- Lightbulb Icon -->
+                        <svg *ngIf="getFaqIcon(faq.question) === 'lightbulb'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
+                        </svg>
+                        <!-- Users Icon -->
+                        <svg *ngIf="getFaqIcon(faq.question) === 'users'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 8H17c-.8 0-1.54.37-2.01.99L14 10.5 12.01 8.99A2.5 2.5 0 0 0 10 8H8.46c-.8 0-1.54.37-2.01.99L4 10.5V22h2v-6h2.5l2.5 2.5L11.5 16H14v6h2zM6.5 8.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5S5 6.17 5 7s.67 1.5 1.5 1.5z"/>
+                        </svg>
+                        <!-- Car Icon -->
+                        <svg *ngIf="getFaqIcon(faq.question) === 'car'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                        </svg>
+                        <!-- Shield Icon -->
+                        <svg *ngIf="getFaqIcon(faq.question) === 'shield'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11H16V16H8V11H9.2V10C9.2,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.4,8.7 10.4,10V11H13.6V10C13.6,8.7 12.8,8.2 12,8.2Z"/>
+                        </svg>
+                        <!-- Clock Icon -->
+                        <svg *ngIf="getFaqIcon(faq.question) === 'clock'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z"/>
+                        </svg>
+                        <!-- Money Icon -->
+                        <svg *ngIf="getFaqIcon(faq.question) === 'money'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5V18H13V16.5H11M12,6A3,3 0 0,0 9,9V11H7V9A5,5 0 0,1 12,4A5,5 0 0,1 17,9V11H15V9A3,3 0 0,0 12,6Z"/>
+                        </svg>
+                        <!-- Calendar Icon -->
+                        <svg *ngIf="getFaqIcon(faq.question) === 'calendar'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M19,3H18V1H16V3H8V1H6V3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M19,19H5V8H19V19M19,6H5V5H19V6M12,10H14V12H12V10M16,10H18V12H16V10M8,14H10V16H8V14M12,14H14V16H12V14M16,14H18V16H16V14M8,10H10V12H8V10Z"/>
+                        </svg>
+                        <!-- Check Icon -->
+                        <svg *ngIf="getFaqIcon(faq.question) === 'check'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+                        </svg>
+                      </div>
+                      <div class="faq-text">
+                        <h4 class="faq-question">{{ faq.question }}</h4>
+                        <p class="faq-subtitle">{{ getFaqSubtitle(faq.question) }}</p>
+                      </div>
+                    </div>
+                    <div class="faq-chevron">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
+                        <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35A8,8,0,0,1,213.66,101.66Z"></path>
+                      </svg>
+                    </div>
+                  </summary>
+                  <div class="faq-answer">
+                    <p>{{ faq.answer }}</p>
                   </div>
-                </summary>
-                <p class="text-[#90adcb] text-sm font-normal leading-normal pb-2">
-                  {{ faq.answer }}
-                </p>
-              </details>
+                </details>
+              </div>
             </div>
 
             <!-- Loading State -->
-            <div *ngIf="loading" class="flex flex-col p-4 gap-3 mb-12">
+            <div *ngIf="loading()" class="flex flex-col p-4 gap-3 mb-20">
               <div class="text-center py-8">
                 <div class="text-[#90adcb]">Loading FAQs...</div>
               </div>

@@ -1,5 +1,12 @@
 const Booking = require('../models/booking');
+const User = require('../models/User');
+const Car = require('../models/Car');
 const logger = require('../utils/logger');
+const { 
+  sendBookingConfirmationEmail, 
+  sendSuperAdminBookingNotification 
+} = require('../utils/emailService');
+const NotificationService = require('../utils/notificationService');
 
 // Create a new booking (User)
 const createBooking = async (req, res) => {
@@ -36,6 +43,31 @@ const createBooking = async (req, res) => {
     });
 
     await booking.save();
+
+    // Send emails and create notifications after successful booking creation
+    try {
+      // Get user and car details for email
+      const user = await User.findById(req.user.id);
+      const car = await Car.findById(carid);
+      
+      if (user && car) {
+        // Send confirmation email to user
+        await sendBookingConfirmationEmail(user, booking, car);
+        
+        // Send notification email to superadmin
+        await sendSuperAdminBookingNotification(user, booking, car);
+        
+        // Create notifications
+        await NotificationService.createBookingNotification(user._id, booking, car);
+        await NotificationService.createUserMadeBookingNotification(user, booking, car);
+        
+        logger(`Emails and notifications sent successfully for booking creation: ${booking._id}`);
+      }
+    } catch (emailError) {
+      // Log email error but don't fail the booking creation
+      logger(`Error sending emails/notifications for booking creation: ${emailError.message}`);
+    }
+
     res.status(201).json({
       status: 'success',
       body: { booking },
@@ -149,6 +181,22 @@ const updateBookingStatus = async (req, res) => {
     
     const updatedBooking = await Booking.findById(req.params.id)
       .populate('carid userid');
+    
+    // Send email notification when booking status is updated
+    try {
+      const user = updatedBooking.userid;
+      const car = updatedBooking.carid;
+      
+      if (user && car) {
+        // Send updated booking confirmation to user
+        await sendBookingConfirmationEmail(user, updatedBooking, car);
+        
+        logger(`Booking status update email sent for booking: ${updatedBooking._id}`);
+      }
+    } catch (emailError) {
+      // Log email error but don't fail the status update
+      logger(`Error sending email for booking status update: ${emailError.message}`);
+    }
       
     res.json({
       status: 'success',

@@ -1,20 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ElementRef, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ContactService, ContactFormData } from '../services/contact.service';
-
-// Declare AOS for TypeScript
-declare const AOS: any;
+import { AnimationService } from '../services/animation.service';
 
 @Component({
   selector: 'app-contact-us',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './contact-us.html',
-  styleUrl: './contact-us.css'
+  styleUrls: ['./contact-us.css', '../animations.css'],
+  animations: AnimationService.getAnimations()
 })
-export class ContactUs implements OnInit {
+export class ContactUs implements OnInit, AfterViewInit {
   formData: ContactFormData = {
     name: '',
     email: '',
@@ -29,7 +28,10 @@ export class ContactUs implements OnInit {
 
   constructor(
     private contactService: ContactService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private elRef: ElementRef<HTMLElement>,
+    private renderer: Renderer2,
+    private animationService: AnimationService
   ) {}
 
   ngOnInit() {
@@ -38,19 +40,9 @@ export class ContactUs implements OnInit {
       this.isInvestorPage = params['type'] === 'investor';
     });
 
-    // Initialize AOS after a small delay to ensure all content is loaded
+    // Initialize Angular animations
     setTimeout(() => {
-      if (typeof AOS !== 'undefined') {
-        AOS.init({
-          duration: 800,
-          easing: 'ease-in-out',
-          once: false,
-          mirror: true,
-          offset: 50,
-          delay: 100,
-          disable: false
-        });
-      }
+      this.initAngularAnimations();
     }, 100);
   }
 
@@ -85,5 +77,14 @@ export class ContactUs implements OnInit {
         this.isSubmitting = false;
       }
     });
+  }
+
+  ngAfterViewInit(): void {
+    this.initAngularAnimations();
+  }
+
+  private initAngularAnimations(): void {
+    // Initialize animations using the animation service
+    this.animationService.initAnimations(this.elRef, this.renderer);
   }
 }

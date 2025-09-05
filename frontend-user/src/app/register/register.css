@@ -1,0 +1,358 @@
+/* Custom styles for the register page */
+
+/* Mobile responsiveness for the promotional section */
+@media (max-width: 1024px) {
+  .min-h-screen {
+    flex-direction: column;
+  }
+  
+  .lg\:w-1\/2 {
+    width: 100%;
+    min-height: 40vh;
+  }
+}
+
+/* Image background styling (from login page) */
+.image-bg {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: brightness(0.8) contrast(1.1);
+  transition: all 0.5s ease;
+}
+
+.image-bg:hover {
+  filter: brightness(0.9) contrast(1.2);
+}
+
+/* Overlay styling */
+.image-overlay {
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(1px);
+}
+
+/* Promotional text styling */
+.promo-text {
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.1));
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  backdrop-filter: blur(2px);
+}
+
+/* Enhanced car section styling */
+.car-section {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 50%, #7f1d1d 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.car-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.1) 2px,
+      rgba(255, 255, 255, 0.1) 4px
+    );
+  opacity: 0.3;
+}
+
+/* Car image styling */
+.car-image {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.car-image::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+  animation: shine 3s ease-in-out infinite;
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* License plate styling */
+.license-plate {
+  background: #000;
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  letter-spacing: 1px;
+  border: 2px solid #333;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Form section styling */
+.form-section {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%);
+}
+
+/* Input field enhancements - compact version */
+.form-input {
+  background: rgba(31, 41, 55, 0.5);
+  border: 1px solid #4b5563;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.form-input:focus {
+  background: rgba(31, 41, 55, 0.7);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  transform: translateY(-1px);
+}
+
+.form-input:hover {
+  border-color: #6b7280;
+}
+
+/* Compact form spacing */
+.space-y-3 > * + * {
+  margin-top: 0.75rem;
+}
+
+.space-y-4 > * + * {
+  margin-top: 1rem;
+}
+
+/* Button styling */
+.submit-button {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.submit-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.submit-button:hover::before {
+  left: 100%;
+}
+
+.submit-button:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+}
+
+.submit-button:active {
+  transform: translateY(0);
+}
+
+/* Logo styling */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.logo-text {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Error and success message styling */
+.message-container {
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  border: 1px solid;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error-message {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: #dc2626;
+  color: #fca5a5;
+}
+
+.success-message {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: #22c55e;
+  color: #86efac;
+}
+
+/* Link styling */
+.link {
+  color: #60a5fa;
+  transition: color 0.2s ease;
+  text-decoration: none;
+}
+
+.link:hover {
+  color: #93c5fd;
+  text-decoration: underline;
+}
+
+/* Terms and privacy styling */
+.terms-text {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.terms-link {
+  color: #60a5fa;
+  transition: color 0.2s ease;
+  text-decoration: none;
+}
+
+.terms-link:hover {
+  color: #93c5fd;
+  text-decoration: underline;
+}
+
+/* Loading animation */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .car-section {
+    min-height: 30vh;
+    padding: 2rem 1rem;
+  }
+  
+  .car-image {
+    width: 280px;
+    height: 180px;
+  }
+  
+  .form-section {
+    padding: 1.5rem 1rem;
+  }
+  
+  .form-input {
+    padding: 0.75rem 1rem;
+  }
+  
+  .submit-button {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Compact form layout for fixed height */
+.compact-form {
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+/* Ensure form fits in viewport */
+.form-container {
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding: 1rem 0;
+}
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Ensure form can scroll when needed */
+.form-scrollable {
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+/* Mobile form adjustments */
+@media (max-width: 1024px) {
+  .form-scrollable {
+    max-height: none;
+    overflow-y: visible;
+  }
+}
+
+/* Focus visible for accessibility */
+.form-input:focus-visible,
+.submit-button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .form-input {
+    border-width: 2px;
+  }
+  
+  .submit-button {
+    border: 2px solid #ffffff;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .car-image::before,
+  .submit-button::before {
+    animation: none;
+  }
+  
+  .form-input,
+  .submit-button {
+    transition: none;
+  }
+}

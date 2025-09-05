@@ -91,10 +91,10 @@ export class BookingService {
 
   // Helper method to check if a date has bookings
   hasBookingsOnDate(bookings: Booking[], date: Date): Booking[] {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = this.formatDateForComparison(date);
     return bookings.filter(booking => {
-      const fromDate = new Date(booking.bookingFrom).toISOString().split('T')[0];
-      const toDate = new Date(booking.bookingTo).toISOString().split('T')[0];
+      const fromDate = this.formatDateForComparison(new Date(booking.bookingFrom));
+      const toDate = this.formatDateForComparison(new Date(booking.bookingTo));
       return dateStr >= fromDate && dateStr <= toDate;
     });
   }
@@ -147,21 +147,40 @@ export class BookingService {
 
   // Helper method to check if a date is booked by current user
   isBookedByCurrentUser(bookings: Booking[], date: Date, currentUserId: string): boolean {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = this.formatDateForComparison(date);
     return bookings.some(booking => {
-      const fromDate = new Date(booking.bookingFrom).toISOString().split('T')[0];
-      const toDate = new Date(booking.bookingTo).toISOString().split('T')[0];
+      const fromDate = this.formatDateForComparison(new Date(booking.bookingFrom));
+      const toDate = this.formatDateForComparison(new Date(booking.bookingTo));
       return dateStr >= fromDate && dateStr <= toDate && booking.userid._id === currentUserId;
     });
   }
 
   // Helper method to check if a date is booked by other users
   isBookedByOthers(bookings: Booking[], date: Date, currentUserId: string): boolean {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = this.formatDateForComparison(date);
     return bookings.some(booking => {
-      const fromDate = new Date(booking.bookingFrom).toISOString().split('T')[0];
-      const toDate = new Date(booking.bookingTo).toISOString().split('T')[0];
+      const fromDate = this.formatDateForComparison(new Date(booking.bookingFrom));
+      const toDate = this.formatDateForComparison(new Date(booking.bookingTo));
       return dateStr >= fromDate && dateStr <= toDate && booking.userid._id !== currentUserId;
     });
+  }
+
+  // Helper method to format date for comparison (avoiding timezone issues)
+  private formatDateForComparison(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const formatted = `${year}-${month}-${day}`;
+    
+    // Debug logging to help identify date issues
+    console.log('Date formatting:', {
+      original: date,
+      year,
+      month: date.getMonth() + 1,
+      day: date.getDate(),
+      formatted
+    });
+    
+    return formatted;
   }
 }

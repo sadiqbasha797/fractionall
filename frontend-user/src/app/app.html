@@ -1,2 +1,4 @@
-<app-navbar></app-navbar>
+<app-preloader *ngIf="showPreloader()" [showPreloader]="showPreloader()"></app-preloader>
+<app-navbar *ngIf="shouldShowNavbar()"></app-navbar>
 <router-outlet />
+<app-footer *ngIf="shouldShowNavbar()"></app-footer>

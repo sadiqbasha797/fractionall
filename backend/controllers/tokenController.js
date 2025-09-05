@@ -1,6 +1,12 @@
 const Token = require('../models/token');
 const Car = require('../models/Car');
+const User = require('../models/User');
 const logger = require('../utils/logger');
+const { 
+  sendTokenPurchaseConfirmationEmail, 
+  sendSuperAdminTokenPurchaseNotification 
+} = require('../utils/emailService');
+const NotificationService = require('../utils/notificationService');
 
 // Create a new token (Admin/SuperAdmin can create for any user, User can create for themselves)
 const createToken = async (req, res) => {
@@ -63,6 +69,30 @@ const createToken = async (req, res) => {
     await Car.findByIdAndUpdate(carid, {
       $inc: { tokensavailble: -1 }
     });
+
+    // Send emails and create notifications after successful token creation
+    try {
+      // Get user and car details for email
+      const user = await User.findById(userid);
+      const car = await Car.findById(carid);
+      
+      if (user && car) {
+        // Send confirmation email to user
+        await sendTokenPurchaseConfirmationEmail(user, token, car);
+        
+        // Send notification email to superadmin
+        await sendSuperAdminTokenPurchaseNotification(user, token, car);
+        
+        // Create notifications
+        await NotificationService.createTokenNotification(user._id, token, car);
+        await NotificationService.createUserJoinedWaitlistNotification(user, token, car);
+        
+        logger(`Emails and notifications sent successfully for token creation: ${token._id}`);
+      }
+    } catch (emailError) {
+      // Log email error but don't fail the token creation
+      logger(`Error sending emails/notifications for token creation: ${emailError.message}`);
+    }
 
     res.status(201).json({
       status: 'success',

@@ -169,8 +169,8 @@ export class Bookings implements OnInit {
 
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const currentDate = new Date(year, month, day);
+      const dateString = this.formatDateForComparison(currentDate);
       
       // Check if date is booked by current user or others
       const isBookedByUser = this.bookingService.isBookedByCurrentUser(this.carBookings(), currentDate, this.currentUserId());
@@ -207,8 +207,8 @@ export class Bookings implements OnInit {
     const nextDay = new Date(date);
     nextDay.setDate(date.getDate() + 1);
     
-    const prevDateString = prevDay.toISOString().split('T')[0];
-    const nextDateString = nextDay.toISOString().split('T')[0];
+    const prevDateString = this.formatDateForComparison(prevDay);
+    const nextDateString = this.formatDateForComparison(nextDay);
     
     const hasPrev = this.bookedDates.has(prevDateString);
     const hasNext = this.bookedDates.has(nextDateString);
@@ -387,7 +387,7 @@ export class Bookings implements OnInit {
         return;
       }
       
-      const dateString = selectedDate.toISOString().split('T')[0];
+      const dateString = this.formatDateForComparison(selectedDate);
       
       // If no from date is selected, set it
       if (!this.bookingForm.fromDate) {
@@ -428,6 +428,14 @@ export class Bookings implements OnInit {
     const token = this.authService.getToken();
     const userData = this.authService.getUserData();
     return !!(token && userData);
+  }
+
+  // Helper method to format date for comparison (avoiding timezone issues)
+  private formatDateForComparison(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   // Load user's cars from their active tickets

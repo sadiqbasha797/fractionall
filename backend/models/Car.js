@@ -41,9 +41,10 @@ const carSchema = new mongoose.Schema({
         type: String,
         required: false
     },
-    expectedpurchasedate: {
-        type: Date,
-        required: false
+    contractYears: {
+        type: Number,
+        required: false,
+        default: 5
     },
     status: {
         type: String,

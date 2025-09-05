@@ -1,49 +1,49 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy, AfterViewInit, Inject, PLATFORM_ID, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, Inject, PLATFORM_ID, signal, computed, effect, ElementRef, Renderer2 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { CarPublicService } from '../services/car-public.service';
 import { PaymentService, PaymentOrder, PaymentVerification } from '../services/payment.service';
 import { TokenService } from '../services/token.service';
 import { BookNowTokenService } from '../services/book-now-token.service';
 import { AuthService } from '../services/auth.service';
+import { AnimationService } from '../services/animation.service';
+import { UserService } from '../services/user.service';
 
 @Component({
   selector: 'app-car-details',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './car-details.html',
-  styleUrl: './car-details.css'
+  styleUrls: ['./car-details.css', '../animations.css'],
+  animations: AnimationService.getAnimations()
 })
 export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private route: ActivatedRoute,
+    private router: Router,
     private carService: CarPublicService,
     private paymentService: PaymentService,
     private tokenService: TokenService,
     private bookNowTokenService: BookNowTokenService,
-    private authService: AuthService
+    private authService: AuthService,
+    private userService: UserService,
+    private elRef: ElementRef<HTMLElement>,
+    private renderer: Renderer2,
+    private animationService: AnimationService
   ) {
-    // Effect to reinitialize AOS when car data changes
+    // Effect to reinitialize animations when car data changes
     effect(() => {
       const carData = this.carData();
       const isLoading = this.loading();
       
       if (!isLoading && carData && isPlatformBrowser(this.platformId)) {
-        // Delay AOS refresh to ensure DOM is updated
+        // Delay animation refresh to ensure DOM is updated
         setTimeout(() => {
-          if (typeof (window as any).AOS !== 'undefined') {
-            (window as any).AOS.refresh();
-          }
+          this.initAngularAnimations();
         }, 200);
-        
-        // Also refresh after a longer delay to catch any late DOM updates
-        setTimeout(() => {
-          if (typeof (window as any).AOS !== 'undefined') {
-            (window as any).AOS.refresh();
-          }
-        }, 1000);
       }
     });
   }
@@ -53,6 +53,30 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   protected carData = signal<any>(null);
   protected loading = signal<boolean>(true);
   protected error = signal<string | null>(null);
+
+  // User data properties
+  protected user = signal<any>({
+    _id: '',
+    name: '',
+    email: '',
+    phone: '',
+    dateofbirth: '',
+    location: '',
+    address: '',
+    pincode: '',
+    profileimage: '',
+    verified: false,
+    kycStatus: 'pending',
+    governmentid: {
+      aadharid: '',
+      panid: '',
+      licenseid: '',
+      income: ''
+    },
+    createdAt: ''
+  });
+  protected userLoading = signal<boolean>(false);
+  protected userError = signal<string>('');
 
   // Carousel properties
   protected currentSlide = signal<number>(0);
@@ -75,6 +99,29 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   protected hasBookNowToken = signal<boolean>(false);
   protected hasWaitlistToken = signal<boolean>(false);
   protected checkingPurchaseStatus = signal<boolean>(true);
+  protected totalBookNowTokens = signal<number>(0);
+  protected totalWaitlistTokens = signal<number>(0);
+  protected maxBookNowTokens = 3;
+  protected maxWaitlistTokens = 3;
+
+  // Token data properties (similar to profile)
+  protected tokens = signal<any[]>([]);
+  protected tokensLoading = signal<boolean>(false);
+  protected tokensError = signal<string>('');
+
+  protected bookNowTokens = signal<any[]>([]);
+  protected bookNowTokensLoading = signal<boolean>(false);
+  protected bookNowTokensError = signal<string>('');
+
+  // Authentication flow properties
+  protected showLoginModal = signal<boolean>(false);
+  protected pendingPaymentType = signal<'book-now' | 'waitlist' | null>(null);
+  protected returnUrl = signal<string>('');
+  protected authSuccessMessage = signal<string>('');
+
+  // Info modal properties
+  protected showInfoModal = signal<boolean>(false);
+  protected infoModalType = signal<'book-now' | 'waitlist' | null>(null);
 
   // Calendar properties
   protected viewDate = signal<Date>(new Date());
@@ -88,23 +135,51 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
     // Get car ID from route parameters
     this.carId.set(this.route.snapshot.paramMap.get('id') || '');
     
+    // Set return URL for authentication flow
+    this.returnUrl.set(`/car-details/${this.carId()}`);
+    
     // Load car data
     this.loadCarData();
 
     // Load Razorpay key
     this.loadRazorpayKey();
     
-    // Check user's purchase status for this car
-    this.checkUserPurchaseStatus();
+    // Load user profile first (similar to profile component)
+    this.loadUserProfile();
 
-    // Initialize AOS if available
-    if (isPlatformBrowser(this.platformId) && typeof (window as any).AOS !== 'undefined') {
-      (window as any).AOS.init({
-        duration: 800,
-        easing: 'slide',
-        offset: 100,
-        delay: 0
+    // Check if user just returned from authentication
+    this.checkAuthReturn();
+
+    // Listen for navigation events to refresh purchase status when returning to this page
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: NavigationEnd) => {
+      // If we're navigating to this car details page, refresh purchase status
+      if (event.url.includes(`/car-details/${this.carId()}`)) {
+        // Small delay to ensure any auth state changes are processed
+        setTimeout(() => {
+          this.loadUserProfile();
+        }, 200);
+      }
+    });
+
+    // Listen for page visibility changes to refresh status when user returns to tab
+    if (isPlatformBrowser(this.platformId)) {
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          this.onPageVisible();
+        }
       });
+      
+      // Listen for window focus events
+      window.addEventListener('focus', () => {
+        this.onWindowFocus();
+      });
+    }
+
+    // Initialize Angular animations
+    if (isPlatformBrowser(this.platformId)) {
+      this.initAngularAnimations();
     }
   }
 
@@ -134,16 +209,93 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  loadUserProfile() {
+    this.userLoading.set(true);
+    this.userError.set('');
+    
+    // First try to get from localStorage if available
+    const storedUser = this.authService.getUserData();
+    if (storedUser) {
+      this.user.set({ ...this.user(), ...storedUser });
+    }
+
+    // Check if user is authenticated
+    const token = this.authService.getToken();
+    if (!token) {
+      this.userLoading.set(false);
+      this.userError.set('Please login to view purchase options.');
+      this.checkingPurchaseStatus.set(false);
+      return;
+    }
+
+    // If user is authenticated, close any open login modal
+    if (this.showLoginModal()) {
+      this.closeLoginModal();
+    }
+
+    // Then fetch fresh data from API
+    this.userService.getProfile().subscribe({
+      next: (response) => {
+        this.userLoading.set(false);
+        if (response && response.body && response.body.user) {
+          this.user.set({ ...this.user(), ...response.body.user });
+          // Update stored user data
+          this.authService.setUserData(this.user());
+          // Now load tokens and book now tokens since user is authenticated
+          this.loadUserTokens();
+          this.loadUserBookNowTokens();
+        }
+      },
+      error: (error) => {
+        this.userLoading.set(false);
+        console.error('Error loading profile:', error);
+        
+        if (error.status === 401) {
+          this.userError.set('Authentication failed. Please login again.');
+          // Clear invalid token and user data
+          this.authService.removeToken();
+          this.authService.removeUserData();
+        } else if (error.status === 403) {
+          this.userError.set('Access denied. You do not have permission to view this page.');
+        } else {
+          this.userError.set('Failed to load user data. Please try again later.');
+        }
+        
+        // If API fails but we have stored data, use that
+        if (!this.user().name && storedUser) {
+          this.user.set({ ...this.user(), ...storedUser });
+          // Still try to load tokens with stored data
+          this.loadUserTokens();
+          this.loadUserBookNowTokens();
+        } else {
+          this.checkingPurchaseStatus.set(false);
+        }
+      }
+    });
+  }
+
   ngAfterViewInit() {
     if (isPlatformBrowser(this.platformId)) {
       this.initializeCarousel();
       this.initializeBookingCalendar();
+      this.initAngularAnimations();
     }
+  }
+
+  private initAngularAnimations(): void {
+    // Initialize animations using the animation service
+    this.animationService.initAnimations(this.elRef, this.renderer);
   }
 
   ngOnDestroy() {
     if (this.carouselInterval) {
       clearInterval(this.carouselInterval);
+    }
+    
+    // Remove event listeners
+    if (isPlatformBrowser(this.platformId)) {
+      document.removeEventListener('visibilitychange', this.onPageVisible.bind(this));
+      window.removeEventListener('focus', this.onWindowFocus.bind(this));
     }
   }
 
@@ -372,14 +524,29 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
     return carData?.images && carData.images.length > 1;
   }
 
+  getContractYears(): number {
+    const carData = this.carData();
+    return carData?.contractYears || 5; // Default to 5 years if not set
+  }
+
   getAMCPerYear(): string {
     const carData = this.carData();
     if (carData?.amcperticket) {
       const amcPerTicket = parseFloat(carData.amcperticket.replace(/[₹,\s]/g, ''));
-      const amcPerYear = amcPerTicket / 2; // Assuming AMC per ticket is for 2 years, so divide by 2 for per year
+      const contractYears = this.getContractYears();
+      const amcPerYear = amcPerTicket / contractYears;
       return `₹${amcPerYear.toFixed(0)}`;
     }
-    return '₹27,500'; // Default fallback
+    return '₹11,000'; // Default fallback (₹55,000 / 5 years)
+  }
+
+  getTotalAMCForContract(): string {
+    const carData = this.carData();
+    if (carData?.amcperticket) {
+      const amcPerTicket = parseFloat(carData.amcperticket.replace(/[₹,\s]/g, ''));
+      return `₹${amcPerTicket.toFixed(0)}`;
+    }
+    return '₹55,000'; // Default fallback
   }
 
   // Payment methods
@@ -395,53 +562,287 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  checkUserPurchaseStatus() {
-    const userData = this.authService.getUserData();
-    if (!userData || !userData._id) {
-      this.checkingPurchaseStatus.set(false);
+  loadUserTokens() {
+    // Check if user is authenticated before making the request
+    const token = this.authService.getToken();
+    if (!token) {
+      this.tokensError.set('Please login to view your tokens');
       return;
     }
 
-    // Check for existing Book Now Token
-    this.bookNowTokenService.getUserBookNowTokens().subscribe({
-      next: (response) => {
-        if (response.body?.bookNowTokens) {
-          const hasBookNow = response.body.bookNowTokens.some((token: any) => 
-            token.carid?._id === this.carId() || token.carid === this.carId()
-          );
-          this.hasBookNowToken.set(hasBookNow);
-        }
-      },
-      error: (error) => {
-        console.error('Error checking Book Now Token status:', error);
-      }
-    });
+    this.tokensLoading.set(true);
+    this.tokensError.set('');
 
-    // Check for existing Waitlist Token
     this.tokenService.getUserTokens().subscribe({
       next: (response) => {
-        if (response.body?.tokens) {
+        this.tokensLoading.set(false);
+        
+        if (response && response.body && response.body.tokens) {
+          this.tokens.set(response.body.tokens);
+          this.totalWaitlistTokens.set(response.body.tokens.length);
+          
+          // Check if user has waitlist token for this car
           const hasWaitlist = response.body.tokens.some((token: any) => 
             token.carid?._id === this.carId() || token.carid === this.carId()
           );
           this.hasWaitlistToken.set(hasWaitlist);
         }
-        this.checkingPurchaseStatus.set(false);
+        
+        // Check if both token types are loaded to update checking status
+        this.updatePurchaseStatusCheck();
       },
       error: (error) => {
-        console.error('Error checking Waitlist Token status:', error);
-        this.checkingPurchaseStatus.set(false);
+        this.tokensLoading.set(false);
+        console.error('Error loading tokens:', error);
+        
+        if (error.status === 401) {
+          this.tokensError.set('Authentication failed. Please login again.');
+          // Clear invalid token and user data
+          this.authService.removeToken();
+          this.authService.removeUserData();
+        } else if (error.status === 403) {
+          this.tokensError.set('Access denied. You do not have permission to view tokens.');
+        } else {
+          this.tokensError.set('Failed to load tokens. Please try again later.');
+        }
+        
+        // Check if both token types are loaded to update checking status
+        this.updatePurchaseStatusCheck();
       }
     });
   }
 
+  loadUserBookNowTokens() {
+    // Check if user is authenticated before making the request
+    const token = this.authService.getToken();
+    if (!token) {
+      this.bookNowTokensError.set('Please login to view your book now tokens');
+      return;
+    }
+
+    this.bookNowTokensLoading.set(true);
+    this.bookNowTokensError.set('');
+
+    this.bookNowTokenService.getUserBookNowTokens().subscribe({
+      next: (response) => {
+        this.bookNowTokensLoading.set(false);
+        
+        if (response && response.body && response.body.bookNowTokens) {
+          this.bookNowTokens.set(response.body.bookNowTokens);
+          this.totalBookNowTokens.set(response.body.bookNowTokens.length);
+          
+          // Check if user has book now token for this car
+          const hasBookNow = response.body.bookNowTokens.some((token: any) => 
+            token.carid?._id === this.carId() || token.carid === this.carId()
+          );
+          this.hasBookNowToken.set(hasBookNow);
+        }
+        
+        // Check if both token types are loaded to update checking status
+        this.updatePurchaseStatusCheck();
+      },
+      error: (error) => {
+        this.bookNowTokensLoading.set(false);
+        console.error('Error loading book now tokens:', error);
+        
+        if (error.status === 401) {
+          this.bookNowTokensError.set('Authentication failed. Please login again.');
+          // Clear invalid token and user data
+          this.authService.removeToken();
+          this.authService.removeUserData();
+        } else if (error.status === 403) {
+          this.bookNowTokensError.set('Access denied. You do not have permission to view book now tokens.');
+        } else {
+          this.bookNowTokensError.set('Failed to load book now tokens. Please try again later.');
+        }
+        
+        // Check if both token types are loaded to update checking status
+        this.updatePurchaseStatusCheck();
+      }
+    });
+  }
+
+  updatePurchaseStatusCheck() {
+    // Only update checking status when both token types have finished loading
+    if (!this.tokensLoading() && !this.bookNowTokensLoading()) {
+      this.checkingPurchaseStatus.set(false);
+      
+      // If there's a pending payment, show success message (don't auto-process)
+      if (this.pendingPaymentType()) {
+        this.processPendingPayment();
+      }
+    }
+  }
+
+  checkAuthReturn() {
+    // Check if user just returned from authentication
+    const urlParams = new URLSearchParams(window.location.search);
+    const authReturn = urlParams.get('auth_return');
+    const pendingPayment = urlParams.get('pending_payment');
+    
+    if (authReturn === 'true' && pendingPayment) {
+      // User returned from authentication, check if they're now logged in
+      if (this.authService.isLoggedIn()) {
+        // Close any open login modal
+        this.closeLoginModal();
+        
+        // Reload user profile and tokens
+        this.loadUserProfile();
+        
+        // If there was a pending payment, process it directly after data loads
+        if (pendingPayment === 'book-now' || pendingPayment === 'waitlist') {
+          this.pendingPaymentType.set(pendingPayment as 'book-now' | 'waitlist');
+          // Process the pending payment after user data is loaded
+          this.processPendingPayment();
+        }
+      }
+      
+      // Clean up URL parameters
+      this.cleanUrlParams();
+    }
+  }
+
+  cleanUrlParams() {
+    // Remove auth_return and pending_payment parameters from URL
+    const url = new URL(window.location.href);
+    url.searchParams.delete('auth_return');
+    url.searchParams.delete('pending_payment');
+    window.history.replaceState({}, '', url.toString());
+  }
+
+  // Method to handle page visibility changes (when user returns to tab)
+  onPageVisible() {
+    // When page becomes visible, reload user profile and tokens
+    this.loadUserProfile();
+  }
+
+  // Method to handle focus events (when user returns to window)
+  onWindowFocus() {
+    // When window gains focus, reload user profile and tokens
+    this.loadUserProfile();
+  }
+
+  // Method to refresh purchase status (can be called externally)
+  refreshPurchaseStatus() {
+    this.loadUserProfile();
+  }
+
+  // Method to handle authentication state changes
+  onAuthStateChange() {
+    // When auth state changes, reload user profile and tokens
+    this.loadUserProfile();
+  }
+
+  // Method to check if user is logged in and refresh status if needed
+  checkAuthAndRefresh() {
+    if (this.authService.isLoggedIn()) {
+      this.loadUserProfile();
+    } else {
+      this.checkingPurchaseStatus.set(false);
+    }
+  }
+
+  // Authentication modal methods
+  openLoginModal() {
+    // Only show modal if user is not logged in
+    if (!this.authService.isLoggedIn()) {
+      this.showLoginModal.set(true);
+    }
+  }
+
+  closeLoginModal() {
+    this.showLoginModal.set(false);
+    this.pendingPaymentType.set(null);
+  }
+
+  // Method to check if login modal should be shown
+  shouldShowLoginModal(): boolean {
+    return this.showLoginModal() && !this.authService.isLoggedIn();
+  }
+
+  // Getter for auth success message
+  getAuthSuccessMessage(): string {
+    return this.authSuccessMessage();
+  }
+
+  redirectToLogin() {
+    const returnUrl = encodeURIComponent(this.returnUrl());
+    const pendingPayment = this.pendingPaymentType();
+    this.router.navigate(['/login'], { 
+      queryParams: { 
+        returnUrl: returnUrl,
+        pending_payment: pendingPayment
+      }
+    });
+  }
+
+  redirectToRegister() {
+    const returnUrl = encodeURIComponent(this.returnUrl());
+    const pendingPayment = this.pendingPaymentType();
+    this.router.navigate(['/register'], { 
+      queryParams: { 
+        returnUrl: returnUrl,
+        pending_payment: pendingPayment
+      }
+    });
+  }
+
+  // Method to handle successful authentication return
+  onAuthSuccess() {
+    this.closeLoginModal();
+    this.loadUserProfile();
+    
+    // If there was a pending payment, show success message (don't auto-process)
+    const pendingPayment = this.pendingPaymentType();
+    if (pendingPayment) {
+      this.showAuthSuccessMessage(pendingPayment);
+      this.pendingPaymentType.set(null);
+    }
+  }
+
+  // Method to process pending payment after authentication
+  processPendingPayment() {
+    const pendingPayment = this.pendingPaymentType();
+    if (pendingPayment && this.authService.isLoggedIn()) {
+      // Clear the pending payment type
+      this.pendingPaymentType.set(null);
+      
+      // Show a success message instead of automatically initiating payment
+      this.showAuthSuccessMessage(pendingPayment);
+    }
+  }
+
+  // Method to show authentication success message
+  showAuthSuccessMessage(paymentType: 'book-now' | 'waitlist') {
+    const message = paymentType === 'book-now' 
+      ? 'Login successful! You can now proceed to book this car.'
+      : 'Login successful! You can now join the waitlist for this car.';
+    
+    this.authSuccessMessage.set(message);
+    
+    // Clear the message after 5 seconds
+    setTimeout(() => {
+      this.authSuccessMessage.set('');
+    }, 5000);
+  }
+
   initiatePayment(type: 'book-now' | 'waitlist') {
+    // First check if user is authenticated
+    if (!this.authService.isLoggedIn()) {
+      this.pendingPaymentType.set(type);
+      this.showLoginModal.set(true);
+      return;
+    }
+
+    // Clear any pending payment type since we're processing now
+    this.pendingPaymentType.set(null);
+
     if (!this.razorpayKey()) {
       this.paymentError.set('Payment system not ready. Please refresh the page.');
       return;
     }
 
-    // Check if user already has this token type
+    // Check if user already has this token type for this specific car
     if (type === 'book-now' && this.hasBookNowToken()) {
       this.paymentError.set('You have already purchased a Book Now token for this car.');
       return;
@@ -449,6 +850,17 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
 
     if (type === 'waitlist' && this.hasWaitlistToken()) {
       this.paymentError.set('You have already joined the waitlist for this car.');
+      return;
+    }
+
+    // Check total token limits
+    if (type === 'book-now' && this.totalBookNowTokens() >= this.maxBookNowTokens) {
+      this.paymentError.set(`You have reached the maximum limit of ${this.maxBookNowTokens} Book Now tokens.`);
+      return;
+    }
+
+    if (type === 'waitlist' && this.totalWaitlistTokens() >= this.maxWaitlistTokens) {
+      this.paymentError.set(`You have reached the maximum limit of ${this.maxWaitlistTokens} waitlist tokens.`);
       return;
     }
 
@@ -572,8 +984,8 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
           // Update the car's bookNowTokenAvailable count
           this.updateCarBookNowTokenCount();
           
-          // Update purchase status
-          this.hasBookNowToken.set(true);
+          // Refresh the entire purchase status to ensure consistency
+          this.loadUserProfile();
           
           this.isPaymentLoading.set(false);
           this.recordCreated.set(true);
@@ -602,8 +1014,8 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
 
       this.tokenService.createToken(tokenData).subscribe({
         next: (response) => {
-          // Update purchase status
-          this.hasWaitlistToken.set(true);
+          // Refresh the entire purchase status to ensure consistency
+          this.loadUserProfile();
           
           this.isPaymentLoading.set(false);
           this.recordCreated.set(true);
@@ -655,6 +1067,53 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  hasReachedBookNowLimit(): boolean {
+    // Book Now should only be available when all waitlist tokens are sold out
+    const carData = this.carData();
+    if (!carData) return true;
+    
+    // Book Now is blocked if there are still waitlist tokens available
+    // tokensavailble === 0 means all waitlist tokens are sold out
+    const waitlistTokensSoldOut = carData.tokensavailble === 0;
+    const userReachedLimit = this.totalBookNowTokens() >= this.maxBookNowTokens;
+    
+    return !waitlistTokensSoldOut || userReachedLimit;
+  }
+
+  hasReachedWaitlistLimit(): boolean {
+    // Join Waitlist should be blocked when waitlist is full
+    const carData = this.carData();
+    if (!carData) return true;
+    
+    // Waitlist is full when tokensavailble === 0 (all waitlist tokens sold out)
+    const waitlistFull = carData.tokensavailble === 0;
+    const userReachedLimit = this.totalWaitlistTokens() >= this.maxWaitlistTokens;
+    
+    return waitlistFull || userReachedLimit;
+  }
+
+  getBookNowLimitMessage(): string {
+    const carData = this.carData();
+    if (!carData) return 'Car data not available';
+    
+    if (carData.tokensavailble > 0) {
+      return 'Book Now is not available yet. Please join the waitlist first.';
+    }
+    
+    return `You have reached the maximum limit of ${this.maxBookNowTokens} Book Now tokens.`;
+  }
+
+  getWaitlistLimitMessage(): string {
+    const carData = this.carData();
+    if (!carData) return 'Car data not available';
+    
+    if (carData.tokensavailble === 0) {
+      return 'Waitlist is full. Book Now is now available!';
+    }
+    
+    return `You have reached the maximum limit of ${this.maxWaitlistTokens} waitlist tokens.`;
+  }
+
   updateCarBookNowTokenCount() {
     const carData = this.carData();
     if (carData && carData.bookNowTokenAvailable > 0) {
@@ -679,5 +1138,37 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
         }
       });
     }
+  }
+
+  // Info modal methods
+  openInfoModal(type: 'book-now' | 'waitlist') {
+    this.infoModalType.set(type);
+    this.showInfoModal.set(true);
+  }
+
+  closeInfoModal() {
+    this.showInfoModal.set(false);
+    this.infoModalType.set(null);
+  }
+
+  getInfoModalTitle(): string {
+    const type = this.infoModalType();
+    return type === 'book-now' ? 'Book Now Information' : 'Join Waitlist Information';
+  }
+
+  getInfoModalPrice(): string {
+    const carData = this.carData();
+    const type = this.infoModalType();
+    
+    if (type === 'book-now') {
+      return this.getFormattedPrice(carData?.bookNowTokenPrice) || '₹3,999';
+    } else {
+      return this.getFormattedPrice(carData?.tokenprice) || '₹199';
+    }
+  }
+
+  getWaitlistPrice(): string {
+    const carData = this.carData();
+    return this.getFormattedPrice(carData?.tokenprice) || '₹199';
   }
 }

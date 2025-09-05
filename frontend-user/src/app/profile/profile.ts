@@ -1,6 +1,7 @@
 import { Component, OnInit, Inject, PLATFORM_ID, ChangeDetectorRef, signal, computed, effect } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { UserService } from '../services/user.service';
 import { AuthService } from '../services/auth.service';
 import { TicketService, Ticket } from '../services/ticket.service';
@@ -8,6 +9,8 @@ import { TokenService, Token } from '../services/token.service';
 import { BookingService, Booking } from '../services/booking.service';
 import { BookNowTokenService, BookNowToken } from '../services/book-now-token.service';
 import { AMCService, AMC } from '../services/amc.service';
+import { PaymentService, PaymentOrder, PaymentVerification } from '../services/payment.service';
+import { ContractService, ContractDocument } from '../services/contract.service';
 
 @Component({
   selector: 'app-profile',
@@ -56,6 +59,11 @@ export class Profile implements OnInit {
   protected amcsLoading = signal<boolean>(false);
   protected amcsError = signal<string>('');
   protected expandedAMC = signal<string | null>(null);
+
+  // Real contract documents data from API
+  protected contractDocuments = signal<ContractDocument[]>([]);
+  protected contractDocumentsLoading = signal<boolean>(false);
+  protected contractDocumentsError = signal<string>('');
 
   // Real bookings data from API
   protected bookings = signal<Booking[]>([]);
@@ -119,6 +127,15 @@ export class Profile implements OnInit {
   protected imageUploadError = signal<string>('');
   protected imageUploadSuccess = signal<string>('');
 
+  // AMC Payment state
+  protected razorpayKey = signal<string>('');
+  protected isAMCPaymentLoading = signal<boolean>(false);
+  protected amcPaymentError = signal<string>('');
+  protected showAMCPaymentModal = signal<boolean>(false);
+  protected selectedAMC = signal<AMC | null>(null);
+  protected selectedAMCYear = signal<number>(-1);
+  protected amcPaymentSuccess = signal<boolean>(false);
+
   constructor(
     private userService: UserService,
     private authService: AuthService,
@@ -127,6 +144,9 @@ export class Profile implements OnInit {
     private bookingService: BookingService,
     private bookNowTokenService: BookNowTokenService,
     private amcService: AMCService,
+    private paymentService: PaymentService,
+    private contractService: ContractService,
+    private router: Router,
     private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
@@ -138,6 +158,7 @@ export class Profile implements OnInit {
       const bookNowTokensData = this.bookNowTokens();
       const amcsData = this.amcs();
       const bookingsData = this.bookings();
+      const contractDocumentsData = this.contractDocuments();
       
       // Trigger change detection when any data changes
       if (isPlatformBrowser(this.platformId)) {
@@ -150,6 +171,7 @@ export class Profile implements OnInit {
 
   ngOnInit() {
     this.loadUserProfile();
+    this.loadRazorpayKey();
     // Don't load tickets here - wait for profile to load first
   }
 
@@ -179,12 +201,13 @@ export class Profile implements OnInit {
           this.user.set({ ...this.user(), ...response.body.user });
           // Update stored user data
           this.authService.setUserData(this.user());
-          // Now load tickets, tokens, booknow tokens, AMCs, and bookings since user is authenticated
+          // Now load tickets, tokens, booknow tokens, AMCs, bookings, and contract documents since user is authenticated
           this.loadUserTickets();
           this.loadUserTokens();
           this.loadUserBookNowTokens();
           this.loadUserAMCs();
           this.loadUserBookings();
+          this.loadUserContractDocuments();
         }
       },
       error: (error) => {
@@ -1122,5 +1145,286 @@ export class Profile implements OnInit {
         this.imageUploadError.set(error.error?.message || 'Failed to upload image. Please try again.');
       }
     });
+  }
+
+  // =============== AMC Payment Methods ===============
+  loadRazorpayKey() {
+    this.paymentService.getRazorpayKey().subscribe({
+      next: (response) => {
+        this.razorpayKey.set(response.key);
+      },
+      error: (error) => {
+        console.error('Failed to load Razorpay key:', error);
+        this.amcPaymentError.set('Failed to load payment system. Please refresh the page.');
+      }
+    });
+  }
+
+  initiateAMCPayment(amc: AMC, yearIndex: number) {
+    if (!this.razorpayKey()) {
+      this.amcPaymentError.set('Payment system not ready. Please refresh the page.');
+      return;
+    }
+
+    const amcAmount = amc.amcamount[yearIndex];
+    if (!amcAmount || amcAmount.paid) {
+      this.amcPaymentError.set('Invalid AMC amount or already paid.');
+      return;
+    }
+
+    // For test mode, use a fixed small amount instead of the actual amount
+    const testAmount = 100; // ₹1 for testing
+    const actualAmount = amcAmount.amount;
+    
+    console.log('AMC Payment Debug:', {
+      actualAmount,
+      testAmount,
+      year: amcAmount.year,
+      carName: amc.carid.carname
+    });
+
+    this.selectedAMC.set(amc);
+    this.selectedAMCYear.set(yearIndex);
+    this.isAMCPaymentLoading.set(true);
+    this.amcPaymentError.set('');
+
+    const orderData: PaymentOrder = {
+      amount: testAmount * 100, // Use test amount in paise
+      currency: 'INR',
+      receipt: `AMC_TEST_${amc._id}_${amcAmount.year}_${Date.now()}`.substring(0, 40)
+    };
+
+    this.paymentService.createOrder(orderData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.openRazorpayCheckout(response.order, `AMC Payment - Year ${amcAmount.year} - ${amc.carid.carname}`);
+        } else {
+          this.amcPaymentError.set(response.message || 'Failed to create payment order');
+          this.isAMCPaymentLoading.set(false);
+        }
+      },
+      error: (error) => {
+        console.error('Error creating payment order:', error);
+        this.amcPaymentError.set('Failed to create payment order. Please try again.');
+        this.isAMCPaymentLoading.set(false);
+      }
+    });
+  }
+
+  openRazorpayCheckout(order: any, description: string) {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const options = {
+      key: this.razorpayKey(),
+      amount: order.amount,
+      currency: order.currency,
+      name: 'Fraction Car Co-ownership',
+      description: description,
+      order_id: order.id,
+      handler: (response: any) => {
+        this.verifyAMCPayment(response);
+      },
+      prefill: {
+        name: this.user().name || 'User',
+        email: this.user().email || 'user@example.com',
+        contact: this.user().phone || '9999999999'
+      },
+      theme: {
+        color: '#3399cc'
+      },
+      modal: {
+        ondismiss: () => {
+          this.isAMCPaymentLoading.set(false);
+        }
+      }
+    };
+
+    const rzp = new (window as any).Razorpay(options);
+    rzp.open();
+  }
+
+  verifyAMCPayment(response: any) {
+    const verificationData: PaymentVerification = {
+      order_id: response.razorpay_order_id,
+      payment_id: response.razorpay_payment_id,
+      signature: response.razorpay_signature
+    };
+
+    this.paymentService.verifyPayment(verificationData).subscribe({
+      next: (result) => {
+        if (result.success) {
+          // Payment verified successfully, now update AMC payment status
+          this.updateAMCPaymentStatus();
+        } else {
+          this.amcPaymentError.set('Payment verification failed. Please contact support.');
+          this.isAMCPaymentLoading.set(false);
+        }
+      },
+      error: (error) => {
+        console.error('Error verifying payment:', error);
+        this.amcPaymentError.set('Payment verification failed. Please contact support.');
+        this.isAMCPaymentLoading.set(false);
+      }
+    });
+  }
+
+  updateAMCPaymentStatus() {
+    const amc = this.selectedAMC();
+    const yearIndex = this.selectedAMCYear();
+    
+    if (!amc || yearIndex === -1) {
+      this.amcPaymentError.set('Invalid AMC data. Please try again.');
+      this.isAMCPaymentLoading.set(false);
+      return;
+    }
+
+    const currentDate = new Date().toISOString();
+    
+    console.log('Updating AMC payment status:', {
+      amcId: amc._id,
+      yearIndex,
+      paid: true,
+      paiddate: currentDate
+    });
+    
+    this.paymentService.updateAMCPaymentStatus(amc._id!, yearIndex, true, currentDate).subscribe({
+      next: (response) => {
+        console.log('AMC payment status update response:', response);
+        this.isAMCPaymentLoading.set(false);
+        if (response.status === 'success') {
+          // Update local AMC data
+          this.updateLocalAMCData(amc._id!, yearIndex, true, currentDate);
+          this.amcPaymentSuccess.set(true);
+          this.showAMCPaymentModal.set(true);
+          this.amcPaymentError.set('');
+        } else {
+          this.amcPaymentError.set(response.message || 'Failed to update AMC payment status.');
+        }
+      },
+      error: (error) => {
+        console.error('Error updating AMC payment status:', error);
+        console.error('Error details:', {
+          status: error.status,
+          statusText: error.statusText,
+          error: error.error,
+          message: error.message
+        });
+        
+        // Still show success modal but with a warning
+        this.updateLocalAMCData(amc._id!, yearIndex, true, currentDate);
+        this.amcPaymentSuccess.set(true);
+        this.showAMCPaymentModal.set(true);
+        this.isAMCPaymentLoading.set(false);
+        
+        // Show a warning message
+        setTimeout(() => {
+          this.amcPaymentError.set('Payment successful! AMC status updated locally. Please refresh the page to see the updated status.');
+        }, 2000);
+      }
+    });
+  }
+
+  updateLocalAMCData(amcId: string, yearIndex: number, paid: boolean, paiddate: string) {
+    const amcs = this.amcs();
+    const amcIndex = amcs.findIndex(amc => amc._id === amcId);
+    
+    if (amcIndex !== -1 && amcs[amcIndex].amcamount[yearIndex]) {
+      const updatedAmcs = [...amcs];
+      updatedAmcs[amcIndex] = {
+        ...updatedAmcs[amcIndex],
+        amcamount: updatedAmcs[amcIndex].amcamount.map((amount, index) => 
+          index === yearIndex 
+            ? { ...amount, paid, paiddate }
+            : amount
+        )
+      };
+      this.amcs.set(updatedAmcs);
+    }
+  }
+
+  closeAMCPaymentModal() {
+    this.showAMCPaymentModal.set(false);
+    this.selectedAMC.set(null);
+    this.selectedAMCYear.set(-1);
+    this.amcPaymentError.set('');
+    this.amcPaymentSuccess.set(false);
+  }
+
+  getAMCPaymentAmount(amc: AMC, yearIndex: number): number {
+    return amc.amcamount[yearIndex]?.amount || 0;
+  }
+
+  canPayAMC(amc: AMC, yearIndex: number): boolean {
+    const amcAmount = amc.amcamount[yearIndex];
+    return amcAmount && !amcAmount.paid;
+  }
+
+  getCurrentDate(): string {
+    return this.formatDate(new Date().toISOString());
+  }
+
+  // =============== Contract Documents Methods ===============
+  loadUserContractDocuments() {
+    // Check if user is authenticated before making the request
+    const token = this.authService.getToken();
+    if (!token) {
+      this.contractDocumentsError.set('Please login to view your contract documents');
+      return;
+    }
+
+    this.contractDocumentsLoading.set(true);
+    this.contractDocumentsError.set('');
+
+    this.contractService.getUserContractDocuments().subscribe({
+      next: (response) => {
+        this.contractDocumentsLoading.set(false);
+        
+        if (response && response.body && response.body.contracts) {
+          this.contractDocuments.set(response.body.contracts);
+        }
+      },
+      error: (error) => {
+        this.contractDocumentsLoading.set(false);
+        console.error('Error loading contract documents:', error);
+        
+        if (error.status === 401) {
+          this.contractDocumentsError.set('Authentication failed. Please login again.');
+          // Clear invalid token and user data
+          this.authService.removeToken();
+          this.authService.removeUserData();
+        } else if (error.status === 403) {
+          this.contractDocumentsError.set('Access denied. You do not have permission to view contract documents.');
+        } else {
+          this.contractDocumentsError.set('Failed to load contract documents. Please try again later.');
+        }
+      }
+    });
+  }
+
+  // Download a specific contract document
+  downloadContractDocument(contractId: string, docIndex: number, ticketCustomId: string, carName: string) {
+    this.contractService.downloadContractDocument(contractId, docIndex).subscribe({
+      next: (blob) => {
+        const fileName = `contract_${ticketCustomId}_${carName.replace(/\s+/g, '_')}_${docIndex + 1}.pdf`;
+        this.contractService.downloadFile(blob, fileName);
+      },
+      error: (error) => {
+        console.error('Error downloading contract document:', error);
+        alert('Failed to download document. Please try again.');
+      }
+    });
+  }
+
+  // Get contract documents for a specific ticket
+  getContractDocumentsForTicket(ticketId: string | undefined): ContractDocument[] {
+    if (!ticketId) return [];
+    return this.contractDocuments().filter(contract => 
+      contract.ticketid._id === ticketId
+    );
+  }
+
+  // Navigate to bookings page
+  navigateToBookings() {
+    this.router.navigate(['/bookings']);
   }
 }

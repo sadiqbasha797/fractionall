@@ -1,5 +1,8 @@
 const Ticket = require('../models/Ticket');
+const Car = require('../models/Car');
+const User = require('../models/User');
 const logger = require('../utils/logger');
+const NotificationService = require('../utils/notificationService');
 
 // Create a new ticket
 const createTicket = async (req, res) => {
@@ -11,13 +14,28 @@ const createTicket = async (req, res) => {
       ticketprice,
       pricepaid,
       pendingamount,
-      ticketexpiry,
       ticketbroughtdate,
       comments,
       paymentid,
       ticketstatus,
       resold
     } = req.body;
+
+    // Fetch car details to get contractYears
+    const car = await Car.findById(carid);
+    if (!car) {
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'Car not found'
+      });
+    }
+
+    // Calculate ticket expiry based on contractYears
+    const broughtDate = new Date(ticketbroughtdate);
+    const contractYears = car.contractYears || 5; // Default to 5 years if not set
+    const expiryDate = new Date(broughtDate);
+    expiryDate.setFullYear(expiryDate.getFullYear() + contractYears);
 
     const ticket = new Ticket({
       userid,
@@ -26,7 +44,7 @@ const createTicket = async (req, res) => {
       ticketprice,
       pricepaid,
       pendingamount,
-      ticketexpiry,
+      ticketexpiry: expiryDate,
       ticketbroughtdate,
       comments,
       paymentid,
@@ -37,6 +55,25 @@ const createTicket = async (req, res) => {
     });
 
     await ticket.save();
+
+    // Create notifications after successful ticket creation
+    try {
+      const user = await User.findById(userid);
+      const car = await Car.findById(carid);
+      
+      if (user && car) {
+        // User notification
+        await NotificationService.createTicketNotification(user._id, ticket, car);
+        
+        // Admin notification
+        await NotificationService.createUserCreatedTicketNotification(user, ticket, car);
+        
+        logger(`Notifications sent successfully for ticket creation: ${ticket._id}`);
+      }
+    } catch (notificationError) {
+      logger(`Error creating ticket notifications: ${notificationError.message}`);
+    }
+
     res.status(201).json({
       status: 'success',
       body: { ticket },
@@ -107,7 +144,6 @@ const updateTicket = async (req, res) => {
       ticketprice,
       pricepaid,
       pendingamount,
-      ticketexpiry,
       ticketbroughtdate,
       comments,
       paymentid,
@@ -133,6 +169,23 @@ const updateTicket = async (req, res) => {
       });
     }
 
+    // Calculate new expiry if carid or ticketbroughtdate is being updated
+    let calculatedExpiry = ticket.ticketexpiry; // Keep existing expiry by default
+    
+    if (carid || ticketbroughtdate) {
+      const carId = carid || ticket.carid;
+      const broughtDate = ticketbroughtdate || ticket.ticketbroughtdate;
+      
+      const car = await Car.findById(carId);
+      if (car) {
+        const contractYears = car.contractYears || 5;
+        const newBroughtDate = new Date(broughtDate);
+        const newExpiryDate = new Date(newBroughtDate);
+        newExpiryDate.setFullYear(newExpiryDate.getFullYear() + contractYears);
+        calculatedExpiry = newExpiryDate;
+      }
+    }
+
     const updatedTicket = await Ticket.findByIdAndUpdate(
       req.params.id,
       {
@@ -142,7 +195,7 @@ const updateTicket = async (req, res) => {
         ticketprice,
         pricepaid,
         pendingamount,
-        ticketexpiry,
+        ticketexpiry: calculatedExpiry,
         ticketbroughtdate,
         comments,
         paymentid,

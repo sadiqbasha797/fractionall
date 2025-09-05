@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const logger = require('../utils/logger');
+const NotificationService = require('../utils/notificationService');
 
 // Submit KYC documents
 const submitKyc = async (req, res) => {
@@ -173,6 +174,17 @@ const approveKyc = async (req, res) => {
     };
     await user.save();
 
+    // Create notifications
+    try {
+      // User notification
+      await NotificationService.createKYCApprovalNotification(user._id, user.name);
+      
+      // Admin notification
+      await NotificationService.createUserKYCApprovalNotification(user);
+    } catch (notificationError) {
+      logger(`Error creating KYC approval notifications: ${notificationError.message}`);
+    }
+
     res.status(200).json({
       status: 'success',
       body: {
@@ -237,6 +249,17 @@ const rejectKyc = async (req, res) => {
     // Update user's KYC status
     user.kycStatus = 'rejected';
     await user.save();
+
+    // Create notifications
+    try {
+      // User notification
+      await NotificationService.createKYCRejectionNotification(user._id, user.name, comment);
+      
+      // Admin notification
+      await NotificationService.createUserKYCRejectionNotification(user, comment);
+    } catch (notificationError) {
+      logger(`Error creating KYC rejection notifications: ${notificationError.message}`);
+    }
 
     res.status(200).json({
       status: 'success',

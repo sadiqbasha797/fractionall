@@ -1,18 +1,18 @@
-import { Component, AfterViewInit, OnInit, Renderer2, ElementRef, signal, computed, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, AfterViewInit, OnInit, Renderer2, ElementRef, signal, computed, effect, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import AOS from 'aos'; // Import AOS properly
-import 'aos/dist/aos.css'; // Import AOS CSS
 import { CarPublicService } from '../services/car-public.service';
+import { AnimationService } from '../services/animation.service';
 
 @Component({
   selector: 'app-cars',
   standalone: true,
   imports: [CommonModule, HttpClientModule, FormsModule],
   templateUrl: './cars.html',
-  styleUrls: ['./cars.css']
+  styleUrls: ['./cars.css', '../animations.css'],
+  animations: AnimationService.getAnimations()
 })
 export class Cars implements OnInit, AfterViewInit {
   // Convert to signals for proper reactivity with zoneless change detection
@@ -24,6 +24,16 @@ export class Cars implements OnInit, AfterViewInit {
   protected searchQuery = signal<string>('');
   protected searchType = signal<string>('');
   protected isSearchActive = signal<boolean>(false);
+  
+  // Location search functionality
+  protected locationSearchQuery = signal<string>('');
+  protected locationSearchType = signal<string>('');
+  protected isLocationSearchActive = signal<boolean>(false);
+  
+  // Brand filter functionality
+  brandFilter = signal<string>('');
+  isBrandFilterActive = signal<boolean>(false);
+  
   protected isLoading = signal<boolean>(true);
   private dropdownsInitialized: boolean = false;
   
@@ -32,12 +42,22 @@ export class Cars implements OnInit, AfterViewInit {
 
   // Computed signals for derived data
   protected filteredCars = computed(() => {
-    console.log('Computing filtered cars...');
+    console.log('Computing filtered cars...', 'allCars:', this.allCars().length, 'isLoading:', this.isLoading());
     let cars = this.allCars();
     
-    // Apply search filter first
+    // Apply brand filter first
+    if (this.isBrandFilterActive() && this.brandFilter()) {
+      cars = this.applyBrandFilter(cars, this.brandFilter());
+    }
+    
+    // Apply main search filter (by car name, brand, etc.)
     if (this.isSearchActive() && this.searchQuery()) {
-      cars = this.applySearchFilter(cars, this.searchQuery(), this.searchType());
+      cars = this.applyMainSearchFilter(cars, this.searchQuery());
+    }
+    
+    // Apply location search filter
+    if (this.isLocationSearchActive() && this.locationSearchQuery()) {
+      cars = this.applyLocationSearchFilter(cars, this.locationSearchQuery(), this.locationSearchType());
     }
     
     // Apply other filters
@@ -57,7 +77,7 @@ export class Cars implements OnInit, AfterViewInit {
     const startIndex = (this.currentPage() - 1) * this.itemsPerPage();
     const endIndex = startIndex + this.itemsPerPage();
     const paginatedCars = this.filteredCars().slice(startIndex, endIndex);
-    console.log('Paginated cars computed:', paginatedCars.length);
+    console.log('Paginated cars computed:', paginatedCars.length, 'from filtered cars:', this.filteredCars().length);
     return paginatedCars;
   });
 
@@ -66,69 +86,105 @@ export class Cars implements OnInit, AfterViewInit {
     private renderer: Renderer2,
     private elementRef: ElementRef,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private animationService: AnimationService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    // Effect to reinitialize AOS when cars data changes
+    // Effect to reinitialize animations when cars data changes
     effect(() => {
       const carsData = this.cars();
       const isLoading = this.isLoading();
       
       if (!isLoading && carsData.length > 0 && this.isBrowser()) {
-        // Delay AOS refresh to ensure DOM is updated
+        // Delay animation refresh to ensure DOM is updated
         setTimeout(() => {
-          AOS.refresh();
+          this.initAngularAnimations();
         }, 200);
-        
-        // Also refresh after a longer delay to catch any late DOM updates
-        setTimeout(() => {
-          AOS.refresh();
-        }, 1000);
       }
     });
   }
 
   private isBrowser(): boolean {
-    return typeof window !== 'undefined' && typeof document !== 'undefined';
+    return isPlatformBrowser(this.platformId);
   }
 
   ngOnInit(): void {
+    console.log('Cars component ngOnInit started');
+    
+    // Set a timeout to force loading to false after 10 seconds as a fallback
+    setTimeout(() => {
+      if (this.isLoading()) {
+        console.warn('Loading timeout reached, forcing loading to false');
+        this.isLoading.set(false);
+      }
+    }, 10000);
+    
     // Check for search parameters in URL
     this.route.queryParams.subscribe(params => {
-      if (params['search']) {
+      // Handle brand filter parameters
+      if (params['brand']) {
+        this.brandFilter.set(params['brand']);
+        this.isBrandFilterActive.set(true);
+        console.log('Brand filter parameters found:', { brand: this.brandFilter() });
+      }
+      
+      // Handle main search parameters
+      if (params['search'] && params['type'] === 'main') {
         this.searchQuery.set(params['search']);
-        this.searchType.set(params['type'] || 'location');
         this.isSearchActive.set(true);
-        console.log('Search parameters found:', { search: this.searchQuery(), type: this.searchType() });
+        console.log('Main search parameters found:', { search: this.searchQuery() });
+      }
+      
+      // Handle location search parameters
+      if (params['locationSearch']) {
+        this.locationSearchQuery.set(params['locationSearch']);
+        this.locationSearchType.set(params['locationType'] || 'location');
+        this.isLocationSearchActive.set(true);
+        console.log('Location search parameters found:', { 
+          locationSearch: this.locationSearchQuery(), 
+          locationType: this.locationSearchType() 
+        });
       }
     });
 
     // Fetch public cars from backend
+    console.log('Fetching cars data...');
     this.carService.getPublicCars().subscribe({
       next: (res: any) => {
+        console.log('Cars API response:', res);
         // API returns { status, body: { cars }, message }
         const carsData = (res && res.body && res.body.cars) ? res.body.cars : (Array.isArray(res) ? res : []);
         this.allCars.set(carsData);
         this.isLoading.set(false);
-        console.log('Cars data loaded:', carsData.length);
+        console.log('Cars data loaded successfully:', carsData.length);
+        
+        // Log sample car data structure for debugging
+        if (carsData.length > 0) {
+          console.log('Sample car data structure:', carsData[0]);
+          console.log('Car availability fields:', {
+            tokensavailble: carsData[0].tokensavailble,
+            ticketsavilble: carsData[0].ticketsavilble,
+            bookNowTokenAvailable: carsData[0].bookNowTokenAvailable,
+            status: carsData[0].status
+          });
+        }
       },
       error: (error) => {
         console.error('Error loading cars:', error);
         this.allCars.set([]);
         this.isLoading.set(false);
+        console.log('Cars data set to empty array due to error');
       }
     });
   }
 
   ngAfterViewInit(): void {
-    // Initialize AOS only on the client side
+    // Initialize Angular animations only on the client side
     if (this.isBrowser()) {
-      AOS.init({
-        duration: 1000,
-        easing: 'ease',
-        once: false,
-        offset: 100,
-        delay: 0
-      });
+      // Use multiple attempts to ensure animations are properly initialized
+      setTimeout(() => this.initAngularAnimations(), 100);
+      setTimeout(() => this.initAngularAnimations(), 500);
+      setTimeout(() => this.initAngularAnimations(), 1000);
     }
 
     // Only run DOM initializers on the client
@@ -395,8 +451,52 @@ export class Cars implements OnInit, AfterViewInit {
   // Filter and Sort methods - now handled by computed signals
   // The applyFiltersAndSort method is no longer needed as filtering is handled by computed signals
 
-  applySearchFilter(cars: any[], searchQuery: string, searchType: string): any[] {
-    console.log('applySearchFilter called with:', { searchQuery, searchType, carsCount: cars.length });
+  // Brand filter (by brand name)
+  applyBrandFilter(cars: any[], brandName: string): any[] {
+    console.log('applyBrandFilter called with:', { brandName, carsCount: cars.length });
+    
+    if (!brandName || !brandName.trim()) {
+      return cars;
+    }
+    
+    const query = brandName.toLowerCase().trim();
+    const filteredCars = cars.filter(car => {
+      const carBrandName = (car.brandname || '').toLowerCase();
+      return carBrandName.includes(query);
+    });
+    
+    console.log('Brand filtered cars count:', filteredCars.length);
+    return filteredCars;
+  }
+
+  // Main search filter (by car name, brand, etc.)
+  applyMainSearchFilter(cars: any[], searchQuery: string): any[] {
+    console.log('applyMainSearchFilter called with:', { searchQuery, carsCount: cars.length });
+    
+    if (!searchQuery || !searchQuery.trim()) {
+      return cars;
+    }
+    
+    const query = searchQuery.toLowerCase().trim();
+    const filteredCars = cars.filter(car => {
+      const carName = (car.carname || '').toLowerCase();
+      const brandName = (car.brandname || '').toLowerCase();
+      const fuel = (car.fuel || '').toLowerCase();
+      const color = (car.color || '').toLowerCase();
+      
+      return carName.includes(query) || 
+             brandName.includes(query) || 
+             fuel.includes(query) || 
+             color.includes(query);
+    });
+    
+    console.log('Main search filtered cars count:', filteredCars.length);
+    return filteredCars;
+  }
+
+  // Location search filter (by location or pincode)
+  applyLocationSearchFilter(cars: any[], searchQuery: string, searchType: string): any[] {
+    console.log('applyLocationSearchFilter called with:', { searchQuery, searchType, carsCount: cars.length });
     
     if (!searchQuery || !searchQuery.trim()) {
       return cars;
@@ -414,7 +514,7 @@ export class Cars implements OnInit, AfterViewInit {
       }
     });
     
-    console.log('Search filtered cars count:', filteredCars.length);
+    console.log('Location search filtered cars count:', filteredCars.length);
     return filteredCars;
   }
 
@@ -428,25 +528,29 @@ export class Cars implements OnInit, AfterViewInit {
         break;
       case 'Book Now':
         // Cars with tokens available (can book now)
+        // Based on template logic: tokensavailble === 0 means "Book Now" is shown
         filteredCars = cars.filter(car => {
-          const hasTokens = (car.tokensavailble && car.tokensavailble > 0) || 
-                           (car.bookNowTokenAvailable && car.bookNowTokenAvailable > 0);
-          console.log(`Car ${car.carname}: tokensavailble=${car.tokensavailble}, bookNowTokenAvailable=${car.bookNowTokenAvailable}, hasTokens=${hasTokens}`);
-          return hasTokens;
+          const canBookNow = car.tokensavailble === 0 && car.ticketsavilble > 0;
+          console.log(`Car ${car.carname}: tokensavailble=${car.tokensavailble}, ticketsavilble=${car.ticketsavilble}, canBookNow=${canBookNow}`);
+          return canBookNow;
         });
         break;
       case 'Join Waitlist':
         // Cars without tokens available (need to join waitlist)
+        // Based on template logic: tokensavailble !== 0 means "Join Waitlist" is shown
         filteredCars = cars.filter(car => {
-          const needsWaitlist = (!car.tokensavailble || car.tokensavailble === 0) && 
-                               (!car.bookNowTokenAvailable || car.bookNowTokenAvailable === 0);
-          console.log(`Car ${car.carname}: needs waitlist=${needsWaitlist}`);
+          const needsWaitlist = car.tokensavailble !== 0 && car.ticketsavilble > 0;
+          console.log(`Car ${car.carname}: tokensavailble=${car.tokensavailble}, ticketsavilble=${car.ticketsavilble}, needsWaitlist=${needsWaitlist}`);
           return needsWaitlist;
         });
         break;
       case 'Relevance':
-        // Sort by relevance (active status first, then by creation date)
-        filteredCars = cars.filter(car => car.status === 'active');
+        // Sort by relevance - show all active cars, prioritizing those with better availability
+        filteredCars = cars.filter(car => {
+          const isActive = car.status === 'active' || car.status === undefined; // Assume active if no status
+          const hasTickets = car.ticketsavilble > 0;
+          return isActive && hasTickets;
+        });
         break;
       default:
         filteredCars = [...cars];
@@ -522,6 +626,48 @@ export class Cars implements OnInit, AfterViewInit {
     console.log('After sort change - cars count:', this.cars().length);
   }
 
+  // Clear all filters and searches
+  clearAllFilters(): void {
+    console.log('Clearing all filters and searches');
+    this.currentFilter.set('All');
+    this.currentSort.set('A-Z (Sort by Car Name)');
+    this.searchQuery.set('');
+    this.isSearchActive.set(false);
+    this.locationSearchQuery.set('');
+    this.isLocationSearchActive.set(false);
+    this.brandFilter.set('');
+    this.isBrandFilterActive.set(false);
+    this.currentPage.set(1);
+  }
+
+  // Get color code for color display
+  getColorCode(colorName: string): string {
+    if (!colorName) return '#6b7280'; // Default gray
+    
+    const colorMap: { [key: string]: string } = {
+      'red': '#ef4444',
+      'blue': '#3b82f6',
+      'green': '#10b981',
+      'yellow': '#f59e0b',
+      'orange': '#f97316',
+      'purple': '#8b5cf6',
+      'pink': '#ec4899',
+      'black': '#000000',
+      'white': '#ffffff',
+      'gray': '#6b7280',
+      'grey': '#6b7280',
+      'silver': '#c0c0c0',
+      'gold': '#fbbf24',
+      'brown': '#a3a3a3',
+      'navy': '#1e40af',
+      'maroon': '#7c2d12',
+      'beige': '#f5f5dc',
+      'cream': '#f5f5dc'
+    };
+    
+    return colorMap[colorName.toLowerCase()] || '#6b7280';
+  }
+
   // Pagination methods - now handled by computed signals
   // updatePagination is no longer needed as pagination is handled by computed signals
 
@@ -589,11 +735,10 @@ export class Cars implements OnInit, AfterViewInit {
     return pages;
   }
 
-  // Search functionality methods
+  // Main search functionality methods
   onSearchSubmit(): void {
     if (this.searchQuery().trim()) {
       this.isSearchActive.set(true);
-      this.searchType.set(this.isPincode(this.searchQuery().trim()) ? 'pincode' : 'location');
       this.currentPage.set(1); // Reset to first page when searching
       
       // Update URL with search parameters
@@ -601,7 +746,7 @@ export class Cars implements OnInit, AfterViewInit {
         relativeTo: this.route,
         queryParams: {
           search: this.searchQuery().trim(),
-          type: this.searchType()
+          type: 'main'
         },
         queryParamsHandling: 'merge'
       });
@@ -617,10 +762,79 @@ export class Cars implements OnInit, AfterViewInit {
   clearSearch(): void {
     this.searchQuery.set('');
     this.isSearchActive.set(false);
-    this.searchType.set('');
     this.currentPage.set(1); // Reset to first page when clearing search
     
     // Remove search parameters from URL
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {},
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  // Location search functionality methods
+  onLocationSearchSubmit(): void {
+    if (this.locationSearchQuery().trim()) {
+      this.isLocationSearchActive.set(true);
+      this.locationSearchType.set(this.isPincode(this.locationSearchQuery().trim()) ? 'pincode' : 'location');
+      this.currentPage.set(1); // Reset to first page when searching
+      
+      // Update URL with location search parameters
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {
+          locationSearch: this.locationSearchQuery().trim(),
+          locationType: this.locationSearchType()
+        },
+        queryParamsHandling: 'merge'
+      });
+    }
+  }
+
+  onLocationSearchKeyPress(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      this.onLocationSearchSubmit();
+    }
+  }
+
+  clearLocationSearch(): void {
+    this.locationSearchQuery.set('');
+    this.isLocationSearchActive.set(false);
+    this.locationSearchType.set('');
+    this.currentPage.set(1); // Reset to first page when clearing search
+    
+    // Remove location search parameters from URL
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {},
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  clearBrandFilter(): void {
+    this.brandFilter.set('');
+    this.isBrandFilterActive.set(false);
+    this.currentPage.set(1); // Reset to first page when clearing filter
+    
+    // Remove brand filter parameters from URL
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {},
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  clearAllSearches(): void {
+    this.searchQuery.set('');
+    this.isSearchActive.set(false);
+    this.locationSearchQuery.set('');
+    this.isLocationSearchActive.set(false);
+    this.locationSearchType.set('');
+    this.brandFilter.set('');
+    this.isBrandFilterActive.set(false);
+    this.currentPage.set(1); // Reset to first page when clearing search
+    
+    // Remove all search parameters from URL
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: {},
@@ -647,5 +861,30 @@ export class Cars implements OnInit, AfterViewInit {
     if (carId) {
       this.router.navigate(['/car-details', carId]);
     }
+  }
+
+  private initAngularAnimations(): void {
+    // Initialize animations using the animation service
+    this.animationService.initAnimations(this.elementRef, this.renderer);
+    
+    // Fallback: Ensure all animated elements are visible after a short delay
+    setTimeout(() => {
+      this.ensureElementsVisible();
+    }, 2000);
+  }
+
+  private ensureElementsVisible(): void {
+    if (!this.isBrowser()) return;
+    
+    const animatedElements = this.elementRef.nativeElement.querySelectorAll('[data-animation]');
+    console.log('Ensuring visibility for', animatedElements.length, 'elements');
+    
+    animatedElements.forEach((el: HTMLElement) => {
+      if (el.classList.contains('animation-hidden')) {
+        console.log('Making element visible:', el);
+        el.classList.remove('animation-hidden');
+        el.classList.add('animation-visible');
+      }
+    });
   }
 }

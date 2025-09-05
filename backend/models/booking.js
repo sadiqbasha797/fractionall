@@ -26,7 +26,7 @@ const bookingSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['accepted', 'rejected'],
-    default: 'rejected'
+    default: 'accepted'
   },
   acceptedby: {
     type: mongoose.Schema.Types.ObjectId,

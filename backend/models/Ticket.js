@@ -7,7 +7,7 @@ const TicketSchema = new mongoose.Schema({
     ticketprice: { type: Number, required: true },
     pricepaid: { type: Number, required: true },
     pendingamount: { type: Number, required: true },
-    ticketexpiry: { type: Date, required: true },
+    ticketexpiry: { type: Date, required: false },
     ticketbroughtdate: { type: Date, required: true },
     comments: { type: String },
     paymentid: { type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' },

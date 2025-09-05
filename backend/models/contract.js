@@ -18,7 +18,6 @@ const contractSchema = new mongoose.Schema({
     },
     contract_docs: {
         type: [String], // Array of document paths or URLs
-        required: true
     },
     createdby: {
         type: mongoose.Schema.Types.ObjectId,

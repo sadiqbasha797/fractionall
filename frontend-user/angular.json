@@ -53,14 +53,12 @@
             ],
             "styles": [
               "src/styles.css",
-              "css/aos.css",
               "css/owl.carousel.min.css",
               "css/owl.theme.default.min.css"
             ],
             "scripts": [
               "js/jquery.min.js",
               "js/owl.carousel.min.js",
-              "js/aos.js",
               "js/mobile-menu.js"
             ],
             "server": "src/main.server.ts",
@@ -150,14 +148,12 @@
             ],
             "styles": [
               "src/styles.css",
-              "css/aos.css",
               "css/owl.carousel.min.css",
               "css/owl.theme.default.min.css"
             ],
             "scripts": [
               "js/jquery.min.js",
               "js/owl.carousel.min.js",
-              "js/aos.js",
               "js/mobile-menu.js"
             ]
           }
