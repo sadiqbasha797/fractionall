@@ -4,11 +4,8 @@
     <!-- Car Image as Background -->
     <div 
       class="absolute inset-0 image-bg"
-      style="background-image: url('/car-1.jpg');"
+      style="background-image: url('/herocar.jpg');"
     ></div>
-    
-    <!-- Gray Overlay -->
-    <div class="absolute inset-0 image-overlay"></div>
     
     <!-- Text Overlay -->
     <div class="relative z-20 flex flex-col justify-end p-8 h-full">
@@ -22,8 +19,11 @@
   <!-- Right Section - Login Form -->
   <div class="w-full lg:w-1/2 bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
-      <!-- Header -->
+      <!-- Header with Logo -->
       <div class="text-center">
+        <div class="flex items-center justify-center mb-4">
+          <img src="/car.png" alt="Fraction Car Logo" class="h-20 w-auto">
+        </div>
         <h2 class="text-3xl font-bold text-white">
           {{ isVerificationMode ? 'Verify Email' : isForgotPasswordMode ? 'Forgot Password' : isResetPasswordMode ? 'Reset Password' : 'Welcome Back' }}
         </h2>

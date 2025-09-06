@@ -9,7 +9,13 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:4200', // Angular default port
+  origin: [
+    'http://localhost:4200', // Angular default port for development
+    'https://fraction.projexino.com', // Production frontend URL
+    'https://fractionbackend.projexino.com' // Production backend URL (for self-referencing)
+  ],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true
 }));
 

@@ -52,7 +52,7 @@ export interface BookNowTokenResponse {
   providedIn: 'root'
 })
 export class BookNowTokenService {
-  private baseUrl = 'http://localhost:5000/api/book-now-tokens';
+  private baseUrl = 'https://fractionbackend.projexino.com/api/book-now-tokens';
 
   constructor(
     private http: HttpClient,

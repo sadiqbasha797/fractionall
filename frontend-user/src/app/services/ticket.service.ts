@@ -59,7 +59,7 @@ export interface TicketResponse {
   providedIn: 'root'
 })
 export class TicketService {
-  private baseUrl = 'http://localhost:5000/api/tickets';
+  private baseUrl = 'https://fractionbackend.projexino.com/api/tickets';
 
   constructor(
     private http: HttpClient,

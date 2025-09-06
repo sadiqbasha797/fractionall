@@ -23,7 +23,7 @@ export interface ApiResponse {
   providedIn: 'root'
 })
 export class HomePublicService {
-  private apiUrl = 'http://localhost:5000/api/home'; // Base URL for home APIs
+  private apiUrl = 'https://fractionbackend.projexino.com/api/home';
 
   constructor(private http: HttpClient) { }
 

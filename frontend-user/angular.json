@@ -53,13 +53,13 @@
             ],
             "styles": [
               "src/styles.css",
-              "css/owl.carousel.min.css",
-              "css/owl.theme.default.min.css"
+              "./css/owl.carousel.min.css",
+              "./css/owl.theme.default.min.css"
             ],
             "scripts": [
-              "js/jquery.min.js",
-              "js/owl.carousel.min.js",
-              "js/mobile-menu.js"
+              "./js/jquery.min.js",
+              "./js/owl.carousel.min.js",
+              "./js/mobile-menu.js"
             ],
             "server": "src/main.server.ts",
             "outputMode": "server",
@@ -72,13 +72,13 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "1MB",
+                  "maximumError": "2MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "8kB",
+                  "maximumError": "25kB"
                 }
               ],
               "outputHashing": "all"
@@ -148,13 +148,13 @@
             ],
             "styles": [
               "src/styles.css",
-              "css/owl.carousel.min.css",
-              "css/owl.theme.default.min.css"
+              "./css/owl.carousel.min.css",
+              "./css/owl.theme.default.min.css"
             ],
             "scripts": [
-              "js/jquery.min.js",
-              "js/owl.carousel.min.js",
-              "js/mobile-menu.js"
+              "./js/jquery.min.js",
+              "./js/owl.carousel.min.js",
+              "./js/mobile-menu.js"
             ]
           }
         }

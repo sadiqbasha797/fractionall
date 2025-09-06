@@ -38,7 +38,7 @@ export interface GovernmentId {
   providedIn: 'root'
 })
 export class KycService {
-  private apiUrl = 'http://localhost:5000/api';
+  private apiUrl = 'https://fractionbackend.projexino.com/api';
   private kycStatusSubject = new BehaviorSubject<KycStatus | null>(null);
   public kycStatus$ = this.kycStatusSubject.asObservable();
 

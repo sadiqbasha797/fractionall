@@ -199,11 +199,21 @@
             </div>
 
             <!-- Book Now -->
-            <div class="bg-gray-800 p-3 rounded-lg shadow-2xl" 
+            <div class="bg-gray-800 p-3 rounded-lg shadow-2xl relative" 
                  [ngClass]="{
                    'opacity-50 pointer-events-none': carData() && carData().tokensavailble > 0 && !hasBookNowToken()
                  }"
                  data-animation="fade-up" data-delay="400">
+              <!-- Gray Overlay when disabled -->
+              <div *ngIf="carData() && carData().tokensavailble > 0 && !hasBookNowToken()" 
+                   class="absolute inset-0 bg-gray-900/70 rounded-lg z-10 flex items-center justify-center">
+                <div class="text-center text-gray-400">
+                  <svg class="w-8 h-8 mx-auto mb-2 opacity-50" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"></path>
+                  </svg>
+                 
+                </div>
+              </div>
               <div class="flex items-center justify-between mb-3">
                 <h2 class="text-lg font-bold text-text-primary">Book Now</h2>
                 <div class="flex items-center gap-2">
@@ -213,7 +223,7 @@
                          'bg-yellow-600/20 text-yellow-400 border border-yellow-500/50': carData().tokensavailble > 0
                        }">
                     <span *ngIf="carData().tokensavailble === 0">Available</span>
-                    <span *ngIf="carData().tokensavailble > 0">Waitlist Required</span>
+                    <span *ngIf="carData().tokensavailble > 0">Not Available</span>
                   </div>
                   <button 
                     (click)="openInfoModal('book-now')"
@@ -278,11 +288,22 @@
             </div>
 
             <!-- Join Waitlist -->
-            <div class="bg-gray-800 p-3 rounded-lg shadow-2xl" 
+            <div class="bg-gray-800 p-3 rounded-lg shadow-2xl relative" 
                  [ngClass]="{
                    'opacity-50 pointer-events-none': carData() && carData().tokensavailble === 0 && !hasWaitlistToken()
                  }"
                  data-animation="fade-up" data-delay="500">
+              <!-- Gray Overlay when disabled -->
+              <div *ngIf="carData() && carData().tokensavailble === 0 && !hasWaitlistToken()" 
+                   class="absolute inset-0 bg-gray-900/70 rounded-lg z-10 flex items-center justify-center">
+                <div class="text-center text-gray-400">
+                  <svg class="w-8 h-8 mx-auto mb-2 opacity-50" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"></path>
+                  </svg>
+                  <p class="text-sm font-medium">Not Available</p>
+                  <p class="text-xs">Waitlist is full</p>
+                </div>
+              </div>
               <div class="flex items-center justify-between mb-3">
                 <h2 class="text-lg font-bold text-text-primary">Join Waitlist</h2>
                 <div *ngIf="carData()" class="text-xs px-2 py-1 rounded-full"

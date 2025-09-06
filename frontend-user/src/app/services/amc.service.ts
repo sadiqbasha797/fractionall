@@ -67,7 +67,7 @@ export interface AMCResponse {
   providedIn: 'root'
 })
 export class AMCService {
-  private baseUrl = 'http://localhost:5000/api/amcs';
+  private baseUrl = 'https://fractionbackend.projexino.com/api/amcs';
 
   constructor(
     private http: HttpClient,

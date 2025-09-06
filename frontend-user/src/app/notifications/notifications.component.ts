@@ -55,12 +55,8 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    console.log('NotificationsComponent ngOnInit called');
     if (isPlatformBrowser(this.platformId)) {
-      console.log('Browser detected, initializing notifications');
       this.initializeNotifications();
-    } else {
-      console.log('Not in browser, skipping initialization');
     }
   }
 
@@ -76,17 +72,12 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   private initializeNotifications(): void {
     if (!this.authService.isLoggedIn()) {
-      console.log('User not logged in, skipping notification initialization');
       return;
     }
-
-    console.log('Initializing notifications...');
 
     // Subscribe to notifications
     this.subscriptions.push(
       this.notificationService.notifications$.subscribe(notifications => {
-        console.log('Component received notifications from service:', notifications.length);
-        console.log('Notifications data:', notifications);
         this.safeRunInZone(() => {
           this.notifications.set(notifications);
           this.cdr.detectChanges();
@@ -97,7 +88,6 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     // Subscribe to unread count
     this.subscriptions.push(
       this.notificationService.unreadCount$.subscribe(count => {
-        console.log('Component received unread count from service:', count);
         this.safeRunInZone(() => {
           this.unreadCount.set(count);
           this.cdr.detectChanges();
@@ -111,11 +101,9 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   loadNotifications(page: number = 1): void {
     if (!this.authService.isLoggedIn()) {
-      console.log('User not logged in, skipping loadNotifications');
       return;
     }
 
-    console.log('Loading notifications for page:', page);
     this.loading.set(true);
     this.currentPage.set(page);
 
@@ -123,10 +111,8 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       this.notificationService.getNotifications(page, 20, this.showUnreadOnly()).subscribe({
         next: (response) => {
           // Extract data from the response
-          console.log('Received notification response:', response);
           const notifications = response.body?.notifications || [];
           const unreadCount = response.body?.pagination?.unreadCount || 0;
-          console.log('Setting notifications:', notifications.length);
           
           // Update service subjects so other components can also receive updates
           this.notificationService.notificationsSubject.next(notifications);

@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class CarPublicService {
-  private apiUrl = 'http://localhost:5000/api/cars/public'; // Assuming backend runs on port 5000
+  private apiUrl = 'https://fractionbackend.projexino.com/api/cars/public';
 
   constructor(private http: HttpClient) { }
 

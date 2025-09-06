@@ -85,25 +85,32 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Profile Card */
-.profile-info {
+/* Profile Card - New Design */
+.profile-header-section {
   display: flex;
+  align-items: center;
   gap: 1.5rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid #374151;
+  position: relative;
 }
 
 .profile-avatar-section {
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .profile-avatar {
-  width: 6rem;
-  height: 6rem;
+  width: 5rem;
+  height: 5rem;
   border-radius: 50%;
   overflow: hidden;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   position: relative;
+  border: 3px solid #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .profile-avatar img {
@@ -139,17 +146,21 @@
 }
 
 .change-photo-btn {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #3b82f6;
   background: none;
   border: none;
   cursor: pointer;
   text-decoration: underline;
   transition: all 0.3s ease;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
 }
 
 .change-photo-btn:hover:not(:disabled) {
   color: #2563eb;
+  background-color: rgba(59, 130, 246, 0.1);
+  text-decoration: none;
 }
 
 .change-photo-btn:disabled {
@@ -158,38 +169,188 @@
   text-decoration: none;
 }
 
-.profile-details {
+.profile-basic-info {
   flex: 1;
+  min-width: 0;
 }
 
-.profile-details-grid {
+.profile-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.2;
+}
+
+.profile-email {
+  font-size: 1rem;
+  color: #9ca3af;
+  margin: 0 0 1rem 0;
+  word-break: break-all;
+}
+
+.profile-status-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.status-badge.verified {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.unverified {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-badge.kyc-status.pending {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-badge.kyc-status.approved {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.kyc-status.rejected {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-badge.kyc-status.submitted {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Expand Toggle Button */
+.expand-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+}
+
+.expand-toggle-btn:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+}
+
+.expand-toggle-btn.expanded .expand-icon {
+  transform: rotate(180deg);
+}
+
+.expand-icon {
+  width: 1rem;
+  height: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.expand-text {
+  white-space: nowrap;
+}
+
+/* Expandable Profile Details */
+.profile-details-expandable {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease-in-out;
+  background-color: #1f2937;
+}
+
+.profile-details-expandable.expanded {
+  max-height: 1000px;
+}
+
+.profile-details-content {
+  padding: 1.5rem;
+}
+
+.info-section {
+  margin-bottom: 2rem;
+}
+
+.info-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #374151;
+}
+
+.section-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.info-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
-  margin-bottom: 1rem;
 }
 
-.detail-item {
+.info-item {
   display: flex;
   flex-direction: column;
 }
 
-.detail-label {
+.info-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.info-label {
   font-size: 0.875rem;
   font-weight: 500;
   color: #9ca3af;
   margin-bottom: 0.25rem;
 }
 
-.detail-value {
-  font-size: 1.125rem;
+.info-value {
+  font-size: 1rem;
   font-weight: 600;
   color: #ffffff;
   margin: 0;
-}
-
-.address-section {
-  margin-top: 1rem;
+  word-break: break-word;
 }
 
 /* KYC Card */
@@ -1179,14 +1340,47 @@ textarea.form-input-enhanced:hover {
     font-size: 1.875rem;
   }
 
-  .profile-info {
+  /* Mobile Profile Card Adjustments */
+  .profile-header-section {
     flex-direction: column;
     text-align: center;
+    gap: 1rem;
+    padding: 1rem;
   }
 
-  .profile-details-grid {
+  .expand-toggle-btn {
+    position: static;
+    align-self: center;
+    margin-top: 0.5rem;
+  }
+
+  .profile-basic-info {
+    width: 100%;
+  }
+
+  .profile-name {
+    font-size: 1.25rem;
+  }
+
+  .profile-email {
+    font-size: 0.875rem;
+  }
+
+  .profile-status-badges {
+    justify-content: center;
+  }
+
+  .info-grid {
     grid-template-columns: 1fr;
     gap: 0.75rem;
+  }
+
+  .profile-details-content {
+    padding: 1rem;
+  }
+
+  .section-title {
+    font-size: 1rem;
   }
 
   .tickets-grid,
@@ -1277,6 +1471,53 @@ textarea.form-input-enhanced:hover {
 
   .section-title {
     font-size: 1.25rem;
+  }
+
+  /* Extra small screens - Profile Card */
+  .profile-header-section {
+    padding: 0.75rem;
+  }
+
+  .profile-avatar {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .profile-name {
+    font-size: 1.125rem;
+  }
+
+  .profile-email {
+    font-size: 0.8rem;
+  }
+
+  .expand-toggle-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .expand-text {
+    display: none;
+  }
+
+  .profile-details-content {
+    padding: 0.75rem;
+  }
+
+  .info-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .section-title {
+    font-size: 0.9rem;
+  }
+
+  .info-label {
+    font-size: 0.8rem;
+  }
+
+  .info-value {
+    font-size: 0.9rem;
   }
 
   .calendar-header-section {

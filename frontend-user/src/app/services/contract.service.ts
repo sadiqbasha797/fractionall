@@ -39,7 +39,7 @@ export interface ContractResponse {
   providedIn: 'root'
 })
 export class ContractService {
-  private baseUrl = 'http://localhost:5000/api/contracts';
+  private baseUrl = 'https://fractionbackend.projexino.com/api/contracts';
 
   constructor(
     private http: HttpClient,

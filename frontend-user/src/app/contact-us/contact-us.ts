@@ -56,7 +56,6 @@ export class ContactUs implements OnInit, AfterViewInit {
     // Submit form to API
     this.contactService.submitContactForm(this.formData).subscribe({
       next: (response) => {
-        console.log('Form submitted successfully:', response);
         this.submitSuccess = true;
         this.isSubmitting = false;
         

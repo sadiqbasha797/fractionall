@@ -42,7 +42,7 @@ export interface PaymentVerificationResponse {
   providedIn: 'root'
 })
 export class PaymentService {
-  private baseUrl = 'http://localhost:5000/api/payments';
+  private baseUrl = 'https://fractionbackend.projexino.com/api/payments';
 
   constructor(
     private http: HttpClient,
@@ -68,7 +68,7 @@ export class PaymentService {
 
   // Get Razorpay Key ID
   getRazorpayKey(): Observable<{ key: string }> {
-    return this.http.get<{ key: string }>('http://localhost:5000/api/razorpay-key');
+    return this.http.get<{ key: string }>('https://fractionbackend.projexino.com/api/razorpay-key');
   }
 
   // Create payment order
@@ -108,7 +108,7 @@ export class PaymentService {
       paiddate
     };
     
-    return this.http.put(`http://localhost:5000/api/amcs/${amcId}/payment-status`, body, {
+    return this.http.put(`https://fractionbackend.projexino.com/api/amcs/${amcId}/payment-status`, body, {
       headers: this.getAuthHeaders()
     });
   }

@@ -99,7 +99,7 @@ export interface ContactFormStats {
   providedIn: 'root'
 })
 export class ContactService {
-  private apiUrl = environment.apiUrl || 'http://localhost:5000/api';
+  private apiUrl = environment.apiUrl || 'https://fractionbackend.projexino.com/api';
 
   constructor(private http: HttpClient) { }
 

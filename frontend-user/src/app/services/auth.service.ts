@@ -7,7 +7,7 @@ import { isPlatformBrowser } from '@angular/common';
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:5000/api/auth'; // Assuming backend runs on port 5000
+  private apiUrl = 'https://fractionbackend.projexino.com/api/auth';
 
   constructor(
     private http: HttpClient,

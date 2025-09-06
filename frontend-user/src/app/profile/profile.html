@@ -29,7 +29,8 @@
     <div class="left-column">
       <!-- User Profile Card -->
       <div class="profile-card">
-        <div class="profile-info">
+        <!-- Profile Header with Avatar and Basic Info -->
+        <div class="profile-header-section">
           <div class="profile-avatar-section">
             <div class="profile-avatar">
               <img [src]="user().profileimage || 'public/person_1.jpg'" [alt]="user().name || 'Profile Image'" />
@@ -51,65 +52,105 @@
               {{ imageUploadError() }}
             </div>
           </div>
-          <div class="profile-details">
-            <div class="profile-details-grid">
-              <div class="detail-item">
-                <label class="detail-label">Full Name</label>
-                <p class="detail-value">{{ user().name || 'Not provided' }}</p>
-              </div>
-              <div class="detail-item">
-                <label class="detail-label">Email</label>
-                <p class="detail-value">{{ user().email || 'Not provided' }}</p>
-              </div>
-              <div class="detail-item">
-                <label class="detail-label">Mobile Number</label>
-                <p class="detail-value">{{ user().phone || 'Not provided' }}</p>
-              </div>
-              <div class="detail-item">
-                <label class="detail-label">Date of Birth</label>
-                <p class="detail-value">{{ formatDate(user().dateofbirth) }}</p>
-              </div>
-              <div class="detail-item">
-                <label class="detail-label">Location</label>
-                <p class="detail-value">{{ user().location || 'Not provided' }}</p>
-              </div>
-              <div class="detail-item">
-                <label class="detail-label">Pincode</label>
-                <p class="detail-value">{{ user().pincode || 'Not provided' }}</p>
-              </div>
-              <div class="detail-item">
-                <label class="detail-label">Account Status</label>
-                <p class="detail-value">{{ getVerificationStatus() }}</p>
-              </div>
-              <div class="detail-item">
-                <label class="detail-label">Member Since</label>
-                <p class="detail-value">{{ formatDate(user().createdAt) }}</p>
+          
+          <div class="profile-basic-info">
+            <h2 class="profile-name">{{ user().name || 'Not provided' }}</h2>
+            <p class="profile-email">{{ user().email || 'Not provided' }}</p>
+            <div class="profile-status-badges">
+              <span class="status-badge" [class.verified]="user().verified" [class.unverified]="!user().verified">
+                {{ getVerificationStatus() }}
+              </span>
+              <span class="status-badge kyc-status" [class]="getKycStatusClass()">
+                {{ getKycStatusDisplay() }}
+              </span>
+            </div>
+          </div>
+          
+          <!-- Expand/Collapse Toggle Button -->
+          <button class="expand-toggle-btn" (click)="toggleProfileExpansion()" [class.expanded]="isProfileExpanded()">
+            <svg class="expand-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+            <span class="expand-text">{{ isProfileExpanded() ? 'Show Less' : 'Show More' }}</span>
+          </button>
+        </div>
+
+        <!-- Expandable Profile Details -->
+        <div class="profile-details-expandable" [class.expanded]="isProfileExpanded()">
+          <div class="profile-details-content">
+            <!-- Personal Information Section -->
+            <div class="info-section">
+              <h3 class="section-title">
+                <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                Personal Information
+              </h3>
+              <div class="info-grid">
+                <div class="info-item">
+                  <label class="info-label">Mobile Number</label>
+                  <p class="info-value">{{ user().phone || 'Not provided' }}</p>
+                </div>
+                <div class="info-item">
+                  <label class="info-label">Date of Birth</label>
+                  <p class="info-value">{{ formatDate(user().dateofbirth) }}</p>
+                </div>
+                <div class="info-item">
+                  <label class="info-label">Member Since</label>
+                  <p class="info-value">{{ formatDate(user().createdAt) }}</p>
+                </div>
               </div>
             </div>
-            <div class="address-section">
-              <label class="detail-label">Address</label>
-              <p class="detail-value">{{ user().address || 'Not provided' }}</p>
+
+            <!-- Location Information Section -->
+            <div class="info-section">
+              <h3 class="section-title">
+                <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                Location Information
+              </h3>
+              <div class="info-grid">
+                <div class="info-item">
+                  <label class="info-label">Location</label>
+                  <p class="info-value">{{ user().location || 'Not provided' }}</p>
+                </div>
+                <div class="info-item">
+                  <label class="info-label">Pincode</label>
+                  <p class="info-value">{{ user().pincode || 'Not provided' }}</p>
+                </div>
+              </div>
+              <div class="info-item full-width">
+                <label class="info-label">Address</label>
+                <p class="info-value">{{ user().address || 'Not provided' }}</p>
+              </div>
             </div>
             
             <!-- Government ID Section -->
-            <div class="government-id-section" style="margin-top: 1.5rem;">
-              <h3 style="font-size: 1.125rem; font-weight: 600; color: #ffffff; margin-bottom: 1rem;">Government IDs</h3>
-              <div class="government-id-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="detail-item">
-                  <label class="detail-label">Aadhar ID</label>
-                  <p class="detail-value">{{ formatGovernmentId('aadharid', user().governmentid?.aadharid) }}</p>
+            <div class="info-section">
+              <h3 class="section-title">
+                <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
+                </svg>
+                Government IDs
+              </h3>
+              <div class="info-grid">
+                <div class="info-item">
+                  <label class="info-label">Aadhar ID</label>
+                  <p class="info-value">{{ formatGovernmentId('aadharid', user().governmentid?.aadharid) }}</p>
                 </div>
-                <div class="detail-item">
-                  <label class="detail-label">PAN ID</label>
-                  <p class="detail-value">{{ formatGovernmentId('panid', user().governmentid?.panid) }}</p>
+                <div class="info-item">
+                  <label class="info-label">PAN ID</label>
+                  <p class="info-value">{{ formatGovernmentId('panid', user().governmentid?.panid) }}</p>
                 </div>
-                <div class="detail-item">
-                  <label class="detail-label">License ID</label>
-                  <p class="detail-value">{{ formatGovernmentId('licenseid', user().governmentid?.licenseid) }}</p>
+                <div class="info-item">
+                  <label class="info-label">License ID</label>
+                  <p class="info-value">{{ formatGovernmentId('licenseid', user().governmentid?.licenseid) }}</p>
                 </div>
-                <div class="detail-item">
-                  <label class="detail-label">Income</label>
-                  <p class="detail-value">{{ user().governmentid?.income || 'Not provided' }}</p>
+                <div class="info-item">
+                  <label class="info-label">Income</label>
+                  <p class="info-value">{{ user().governmentid?.income || 'Not provided' }}</p>
                 </div>
               </div>
             </div>

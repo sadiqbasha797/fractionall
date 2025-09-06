@@ -45,7 +45,7 @@ export interface UnreadCountResponse {
   providedIn: 'root'
 })
 export class NotificationService {
-  private apiUrl = 'http://localhost:5000/api/notifications';
+  private apiUrl = 'https://fractionbackend.projexino.com/api/notifications';
   public unreadCountSubject = new BehaviorSubject<number>(0);
   public notificationsSubject = new BehaviorSubject<Notification[]>([]);
   private refreshInterval?: any;
@@ -118,31 +118,18 @@ export class NotificationService {
 
   // Load notifications and update subjects
   loadNotifications(page: number = 1, limit: number = 20, unreadOnly: boolean = false): void {
-    console.log('NotificationService loadNotifications called', { page, limit, unreadOnly });
-    
     if (!this.authService.isLoggedIn()) {
-      console.log('User not logged in, skipping loadNotifications');
       return;
     }
 
-    console.log('Making API call to get notifications');
     this.getNotifications(page, limit, unreadOnly).subscribe({
       next: (response) => {
-        console.log('NotificationService received response:', response);
         // Extract data from the response
         const notifications = response.body?.notifications || [];
         const unreadCount = response.body?.pagination?.unreadCount || 0;
         
-        console.log('Updating subjects with:', { notificationsCount: notifications.length, unreadCount });
-        console.log('Current subject values before update:', { 
-          currentNotifications: this.notificationsSubject.value.length, 
-          currentUnreadCount: this.unreadCountSubject.value 
-        });
-        
         this.notificationsSubject.next(notifications);
         this.unreadCountSubject.next(unreadCount);
-        
-        console.log('Subjects updated successfully');
       },
       error: (error) => {
         console.error('Error loading notifications:', error);
@@ -188,7 +175,6 @@ export class NotificationService {
   // Initialize auto-refresh (public method for components to call)
   initializeAutoRefresh(): void {
     if (!this.isInitialized) {
-      console.log('Initializing auto-refresh and loading initial data');
       this.loadNotifications();
       this.loadUnreadCount();
       this.startAutoRefresh();
@@ -280,12 +266,7 @@ export class NotificationService {
 
   // Initialize notifications for logged-in user
   initializeNotifications(): void {
-    console.log('NotificationService initializeNotifications called');
-    console.log('User logged in:', this.authService.isLoggedIn());
-    console.log('Already initialized:', this.isInitialized);
-    
     if (this.authService.isLoggedIn() && !this.isInitialized) {
-      console.log('Initializing notification service');
       this.isInitialized = true;
       this.loadNotifications();
       this.loadUnreadCount();

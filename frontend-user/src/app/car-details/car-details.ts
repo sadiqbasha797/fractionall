@@ -992,7 +992,6 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
           this.recordId.set(response.body?.bookNowToken?._id || 'N/A');
           this.showPaymentModal.set(true);
           this.paymentError.set(null);
-          console.log('Book Now Token created successfully:', response);
         },
         error: (error) => {
           console.error('Error creating Book Now Token:', error);
@@ -1022,7 +1021,6 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
           this.recordId.set(response.body?.token?._id || 'N/A');
           this.showPaymentModal.set(true);
           this.paymentError.set(null);
-          console.log('Waitlist Token created successfully:', response);
         },
         error: (error) => {
           console.error('Error creating Waitlist Token:', error);
@@ -1129,7 +1127,6 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
       // Update the backend
       this.carService.updateBookNowTokenCount(this.carId(), newCount).subscribe({
         next: (response) => {
-          console.log('Car bookNowTokenAvailable count updated successfully:', response);
         },
         error: (error) => {
           console.error('Error updating car bookNowTokenAvailable count:', error);

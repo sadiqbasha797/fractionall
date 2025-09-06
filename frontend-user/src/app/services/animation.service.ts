@@ -101,7 +101,6 @@ export class AnimationService {
     }
 
     const elements = elementRef.nativeElement.querySelectorAll('[data-animation]');
-    console.log('Initializing animations for', elements.length, 'elements');
     
     elements.forEach((el: HTMLElement, index: number) => {
       const animationType = el.getAttribute('data-animation');
@@ -140,7 +139,6 @@ export class AnimationService {
         const isInViewport = rect.top < window.innerHeight && rect.bottom > 0;
         
         if (isInViewport) {
-          console.log('Element already in viewport, triggering animation:', htmlEl);
           htmlEl.classList.remove('animation-hidden');
           htmlEl.classList.add('animation-visible');
           htmlEl.offsetHeight; // Force reflow
@@ -154,7 +152,6 @@ export class AnimationService {
     elements.forEach((el: Element) => {
       const htmlEl = el as HTMLElement;
       if (htmlEl.classList.contains('animation-hidden')) {
-        console.log('Force showing element:', htmlEl);
         htmlEl.classList.remove('animation-hidden');
         htmlEl.classList.add('animation-visible');
       }
@@ -165,7 +162,6 @@ export class AnimationService {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         const element = entry.target as HTMLElement;
-        console.log('Element entering viewport:', element);
         
         // Remove hidden class and add visible class
         element.classList.remove('animation-hidden');

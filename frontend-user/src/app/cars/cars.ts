@@ -42,7 +42,6 @@ export class Cars implements OnInit, AfterViewInit {
 
   // Computed signals for derived data
   protected filteredCars = computed(() => {
-    console.log('Computing filtered cars...', 'allCars:', this.allCars().length, 'isLoading:', this.isLoading());
     let cars = this.allCars();
     
     // Apply brand filter first
@@ -66,7 +65,6 @@ export class Cars implements OnInit, AfterViewInit {
     // Then apply sorting
     cars = this.applySort(cars, this.currentSort());
     
-    console.log('Filtered cars computed:', cars.length);
     return cars;
   });
 
@@ -77,7 +75,6 @@ export class Cars implements OnInit, AfterViewInit {
     const startIndex = (this.currentPage() - 1) * this.itemsPerPage();
     const endIndex = startIndex + this.itemsPerPage();
     const paginatedCars = this.filteredCars().slice(startIndex, endIndex);
-    console.log('Paginated cars computed:', paginatedCars.length, 'from filtered cars:', this.filteredCars().length);
     return paginatedCars;
   });
 
@@ -109,12 +106,9 @@ export class Cars implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    console.log('Cars component ngOnInit started');
-    
     // Set a timeout to force loading to false after 10 seconds as a fallback
     setTimeout(() => {
       if (this.isLoading()) {
-        console.warn('Loading timeout reached, forcing loading to false');
         this.isLoading.set(false);
       }
     }, 10000);
@@ -125,14 +119,12 @@ export class Cars implements OnInit, AfterViewInit {
       if (params['brand']) {
         this.brandFilter.set(params['brand']);
         this.isBrandFilterActive.set(true);
-        console.log('Brand filter parameters found:', { brand: this.brandFilter() });
       }
       
       // Handle main search parameters
       if (params['search'] && params['type'] === 'main') {
         this.searchQuery.set(params['search']);
         this.isSearchActive.set(true);
-        console.log('Main search parameters found:', { search: this.searchQuery() });
       }
       
       // Handle location search parameters
@@ -140,40 +132,21 @@ export class Cars implements OnInit, AfterViewInit {
         this.locationSearchQuery.set(params['locationSearch']);
         this.locationSearchType.set(params['locationType'] || 'location');
         this.isLocationSearchActive.set(true);
-        console.log('Location search parameters found:', { 
-          locationSearch: this.locationSearchQuery(), 
-          locationType: this.locationSearchType() 
-        });
       }
     });
 
     // Fetch public cars from backend
-    console.log('Fetching cars data...');
     this.carService.getPublicCars().subscribe({
       next: (res: any) => {
-        console.log('Cars API response:', res);
         // API returns { status, body: { cars }, message }
         const carsData = (res && res.body && res.body.cars) ? res.body.cars : (Array.isArray(res) ? res : []);
         this.allCars.set(carsData);
         this.isLoading.set(false);
-        console.log('Cars data loaded successfully:', carsData.length);
-        
-        // Log sample car data structure for debugging
-        if (carsData.length > 0) {
-          console.log('Sample car data structure:', carsData[0]);
-          console.log('Car availability fields:', {
-            tokensavailble: carsData[0].tokensavailble,
-            ticketsavilble: carsData[0].ticketsavilble,
-            bookNowTokenAvailable: carsData[0].bookNowTokenAvailable,
-            status: carsData[0].status
-          });
-        }
       },
       error: (error) => {
         console.error('Error loading cars:', error);
         this.allCars.set([]);
         this.isLoading.set(false);
-        console.log('Cars data set to empty array due to error');
       }
     });
   }
@@ -289,10 +262,7 @@ export class Cars implements OnInit, AfterViewInit {
       const btn = this.elementRef.nativeElement.querySelector(`#${button}`);
       const menuEl = this.elementRef.nativeElement.querySelector(`#${menu}`);
       
-      console.log(`Looking for dropdown: ${button}`, { btn, menuEl }); // Debug log
-      
       if (!btn || !menuEl) {
-        console.warn(`Dropdown elements not found for ${button}`);
         return;
       }
       
@@ -302,8 +272,6 @@ export class Cars implements OnInit, AfterViewInit {
       this.renderer.listen(btn, 'click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        
-        console.log(`Dropdown clicked: ${button}`); // Debug log
         
         // Close other dropdowns
         dropdowns.forEach(({ menu: m }) => {
@@ -329,7 +297,6 @@ export class Cars implements OnInit, AfterViewInit {
           e.stopPropagation();
           
           const linkText = link.textContent?.trim() || '';
-          console.log(`Menu item clicked: ${linkText} in ${menu}`); // Debug log
           
           // Close all dropdowns
           dropdowns.forEach(({ menu: m }) => {
@@ -354,7 +321,6 @@ export class Cars implements OnInit, AfterViewInit {
     
     if (foundElements === 2) {
       this.dropdownsInitialized = true;
-      console.log('Dropdowns initialized successfully');
     }
   }
 
@@ -453,8 +419,6 @@ export class Cars implements OnInit, AfterViewInit {
 
   // Brand filter (by brand name)
   applyBrandFilter(cars: any[], brandName: string): any[] {
-    console.log('applyBrandFilter called with:', { brandName, carsCount: cars.length });
-    
     if (!brandName || !brandName.trim()) {
       return cars;
     }
@@ -465,14 +429,11 @@ export class Cars implements OnInit, AfterViewInit {
       return carBrandName.includes(query);
     });
     
-    console.log('Brand filtered cars count:', filteredCars.length);
     return filteredCars;
   }
 
   // Main search filter (by car name, brand, etc.)
   applyMainSearchFilter(cars: any[], searchQuery: string): any[] {
-    console.log('applyMainSearchFilter called with:', { searchQuery, carsCount: cars.length });
-    
     if (!searchQuery || !searchQuery.trim()) {
       return cars;
     }
@@ -490,14 +451,11 @@ export class Cars implements OnInit, AfterViewInit {
              color.includes(query);
     });
     
-    console.log('Main search filtered cars count:', filteredCars.length);
     return filteredCars;
   }
 
   // Location search filter (by location or pincode)
   applyLocationSearchFilter(cars: any[], searchQuery: string, searchType: string): any[] {
-    console.log('applyLocationSearchFilter called with:', { searchQuery, searchType, carsCount: cars.length });
-    
     if (!searchQuery || !searchQuery.trim()) {
       return cars;
     }
@@ -514,13 +472,10 @@ export class Cars implements OnInit, AfterViewInit {
       }
     });
     
-    console.log('Location search filtered cars count:', filteredCars.length);
     return filteredCars;
   }
 
   applyFilter(cars: any[], filter: string): any[] {
-    console.log('applyFilter called with:', filter, 'cars count:', cars.length);
-    
     let filteredCars: any[];
     switch (filter) {
       case 'All':
@@ -531,7 +486,6 @@ export class Cars implements OnInit, AfterViewInit {
         // Based on template logic: tokensavailble === 0 means "Book Now" is shown
         filteredCars = cars.filter(car => {
           const canBookNow = car.tokensavailble === 0 && car.ticketsavilble > 0;
-          console.log(`Car ${car.carname}: tokensavailble=${car.tokensavailble}, ticketsavilble=${car.ticketsavilble}, canBookNow=${canBookNow}`);
           return canBookNow;
         });
         break;
@@ -540,7 +494,6 @@ export class Cars implements OnInit, AfterViewInit {
         // Based on template logic: tokensavailble !== 0 means "Join Waitlist" is shown
         filteredCars = cars.filter(car => {
           const needsWaitlist = car.tokensavailble !== 0 && car.ticketsavilble > 0;
-          console.log(`Car ${car.carname}: tokensavailble=${car.tokensavailble}, ticketsavilble=${car.ticketsavilble}, needsWaitlist=${needsWaitlist}`);
           return needsWaitlist;
         });
         break;
@@ -556,12 +509,10 @@ export class Cars implements OnInit, AfterViewInit {
         filteredCars = [...cars];
     }
     
-    console.log('Filtered cars count:', filteredCars.length);
     return filteredCars;
   }
 
   applySort(cars: any[], sort: string): any[] {
-    console.log('applySort called with:', sort, 'cars count:', cars.length);
     const sortedCars = [...cars];
     
     let result: any[];
@@ -592,7 +543,6 @@ export class Cars implements OnInit, AfterViewInit {
         result = sortedCars.sort((a, b) => {
           const priceA = parseFloat(a.fractionprice || a.tokenprice || '0');
           const priceB = parseFloat(b.fractionprice || b.tokenprice || '0');
-          console.log(`Sorting: ${a.carname} (${priceA}) vs ${b.carname} (${priceB})`);
           return priceA - priceB; // Low to high
         });
         break;
@@ -607,28 +557,22 @@ export class Cars implements OnInit, AfterViewInit {
         result = sortedCars;
     }
     
-    console.log('Sorted cars count:', result.length);
     return result;
   }
 
   // Filter and Sort event handlers
   onFilterChange(filter: string): void {
-    console.log('onFilterChange called with:', filter);
     this.currentFilter.set(filter);
     this.currentPage.set(1); // Reset to first page when filter changes
-    console.log('After filter change - cars count:', this.cars().length);
   }
 
   onSortChange(sort: string): void {
-    console.log('onSortChange called with:', sort);
     this.currentSort.set(sort);
     this.currentPage.set(1); // Reset to first page when sort changes
-    console.log('After sort change - cars count:', this.cars().length);
   }
 
   // Clear all filters and searches
   clearAllFilters(): void {
-    console.log('Clearing all filters and searches');
     this.currentFilter.set('All');
     this.currentSort.set('A-Z (Sort by Car Name)');
     this.searchQuery.set('');
@@ -877,11 +821,9 @@ export class Cars implements OnInit, AfterViewInit {
     if (!this.isBrowser()) return;
     
     const animatedElements = this.elementRef.nativeElement.querySelectorAll('[data-animation]');
-    console.log('Ensuring visibility for', animatedElements.length, 'elements');
     
     animatedElements.forEach((el: HTMLElement) => {
       if (el.classList.contains('animation-hidden')) {
-        console.log('Making element visible:', el);
         el.classList.remove('animation-hidden');
         el.classList.add('animation-visible');
       }

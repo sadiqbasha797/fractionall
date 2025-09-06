@@ -22,7 +22,7 @@ export interface ApiResponse {
   providedIn: 'root'
 })
 export class FaqPublicService {
-  private apiUrl = 'http://localhost:5000/api/home/faqs/public'; // Updated to use new home API
+  private apiUrl = 'https://fractionbackend.projexino.com/api/home/faqs/public';
 
   constructor(private http: HttpClient) { }
 

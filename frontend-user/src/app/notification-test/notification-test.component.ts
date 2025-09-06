@@ -234,20 +234,16 @@ export class NotificationTestComponent implements OnInit, OnDestroy {
 
   testWelcomeNotification(): void {
     // This would typically be called from the backend
-    console.log('Testing welcome notification...');
     // In a real scenario, this would trigger a backend API call
   }
 
   testTokenNotification(): void {
-    console.log('Testing token notification...');
   }
 
   testBookingNotification(): void {
-    console.log('Testing booking notification...');
   }
 
   testAMCReminderNotification(): void {
-    console.log('Testing AMC reminder notification...');
   }
 
   getNotificationIcon(type: string): string {

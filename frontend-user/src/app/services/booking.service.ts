@@ -32,7 +32,7 @@ export interface Booking {
   providedIn: 'root'
 })
 export class BookingService {
-  private apiUrl = 'http://localhost:5000/api/bookings';
+  private apiUrl = 'https://fractionbackend.projexino.com/api/bookings';
 
   constructor(
     private http: HttpClient,
@@ -52,10 +52,6 @@ export class BookingService {
   // Get all bookings for the current user
   getUserBookings(): Observable<any> {
     const headers = this.getAuthHeaders();
-    console.log('Booking Service Debug:');
-    console.log('API URL:', `${this.apiUrl}`);
-    console.log('Headers:', headers);
-    console.log('Token:', this.authService.getToken());
     return this.http.get<any>(`${this.apiUrl}`, { headers });
   }
 
@@ -172,14 +168,6 @@ export class BookingService {
     const day = String(date.getDate()).padStart(2, '0');
     const formatted = `${year}-${month}-${day}`;
     
-    // Debug logging to help identify date issues
-    console.log('Date formatting:', {
-      original: date,
-      year,
-      month: date.getMonth() + 1,
-      day: date.getDate(),
-      formatted
-    });
     
     return formatted;
   }

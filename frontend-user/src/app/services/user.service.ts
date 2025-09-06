@@ -7,7 +7,7 @@ import { AuthService } from './auth.service';
   providedIn: 'root'
 })
 export class UserService {
-  private apiUrl = 'http://localhost:5000/api/users'; // Assuming backend runs on port 5000
+  private apiUrl = 'https://fractionbackend.projexino.com/api/users';
 
   constructor(
     private http: HttpClient,
@@ -63,11 +63,11 @@ export class UserService {
 
   // KYC related services
   submitKyc(kycData: { kycDocs: string[] }): Observable<any> {
-    return this.http.post<any>(`http://localhost:5000/api/kyc/submit`, kycData, { headers: this.getAuthHeaders() });
+    return this.http.post<any>(`https://fractionbackend.projexino.com/api/kyc/submit`, kycData, { headers: this.getAuthHeaders() });
   }
 
   getMyKycStatus(): Observable<any> {
-    return this.http.get<any>(`http://localhost:5000/api/kyc/my-status`, { headers: this.getAuthHeaders() });
+    return this.http.get<any>(`https://fractionbackend.projexino.com/api/kyc/my-status`, { headers: this.getAuthHeaders() });
   }
 
   // Upload KYC document
@@ -82,6 +82,6 @@ export class UserService {
       'Authorization': `Bearer ${token}`
     });
     
-    return this.http.post<any>(`http://localhost:5000/api/kyc/upload-document`, formData, { headers });
+    return this.http.post<any>(`https://fractionbackend.projexino.com/api/kyc/upload-document`, formData, { headers });
   }
 }

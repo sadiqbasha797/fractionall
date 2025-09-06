@@ -136,6 +136,9 @@ export class Profile implements OnInit {
   protected selectedAMCYear = signal<number>(-1);
   protected amcPaymentSuccess = signal<boolean>(false);
 
+  // Profile expansion state
+  protected profileExpanded = signal<boolean>(false);
+
   constructor(
     private userService: UserService,
     private authService: AuthService,
@@ -1176,12 +1179,6 @@ export class Profile implements OnInit {
     const testAmount = 100; // ₹1 for testing
     const actualAmount = amcAmount.amount;
     
-    console.log('AMC Payment Debug:', {
-      actualAmount,
-      testAmount,
-      year: amcAmount.year,
-      carName: amc.carid.carname
-    });
 
     this.selectedAMC.set(amc);
     this.selectedAMCYear.set(yearIndex);
@@ -1280,16 +1277,9 @@ export class Profile implements OnInit {
 
     const currentDate = new Date().toISOString();
     
-    console.log('Updating AMC payment status:', {
-      amcId: amc._id,
-      yearIndex,
-      paid: true,
-      paiddate: currentDate
-    });
     
     this.paymentService.updateAMCPaymentStatus(amc._id!, yearIndex, true, currentDate).subscribe({
       next: (response) => {
-        console.log('AMC payment status update response:', response);
         this.isAMCPaymentLoading.set(false);
         if (response.status === 'success') {
           // Update local AMC data
@@ -1426,5 +1416,14 @@ export class Profile implements OnInit {
   // Navigate to bookings page
   navigateToBookings() {
     this.router.navigate(['/bookings']);
+  }
+
+  // =============== Profile Expansion Methods ===============
+  toggleProfileExpansion() {
+    this.profileExpanded.set(!this.profileExpanded());
+  }
+
+  isProfileExpanded(): boolean {
+    return this.profileExpanded();
   }
 }

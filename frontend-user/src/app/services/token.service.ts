@@ -53,7 +53,7 @@ export interface TokenResponse {
   providedIn: 'root'
 })
 export class TokenService {
-  private baseUrl = 'http://localhost:5000/api/tokens';
+  private baseUrl = 'https://fractionbackend.projexino.com/api/tokens';
 
   constructor(
     private http: HttpClient,
