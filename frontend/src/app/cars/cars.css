@@ -1,0 +1,292 @@
+/* Custom scrollbar styling (default) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1f2937; /* gray-800 track for dark theme */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #374151; /* gray-700 thumb */
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563; /* slightly lighter on hover */
+}
+
+/* Enhanced header styling */
+.header-gradient {
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+}
+
+/* Glass morphism effect for cards */
+.glass-card {
+  background: rgba(31, 41, 55, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+/* Enhanced button hover effects */
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+}
+
+.btn-secondary {
+  background: rgba(55, 65, 81, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(55, 65, 81, 0.7);
+  border-color: rgba(75, 85, 99, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Search input enhancements */
+.search-input {
+  background: rgba(31, 41, 55, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  background: rgba(31, 41, 55, 0.7);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Stats card animations */
+.stats-card {
+  transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Hide scrollbars but keep scrolling for .no-scrollbar containers */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Table header sticky with subtle background */
+thead tr {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #111827; /* gray-900 header */
+  color: #e5e7eb; /* light text */
+}
+
+/* Prevent text from wrapping in table cells where utility class used */
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+
+/* Status badges with clear, accessible colors */
+.status-badge[data-status="active"] {
+  background-color: #ecfdf5; /* green-50 */
+  color: #065f46; /* green-800 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+.status-badge[data-status="pending"] {
+  background-color: #fffbeb; /* yellow-50 */
+  color: #92400e; /* yellow-800 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+.status-badge[data-status="cancelled"],
+.status-badge[data-status="cancel"] {
+  background-color: #fff1f2; /* red-50 */
+  color: #831843; /* red-800 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+/* Search icon styling */
+.search-icon {
+  color: #9ca3af !important; /* text-gray-400 */
+  font-size: 1rem !important; /* slightly larger */
+  z-index: 10;
+  pointer-events: none;
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 16px !important;
+  height: 16px !important;
+  line-height: 1 !important;
+}
+
+.search-icon:hover {
+  color: #d1d5db !important; /* text-gray-300 */
+}
+
+/* Ensure search input container has proper positioning */
+.search-input-container {
+  position: relative;
+}
+
+.search-input-container .search-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem; /* pl-3 */
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+/* SVG fallback icon styling */
+.search-icon-svg {
+  color: #9ca3af !important; /* text-gray-400 */
+  position: absolute;
+  top: 50%;
+  left: 0.75rem; /* pl-3 */
+  transform: translateY(-50%);
+  z-index: 10;
+  pointer-events: none;
+  display: none !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Show SVG icon if Font Awesome fails to load */
+.search-input-container:not(.fa-loaded) .search-icon-svg {
+  display: block !important;
+}
+
+.search-input-container:not(.fa-loaded) .search-icon {
+  display: none !important;
+}
+
+/* Action buttons styling */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  margin-top: 1.5rem; /* Move buttons down to align with input fields */
+}
+
+.action-buttons button {
+  height: 2.5rem; /* h-10 */
+  min-height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* Focus outlines for keyboard users */
+button:focus, input:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.12);
+  border-color: rgba(59,130,246,0.4);
+}
+
+/* Subtle hover for table rows */
+tbody tr:hover {
+  background-color: #111827; /* dark hover that keeps whole table dark */
+}
+
+/* Responsive tweaks: adjust padding and avatar sizes on small screens */
+@media (max-width: 1024px) {
+  .header-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .header-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-section {
+    padding: 1rem;
+  }
+  
+  .search-filters {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .filters-group {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .action-buttons {
+    flex-direction: row;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    width: 100%;
+    margin-top: 1.5rem; /* Maintain consistent positioning on mobile */
+  }
+  
+  .action-buttons button {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .stats-cards {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .stats-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .min-w-full td, .min-w-full th, .min-w-max td, .min-w-max th {
+    padding: 0.5rem 0.5rem;
+    font-size: 12px;
+  }
+  .min-w-full img, .min-w-max img { width: 40px; height: 40px; }
+  
+  .header-title h1 {
+    font-size: 1.5rem;
+  }
+  
+  .header-title p {
+    font-size: 0.75rem;
+  }
+  
+  .stats-card {
+    padding: 0.75rem;
+  }
+  
+  .stats-card .text-2xl {
+    font-size: 1.25rem;
+  }
+}

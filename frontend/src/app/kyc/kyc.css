@@ -1,0 +1,411 @@
+/* KYC Management Page Styles - Dark Theme */
+
+/* Custom scrollbar styling (default) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1f2937; /* gray-800 track for dark theme */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #374151; /* gray-700 thumb */
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563; /* slightly lighter on hover */
+}
+
+/* Status badges with clear, accessible colors */
+.status-badge[data-status="approved"] {
+  background-color: #ecfdf5; /* green-50 */
+  color: #065f46; /* green-800 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+.status-badge[data-status="rejected"] {
+  background-color: #fff1f2; /* red-50 */
+  color: #831843; /* red-800 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+.status-badge[data-status="submitted"] {
+  background-color: #fef3c7; /* yellow-50 */
+  color: #92400e; /* yellow-800 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+.status-badge[data-status="pending"] {
+  background-color: #f3f4f6; /* gray-50 */
+  color: #374151; /* gray-700 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+/* Search icon styling */
+.search-icon {
+  color: #9ca3af !important; /* text-gray-400 */
+  font-size: 1rem !important; /* slightly larger */
+  z-index: 10;
+  pointer-events: none;
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 16px !important;
+  height: 16px !important;
+  line-height: 1 !important;
+}
+
+.search-icon:hover {
+  color: #d1d5db !important; /* text-gray-300 */
+}
+
+/* Ensure search input container has proper positioning */
+.search-input-container {
+  position: relative;
+}
+
+.search-input-container .search-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem; /* pl-3 */
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+/* Action buttons styling */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  margin-top: 1.5rem; /* Move buttons down to align with input fields */
+}
+
+.action-buttons button {
+  height: 2.5rem; /* h-10 */
+  min-height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* Table container with horizontal scroll but hidden scrollbar */
+.table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  scroll-behavior: smooth; /* Smooth scrolling */
+  position: relative;
+}
+
+.table-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Ensure table maintains minimum width for horizontal scroll */
+.kyc-table {
+  min-width: 1200px; /* Minimum width to trigger horizontal scroll */
+}
+
+/* Set minimum widths for table columns to ensure proper horizontal scroll */
+.kyc-table th,
+.kyc-table td {
+  min-width: 200px; /* Minimum width for each column */
+}
+
+/* Specific column widths for better layout */
+.kyc-table th:nth-child(1),
+.kyc-table td:nth-child(1) {
+  min-width: 300px; /* User Details column */
+}
+
+.kyc-table th:nth-child(2),
+.kyc-table td:nth-child(2) {
+  min-width: 250px; /* Contact Info column */
+}
+
+.kyc-table th:nth-child(3),
+.kyc-table td:nth-child(3) {
+  min-width: 200px; /* Government ID column */
+}
+
+.kyc-table th:nth-child(4),
+.kyc-table td:nth-child(4) {
+  min-width: 150px; /* Status column */
+}
+
+.kyc-table th:nth-child(5),
+.kyc-table td:nth-child(5) {
+  min-width: 150px; /* Submitted column */
+}
+
+.kyc-table th:nth-child(6),
+.kyc-table td:nth-child(6) {
+  min-width: 150px; /* Actions column */
+}
+
+/* Table header sticky with subtle background */
+thead tr {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #111827; /* gray-900 header */
+  color: #e5e7eb; /* light text */
+}
+
+/* Prevent text from wrapping in table cells where utility class used */
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+
+/* Table row hover effects */
+.table-row {
+  transition: all 0.2s ease-in-out;
+}
+
+.table-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal animations */
+.modal-enter {
+  animation: modalEnter 0.3s ease-out;
+}
+
+.modal-exit {
+  animation: modalExit 0.2s ease-in;
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalExit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+}
+
+/* Loading spinner customization */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Button hover effects */
+.btn-primary {
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.btn-success {
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-success:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
+.btn-danger {
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.2s ease-in-out;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Search input focus effects */
+.search-input:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #3b82f6;
+}
+
+/* Status indicator pulse animation */
+.status-pending {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Document preview hover effects */
+.document-preview {
+  transition: all 0.2s ease-in-out;
+}
+
+.document-preview:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive table improvements */
+@media (max-width: 768px) {
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+  
+  .table-responsive th,
+  .table-responsive td {
+    padding: 0.5rem;
+  }
+}
+
+/* Custom focus styles for accessibility */
+.focus-visible:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Error and success message animations */
+.message-enter {
+  animation: messageEnter 0.3s ease-out;
+}
+
+@keyframes messageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Progress bar animation */
+.progress-bar {
+  transition: width 0.3s ease-in-out;
+}
+
+/* Empty state styling */
+.empty-state {
+  opacity: 0.6;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.empty-state:hover {
+  opacity: 1;
+}
+
+/* Custom checkbox and radio styles */
+.custom-checkbox {
+  position: relative;
+  display: inline-block;
+}
+
+.custom-checkbox input[type="checkbox"] {
+  opacity: 0;
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.custom-checkbox .checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #fff;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  transition: all 0.2s ease-in-out;
+}
+
+.custom-checkbox:hover .checkmark {
+  border-color: #3b82f6;
+}
+
+.custom-checkbox input:checked ~ .checkmark {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.custom-checkbox .checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 6px;
+  top: 2px;
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.custom-checkbox input:checked ~ .checkmark:after {
+  display: block;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-friendly {
+    background: white !important;
+    color: black !important;
+  }
+}

@@ -3,45 +3,68 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 // Define interfaces for our data models
+export interface Car {
+  _id?: string;
+  carname: string;
+  color: string;
+  milege: string;
+  seating: number;
+  features: string[];
+  brandname: string;
+  price: number;
+  fractionprice: number;
+  tokenprice: number;
+  expectedpurchasedate?: string;
+  status?: string;
+  totaltickets: number;
+  bookNowTokenAvailable: number;
+  bookNowTokenPrice: number;
+  tokensavailble: number;
+  images: string[];
+  createdBy?: string;
+  createdByModel?: string;
+  createdAt?: string;
+  __v?: number;
+  ticketsavilble: number;
+  location?: string;
+  pincode?: string;
+  amcperticket?: number;
+  contractYears?: number;
+  description?: string;
+}
+
+export interface User {
+  _id?: string;
+  name: string;
+  email: string;
+  phone?: string;
+  dateofbirth?: string;
+  address?: string;
+  location?: string;
+  pincode?: string;
+  kycStatus?: string;
+  profileimage?: string;
+  governmentid?: {
+    aadharid?: string;
+    panid?: string;
+    licenseid?: string;
+    income?: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Token {
   _id?: string;
-  carid: {
-    _id: string;
-    carname: string;
-    color: string;
-    milege: string;
-    seating: number;
-    features: string[];
-    brandname: string;
-    price: string;
-    fractionprice: string;
-    tokenprice: string;
-    expectedpurchasedate: string;
-    status: string;
-    totaltickets: number;
-    bookNowTokenAvailable: number;
-    bookNowTokenPrice: string;
-    tokensavailble: number;
-    images: string[];
-    createdBy: string;
-    createdByModel: string;
-    createdAt: string;
-    __v: number;
-    ticketsavilble: number;
-  };
+  carid: string | Car;
   customtokenid: string;
-  userid: {
-    _id: string;
-    name: string;
-    email: string;
-    phone: string;
-  };
+  userid: string | User;
   amountpaid: number;
-  date: string;
+  date?: string;
   expirydate: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
+  status: 'active' | 'expired' | 'dropped';
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface TokenResponse {

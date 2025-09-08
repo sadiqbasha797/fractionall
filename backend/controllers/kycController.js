@@ -211,7 +211,7 @@ const approveKyc = async (req, res) => {
 const rejectKyc = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { comment } = req.body;
+    const { rejectionReason } = req.body;
 
     // Only admin and superadmin can access this
     if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
@@ -242,7 +242,7 @@ const rejectKyc = async (req, res) => {
 
     // Add rejection comment
     user.rejected_comments.push({
-      comment: comment,
+      comment: rejectionReason,
       date: new Date()
     });
 
@@ -253,10 +253,10 @@ const rejectKyc = async (req, res) => {
     // Create notifications
     try {
       // User notification
-      await NotificationService.createKYCRejectionNotification(user._id, user.name, comment);
+      await NotificationService.createKYCRejectionNotification(user._id, user.name, rejectionReason);
       
       // Admin notification
-      await NotificationService.createUserKYCRejectionNotification(user, comment);
+      await NotificationService.createUserKYCRejectionNotification(user, rejectionReason);
     } catch (notificationError) {
       logger(`Error creating KYC rejection notifications: ${notificationError.message}`);
     }

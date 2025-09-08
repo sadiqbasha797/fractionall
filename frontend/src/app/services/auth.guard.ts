@@ -19,17 +19,28 @@ export class AuthGuard implements CanActivate {
   ): Observable<boolean> {
     if (typeof localStorage === 'undefined') {
       // If localStorage is not available (SSR), assume not authenticated
-      this.router.navigate(['/admin/login']);
+      this.router.navigate(['/login-selection']);
       return of(false);
     }
 
     const token = this.authService.getToken();
-    if (token) {
-      // Optionally, you could add a token validation call here if needed
-      // For now, just checking for presence of token
+    const userRole = this.authService.getUserRole();
+    
+    if (token && userRole) {
+      // Check if the route requires specific role permissions
+      const requiredRole = route.data?.['role'];
+      if (requiredRole) {
+        if (userRole === requiredRole || (requiredRole === 'admin' && userRole === 'superadmin')) {
+          return of(true);
+        } else {
+          // Redirect to appropriate login based on role
+          this.router.navigate([userRole === 'admin' ? '/admin-login' : '/superadmin-login']);
+          return of(false);
+        }
+      }
       return of(true);
     } else {
-      this.router.navigate(['/admin/login']);
+      this.router.navigate(['/login-selection']);
       return of(false);
     }
   }

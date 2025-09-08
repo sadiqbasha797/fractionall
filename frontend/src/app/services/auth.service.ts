@@ -155,5 +155,42 @@ export class AuthService {
     localStorage.removeItem('user');
     localStorage.removeItem('admin');
     localStorage.removeItem('superadmin');
+    localStorage.removeItem('userRole');
+  }
+
+  // Get current user role
+  getUserRole(): string | null {
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem('userRole');
+    }
+    return null;
+  }
+
+  // Check if user is admin
+  isAdmin(): boolean {
+    return this.getUserRole() === 'admin';
+  }
+
+  // Check if user is superadmin
+  isSuperAdmin(): boolean {
+    return this.getUserRole() === 'superadmin';
+  }
+
+  // Get current admin data
+  getCurrentAdmin(): Admin | null {
+    if (typeof localStorage !== 'undefined') {
+      const adminData = localStorage.getItem('admin');
+      return adminData ? JSON.parse(adminData) : null;
+    }
+    return null;
+  }
+
+  // Get current superadmin data
+  getCurrentSuperAdmin(): SuperAdmin | null {
+    if (typeof localStorage !== 'undefined') {
+      const superAdminData = localStorage.getItem('superadmin');
+      return superAdminData ? JSON.parse(superAdminData) : null;
+    }
+    return null;
   }
 }

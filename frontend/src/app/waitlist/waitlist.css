@@ -1,0 +1,367 @@
+/* Custom scrollbar styling (default) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1f2937; /* gray-800 track for dark theme */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #374151; /* gray-700 thumb */
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563; /* slightly lighter on hover */
+}
+
+/* Enhanced header styling */
+.header-gradient {
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+}
+
+/* Glass morphism effect for cards */
+.glass-card {
+  background: rgba(31, 41, 55, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+/* Enhanced button hover effects */
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+}
+
+.btn-secondary {
+  background: rgba(55, 65, 81, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(75, 85, 99, 0.7);
+  transform: translateY(-1px);
+}
+
+/* General styling */
+.min-h-screen {
+  min-height: 100vh;
+}
+
+/* Search icon styling */
+.search-icon {
+  color: #9ca3af !important;
+  font-size: 1rem !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 1rem !important;
+  height: 1rem !important;
+  line-height: 1 !important;
+}
+
+.search-input-container {
+  position: relative;
+}
+
+.search-icon-svg {
+  display: none;
+}
+
+.search-input-container:not(.fa-loaded) .search-icon-svg {
+  display: block;
+}
+
+.search-input-container.fa-loaded .search-icon-svg {
+  display: none;
+}
+
+/* Action buttons styling */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  margin-top: 1.5rem;
+}
+
+.action-buttons button {
+  height: 2.5rem;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* Enhanced action buttons for tickets page style */
+.flex.items-end.gap-2 button {
+  height: 2.5rem;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* Custom scrollbar styling */
+.table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+.table-container::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
+
+/* Scroll indicator */
+.table-container::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(transparent, rgba(17, 24, 39, 0.8));
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Touch device scrolling */
+@media (hover: none) and (pointer: coarse) {
+  .table-container {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* Table styling */
+.tokens-table {
+  min-width: 1200px;
+}
+
+.tokens-table th,
+.tokens-table td {
+  min-width: 120px;
+}
+
+.tokens-table th:nth-child(1),
+.tokens-table td:nth-child(1) {
+  min-width: 200px; /* Token Details */
+}
+
+.tokens-table th:nth-child(2),
+.tokens-table td:nth-child(2) {
+  min-width: 180px; /* User Info */
+}
+
+.tokens-table th:nth-child(3),
+.tokens-table td:nth-child(3) {
+  min-width: 180px; /* Car Info */
+}
+
+.tokens-table th:nth-child(4),
+.tokens-table td:nth-child(4) {
+  min-width: 150px; /* Financial */
+}
+
+.tokens-table th:nth-child(5),
+.tokens-table td:nth-child(5) {
+  min-width: 100px; /* Status */
+}
+
+.tokens-table th:nth-child(6),
+.tokens-table td:nth-child(6) {
+  min-width: 120px; /* Actions */
+}
+
+/* Status badges */
+.status-active {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-expired {
+  background-color: #fecaca;
+  color: #991b1b;
+}
+
+.status-dropped {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+/* Modal styling */
+.modal {
+  backdrop-filter: blur(4px);
+}
+
+.modal[style*="display: none"] {
+  display: none !important;
+}
+
+.modal[style*="display: block"] {
+  display: block !important;
+}
+
+/* Form styling */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select {
+  transition: all 0.2s ease-in-out;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+select:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+/* Button hover effects */
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Card hover effects */
+.hover\:bg-gray-800:hover {
+  background-color: #1f2937;
+}
+
+/* Image styling */
+img {
+  object-fit: cover;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .action-buttons {
+    flex-direction: row;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    width: 100%;
+    margin-top: 1.5rem;
+  }
+
+  .action-buttons button {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .tokens-table {
+    min-width: 800px;
+  }
+
+  .tokens-table th,
+  .tokens-table td {
+    min-width: 100px;
+  }
+}
+
+@media (max-width: 640px) {
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .action-buttons button {
+    width: 100%;
+  }
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Error states */
+.error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Success states */
+.success {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Focus states for accessibility */
+button:focus,
+input:focus,
+select:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .bg-gray-800 {
+    background-color: #000000;
+  }
+  
+  .text-gray-400 {
+    color: #ffffff;
+  }
+  
+  .border-gray-600 {
+    border-color: #ffffff;
+  }
+}

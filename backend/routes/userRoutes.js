@@ -19,4 +19,7 @@ router.post('/profile/image', upload.single('image'), userController.uploadProfi
 // Update government ID
 router.put('/profile/government-id', userController.updateGovernmentId);
 
+// Get all users (admin/superadmin only)
+router.get('/', userController.getAllUsers);
+
 module.exports = router;

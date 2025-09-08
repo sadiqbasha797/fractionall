@@ -1,0 +1,288 @@
+/* Sidebar container - main aside element */
+.sidebar-container {
+  overflow: hidden; /* Let the nav handle scrolling */
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* Internet Explorer 10+ */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Ensure full viewport height */
+}
+
+/* Hide scrollbar for sidebar container */
+.sidebar-container::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+.sidebar-container::-webkit-scrollbar-track {
+  display: none !important;
+  background: transparent !important;
+}
+
+.sidebar-container::-webkit-scrollbar-thumb {
+  display: none !important;
+  background: transparent !important;
+}
+
+.sidebar-container::-webkit-scrollbar-corner {
+  display: none !important;
+  background: transparent !important;
+}
+
+/* Additional webkit scrollbar hiding for sidebar container */
+.sidebar-container::-webkit-scrollbar-button {
+  display: none !important;
+}
+
+.sidebar-container::-webkit-scrollbar-track-piece {
+  display: none !important;
+}
+
+.sidebar-container::-webkit-scrollbar-resizer {
+  display: none !important;
+}
+
+/* Sidebar navigation area - this handles the scrolling */
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* Internet Explorer 10+ */
+  min-height: 0; /* Allow flex item to shrink */
+  /* Ensure proper height for scrolling */
+  max-height: calc(100vh - 120px); /* Account for header height */
+  /* Smooth scrolling behavior */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
+  /* Ensure content can be scrolled */
+  overscroll-behavior: contain;
+  /* Force hide scrollbar with multiple methods */
+  scrollbar-gutter: stable;
+}
+
+/* Hide scrollbar for navigation area */
+.sidebar-nav::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  display: none;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  display: none;
+}
+
+.sidebar-nav::-webkit-scrollbar-corner {
+  display: none;
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .sidebar-container {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  .sidebar-nav {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* Additional scrollbar hiding for all browsers */
+.sidebar-nav {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* Internet Explorer 10+ */
+  /* Additional hiding methods */
+  scrollbar-gutter: stable;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  display: none !important;
+  background: transparent !important;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  display: none !important;
+  background: transparent !important;
+}
+
+.sidebar-nav::-webkit-scrollbar-corner {
+  display: none !important;
+  background: transparent !important;
+}
+
+/* Force hide scrollbar for all webkit browsers */
+.sidebar-nav::-webkit-scrollbar-button {
+  display: none !important;
+}
+
+.sidebar-nav::-webkit-scrollbar-track-piece {
+  display: none !important;
+}
+
+.sidebar-nav::-webkit-scrollbar-resizer {
+  display: none !important;
+}
+
+/* Ultra-aggressive scrollbar hiding for sidebar */
+#sidebar-aside {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+#sidebar-aside::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+#sidebar-aside::-webkit-scrollbar-track {
+  display: none !important;
+  background: transparent !important;
+}
+
+#sidebar-aside::-webkit-scrollbar-thumb {
+  display: none !important;
+  background: transparent !important;
+}
+
+#sidebar-aside::-webkit-scrollbar-corner {
+  display: none !important;
+  background: transparent !important;
+}
+
+#sidebar-aside::-webkit-scrollbar-button {
+  display: none !important;
+}
+
+#sidebar-aside::-webkit-scrollbar-track-piece {
+  display: none !important;
+}
+
+#sidebar-aside::-webkit-scrollbar-resizer {
+  display: none !important;
+}
+
+/* Additional specific targeting for sidebar navigation */
+.sidebar-nav.no-scrollbar {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  scrollbar-gutter: stable !important;
+}
+
+.sidebar-nav.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+.sidebar-nav.no-scrollbar::-webkit-scrollbar-track {
+  display: none !important;
+  background: transparent !important;
+}
+
+.sidebar-nav.no-scrollbar::-webkit-scrollbar-thumb {
+  display: none !important;
+  background: transparent !important;
+}
+
+.sidebar-nav.no-scrollbar::-webkit-scrollbar-corner {
+  display: none !important;
+  background: transparent !important;
+}
+
+.sidebar-nav.no-scrollbar::-webkit-scrollbar-button {
+  display: none !important;
+}
+
+.sidebar-nav.no-scrollbar::-webkit-scrollbar-track-piece {
+  display: none !important;
+}
+
+.sidebar-nav.no-scrollbar::-webkit-scrollbar-resizer {
+  display: none !important;
+}
+
+/* Enhanced sidebar styling for better readability */
+.sidebar-nav a {
+  font-size: 1rem; /* text-base */
+  font-weight: 500;
+  padding: 0.75rem 1rem; /* py-3 px-4 */
+}
+
+.sidebar-nav a svg {
+  width: 1.75rem; /* w-7 */
+  height: 1.75rem; /* h-7 */
+}
+
+.sidebar-container .header-icon {
+  width: 2rem; /* w-8 */
+  height: 2rem; /* h-8 */
+}
+
+.sidebar-container .close-button {
+  width: 1.75rem; /* w-7 */
+  height: 1.75rem; /* h-7 */
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem; /* rounded-md */
+  cursor: pointer;
+  transition-colors: 0.2s ease-in-out;
+  color: #4b5563; /* gray-600 */
+}
+
+.nav-link:hover {
+  background-color: #e5e7eb; /* gray-200 */
+}
+
+.nav-link.active-link {
+  background-color: #3b82f6; /* blue-500 */
+  color: white;
+}
+
+.nav-link.active-link:hover {
+  background-color: #2563eb; /* blue-700 */
+}
+
+.nav-link svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #6b7280; /* gray-500 */
+}
+
+.nav-link.active-link svg {
+  color: white;
+}
+
+.car-service-header {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+}
+
+.sidebar-divider {
+  border: none;
+  border-top: 1px solid #e5e7eb; /* gray-200 */
+}

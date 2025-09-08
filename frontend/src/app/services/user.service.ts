@@ -7,12 +7,19 @@ export interface User {
   _id?: string;
   name: string;
   email: string;
-  phone: string;
-  dateofbirth: string;
-  address: string;
-  kycStatus: string;
-  profileImage?: string;
-  governmentId?: string;
+  phone?: string;
+  dateofbirth?: string;
+  address?: string;
+  location?: string;
+  pincode?: string;
+  kycStatus?: string;
+  profileimage?: string;
+  governmentid?: {
+    aadharid?: string;
+    panid?: string;
+    licenseid?: string;
+    income?: string;
+  };
   createdAt?: string;
   updatedAt?: string;
 }
@@ -21,6 +28,14 @@ export interface UserProfileResponse {
   status: string;
   body: {
     user: User;
+  };
+  message: string;
+}
+
+export interface UsersResponse {
+  status: string;
+  body: {
+    users: User[];
   };
   message: string;
 }
@@ -46,6 +61,11 @@ export class UserService {
   // Upload profile image
   uploadProfileImage(imageData: FormData): Observable<UserProfileResponse> {
     return this.http.post<UserProfileResponse>(`${this.baseUrl}/profile/image`, imageData);
+  }
+
+  // Get all users (for admin/superadmin)
+  getUsers(): Observable<UsersResponse> {
+    return this.http.get<UsersResponse>(`${this.baseUrl}/`);
   }
 
   // Update government ID

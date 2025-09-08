@@ -227,9 +227,39 @@ const updateGovernmentId = async (req, res) => {
   }
 };
 
+// Get all users (for admin/superadmin)
+const getAllUsers = async (req, res) => {
+  try {
+    // Check if user has admin or superadmin role
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      return res.status(403).json({
+        status: 'failed',
+        body: {},
+        message: 'Access denied. Admin or Superadmin role required.'
+      });
+    }
+
+    const users = await User.find({}).select('-password').sort({ createdAt: -1 });
+    
+    res.json({
+      status: 'success',
+      body: { users },
+      message: 'Users retrieved successfully'
+    });
+  } catch (error) {
+    logger(`Error in getAllUsers: ${error.message}`);
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   getProfile,
   updateProfile,
   uploadProfileImage,
-  updateGovernmentId
+  updateGovernmentId,
+  getAllUsers
 };

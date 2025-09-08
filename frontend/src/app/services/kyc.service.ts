@@ -20,8 +20,10 @@ export interface KYC {
 export interface KYCResponse {
   status: string;
   body: {
-    kyc: KYC;
-    kycs: KYC[];
+    kyc?: KYC;
+    kycs?: KYC[];
+    users?: any[];
+    user?: any;
   };
   message: string;
 }

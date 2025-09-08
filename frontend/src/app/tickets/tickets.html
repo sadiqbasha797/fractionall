@@ -1,0 +1,614 @@
+<div class="flex-1 flex flex-col min-h-screen bg-gray-700 text-gray-100">
+  <!-- Enhanced Header Section -->
+  <header class="bg-gradient-to-r from-gray-800 to-gray-700 border-b border-gray-600 shadow-lg">
+    <!-- Title and Stats Section -->
+    <div class="px-6 py-6 border-b border-gray-600/50">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-3">
+            <div class="p-2 bg-blue-600/20 rounded-lg">
+              <i class="fas fa-ticket-alt text-blue-400 text-xl"></i>
+            </div>
+            <div>
+              <h1 class="text-3xl font-bold text-white">Manage Tickets</h1>
+              <p class="text-gray-400 text-sm mt-1">Track and manage all ticket transactions</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="flex items-center space-x-4">
+          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-600/50">
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span class="text-sm text-gray-300">Total Tickets</span>
+            </div>
+            <div class="text-2xl font-bold text-white mt-1">{{tickets.length}}</div>
+          </div>
+          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-600/50">
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+              <span class="text-sm text-gray-300">Active</span>
+            </div>
+            <div class="text-2xl font-bold text-white mt-1">{{getActiveTicketsCount()}}</div>
+          </div>
+          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-600/50">
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-yellow-400 rounded-full"></div>
+              <span class="text-sm text-gray-300">Filtered</span>
+            </div>
+            <div class="text-2xl font-bold text-white mt-1">{{filteredTickets.length}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search and Filters Section -->
+    <div class="px-6 py-6">
+      <div class="flex flex-col lg:flex-row gap-6">
+        <!-- Search Bar -->
+        <div class="flex-1">
+          <label class="block text-sm font-medium text-gray-300 mb-2">Search Tickets</label>
+          <div class="relative search-input-container">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-search search-icon"></i>
+            </div>
+            <input 
+              type="search" 
+              [(ngModel)]="searchTerm" 
+              (ngModelChange)="onSearchChange()"
+              placeholder="Search by ticket ID, user name, car name, status..."
+              class="w-full pl-10 pr-4 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
+            />
+          </div>
+        </div>
+
+        <!-- Filters Group -->
+        <div class="flex flex-col sm:flex-row gap-4">
+          <div class="flex-1 min-w-0">
+            <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+            <select 
+              [(ngModel)]="statusFilter" 
+              (ngModelChange)="onStatusFilterChange()"
+              class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="expired">Expired</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <label class="block text-sm font-medium text-gray-300 mb-2">Resold</label>
+            <select 
+              [(ngModel)]="resoldFilter" 
+              (ngModelChange)="onResoldFilterChange()"
+              class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
+            >
+              <option value="all">All</option>
+              <option value="true">Resold</option>
+              <option value="false">Not Resold</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button 
+            (click)="clearFilters()" 
+            class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
+          >
+            <i class="fas fa-times text-sm"></i>
+            <span>Clear</span>
+          </button>
+
+          <button 
+            (click)="showCreateTicketModal()" 
+            class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 h-10"
+          >
+            <i class="fas fa-plus text-sm"></i>
+            <span>Add Ticket</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 py-4 overflow-auto">
+    <section class="max-w-7xl mx-auto">
+      <div class="h-full rounded-xl border border-gray-700 bg-gray-900 shadow-sm min-w-0">
+        <!-- scrollable table container -->
+        <div class="table-container" style="max-height: 72vh;">
+          <table class="tickets-table min-w-full divide-y divide-gray-700" role="table" aria-label="Tickets table">
+          <thead>
+            <tr class="bg-gray-800">
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Ticket Details</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">User Info</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Car Info</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Financial</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Status</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-700 bg-gray-900">
+            <tr *ngIf="filteredTickets.length === 0" class="text-center">
+              <td colspan="6" class="px-6 py-12 text-gray-400">
+                <div class="flex flex-col items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 mb-4 text-gray-500">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                  </svg>
+                  <p class="text-lg font-medium text-gray-500 mb-2">No tickets found</p>
+                  <p class="text-sm text-gray-400">Try adjusting your search or filter criteria</p>
+                </div>
+              </td>
+            </tr>
+            <tr *ngFor="let ticket of filteredTickets" class="hover:bg-gray-800 transition duration-150">
+              <!-- Ticket Details -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-gray-700 bg-gray-800 flex items-center justify-center">
+                    <i class="fas fa-ticket-alt text-blue-400 text-xl"></i>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-100">{{ ticket.ticketcustomid }}</div>
+                    <div class="text-xs text-gray-300">Bought: {{ formatDate(ticket.ticketbroughtdate) }}</div>
+                    <div class="text-xs text-gray-400">Expires: {{ formatDate(ticket.ticketexpiry) }}</div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- User Info -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border border-gray-700">
+                    <img *ngIf="getUser(ticket).profileimage" [src]="getUser(ticket).profileimage" [alt]="getUser(ticket).name" class="h-10 w-10 object-cover" />
+                    <div *ngIf="!getUser(ticket).profileimage" class="h-10 w-10 bg-gray-600 flex items-center justify-center">
+                      <i class="fas fa-user text-gray-300"></i>
+                    </div>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-100">{{ getUser(ticket).name }}</div>
+                    <div class="text-xs text-gray-300">{{ getUser(ticket).email }}</div>
+                    <div class="text-xs text-gray-400" *ngIf="getUser(ticket).phone">{{ getUser(ticket).phone }}</div>
+                    <div class="text-xs text-gray-400" *ngIf="getUser(ticket).location">{{ getUser(ticket).location }}, {{ getUser(ticket).pincode }}</div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Car Info -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg border border-gray-700">
+                    <img *ngIf="getCar(ticket).images && getCar(ticket).images.length > 0" [src]="getCar(ticket).images[0]" [alt]="getCar(ticket).carname" class="h-10 w-10 object-cover" />
+                    <div *ngIf="!getCar(ticket).images || getCar(ticket).images.length === 0" class="h-10 w-10 bg-gray-600 flex items-center justify-center">
+                      <i class="fas fa-car text-gray-300"></i>
+                    </div>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-100">{{ getCar(ticket).carname }}</div>
+                    <div class="text-xs text-gray-300">{{ getCar(ticket).brandname }}</div>
+                    <div class="text-xs text-gray-400">{{ getCar(ticket).color }} • {{ getCar(ticket).seating }} seats</div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Financial -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-300">
+                  <div class="font-medium">₹{{ ticket.ticketprice | number:'1.0-0' }}</div>
+                  <div class="text-xs text-green-400">Paid: ₹{{ ticket.pricepaid | number:'1.0-0' }}</div>
+                  <div class="text-xs text-red-400" *ngIf="ticket.pendingamount > 0">Pending: ₹{{ ticket.pendingamount | number:'1.0-0' }}</div>
+                </div>
+              </td>
+
+              <!-- Status -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex flex-col space-y-1">
+                  <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize status-badge" [attr.data-status]="ticket.ticketstatus">
+                    {{ ticket.ticketstatus }}
+                  </span>
+                  <span *ngIf="ticket.resold" class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-800">
+                    <i class="fas fa-exchange-alt mr-1"></i>
+                    Resold
+                  </span>
+                </div>
+              </td>
+
+              <!-- Actions -->
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <div class="flex items-center justify-end space-x-2">
+                  <button class="p-2 text-gray-300 hover:text-blue-300 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-blue-300" 
+                          (click)="viewTicketDetails(ticket)" title="View Details" aria-label="View details for ticket {{ticket.ticketcustomid}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </button>
+                  <button class="p-2 text-gray-300 hover:text-amber-400 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-amber-200" 
+                          (click)="editTicket(ticket)" title="Edit" aria-label="Edit ticket {{ticket.ticketcustomid}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                    </svg>
+                  </button>
+                  <button class="p-2 text-gray-300 hover:text-red-400 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-red-200" 
+                          (click)="deleteTicket(ticket)" title="Delete" aria-label="Delete ticket {{ticket.ticketcustomid}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+        
+        <!-- Pagination -->
+        <div class="flex items-center justify-between border-t border-gray-700 bg-gray-900 px-6 py-4">
+          <div class="flex items-center space-x-2 text-sm text-gray-300">
+            <span>Showing</span>
+            <span class="font-medium text-gray-100">1</span>
+            <span>to</span>
+            <span class="font-medium text-gray-100">{{ filteredTickets.length }}</span>
+            <span>of</span>
+            <span class="font-medium text-gray-100">{{ tickets.length }}</span>
+            <span>tickets</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150">
+              Previous
+            </button>
+            <button class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Create/Edit Ticket Modal -->
+<div class="modal fixed inset-0 bg-gray-900/80 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50" style="display: none;">
+  <div class="relative top-10 mx-auto p-6 w-full max-w-4xl shadow-2xl rounded-2xl bg-gray-800 border border-gray-700">
+    <div class="mt-3">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-semibold text-white">{{ isEditMode ? 'Edit Ticket Details' : 'Create New Ticket' }}</h3>
+        <button (click)="closeModal()" class="text-gray-400 hover:text-white transition-colors duration-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="mt-2">
+        <form (ngSubmit)="submitTicketForm()" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- User Selection -->
+          <div class="space-y-2 col-span-2">
+            <label class="block text-gray-300 text-sm font-medium" for="userid">
+              Select User
+            </label>
+            <select class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                    id="userid" [(ngModel)]="newTicket.userid" name="userid" required>
+              <option value="">Select a user</option>
+              <option *ngFor="let user of users" [value]="user._id">{{ user.name }} ({{ user.email }})</option>
+            </select>
+            <div *ngIf="users.length === 0" class="text-sm text-yellow-400 mt-1">
+              No users available. Please check if you have admin/superadmin access.
+            </div>
+          </div>
+
+          <!-- Car Selection -->
+          <div class="space-y-2 col-span-2">
+            <label class="block text-gray-300 text-sm font-medium" for="carid">
+              Select Car
+            </label>
+            <select class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                    id="carid" [(ngModel)]="newTicket.carid" name="carid" required>
+              <option value="">Select a car</option>
+              <option *ngFor="let car of cars" [value]="car._id">{{ car.carname }} - {{ car.brandname }}</option>
+            </select>
+            <div *ngIf="cars.length === 0" class="text-sm text-yellow-400 mt-1">
+              No cars available. Please add some cars first.
+            </div>
+          </div>
+
+          <!-- Ticket Custom ID -->
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="ticketcustomid">
+              Ticket Custom ID
+            </label>
+            <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                   id="ticketcustomid" type="text" placeholder="Enter ticket custom ID" 
+                   [(ngModel)]="newTicket.ticketcustomid" name="ticketcustomid" required>
+          </div>
+
+          <!-- Ticket Price -->
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="ticketprice">
+              Ticket Price
+            </label>
+            <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                   id="ticketprice" type="number" placeholder="Enter ticket price" 
+                   [(ngModel)]="newTicket.ticketprice" name="ticketprice" required>
+          </div>
+
+          <!-- Price Paid -->
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="pricepaid">
+              Price Paid
+            </label>
+            <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                   id="pricepaid" type="number" placeholder="Enter amount paid" 
+                   [(ngModel)]="newTicket.pricepaid" name="pricepaid" required>
+          </div>
+
+          <!-- Pending Amount -->
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="pendingamount">
+              Pending Amount
+            </label>
+            <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                   id="pendingamount" type="number" placeholder="Enter pending amount" 
+                   [(ngModel)]="newTicket.pendingamount" name="pendingamount" required>
+          </div>
+
+          <!-- Ticket Brought Date -->
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="ticketbroughtdate">
+              Ticket Brought Date
+            </label>
+            <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                   id="ticketbroughtdate" type="date" 
+                   [(ngModel)]="newTicket.ticketbroughtdate" name="ticketbroughtdate" required>
+          </div>
+
+          <!-- Ticket Status -->
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="ticketstatus">
+              Ticket Status
+            </label>
+            <select class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white
+                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                    id="ticketstatus" [(ngModel)]="newTicket.ticketstatus" name="ticketstatus">
+              <option value="active">Active</option>
+              <option value="expired">Expired</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <!-- Resold -->
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="resold">
+              Resold Status
+            </label>
+            <select class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white
+                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                    id="resold" [(ngModel)]="newTicket.resold" name="resold">
+              <option [value]="false">Not Resold</option>
+              <option [value]="true">Resold</option>
+            </select>
+          </div>
+
+          <!-- Comments -->
+          <div class="space-y-2 col-span-2">
+            <label class="block text-gray-300 text-sm font-medium" for="comments">
+              Comments
+            </label>
+            <textarea class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                      id="comments" rows="3" placeholder="Enter any comments about this ticket" 
+                      [(ngModel)]="newTicket.comments" name="comments"></textarea>
+          </div>
+
+          <div class="col-span-2 flex items-center justify-end space-x-4 mt-6">
+            <button type="button" 
+                    (click)="closeModal()"
+                    class="px-6 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-600 transition-colors duration-200">
+              Cancel
+            </button>
+            <button type="submit"
+                    class="px-6 py-2.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200">
+              {{ isEditMode ? 'Update Ticket' : 'Create Ticket' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Ticket Details Modal -->
+<div *ngIf="selectedTicket" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+  <div class="relative top-10 mx-auto p-6 w-full max-w-6xl shadow-2xl rounded-2xl bg-gray-800 border border-gray-700">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-2xl font-semibold text-white">Ticket Details</h3>
+      <button (click)="closeViewModal()" class="text-gray-400 hover:text-white transition-colors duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Ticket Information -->
+      <div class="space-y-6">
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">Ticket Information</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-400">Ticket ID</p>
+              <p class="font-medium text-white">{{ selectedTicket.ticketcustomid }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Status</p>
+              <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
+                    (selectedTicket.ticketstatus === 'active' ? 'bg-green-100 text-green-800' : 
+                     selectedTicket.ticketstatus === 'expired' ? 'bg-red-100 text-red-800' : 
+                     'bg-gray-100 text-gray-800')">
+                {{ selectedTicket.ticketstatus }}
+              </span>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Brought Date</p>
+              <p class="font-medium text-white">{{ formatDate(selectedTicket.ticketbroughtdate) }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Expiry Date</p>
+              <p class="font-medium text-white">{{ formatDate(selectedTicket.ticketexpiry) }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Resold</p>
+              <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
+                    (selectedTicket.resold ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800')">
+                {{ selectedTicket.resold ? 'Yes' : 'No' }}
+              </span>
+            </div>
+          </div>
+          <div class="mt-4" *ngIf="selectedTicket.comments">
+            <p class="text-sm text-gray-400">Comments</p>
+            <p class="text-white">{{ selectedTicket.comments }}</p>
+          </div>
+        </div>
+
+        <!-- Financial Information -->
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">Financial Details</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-400">Ticket Price</p>
+              <p class="font-medium text-white">₹{{ selectedTicket.ticketprice | number:'1.0-0' }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Amount Paid</p>
+              <p class="font-medium text-green-400">₹{{ selectedTicket.pricepaid | number:'1.0-0' }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Pending Amount</p>
+              <p class="font-medium text-red-400">₹{{ selectedTicket.pendingamount | number:'1.0-0' }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Payment Progress</p>
+              <div class="w-full bg-gray-600 rounded-full h-2">
+                <div class="bg-blue-500 h-2 rounded-full" [style.width.%]="getPaymentProgress(selectedTicket)"></div>
+              </div>
+              <p class="text-xs text-gray-400 mt-1">{{ getPaymentProgress(selectedTicket) | number:'1.0-1' }}% Complete</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User and Car Information -->
+      <div class="space-y-6">
+        <!-- User Information -->
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">User Information</h4>
+          <div class="flex items-start space-x-4">
+            <div class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-full border border-gray-600">
+              <img *ngIf="getUser(selectedTicket).profileimage" [src]="getUser(selectedTicket).profileimage" [alt]="getUser(selectedTicket).name" class="h-16 w-16 object-cover" />
+              <div *ngIf="!getUser(selectedTicket).profileimage" class="h-16 w-16 bg-gray-600 flex items-center justify-center">
+                <i class="fas fa-user text-gray-400 text-xl"></i>
+              </div>
+            </div>
+            <div class="flex-1">
+              <h5 class="font-medium text-white">{{ getUser(selectedTicket).name }}</h5>
+              <p class="text-sm text-gray-400">{{ getUser(selectedTicket).email }}</p>
+              <p class="text-sm text-gray-400" *ngIf="getUser(selectedTicket).phone">{{ getUser(selectedTicket).phone }}</p>
+              <div class="mt-2">
+                <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
+                      (getUser(selectedTicket).kycStatus === 'approved' ? 'bg-green-100 text-green-800' : 
+                       getUser(selectedTicket).kycStatus === 'rejected' ? 'bg-red-100 text-red-800' : 
+                       'bg-yellow-100 text-yellow-800')">
+                  KYC: {{ getUser(selectedTicket).kycStatus }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-4">
+            <div *ngIf="getUser(selectedTicket).location">
+              <p class="text-sm text-gray-400">Location</p>
+              <p class="font-medium text-white">{{ getUser(selectedTicket).location }}, {{ getUser(selectedTicket).pincode }}</p>
+            </div>
+            <div *ngIf="getUser(selectedTicket).dateofbirth">
+              <p class="text-sm text-gray-400">Date of Birth</p>
+              <p class="font-medium text-white">{{ formatDate(getUser(selectedTicket).dateofbirth || '') }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Car Information -->
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">Car Information</h4>
+          <div class="flex items-start space-x-4">
+            <div class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-gray-600">
+              <img *ngIf="getCar(selectedTicket).images && getCar(selectedTicket).images.length > 0" [src]="getCar(selectedTicket).images[0]" [alt]="getCar(selectedTicket).carname" class="h-16 w-16 object-cover" />
+              <div *ngIf="!getCar(selectedTicket).images || getCar(selectedTicket).images.length === 0" class="h-16 w-16 bg-gray-600 flex items-center justify-center">
+                <i class="fas fa-car text-gray-400 text-xl"></i>
+              </div>
+            </div>
+            <div class="flex-1">
+              <h5 class="font-medium text-white">{{ getCar(selectedTicket).carname }}</h5>
+              <p class="text-sm text-gray-400">{{ getCar(selectedTicket).brandname }}</p>
+              <p class="text-sm text-gray-400">{{ getCar(selectedTicket).color }} • {{ getCar(selectedTicket).seating }} seats</p>
+              <div class="mt-2">
+                <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
+                      (getCar(selectedTicket).status === 'active' ? 'bg-green-100 text-green-800' : 
+                       getCar(selectedTicket).status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                       'bg-red-100 text-red-800')">
+                  {{ getCar(selectedTicket).status }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-400">Mileage</p>
+              <p class="font-medium text-white">{{ getCar(selectedTicket).milege }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Price</p>
+              <p class="font-medium text-white">₹{{ getCar(selectedTicket).price | number:'1.0-0' }}</p>
+            </div>
+            <div *ngIf="getCar(selectedTicket).location">
+              <p class="text-sm text-gray-400">Location</p>
+              <p class="font-medium text-white">{{ getCar(selectedTicket).location }}, {{ getCar(selectedTicket).pincode }}</p>
+            </div>
+          </div>
+          <div class="mt-4" *ngIf="getCar(selectedTicket).features && getCar(selectedTicket).features.length > 0">
+            <p class="text-sm text-gray-400 mb-2">Features</p>
+            <div class="flex flex-wrap gap-2">
+              <span *ngFor="let feature of getCar(selectedTicket).features" 
+                    class="inline-flex items-center rounded-full bg-blue-900/50 px-3 py-1 text-sm font-medium text-blue-300 border border-blue-700">
+                {{ feature }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dialog Components -->
+<app-dialog
+  [visible]="dialogService.currentState.visible"
+  [config]="dialogService.currentState.config"
+  [loading]="dialogService.currentState.loading"
+  (confirm)="dialogService.confirm(true)"
+  (cancel)="dialogService.confirm(false)"
+  (close)="dialogService.hideDialog()">
+</app-dialog>
+
+<app-loading-dialog
+  [visible]="showLoadingDialog"
+  [title]="loadingMessage"
+  [message]="loadingMessage"
+  [allowCancel]="false">
+</app-loading-dialog>

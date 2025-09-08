@@ -3,22 +3,75 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 // Define interfaces for our data models
+export interface User {
+  _id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  dateofbirth?: string;
+  address?: string;
+  location?: string;
+  pincode?: string;
+  verified: boolean;
+  profileimage?: string;
+  governmentid?: {
+    aadharid?: string;
+    panid?: string;
+    licenseid?: string;
+    income?: string;
+  };
+  kycStatus: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Car {
+  _id?: string;
+  carname: string;
+  color: string;
+  milege: string;
+  seating: number;
+  features: string[];
+  brandname: string;
+  price: number;
+  fractionprice: number;
+  tokenprice: number;
+  expectedpurchasedate: string;
+  ticketsavilble: number;
+  totaltickets: number;
+  tokensavailble: number;
+  bookNowTokenAvailable: number;
+  bookNowTokenPrice: number;
+  amcperticket: number;
+  contractYears: number;
+  location: string;
+  pincode: string;
+  description: string;
+  images: string[];
+  createdBy: string;
+  createdByModel: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Ticket {
   _id?: string;
-  userid: string;
-  carid: string;
+  userid: string | User;
+  carid: string | Car;
   ticketcustomid: string;
   ticketprice: number;
   pricepaid: number;
   pendingamount: number;
   ticketexpiry: string;
   ticketbroughtdate: string;
-  comments: string;
-  paymentid: string;
-  ticketstatus: string;
+  comments?: string;
+  paymentid?: string;
+  ticketstatus: 'active' | 'expired' | 'cancelled';
   resold: boolean;
   createdby: string;
   createdByModel: string;
+  createdate?: string;
   createdAt?: string;
   updatedAt?: string;
 }

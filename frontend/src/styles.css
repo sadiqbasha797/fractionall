@@ -1,6 +1,67 @@
 /* Custom fonts */
 @import "tailwindcss";
 
+/* Global scrollbar hiding for sidebar - Enhanced specificity */
+aside, .sidebar-container, .sidebar-nav, #sidebar-aside {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+aside::-webkit-scrollbar,
+.sidebar-container::-webkit-scrollbar,
+.sidebar-nav::-webkit-scrollbar,
+#sidebar-aside::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+aside::-webkit-scrollbar-track,
+.sidebar-container::-webkit-scrollbar-track,
+.sidebar-nav::-webkit-scrollbar-track,
+#sidebar-aside::-webkit-scrollbar-track {
+  display: none !important;
+  background: transparent !important;
+}
+
+aside::-webkit-scrollbar-thumb,
+.sidebar-container::-webkit-scrollbar-thumb,
+.sidebar-nav::-webkit-scrollbar-thumb,
+#sidebar-aside::-webkit-scrollbar-thumb {
+  display: none !important;
+  background: transparent !important;
+}
+
+aside::-webkit-scrollbar-corner,
+.sidebar-container::-webkit-scrollbar-corner,
+.sidebar-nav::-webkit-scrollbar-corner,
+#sidebar-aside::-webkit-scrollbar-corner {
+  display: none !important;
+  background: transparent !important;
+}
+
+aside::-webkit-scrollbar-button,
+.sidebar-container::-webkit-scrollbar-button,
+.sidebar-nav::-webkit-scrollbar-button,
+#sidebar-aside::-webkit-scrollbar-button {
+  display: none !important;
+}
+
+aside::-webkit-scrollbar-track-piece,
+.sidebar-container::-webkit-scrollbar-track-piece,
+.sidebar-nav::-webkit-scrollbar-track-piece,
+#sidebar-aside::-webkit-scrollbar-track-piece {
+  display: none !important;
+}
+
+aside::-webkit-scrollbar-resizer,
+.sidebar-container::-webkit-scrollbar-resizer,
+.sidebar-nav::-webkit-scrollbar-resizer,
+#sidebar-aside::-webkit-scrollbar-resizer {
+  display: none !important;
+}
+
 /* Global styles */
 * {
   box-sizing: border-box;
@@ -28,29 +89,54 @@ html, body {
   overflow-x: hidden;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
+/* Scrollbar styling - exclude sidebar elements */
+:not(aside):not(.sidebar-container):not(.sidebar-nav):not(#sidebar-aside)::-webkit-scrollbar {
   width: 8px;
 }
 
-::-webkit-scrollbar-track {
+:not(aside):not(.sidebar-container):not(.sidebar-nav):not(#sidebar-aside)::-webkit-scrollbar-track {
   background: rgb(31 41 55); /* bg-gray-800 */
 }
 
-::-webkit-scrollbar-thumb {
+:not(aside):not(.sidebar-container):not(.sidebar-nav):not(#sidebar-aside)::-webkit-scrollbar-thumb {
   background: rgb(75 85 99); /* bg-gray-600 */
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
+:not(aside):not(.sidebar-container):not(.sidebar-nav):not(#sidebar-aside)::-webkit-scrollbar-thumb:hover {
   background: rgb(107 114 128); /* bg-gray-500 */
 }
 
 /* Utility: hide scrollbars but keep scrolling functional */
 .no-scrollbar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+  scrollbar-width: none !important; /* Firefox */
+  scrollbar-gutter: stable !important;
 }
 .no-scrollbar::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
+  display: none !important; /* Safari and Chrome */
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+.no-scrollbar::-webkit-scrollbar-track {
+  display: none !important;
+  background: transparent !important;
+}
+.no-scrollbar::-webkit-scrollbar-thumb {
+  display: none !important;
+  background: transparent !important;
+}
+.no-scrollbar::-webkit-scrollbar-corner {
+  display: none !important;
+  background: transparent !important;
+}
+.no-scrollbar::-webkit-scrollbar-button {
+  display: none !important;
+}
+.no-scrollbar::-webkit-scrollbar-track-piece {
+  display: none !important;
+}
+.no-scrollbar::-webkit-scrollbar-resizer {
+  display: none !important;
 }

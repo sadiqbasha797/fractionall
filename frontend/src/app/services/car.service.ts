@@ -20,6 +20,11 @@ export interface Car {
   tokensavailble: number;
   bookNowTokenAvailable: number;
   bookNowTokenPrice: number;
+  amcperticket: number;
+  contractYears: number;
+  location: string;
+  pincode: string;
+  description: string;
   images: string[];
   createdBy: string;
   createdByModel: string;
