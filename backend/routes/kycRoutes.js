@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const kycController = require('../controllers/kycController');
 const authMiddleware = require('../middleware/authMiddleware');
+const uploadKycDocument = require('../config/kycMulter');
 
 // User routes
+router.post('/upload-document', authMiddleware(['user']), uploadKycDocument.single('document'), kycController.uploadKycDocument);
 router.post('/submit', authMiddleware(['user']), kycController.submitKyc);
 router.get('/my-status', authMiddleware(['user']), kycController.getMyKycStatus);
 

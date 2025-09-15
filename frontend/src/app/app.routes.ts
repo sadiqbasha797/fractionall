@@ -7,12 +7,15 @@ import { Dashboard } from './dashboard/dashboard';
 import { Amc } from './amc/amc';
 import { Bookings } from './bookings/bookings';
 import { Cars } from './cars/cars';
+import { Contracts } from './contracts/contracts';
 import { Tickets } from './tickets/tickets';
 import { Users } from './users/users';
 import { Waitlist } from './waitlist/waitlist';
 import { BookNow } from './book-now/book-now';
+import { Tokens } from './tokens/tokens';
 import { ContactForms } from './contact-forms/contact-forms';
-import { Kyc } from './kyc/kyc';
+import { Notifications } from './notifications/notifications';
+import { ManageContent } from './manage-content/manage-content';
 import { Layout } from './layout/layout'; // Import the Layout component
 import { AuthGuard } from './services/auth.guard';
 
@@ -30,13 +33,16 @@ export const routes: Routes = [
       { path: 'amc', component: Amc },
       { path: 'bookings', component: Bookings },
       { path: 'cars', component: Cars },
+      { path: 'contracts', component: Contracts },
       { path: 'tickets', component: Tickets },
       { path: 'users', component: Users },
       { path: 'waitlist', component: Waitlist },
       { path: 'book-now', component: BookNow },
+      { path: 'tokens', component: Tokens },
       { path: 'contact-forms', component: ContactForms },
-      { path: 'kyc', component: Kyc },
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' } // Default route
+      { path: 'notifications', component: Notifications },
+      { path: 'manage-content', component: ManageContent },
+      { path: '', redirectTo: 'cars', pathMatch: 'full' } // Default route
     ]
   },
   { path: '**', redirectTo: 'login-selection', pathMatch: 'full' } // Redirect any unknown paths to login selection

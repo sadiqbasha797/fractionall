@@ -1,8 +1,9 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
+import { environment } from '../../environments/environment';
 
 export interface KycDocument {
   id?: string;
@@ -38,7 +39,7 @@ export interface GovernmentId {
   providedIn: 'root'
 })
 export class KycService {
-  private apiUrl = 'https://fractionbackend.projexino.com/api';
+  private apiUrl = environment.apiUrl;
   private kycStatusSubject = new BehaviorSubject<KycStatus | null>(null);
   public kycStatus$ = this.kycStatusSubject.asObservable();
 
@@ -52,16 +53,33 @@ export class KycService {
     }
   }
 
+  // Helper method to get headers with authentication token
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+  }
+
+  // Helper method for file upload headers
+  private getFileUploadHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+  }
+
   // Submit KYC documents
   submitKyc(kycDocs: string[]): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/kyc/submit`, { kycDocs }).pipe(
+    return this.http.post<any>(`${this.apiUrl}/kyc/submit`, { kycDocs }, { headers: this.getAuthHeaders() }).pipe(
       tap(() => this.loadKycStatus()) // Refresh status after submission
     );
   }
 
   // Get current user's KYC status
   getMyKycStatus(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/kyc/my-status`).pipe(
+    return this.http.get<any>(`${this.apiUrl}/kyc/my-status`, { headers: this.getAuthHeaders() }).pipe(
       tap(response => {
         if (response.status === 'success') {
           this.kycStatusSubject.next(response.body);
@@ -87,7 +105,7 @@ export class KycService {
     const formData = new FormData();
     formData.append('document', documentFile);
     formData.append('documentType', documentType);
-    return this.http.post<any>(`${this.apiUrl}/kyc/upload-document`, formData);
+    return this.http.post<any>(`${this.apiUrl}/kyc/upload-document`, formData, { headers: this.getFileUploadHeaders() });
   }
 
   // Update government ID information

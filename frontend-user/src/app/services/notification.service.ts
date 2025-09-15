@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject, interval, timer } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 export interface Notification {
   _id: string;
@@ -45,7 +46,7 @@ export interface UnreadCountResponse {
   providedIn: 'root'
 })
 export class NotificationService {
-  private apiUrl = 'https://fractionbackend.projexino.com/api/notifications';
+  private apiUrl = `${environment.apiUrl}/notifications`;
   public unreadCountSubject = new BehaviorSubject<number>(0);
   public notificationsSubject = new BehaviorSubject<Notification[]>([]);
   private refreshInterval?: any;

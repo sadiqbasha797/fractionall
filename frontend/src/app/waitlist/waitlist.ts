@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { DialogService } from '../shared/dialog/dialog.service';
 import { DialogComponent } from '../shared/dialog/dialog.component';
 import { LoadingDialogComponent } from '../shared/loading-dialog/loading-dialog.component';
+import { ExportService, ExportOptions } from '../services/export.service';
 
 @Component({
   selector: 'app-waitlist',
@@ -51,7 +52,8 @@ export class Waitlist implements OnInit {
     private tokenService: TokenService,
     private userService: UserService,
     private carService: CarService,
-    public dialogService: DialogService
+    public dialogService: DialogService,
+    private exportService: ExportService
   ) { }
 
   ngOnInit(): void {
@@ -458,4 +460,67 @@ export class Waitlist implements OnInit {
       console.error('Error in delete confirmation:', error);
     }
   }
+
+  // Export functionality
+  exportData() {
+    this.exportToExcel();
+  }
+
+  exportToPDF() {
+    // This method is kept for backward compatibility but should not be used
+    return;
+  }
+
+  exportToExcel() {
+    const exportData = this.filteredTokens.map(token => ({
+      tokenId: token.customtokenid,
+      userName: this.getUser(token).name,
+      userEmail: this.getUser(token).email,
+      userPhone: this.getUser(token).phone,
+      carName: this.getCar(token).carname,
+      carBrand: this.getCar(token).brandname,
+      carColor: this.getCar(token).color,
+      carSeating: this.getCar(token).seating,
+      amountPaid: token.amountpaid,
+      tokenPrice: this.getCar(token).tokenprice,
+      status: token.status,
+      date: token.date,
+      expiryDate: token.expirydate,
+      carLocation: this.getCar(token).location,
+      carMileage: this.getCar(token).milege
+    }));
+
+    const options: ExportOptions = {
+      filename: `waitlist-data-${new Date().toISOString().split('T')[0]}`,
+      title: 'Waitlist Management Report',
+      columns: [
+        { header: 'Token ID', key: 'tokenId', width: 20 },
+        { header: 'User Name', key: 'userName', width: 25 },
+        { header: 'Email', key: 'userEmail', width: 30 },
+        { header: 'Phone', key: 'userPhone', width: 15 },
+        { header: 'Car', key: 'carName', width: 20 },
+        { header: 'Brand', key: 'carBrand', width: 20 },
+        { header: 'Color', key: 'carColor', width: 15 },
+        { header: 'Seating', key: 'carSeating', width: 10 },
+        { header: 'Amount Paid', key: 'amountPaid', width: 15 },
+        { header: 'Token Price', key: 'tokenPrice', width: 15 },
+        { header: 'Status', key: 'status', width: 15 },
+        { header: 'Date', key: 'date', width: 20 },
+        { header: 'Expiry Date', key: 'expiryDate', width: 20 },
+        { header: 'Car Location', key: 'carLocation', width: 25 },
+        { header: 'Car Mileage', key: 'carMileage', width: 15 }
+      ],
+      data: exportData
+    };
+
+    this.exportService.exportToExcel(options);
+  }
+
+  private formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR'
+    }).format(amount);
+  }
+
 }

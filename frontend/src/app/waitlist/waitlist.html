@@ -2,52 +2,46 @@
   <!-- Enhanced Header Section -->
   <header class="bg-gradient-to-r from-gray-800 to-gray-700 border-b border-gray-600 shadow-lg">
     <!-- Title and Stats Section -->
-    <div class="px-6 py-6 border-b border-gray-600/50">
-      <div class="flex items-center justify-between">
+    <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/50">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div class="flex items-center space-x-4">
           <div class="flex items-center space-x-3">
             <div class="p-2 bg-blue-600/20 rounded-lg">
               <i class="fas fa-ticket-alt text-blue-400 text-xl"></i>
             </div>
             <div>
-              <h1 class="text-3xl font-bold text-white">Manage Tokens</h1>
+              <h1 class="text-2xl sm:text-3xl font-bold text-white">Manage Tokens</h1>
               <p class="text-gray-400 text-sm mt-1">Track and manage all token transactions</p>
             </div>
           </div>
         </div>
         
         <!-- Stats Cards -->
-        <div class="flex items-center space-x-4">
-          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-600/50">
+        <div class="flex items-center space-x-3 sm:space-x-4">
+          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600/50">
             <div class="flex items-center space-x-2">
               <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span class="text-sm text-gray-300">Total Tokens</span>
+              <span class="text-xs sm:text-sm text-gray-300">Total Tokens</span>
             </div>
-            <div class="text-2xl font-bold text-white mt-1">{{tokens.length}}</div>
+            <div class="text-xl sm:text-2xl font-bold text-white mt-1">{{tokens.length}}</div>
           </div>
-          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-600/50">
-            <div class="flex items-center space-x-2">
-              <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
-              <span class="text-sm text-gray-300">Active</span>
-            </div>
-            <div class="text-2xl font-bold text-white mt-1">{{getActiveTokensCount()}}</div>
-          </div>
-          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-600/50">
+          
+          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600/50">
             <div class="flex items-center space-x-2">
               <div class="w-2 h-2 bg-yellow-400 rounded-full"></div>
-              <span class="text-sm text-gray-300">Filtered</span>
+              <span class="text-xs sm:text-sm text-gray-300">Filtered</span>
             </div>
-            <div class="text-2xl font-bold text-white mt-1">{{filteredTokens.length}}</div>
+            <div class="text-xl sm:text-2xl font-bold text-white mt-1">{{filteredTokens.length}}</div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Search and Filters Section -->
-    <div class="px-6 py-6">
-      <div class="flex flex-col lg:flex-row gap-6">
+    <div class="px-4 sm:px-6 py-4 sm:py-6">
+      <div class="flex flex-col gap-4">
         <!-- Search Bar -->
-        <div class="flex-1">
+        <div class="w-full">
           <div class="relative search-input-container">
             <input
               type="text"
@@ -65,8 +59,10 @@
           </div>
         </div>
 
-        <!-- Filter Dropdowns -->
+        <!-- Filters and Actions Row -->
         <div class="flex flex-col sm:flex-row gap-4">
+          <!-- Filter Dropdowns -->
+          <div class="flex flex-col sm:flex-row gap-4 flex-1">
           <select
             [(ngModel)]="statusFilter"
             (change)="onStatusFilterChange()"
@@ -88,10 +84,10 @@
             <option value="all">All Cars</option>
             <option *ngFor="let car of cars" [value]="car._id">{{ car.carname }} - {{ car.brandname }}</option>
           </select>
-        </div>
+          </div>
 
-        <!-- Action Buttons -->
-        <div class="flex items-end gap-2">
+          <!-- Action Buttons -->
+          <div class="flex items-end gap-2 sm:ml-auto">
           <button
             (click)="clearFilters()"
             class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
@@ -101,12 +97,21 @@
           </button>
 
           <button 
+            (click)="exportData()" 
+            class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
+          >
+            <i class="fas fa-download text-sm"></i>
+            <span>Export</span>
+          </button>
+
+          <button 
             (click)="showCreateTokenModal()" 
             class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 h-10"
           >
             <i class="fas fa-plus text-sm"></i>
             <span>Add Token</span>
           </button>
+          </div>
         </div>
       </div>
     </div>

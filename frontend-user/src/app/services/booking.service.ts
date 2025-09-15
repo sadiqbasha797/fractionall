@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import { isPlatformBrowser } from '@angular/common';
+import { environment } from '../../environments/environment';
 
 export interface Booking {
   _id: string;
@@ -32,7 +33,7 @@ export interface Booking {
   providedIn: 'root'
 })
 export class BookingService {
-  private apiUrl = 'https://fractionbackend.projexino.com/api/bookings';
+  private apiUrl = `${environment.apiUrl}/bookings`;
 
   constructor(
     private http: HttpClient,

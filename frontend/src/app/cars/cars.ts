@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { DialogService } from '../shared/dialog/dialog.service';
 import { DialogComponent } from '../shared/dialog/dialog.component';
 import { LoadingDialogComponent } from '../shared/loading-dialog/loading-dialog.component';
+import { ExportService, ExportOptions } from '../services/export.service';
 
 @Component({
   selector: 'app-cars',
@@ -60,7 +61,8 @@ export class Cars implements OnInit {
 
   constructor(
     private carService: CarService,
-    public dialogService: DialogService
+    public dialogService: DialogService,
+    private exportService: ExportService
   ) { }
 
   ngOnInit(): void {
@@ -200,6 +202,14 @@ export class Cars implements OnInit {
     }
   }
 
+  getTicketsProgress(car: Car): number {
+    if (!car.totaltickets || car.totaltickets === 0) {
+      return 0;
+    }
+    const sold = car.totaltickets - (car.ticketsavilble || 0);
+    return (sold / car.totaltickets) * 100;
+  }
+
   onFileSelected(event: any): void {
     this.selectedFiles = Array.from(event.target.files);
   }
@@ -306,5 +316,69 @@ export class Cars implements OnInit {
     } catch (error) {
       console.error('Error in delete confirmation:', error);
     }
+  }
+
+  // Export functionality
+  exportData() {
+    this.exportToExcel();
+  }
+
+  exportToExcel() {
+    const exportData = this.filteredCars.map(car => ({
+      carName: car.carname,
+      brandName: car.brandname,
+      color: car.color,
+      mileage: car.milege,
+      seating: car.seating,
+      price: car.price,
+      fractionPrice: car.fractionprice,
+      tokenPrice: car.tokenprice,
+      totalTickets: car.totaltickets || 0,
+      availableTickets: car.ticketsavilble || 0,
+      soldTickets: (car.totaltickets || 0) - (car.ticketsavilble || 0),
+      amcPerTicket: car.amcperticket,
+      contractYears: car.contractYears,
+      location: car.location || '',
+      pincode: car.pincode || '',
+      status: car.status || 'Active',
+      description: car.description || '',
+      features: Array.isArray(car.features) ? car.features.join(', ') : car.features || '',
+      expectedPurchaseDate: car.expectedpurchasedate || '',
+      tokensAvailable: car.tokensavailble || 0,
+      bookNowTokenAvailable: car.bookNowTokenAvailable || 0,
+      bookNowTokenPrice: car.bookNowTokenPrice || 0
+    }));
+
+    const options: ExportOptions = {
+      filename: `cars-data-${new Date().toISOString().split('T')[0]}`,
+      title: 'Cars Management Report',
+      columns: [
+        { header: 'Car Name', key: 'carName', width: 25 },
+        { header: 'Brand', key: 'brandName', width: 20 },
+        { header: 'Color', key: 'color', width: 15 },
+        { header: 'Mileage', key: 'mileage', width: 15 },
+        { header: 'Seating', key: 'seating', width: 10 },
+        { header: 'Price', key: 'price', width: 20 },
+        { header: 'Fraction Price', key: 'fractionPrice', width: 20 },
+        { header: 'Token Price', key: 'tokenPrice', width: 20 },
+        { header: 'Total Tickets', key: 'totalTickets', width: 15 },
+        { header: 'Available Tickets', key: 'availableTickets', width: 15 },
+        { header: 'Sold Tickets', key: 'soldTickets', width: 15 },
+        { header: 'AMC/Ticket', key: 'amcPerTicket', width: 20 },
+        { header: 'Contract Years', key: 'contractYears', width: 15 },
+        { header: 'Location', key: 'location', width: 25 },
+        { header: 'Pincode', key: 'pincode', width: 15 },
+        { header: 'Status', key: 'status', width: 15 },
+        { header: 'Description', key: 'description', width: 40 },
+        { header: 'Features', key: 'features', width: 40 },
+        { header: 'Expected Purchase Date', key: 'expectedPurchaseDate', width: 20 },
+        { header: 'Tokens Available', key: 'tokensAvailable', width: 15 },
+        { header: 'Book Now Token Available', key: 'bookNowTokenAvailable', width: 20 },
+        { header: 'Book Now Token Price', key: 'bookNowTokenPrice', width: 20 }
+      ],
+      data: exportData
+    };
+
+    this.exportService.exportToExcel(options);
   }
 }

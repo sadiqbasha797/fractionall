@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 // Define interfaces for our data models
 export interface Ticket {
@@ -59,7 +60,7 @@ export interface TicketResponse {
   providedIn: 'root'
 })
 export class TicketService {
-  private baseUrl = 'https://fractionbackend.projexino.com/api/tickets';
+  private baseUrl = `${environment.apiUrl}/tickets`;
 
   constructor(
     private http: HttpClient,

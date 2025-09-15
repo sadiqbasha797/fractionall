@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ConfigService } from './config.service';
 
 // Define interfaces for our data models
 export interface Car {
@@ -46,9 +47,11 @@ export interface CarResponse {
   providedIn: 'root'
 })
 export class CarService {
-  private baseUrl = 'http://localhost:5000/api/cars';
+  private baseUrl: string;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private configService: ConfigService) {
+    this.baseUrl = this.configService.getApiUrl('/cars');
+  }
 
   // Create a new car
   createCar(carData: FormData): Observable<CarResponse> {

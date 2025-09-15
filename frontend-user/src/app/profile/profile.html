@@ -172,7 +172,30 @@
           </div>
         </div>
         <p class="kyc-description">Please submit the required documents to get your account verified and access all features.</p>
-        <button class="submit-docs-btn" (click)="openDocModal()" *ngIf="user().kycStatus === 'pending'">Submit Documents</button>
+        <button class="submit-docs-btn" (click)="openDocModal()" *ngIf="user().kycStatus === 'pending' || user().kycStatus === 'rejected'">
+          <span *ngIf="user().kycStatus === 'pending'">Submit Documents</span>
+          <span *ngIf="user().kycStatus === 'rejected'">Resubmit Documents</span>
+        </button>
+        
+        <!-- Show rejection reason if KYC is rejected -->
+        <div *ngIf="user().kycStatus === 'rejected'" class="kyc-rejection-info">
+          <div class="rejection-notice">
+            <svg class="warning-icon" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            </svg>
+            <div class="rejection-content">
+              <span class="rejection-title">Your KYC documents were rejected.</span>
+              <!-- Show rejection comments if available -->
+              <div *ngIf="getRejectionComments().length > 0" class="rejection-comments">
+                <div *ngFor="let comment of getRejectionComments()" class="rejection-comment">
+                  <p class="comment-text">{{ comment.comment }}</p>
+                  <span class="comment-date">{{ formatDate(comment.date) }}</span>
+                </div>
+              </div>
+              <p class="rejection-action">Please upload new documents to resubmit your KYC.</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- My Shares Section -->
@@ -374,7 +397,30 @@
           </div>
         </div>
         <p class="kyc-description">Please submit the required documents to get your account verified and access all features.</p>
-        <button class="submit-docs-btn" (click)="openDocModal()" *ngIf="user().kycStatus === 'pending'">Submit Documents</button>
+        <button class="submit-docs-btn" (click)="openDocModal()" *ngIf="user().kycStatus === 'pending' || user().kycStatus === 'rejected'">
+          <span *ngIf="user().kycStatus === 'pending'">Submit Documents</span>
+          <span *ngIf="user().kycStatus === 'rejected'">Resubmit Documents</span>
+        </button>
+        
+        <!-- Show rejection reason if KYC is rejected -->
+        <div *ngIf="user().kycStatus === 'rejected'" class="kyc-rejection-info">
+          <div class="rejection-notice">
+            <svg class="warning-icon" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            </svg>
+            <div class="rejection-content">
+              <span class="rejection-title">Your KYC documents were rejected.</span>
+              <!-- Show rejection comments if available -->
+              <div *ngIf="getRejectionComments().length > 0" class="rejection-comments">
+                <div *ngFor="let comment of getRejectionComments()" class="rejection-comment">
+                  <p class="comment-text">{{ comment.comment }}</p>
+                  <span class="comment-date">{{ formatDate(comment.date) }}</span>
+                </div>
+              </div>
+              <p class="rejection-action">Please upload new documents to resubmit your KYC.</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Calendar/Bookings Card -->
@@ -556,7 +602,10 @@
   <div *ngIf="showDocModal()" class="modal-overlay" (click)="closeDocModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3 class="modal-title">Submit Documents</h3>
+        <h3 class="modal-title">
+          <span *ngIf="user().kycStatus === 'pending'">Submit Documents</span>
+          <span *ngIf="user().kycStatus === 'rejected'">Resubmit Documents</span>
+        </h3>
         <button class="modal-close-btn" (click)="closeDocModal()">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -564,6 +613,26 @@
         </button>
       </div>
       <form class="kyc-form" (ngSubmit)="onSubmitKyc()">
+        <!-- Show rejection reason if KYC is rejected -->
+        <div *ngIf="user().kycStatus === 'rejected'" class="rejection-help-text">
+          <div class="rejection-help-notice">
+            <svg class="info-icon" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+              <p><strong>Your previous KYC submission was rejected.</strong></p>
+              <!-- Show rejection comments in modal -->
+              <div *ngIf="getRejectionComments().length > 0" class="modal-rejection-comments">
+                <p class="rejection-reason-label">Rejection reasons:</p>
+                <div *ngFor="let comment of getRejectionComments()" class="modal-rejection-comment">
+                  <p class="modal-comment-text">• {{ comment.comment }}</p>
+                  <span class="modal-comment-date">{{ formatDate(comment.date) }}</span>
+                </div>
+              </div>
+              <p>Please upload new, clear documents and ensure all information is accurate.</p>
+            </div>
+          </div>
+        </div>
         <div class="form-group">
           <label class="form-label">Aadhar ID</label>
           <input type="text" class="form-input" [ngModel]="kycForm().aadharId" (ngModelChange)="updateKycAadharId($event)" name="aadharId" placeholder="Enter your 12-digit Aadhar number" maxlength="12" (input)="onAadharIdChange()" required>
@@ -582,8 +651,14 @@
           <div *ngIf="fileError()" class="file-error">{{ fileError() }}</div>
         </div>
         <button type="submit" class="submit-btn" [disabled]="submittingKyc()">
-          <span *ngIf="submittingKyc()">Submitting...</span>
-          <span *ngIf="!submittingKyc()">Submit Documents</span>
+          <span *ngIf="submittingKyc()">
+            <span *ngIf="user().kycStatus === 'pending'">Submitting...</span>
+            <span *ngIf="user().kycStatus === 'rejected'">Resubmitting...</span>
+          </span>
+          <span *ngIf="!submittingKyc()">
+            <span *ngIf="user().kycStatus === 'pending'">Submit Documents</span>
+            <span *ngIf="user().kycStatus === 'rejected'">Resubmit Documents</span>
+          </span>
         </button>
       </form>
     </div>

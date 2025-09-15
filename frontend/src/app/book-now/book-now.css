@@ -1,24 +1,4 @@
-/* Custom scrollbar styling (default) */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #1f2937; /* gray-800 track for dark theme */
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #374151; /* gray-700 thumb */
-  border-radius: 4px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #4b5563; /* slightly lighter on hover */
-}
+/* Scrollbar styling removed - using global hidden scrollbars */
 
 /* Enhanced header styling */
 .header-gradient {

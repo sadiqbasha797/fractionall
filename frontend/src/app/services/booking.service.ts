@@ -1,16 +1,32 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ConfigService } from './config.service';
 
 // Define interfaces for our data models
 export interface Booking {
   _id?: string;
-  userid: string;
-  carid: string;
-  bookingDate: string;
-  bookingAmount: number;
-  status: string;
-  paymentId?: string;
+  userid: {
+    _id: string;
+    name: string;
+    email: string;
+    phone?: string;
+  } | string;
+  carid: {
+    _id: string;
+    carname: string;
+    brandname: string;
+    color: string;
+    location: string;
+    price: number;
+    images: string[];
+  } | string;
+  bookingFrom: string;
+  bookingTo: string;
+  comments?: string;
+  status: 'accepted' | 'rejected';
+  acceptedby?: string;
+  acceptedByModel?: 'Admin' | 'SuperAdmin';
   createdAt?: string;
   updatedAt?: string;
 }
@@ -18,8 +34,8 @@ export interface Booking {
 export interface BookingResponse {
   status: string;
   body: {
-    booking: Booking;
-    bookings: Booking[];
+    booking?: Booking;
+    bookings?: Booking[];
   };
   message: string;
 }
@@ -28,12 +44,14 @@ export interface BookingResponse {
   providedIn: 'root'
 })
 export class BookingService {
-  private baseUrl = 'http://localhost:5000/api/bookings';
+  private baseUrl: string;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private configService: ConfigService) {
+    this.baseUrl = this.configService.getApiUrl('/bookings');
+  }
 
   // Create a new booking
-  createBooking(bookingData: Booking): Observable<BookingResponse> {
+  createBooking(bookingData: Partial<Booking>): Observable<BookingResponse> {
     return this.http.post<BookingResponse>(`${this.baseUrl}/`, bookingData);
   }
 

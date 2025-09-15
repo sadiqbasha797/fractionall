@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 // Define interfaces for our data models
 export interface AMCAmount {
@@ -67,7 +68,7 @@ export interface AMCResponse {
   providedIn: 'root'
 })
 export class AMCService {
-  private baseUrl = 'https://fractionbackend.projexino.com/api/amcs';
+  private baseUrl = `${environment.apiUrl}/amcs`;
 
   constructor(
     private http: HttpClient,

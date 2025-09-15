@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 // Define interfaces for our data models
 export interface Token {
@@ -53,7 +54,7 @@ export interface TokenResponse {
   providedIn: 'root'
 })
 export class TokenService {
-  private baseUrl = 'https://fractionbackend.projexino.com/api/tokens';
+  private baseUrl = `${environment.apiUrl}/tokens`;
 
   constructor(
     private http: HttpClient,

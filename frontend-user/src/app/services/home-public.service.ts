@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface HeroContent {
   _id: string;
@@ -23,7 +24,7 @@ export interface ApiResponse {
   providedIn: 'root'
 })
 export class HomePublicService {
-  private apiUrl = 'https://fractionbackend.projexino.com/api/home';
+  private apiUrl = `${environment.apiUrl}/home`;
 
   constructor(private http: HttpClient) { }
 

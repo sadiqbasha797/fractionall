@@ -287,11 +287,12 @@ const getUserContractDocuments = async (req, res) => {
   }
 };
 
-// Download contract document (User)
+// Download contract document (User/Admin/SuperAdmin)
 const downloadContractDocument = async (req, res) => {
   try {
     const { contractId, docIndex } = req.params;
     const userId = req.user.id;
+    const userRole = req.user.role;
     
     // Find the contract and verify ownership
     const contract = await Contract.findById(contractId)
@@ -306,8 +307,9 @@ const downloadContractDocument = async (req, res) => {
       });
     }
     
-    // Check if user owns this contract
-    if (contract.userid.toString() !== userId) {
+    // Check if user is authorized to access this contract
+    // Users can only access their own contracts, but admin/superadmin can access any
+    if (userRole === 'user' && contract.userid.toString() !== userId) {
       return res.status(403).json({
         status: 'failed',
         body: {},
@@ -449,11 +451,12 @@ const uploadContractDocuments = async (req, res) => {
   }
 };
 
-// Get contract document URL (User) - for testing purposes
+// Get contract document URL (User/Admin/SuperAdmin) - for testing purposes
 const getContractDocumentUrl = async (req, res) => {
   try {
     const { contractId, docIndex } = req.params;
     const userId = req.user.id;
+    const userRole = req.user.role;
     
     // Find the contract and verify ownership
     const contract = await Contract.findById(contractId)
@@ -468,8 +471,9 @@ const getContractDocumentUrl = async (req, res) => {
       });
     }
     
-    // Check if user owns this contract
-    if (contract.userid.toString() !== userId) {
+    // Check if user is authorized to access this contract
+    // Users can only access their own contracts, but admin/superadmin can access any
+    if (userRole === 'user' && contract.userid.toString() !== userId) {
       return res.status(403).json({
         status: 'failed',
         body: {},

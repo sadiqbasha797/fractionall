@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { User } from './user.service';
 import { Car } from './car.service';
 import { Ticket, Car as TicketCar } from './ticket.service';
+import { ConfigService } from './config.service';
 
 // Define interfaces for our data models
 export interface AMCAmount {
@@ -45,9 +46,11 @@ export interface PaymentStatusUpdate {
   providedIn: 'root'
 })
 export class AmcService {
-  private baseUrl = 'http://localhost:5000/api/amcs';
+  private baseUrl: string;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private configService: ConfigService) {
+    this.baseUrl = this.configService.getApiUrl('/amcs');
+  }
 
   // Helper method to get auth headers
   private getAuthHeaders(): HttpHeaders {

@@ -1,0 +1,666 @@
+<div class="flex-1 flex flex-col min-h-screen bg-gray-700 text-gray-100">
+  <!-- Header with tabs -->
+  <header class="bg-gradient-to-r from-gray-800 to-gray-700 border-b border-gray-600 shadow-lg">
+    <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/50">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-3">
+            <div class="p-2 bg-blue-600/20 rounded-lg">
+              <i class="fas fa-ticket-alt text-blue-400 text-xl"></i>
+            </div>
+            <div>
+              <h1 class="text-2xl sm:text-3xl font-bold text-white">Token Management</h1>
+              <p class="text-gray-400 text-sm mt-1">Manage waitlist and book now tokens</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="flex bg-gray-800/50 rounded-xl p-1 border border-gray-600/50">
+          <button 
+            (click)="switchTab('waitlist')"
+            [class]="'flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ' + 
+              (activeTab === 'waitlist' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-300 hover:text-white hover:bg-gray-700/50')">
+            <i class="fas fa-list text-sm"></i>
+            <span>Waitlist</span>
+            <span class="bg-gray-600/50 px-2 py-0.5 rounded-full text-xs">{{tokens.length}}</span>
+          </button>
+          <button 
+            (click)="switchTab('booknow')"
+            [class]="'flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ' + 
+              (activeTab === 'booknow' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-300 hover:text-white hover:bg-gray-700/50')">
+            <i class="fas fa-bolt text-sm"></i>
+            <span>Book Now</span>
+            <span class="bg-gray-600/50 px-2 py-0.5 rounded-full text-xs">{{bookNowTokens.length}}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="px-4 sm:px-6 py-4 sm:py-6">
+      <div class="flex flex-col gap-4">
+        <div class="w-full">
+          <div class="relative search-input-container">
+            <input
+              type="text"
+              [placeholder]="'Search ' + (activeTab === 'waitlist' ? 'waitlist' : 'book now') + ' tokens...'"
+              [(ngModel)]="searchTerm"
+              (input)="onSearchChange()"
+              class="w-full bg-gray-700/50 border border-gray-600/50 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-400
+                       focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
+            />
+            <i class="fas fa-search search-icon absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+          <div class="flex flex-col sm:flex-row gap-4 flex-1">
+            <select [(ngModel)]="statusFilter" (change)="onStatusFilterChange()" class="bg-gray-700/50 border border-gray-600/50 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="expired">Expired</option>
+              <option value="dropped">Dropped</option>
+            </select>
+            <select [(ngModel)]="carFilter" (change)="onCarFilterChange()" class="bg-gray-700/50 border border-gray-600/50 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+              <option value="all">All Cars</option>
+              <option *ngFor="let car of cars" [value]="car._id">{{ car.carname }} - {{ car.brandname }}</option>
+            </select>
+          </div>
+          <div class="flex items-end gap-2">
+            <button (click)="clearFilters()" class="px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all">
+              <i class="fas fa-times text-sm mr-1"></i>Clear
+            </button>
+            <button 
+              (click)="exportData()" 
+              class="px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all"
+            >
+              <i class="fas fa-download text-sm mr-1"></i>Export
+            </button>
+            <button (click)="activeTab === 'waitlist' ? showCreateTokenModal() : showCreateBookNowTokenModal()" 
+                    class="px-3 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white text-sm font-medium transition-all">
+              <i class="fas fa-plus text-sm mr-1"></i>Add Token
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main content with tables -->
+  <main class="flex-1 py-4 overflow-auto">
+    <section class="max-w-7xl mx-auto">
+      <div class="h-full rounded-xl border border-gray-700 bg-gray-900 shadow-sm">
+        
+        <!-- Waitlist Tokens Table -->
+        <div *ngIf="activeTab === 'waitlist'" class="table-container" style="max-height: 72vh;">
+          <table class="min-w-full divide-y divide-gray-700">
+            <thead>
+              <tr class="bg-gray-800">
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Token Details</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">User Info</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Car Info</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Financial</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-700 bg-gray-900">
+              <tr *ngIf="filteredTokens.length === 0" class="text-center">
+                <td colspan="6" class="px-6 py-12 text-gray-400">
+                  <p class="text-lg font-medium text-gray-500 mb-2">No waitlist tokens found</p>
+                </td>
+              </tr>
+              <tr *ngFor="let token of getPaginatedTokens()" class="hover:bg-gray-800 transition duration-150">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center">
+                      <i class="fas fa-ticket-alt text-white text-sm"></i>
+                    </div>
+                    <div class="ml-4">
+                      <div class="text-sm font-medium text-white">{{ token.customtokenid }}</div>
+                      <div class="text-sm text-gray-400">{{ formatDate(token.date) }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-8 w-8">
+                      <img *ngIf="getUser(token).profileimage" [src]="getUser(token).profileimage" [alt]="getUser(token).name" class="h-8 w-8 rounded-full object-cover" />
+                      <div *ngIf="!getUser(token).profileimage" class="h-8 w-8 rounded-full bg-gray-600 flex items-center justify-center">
+                        <i class="fas fa-user text-gray-400 text-xs"></i>
+                      </div>
+                    </div>
+                    <div class="ml-3">
+                      <div class="text-sm font-medium text-white">{{ getUser(token).name }}</div>
+                      <div class="text-sm text-gray-400">{{ getUser(token).email }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-8 w-8">
+                      <img *ngIf="getCar(token).images && getCar(token).images.length > 0" [src]="getCar(token).images[0]" [alt]="getCar(token).carname" class="h-8 w-8 rounded-lg object-cover" />
+                      <div *ngIf="!getCar(token).images || getCar(token).images.length === 0" class="h-8 w-8 rounded-lg bg-gray-600 flex items-center justify-center">
+                        <i class="fas fa-car text-gray-400 text-xs"></i>
+                      </div>
+                    </div>
+                    <div class="ml-3">
+                      <div class="text-sm font-medium text-white">{{ getCar(token).carname }}</div>
+                      <div class="text-sm text-gray-400">{{ getCar(token).brandname }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-white">₹{{ token.amountpaid | number:'1.0-0' }}</div>
+                  <div class="text-sm text-gray-400">Token: ₹{{ getCar(token).tokenprice | number:'1.0-0' }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
+                        (token.status === 'active' ? 'bg-green-100 text-green-800' : 
+                         token.status === 'expired' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800')">
+                    {{ token.status }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                  <div class="flex items-center justify-center space-x-2">
+                    <button (click)="viewTokenDetails(token)" class="p-2 text-gray-300 hover:text-blue-300 rounded-lg hover:bg-gray-800 transition">
+                      <i class="fas fa-eye text-sm"></i>
+                    </button>
+                    <button (click)="editToken(token)" class="p-2 text-gray-300 hover:text-yellow-300 rounded-lg hover:bg-gray-800 transition">
+                      <i class="fas fa-edit text-sm"></i>
+                    </button>
+                    <button (click)="deleteToken(token)" class="p-2 text-gray-300 hover:text-red-300 rounded-lg hover:bg-gray-800 transition">
+                      <i class="fas fa-trash text-sm"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Book Now Tokens Table -->
+        <div *ngIf="activeTab === 'booknow'" class="table-container" style="max-height: 72vh;">
+          <table class="min-w-full divide-y divide-gray-700">
+            <thead>
+              <tr class="bg-gray-800">
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Token Details</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">User Info</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Car Info</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Financial</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-700 bg-gray-900">
+              <tr *ngIf="filteredBookNowTokens.length === 0" class="text-center">
+                <td colspan="6" class="px-6 py-12 text-gray-400">
+                  <p class="text-lg font-medium text-gray-500 mb-2">No book now tokens found</p>
+                </td>
+              </tr>
+              <tr *ngFor="let token of getPaginatedBookNowTokens()" class="hover:bg-gray-800 transition duration-150">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center">
+                      <i class="fas fa-bolt text-white text-sm"></i>
+                    </div>
+                    <div class="ml-4">
+                      <div class="text-sm font-medium text-white">{{ token.customtokenid }}</div>
+                      <div class="text-sm text-gray-400">{{ formatDate(token.date) }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-8 w-8">
+                      <img *ngIf="getBookNowUser(token).profileimage" [src]="getBookNowUser(token).profileimage" [alt]="getBookNowUser(token).name" class="h-8 w-8 rounded-full object-cover" />
+                      <div *ngIf="!getBookNowUser(token).profileimage" class="h-8 w-8 rounded-full bg-gray-600 flex items-center justify-center">
+                        <i class="fas fa-user text-gray-400 text-xs"></i>
+                      </div>
+                    </div>
+                    <div class="ml-3">
+                      <div class="text-sm font-medium text-white">{{ getBookNowUser(token).name }}</div>
+                      <div class="text-sm text-gray-400">{{ getBookNowUser(token).email }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-8 w-8">
+                      <img *ngIf="getBookNowCar(token).images && getBookNowCar(token).images.length > 0" [src]="getBookNowCar(token).images[0]" [alt]="getBookNowCar(token).carname" class="h-8 w-8 rounded-lg object-cover" />
+                      <div *ngIf="!getBookNowCar(token).images || getBookNowCar(token).images.length === 0" class="h-8 w-8 rounded-lg bg-gray-600 flex items-center justify-center">
+                        <i class="fas fa-car text-gray-400 text-xs"></i>
+                      </div>
+                    </div>
+                    <div class="ml-3">
+                      <div class="text-sm font-medium text-white">{{ getBookNowCar(token).carname }}</div>
+                      <div class="text-sm text-gray-400">{{ getBookNowCar(token).brandname }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-white">₹{{ token.amountpaid | number:'1.0-0' }}</div>
+                  <div class="text-sm text-gray-400">Book Now: ₹{{ getBookNowCar(token).bookNowTokenPrice | number:'1.0-0' }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
+                        (token.status === 'active' ? 'bg-green-100 text-green-800' : 
+                         token.status === 'expired' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800')">
+                    {{ token.status }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                  <div class="flex items-center justify-center space-x-2">
+                    <button (click)="viewBookNowTokenDetails(token)" class="p-2 text-gray-300 hover:text-blue-300 rounded-lg hover:bg-gray-800 transition">
+                      <i class="fas fa-eye text-sm"></i>
+                    </button>
+                    <button (click)="editBookNowToken(token)" class="p-2 text-gray-300 hover:text-yellow-300 rounded-lg hover:bg-gray-800 transition">
+                      <i class="fas fa-edit text-sm"></i>
+                    </button>
+                    <button (click)="deleteBookNowToken(token)" class="p-2 text-gray-300 hover:text-red-300 rounded-lg hover:bg-gray-800 transition">
+                      <i class="fas fa-trash text-sm"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="flex items-center justify-between border-t border-gray-700 bg-gray-900 px-6 py-4">
+          <div class="text-sm text-gray-300">
+            Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, (activeTab === 'waitlist' ? filteredTokens.length : filteredBookNowTokens.length)) }} of {{ activeTab === 'waitlist' ? filteredTokens.length : filteredBookNowTokens.length }} tokens
+          </div>
+          <div class="flex items-center space-x-2">
+            <button (click)="previousPage()" [disabled]="currentPage === 1" class="px-3 py-2 border border-gray-700 rounded-lg text-gray-300 hover:bg-gray-800 disabled:opacity-50">Previous</button>
+            <button *ngFor="let page of getPageNumbers()" (click)="goToPage(page)" [class]="'px-3 py-2 rounded-lg text-sm font-medium transition ' + (page === currentPage ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 border border-gray-700')">{{ page }}</button>
+            <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="px-3 py-2 border border-gray-700 rounded-lg text-gray-300 hover:bg-gray-800 disabled:opacity-50">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Modal for Create/Edit -->
+<div class="modal fixed inset-0 bg-gray-900/80 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50" style="display: none;">
+  <div class="relative top-10 mx-auto p-6 w-full max-w-2xl shadow-2xl rounded-2xl bg-gray-800 border border-gray-700">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-2xl font-semibold text-white">{{ isEditMode ? 'Edit' : 'Create' }} {{ activeTab === 'waitlist' ? 'Waitlist' : 'Book Now' }} Token</h3>
+      <button (click)="closeModal()" class="text-gray-400 hover:text-white">×</button>
+    </div>
+    <form (ngSubmit)="submitTokenForm()" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="col-span-2">
+        <label class="block text-gray-300 text-sm font-medium mb-2">User</label>
+        <select [(ngModel)]="formUserid" name="userid" required class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white">
+          <option value="">Select a user</option>
+          <option *ngFor="let user of users" [value]="user._id">{{ user.name }} ({{ user.email }})</option>
+        </select>
+      </div>
+      <div class="col-span-2">
+        <label class="block text-gray-300 text-sm font-medium mb-2">Car</label>
+        <select [(ngModel)]="formCarid" name="carid" required class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white">
+          <option value="">Select a car</option>
+          <option *ngFor="let car of cars" [value]="car._id">{{ car.carname }} - {{ car.brandname }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-gray-300 text-sm font-medium mb-2">Token ID</label>
+        <input [(ngModel)]="formCustomTokenId" name="customtokenid" required type="text" class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white">
+      </div>
+      <div>
+        <label class="block text-gray-300 text-sm font-medium mb-2">Amount Paid</label>
+        <input [(ngModel)]="formAmountPaid" name="amountpaid" required type="number" class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white">
+      </div>
+      <div>
+        <label class="block text-gray-300 text-sm font-medium mb-2">Expiry Date</label>
+        <input [(ngModel)]="formExpiryDate" name="expirydate" required type="date" class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white">
+      </div>
+      <div>
+        <label class="block text-gray-300 text-sm font-medium mb-2">Status</label>
+        <select [(ngModel)]="formStatus" name="status" required class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white">
+          <option value="active">Active</option>
+          <option value="expired">Expired</option>
+          <option value="dropped">Dropped</option>
+        </select>
+      </div>
+      <div class="col-span-2 flex justify-end space-x-3 pt-4">
+        <button type="button" (click)="closeModal()" class="px-6 py-2.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition">Cancel</button>
+        <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">{{ isEditMode ? 'Update' : 'Create' }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- View Token Details Modal -->
+<div *ngIf="selectedToken" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+  <div class="relative top-10 mx-auto p-6 w-full max-w-6xl shadow-2xl rounded-2xl bg-gray-800 border border-gray-700">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-2xl font-semibold text-white">Token Details</h3>
+      <button (click)="closeViewModal()" class="text-gray-400 hover:text-white transition-colors duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Token Information -->
+      <div class="space-y-6">
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">Token Information</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-400">Token ID</p>
+              <p class="font-medium text-white">{{ selectedToken.customtokenid }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Status</p>
+              <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
+                    (selectedToken.status === 'active' ? 'bg-green-100 text-green-800' : 
+                     selectedToken.status === 'expired' ? 'bg-red-100 text-red-800' : 
+                     'bg-gray-100 text-gray-800')">
+                {{ selectedToken.status }}
+              </span>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Created Date</p>
+              <p class="font-medium text-white">{{ formatDate(selectedToken.date) }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Expiry Date</p>
+              <p class="font-medium text-white">{{ formatDate(selectedToken.expirydate) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financial Information -->
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">Financial Details</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-400">Amount Paid</p>
+              <p class="font-medium text-white">₹{{ selectedToken.amountpaid | number:'1.0-0' }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Token Price</p>
+              <p class="font-medium text-white">₹{{ getCar(selectedToken).tokenprice | number:'1.0-0' }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Car Price</p>
+              <p class="font-medium text-white">₹{{ getCar(selectedToken).price | number:'1.0-0' }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Fraction Price</p>
+              <p class="font-medium text-white">₹{{ getCar(selectedToken).fractionprice | number:'1.0-0' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User and Car Information -->
+      <div class="space-y-6">
+        <!-- User Information -->
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">User Information</h4>
+          <div class="flex items-start space-x-4">
+            <div class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-full border border-gray-600">
+              <img *ngIf="getUser(selectedToken).profileimage" [src]="getUser(selectedToken).profileimage" [alt]="getUser(selectedToken).name" class="h-16 w-16 object-cover" />
+              <div *ngIf="!getUser(selectedToken).profileimage" class="h-16 w-16 bg-gray-600 flex items-center justify-center">
+                <i class="fas fa-user text-gray-400 text-xl"></i>
+              </div>
+            </div>
+            <div class="flex-1">
+              <h5 class="font-medium text-white">{{ getUser(selectedToken).name }}</h5>
+              <p class="text-sm text-gray-400">{{ getUser(selectedToken).email }}</p>
+              <p class="text-sm text-gray-400" *ngIf="getUser(selectedToken).phone">{{ getUser(selectedToken).phone }}</p>
+              <div class="mt-2">
+                <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
+                      (getUser(selectedToken).kycStatus === 'approved' ? 'bg-green-100 text-green-800' : 
+                       getUser(selectedToken).kycStatus === 'rejected' ? 'bg-red-100 text-red-800' : 
+                       'bg-yellow-100 text-yellow-800')">
+                  KYC: {{ getUser(selectedToken).kycStatus }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-4">
+            <div *ngIf="getUser(selectedToken).location">
+              <p class="text-sm text-gray-400">Location</p>
+              <p class="font-medium text-white">{{ getUser(selectedToken).location }}, {{ getUser(selectedToken).pincode }}</p>
+            </div>
+            <div *ngIf="getUser(selectedToken).dateofbirth">
+              <p class="text-sm text-gray-400">Date of Birth</p>
+              <p class="font-medium text-white">{{ formatDate(getUser(selectedToken).dateofbirth || '') }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Car Information -->
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">Car Information</h4>
+          <div class="flex items-start space-x-4">
+            <div class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-gray-600">
+              <img *ngIf="getCar(selectedToken).images && getCar(selectedToken).images.length > 0" [src]="getCar(selectedToken).images[0]" [alt]="getCar(selectedToken).carname" class="h-16 w-16 object-cover" />
+              <div *ngIf="!getCar(selectedToken).images || getCar(selectedToken).images.length === 0" class="h-16 w-16 bg-gray-600 flex items-center justify-center">
+                <i class="fas fa-car text-gray-400 text-xl"></i>
+              </div>
+            </div>
+            <div class="flex-1">
+              <h5 class="font-medium text-white">{{ getCar(selectedToken).carname }}</h5>
+              <p class="text-sm text-gray-400">{{ getCar(selectedToken).brandname }}</p>
+              <p class="text-sm text-gray-400">{{ getCar(selectedToken).color }} • {{ getCar(selectedToken).seating }} seats</p>
+              <div class="mt-2">
+                <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
+                      (getCar(selectedToken).status === 'active' ? 'bg-green-100 text-green-800' : 
+                       getCar(selectedToken).status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                       'bg-red-100 text-red-800')">
+                  {{ getCar(selectedToken).status }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-400">Mileage</p>
+              <p class="font-medium text-white">{{ getCar(selectedToken).milege }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Price</p>
+              <p class="font-medium text-white">₹{{ getCar(selectedToken).price | number:'1.0-0' }}</p>
+            </div>
+            <div *ngIf="getCar(selectedToken).location">
+              <p class="text-sm text-gray-400">Location</p>
+              <p class="font-medium text-white">{{ getCar(selectedToken).location }}, {{ getCar(selectedToken).pincode }}</p>
+            </div>
+          </div>
+          <div class="mt-4" *ngIf="getCar(selectedToken).features && getCar(selectedToken).features.length > 0">
+            <p class="text-sm text-gray-400 mb-2">Features</p>
+            <div class="flex flex-wrap gap-2">
+              <span *ngFor="let feature of getCar(selectedToken).features" 
+                    class="inline-flex items-center rounded-full bg-blue-900/50 px-3 py-1 text-sm font-medium text-blue-300 border border-blue-700">
+                {{ feature }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Book Now Token Details Modal -->
+<div *ngIf="selectedBookNowToken" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+  <div class="relative top-10 mx-auto p-6 w-full max-w-6xl shadow-2xl rounded-2xl bg-gray-800 border border-gray-700">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-2xl font-semibold text-white">Book Now Token Details</h3>
+      <button (click)="closeViewModal()" class="text-gray-400 hover:text-white transition-colors duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Token Information -->
+      <div class="space-y-6">
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">Token Information</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-400">Token ID</p>
+              <p class="font-medium text-white">{{ selectedBookNowToken.customtokenid }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Status</p>
+              <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
+                    (selectedBookNowToken.status === 'active' ? 'bg-green-100 text-green-800' : 
+                     selectedBookNowToken.status === 'expired' ? 'bg-red-100 text-red-800' : 
+                     'bg-gray-100 text-gray-800')">
+                {{ selectedBookNowToken.status }}
+              </span>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Created Date</p>
+              <p class="font-medium text-white">{{ formatDate(selectedBookNowToken.date) }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Expiry Date</p>
+              <p class="font-medium text-white">{{ formatDate(selectedBookNowToken.expirydate) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financial Information -->
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">Financial Details</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-400">Amount Paid</p>
+              <p class="font-medium text-white">₹{{ selectedBookNowToken.amountpaid | number:'1.0-0' }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Book Now Token Price</p>
+              <p class="font-medium text-white">₹{{ getBookNowCar(selectedBookNowToken!).bookNowTokenPrice | number:'1.0-0' }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Car Price</p>
+              <p class="font-medium text-white">₹{{ getBookNowCar(selectedBookNowToken!).price | number:'1.0-0' }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Fraction Price</p>
+              <p class="font-medium text-white">₹{{ getBookNowCar(selectedBookNowToken!).fractionprice | number:'1.0-0' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User and Car Information -->
+      <div class="space-y-6">
+        <!-- User Information -->
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">User Information</h4>
+          <div class="flex items-start space-x-4">
+            <div class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-full border border-gray-600">
+              <img *ngIf="getBookNowUser(selectedBookNowToken!).profileimage" [src]="getBookNowUser(selectedBookNowToken!).profileimage" [alt]="getBookNowUser(selectedBookNowToken!).name" class="h-16 w-16 object-cover" />
+              <div *ngIf="!getBookNowUser(selectedBookNowToken!).profileimage" class="h-16 w-16 bg-gray-600 flex items-center justify-center">
+                <i class="fas fa-user text-gray-400 text-xl"></i>
+              </div>
+            </div>
+            <div class="flex-1">
+              <h5 class="font-medium text-white">{{ getBookNowUser(selectedBookNowToken!).name }}</h5>
+              <p class="text-sm text-gray-400">{{ getBookNowUser(selectedBookNowToken!).email }}</p>
+              <p class="text-sm text-gray-400" *ngIf="getBookNowUser(selectedBookNowToken!).phone">{{ getBookNowUser(selectedBookNowToken!).phone }}</p>
+              <div class="mt-2">
+                <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
+                      (getBookNowUser(selectedBookNowToken!).kycStatus === 'approved' ? 'bg-green-100 text-green-800' : 
+                       getBookNowUser(selectedBookNowToken!).kycStatus === 'rejected' ? 'bg-red-100 text-red-800' : 
+                       'bg-yellow-100 text-yellow-800')">
+                  KYC: {{ getBookNowUser(selectedBookNowToken!).kycStatus }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-4">
+            <div *ngIf="getBookNowUser(selectedBookNowToken!).location">
+              <p class="text-sm text-gray-400">Location</p>
+              <p class="font-medium text-white">{{ getBookNowUser(selectedBookNowToken!).location }}, {{ getBookNowUser(selectedBookNowToken!).pincode }}</p>
+            </div>
+            <div *ngIf="getBookNowUser(selectedBookNowToken!).dateofbirth">
+              <p class="text-sm text-gray-400">Date of Birth</p>
+              <p class="font-medium text-white">{{ formatDate(getBookNowUser(selectedBookNowToken!).dateofbirth || '') }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Car Information -->
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">Car Information</h4>
+          <div class="flex items-start space-x-4">
+            <div class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-gray-600">
+              <img *ngIf="getBookNowCar(selectedBookNowToken!).images && (getBookNowCar(selectedBookNowToken!).images.length || 0) > 0" [src]="(getBookNowCar(selectedBookNowToken!).images[0]) || ''" [alt]="getBookNowCar(selectedBookNowToken!).carname || ''" class="h-16 w-16 object-cover" />
+              <div *ngIf="!getBookNowCar(selectedBookNowToken!).images || getBookNowCar(selectedBookNowToken!).images.length === 0" class="h-16 w-16 bg-gray-600 flex items-center justify-center">
+                <i class="fas fa-car text-gray-400 text-xl"></i>
+              </div>
+            </div>
+            <div class="flex-1">
+              <h5 class="font-medium text-white">{{ getBookNowCar(selectedBookNowToken!).carname }}</h5>
+              <p class="text-sm text-gray-400">{{ getBookNowCar(selectedBookNowToken!).brandname }}</p>
+              <p class="text-sm text-gray-400">{{ getBookNowCar(selectedBookNowToken!).color }} • {{ getBookNowCar(selectedBookNowToken!).seating }} seats</p>
+              <div class="mt-2">
+                <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
+                      (getBookNowCar(selectedBookNowToken!).status === 'active' ? 'bg-green-100 text-green-800' : 
+                       getBookNowCar(selectedBookNowToken!).status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                       'bg-red-100 text-red-800')">
+                  {{ getBookNowCar(selectedBookNowToken!).status }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-400">Mileage</p>
+              <p class="font-medium text-white">{{ getBookNowCar(selectedBookNowToken!).milege }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Price</p>
+              <p class="font-medium text-white">₹{{ getBookNowCar(selectedBookNowToken!).price | number:'1.0-0' }}</p>
+            </div>
+            <div *ngIf="getBookNowCar(selectedBookNowToken!).location">
+              <p class="text-sm text-gray-400">Location</p>
+              <p class="font-medium text-white">{{ getBookNowCar(selectedBookNowToken!).location }}, {{ getBookNowCar(selectedBookNowToken!).pincode }}</p>
+            </div>
+          </div>
+          <div class="mt-4" *ngIf="getBookNowCar(selectedBookNowToken!).features && (getBookNowCar(selectedBookNowToken!).features.length || 0) > 0">
+            <p class="text-sm text-gray-400 mb-2">Features</p>
+            <div class="flex flex-wrap gap-2">
+              <span *ngFor="let feature of getBookNowCar(selectedBookNowToken!).features || []" 
+                    class="inline-flex items-center rounded-full bg-blue-900/50 px-3 py-1 text-sm font-medium text-blue-300 border border-blue-700">
+                {{ feature }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dialog Components -->
+<app-dialog
+  [visible]="dialogService.currentState.visible"
+  [config]="dialogService.currentState.config"
+  [loading]="dialogService.currentState.loading"
+  (confirm)="dialogService.confirm(true)"
+  (cancel)="dialogService.confirm(false)"
+  (close)="dialogService.hideDialog()">
+</app-dialog>
+
+<app-loading-dialog
+  [visible]="showLoadingDialog"
+  [title]="loadingMessage"
+  [message]="loadingMessage"
+  [allowCancel]="false">
+</app-loading-dialog>

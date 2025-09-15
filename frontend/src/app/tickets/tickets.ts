@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { DialogService } from '../shared/dialog/dialog.service';
 import { DialogComponent } from '../shared/dialog/dialog.component';
 import { LoadingDialogComponent } from '../shared/loading-dialog/loading-dialog.component';
+import { ExportService, ExportOptions } from '../services/export.service';
 
 @Component({
   selector: 'app-tickets',
@@ -51,7 +52,8 @@ export class Tickets implements OnInit {
     private ticketService: TicketService,
     private userService: UserService,
     private carService: CarService,
-    public dialogService: DialogService
+    public dialogService: DialogService,
+    private exportService: ExportService
   ) { }
 
   ngOnInit(): void {
@@ -409,4 +411,70 @@ export class Tickets implements OnInit {
       console.error('Error in delete confirmation:', error);
     }
   }
+
+  // Export functionality
+  exportData() {
+    this.exportToExcel();
+  }
+
+  exportToExcel() {
+    const exportData = this.filteredTickets.map(ticket => ({
+      ticketId: ticket.ticketcustomid,
+      userName: this.getUser(ticket).name,
+      userEmail: this.getUser(ticket).email,
+      userPhone: this.getUser(ticket).phone,
+      userLocation: this.getUser(ticket).location,
+      carName: this.getCar(ticket).carname,
+      carBrand: this.getCar(ticket).brandname,
+      carColor: this.getCar(ticket).color,
+      carSeating: this.getCar(ticket).seating,
+      ticketPrice: ticket.ticketprice,
+      pricePaid: ticket.pricepaid,
+      pendingAmount: ticket.pendingamount,
+      status: ticket.ticketstatus,
+      resold: ticket.resold,
+      boughtDate: ticket.ticketbroughtdate,
+      expiryDate: ticket.ticketexpiry,
+      comments: ticket.comments || '',
+      paymentId: ticket.paymentid || '',
+      createdBy: ticket.createdby || ''
+    }));
+
+    const options: ExportOptions = {
+      filename: `tickets-data-${new Date().toISOString().split('T')[0]}`,
+      title: 'Tickets Management Report',
+      columns: [
+        { header: 'Ticket ID', key: 'ticketId', width: 20 },
+        { header: 'User Name', key: 'userName', width: 25 },
+        { header: 'Email', key: 'userEmail', width: 30 },
+        { header: 'Phone', key: 'userPhone', width: 15 },
+        { header: 'Location', key: 'userLocation', width: 20 },
+        { header: 'Car', key: 'carName', width: 20 },
+        { header: 'Brand', key: 'carBrand', width: 20 },
+        { header: 'Color', key: 'carColor', width: 15 },
+        { header: 'Seating', key: 'carSeating', width: 10 },
+        { header: 'Price', key: 'ticketPrice', width: 15 },
+        { header: 'Paid', key: 'pricePaid', width: 15 },
+        { header: 'Pending', key: 'pendingAmount', width: 15 },
+        { header: 'Status', key: 'status', width: 15 },
+        { header: 'Resold', key: 'resold', width: 10 },
+        { header: 'Bought Date', key: 'boughtDate', width: 20 },
+        { header: 'Expiry Date', key: 'expiryDate', width: 20 },
+        { header: 'Comments', key: 'comments', width: 30 },
+        { header: 'Payment ID', key: 'paymentId', width: 20 },
+        { header: 'Created By', key: 'createdBy', width: 20 }
+      ],
+      data: exportData
+    };
+
+    this.exportService.exportToExcel(options);
+  }
+
+  private formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR'
+    }).format(amount);
+  }
+
 }

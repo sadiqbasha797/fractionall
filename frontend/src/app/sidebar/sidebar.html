@@ -2,11 +2,16 @@
   <!-- Make sidebar fixed on all viewports so it stays in place while main content scrolls -->
   <aside id="sidebar-aside" [class.hidden]="!isMobileMenuOpen" class="fixed w-64 h-full bg-gray-900 z-40 md:block transition-transform duration-300 ease-in-out sidebar-container flex flex-col">
       <div class="flex flex-col h-full">
-        <div class="flex items-center gap-3 p-4 border-b border-gray-800 flex-shrink-0">
-          <div class="flex-1">
-            <h1 class="text-xl font-semibold text-white">Fractioncars</h1>
-            <p class="text-sm text-gray-400">Admin Dashboard</p>
-          </div>
+          <div class="flex items-center justify-between p-2 border-b border-gray-800 flex-shrink-0">
+            <div class="flex-1">
+              <div class="flex items-center justify-center">
+                <div class="w-full">
+                  <div class="mx-auto max-w-[12rem] w-[11rem] rounded-xl bg-gradient-to-r from-gray-800 to-gray-700 ring-1 ring-white/10 shadow-lg px-3 flex items-center justify-center">
+                    <img src="/car.png" alt="FractionCars logo" class="h-16 w-auto object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]" />
+                  </div>
+                </div>
+              </div>
+            </div>
           <!-- Close button for mobile -->
           <button class="md:hidden text-gray-400 hover:text-white" (click)="closeSidebar()">
             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,21 +58,13 @@
             <span class="text-base font-medium">Tickets</span>
           </a>
 
-          <!-- Waitlist -->
-          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="waitlist" [class.bg-gray-800]="isActive('waitlist')" [class.text-white]="isActive('waitlist')">
+          <!-- Tokens (Waitlist & Book Now) -->
+          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="tokens" [class.bg-gray-800]="isActive('tokens')" [class.text-white]="isActive('tokens')">
             <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <span class="text-base font-medium">Waitlist</span>
-          </a>
-
-          <!-- Book Now Tokens -->
-          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="book-now" [class.bg-gray-800]="isActive('book-now')" [class.text-white]="isActive('book-now')">
-            <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path>
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
             </svg>
-            <span class="text-base font-medium">Book Now Tokens</span>
+            <span class="text-base font-medium">Token Management</span>
           </a>
 
           <!-- Bookings -->
@@ -81,15 +78,20 @@
             <span class="text-base font-medium">Bookings</span>
           </a>
 
-          <!-- KYC Requests -->
-          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="kyc" [class.bg-gray-800]="isActive('kyc')" [class.text-white]="isActive('kyc')">
-            <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
-              <rect height="16" rx="2" width="20" x="2" y="4"></rect>
-              <path d="M16 10h3"></path>
-              <path d="M16 16h.01"></path>
+          <!-- Contracts -->
+          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="contracts" [class.bg-gray-800]="isActive('contracts')" [class.text-white]="isActive('contracts')">
+            <svg class="w-7 h-7 mr-3 p-1 rounded border border-purple-500/50 bg-purple-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14,2 14,8 20,8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10,9 9,9 8,9"></polyline>
             </svg>
-            <span class="text-base font-medium">KYC Requests</span>
+            <span class="text-base font-medium">LLP & Purchase</span>
           </a>
+
+          <!-- KYC Requests -->
+          <!-- Removed - KYC functionality is now integrated into User Management -->
 
           <!-- Contact Forms -->
           <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="contact-forms" [class.bg-gray-800]="isActive('contact-forms')" [class.text-white]="isActive('contact-forms')">
@@ -100,6 +102,18 @@
             <span class="text-base font-medium">Contact Forms</span>
           </a>
 
+          <!-- Manage Content -->
+          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="manage-content" [class.bg-gray-800]="isActive('manage-content')" [class.text-white]="isActive('manage-content')">
+            <svg class="w-7 h-7 mr-3 p-1 rounded border border-green-500/50 bg-green-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14,2 14,8 20,8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <line x1="10" y1="9" x2="8" y2="9"></line>
+            </svg>
+            <span class="text-base font-medium">Manage Content</span>
+          </a>
+
           <!-- Users Management - Only for Super Admin -->
           <a *ngIf="isSuperAdmin" class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="users" [class.bg-gray-800]="isActive('users')" [class.text-white]="isActive('users')">
             <svg class="w-7 h-7 mr-3 p-1 rounded border border-purple-500/50 bg-purple-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
@@ -108,7 +122,7 @@
               <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
               <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
             </svg>
-            <span class="text-base font-medium">User Management</span>
+            <span class="text-base font-medium">User & KYC Management</span>
           </a>
         </nav>
       </div>

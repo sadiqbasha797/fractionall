@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 // Define interfaces for contract data models
 export interface ContractDocument {
@@ -39,7 +40,7 @@ export interface ContractResponse {
   providedIn: 'root'
 })
 export class ContractService {
-  private baseUrl = 'https://fractionbackend.projexino.com/api/contracts';
+  private baseUrl = `${environment.apiUrl}/contracts`;
 
   constructor(
     private http: HttpClient,

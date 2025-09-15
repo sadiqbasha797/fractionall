@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 // Define interfaces for our data models
 export interface BookNowToken {
@@ -52,7 +53,7 @@ export interface BookNowTokenResponse {
   providedIn: 'root'
 })
 export class BookNowTokenService {
-  private baseUrl = 'https://fractionbackend.projexino.com/api/book-now-tokens';
+  private baseUrl = `${environment.apiUrl}/book-now-tokens`;
 
   constructor(
     private http: HttpClient,

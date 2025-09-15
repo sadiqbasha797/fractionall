@@ -31,7 +31,7 @@ export class AdminLogin {
             localStorage.setItem('admin', JSON.stringify(response.body.admin));
             localStorage.setItem('userRole', 'admin');
           }
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/cars']);
         } else {
           this.errorMessage = response.message;
         }

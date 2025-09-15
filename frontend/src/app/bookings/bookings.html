@@ -1,1 +1,449 @@
-<p>bookings works!</p>
+<div class="flex-1 flex flex-col min-h-screen bg-gray-700 text-gray-100">
+  <!-- Enhanced Header Section -->
+  <header class="bg-gradient-to-r from-gray-800 to-gray-700 border-b border-gray-600 shadow-lg">
+    <!-- Title and Stats Section -->
+    <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/50">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <!-- Title Section -->
+        <div class="flex items-center space-x-3">
+          <div class="p-2 bg-blue-600/20 rounded-lg">
+            <i class="fas fa-calendar-check text-blue-400 text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-white">Manage Bookings</h1>
+            <p class="text-gray-400 text-sm mt-1">Monitor and manage all car bookings</p>
+          </div>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="flex items-center space-x-3 sm:space-x-4">
+          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600/50 flex-1 sm:flex-none">
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span class="text-xs sm:text-sm text-gray-300">Total Bookings</span>
+            </div>
+            <div class="text-xl sm:text-2xl font-bold text-white mt-1">{{bookings.length}}</div>
+          </div>
+          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600/50 flex-1 sm:flex-none">
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+              <span class="text-xs sm:text-sm text-gray-300">Filtered</span>
+            </div>
+            <div class="text-xl sm:text-2xl font-bold text-white mt-1">{{filteredBookings.length}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search and Filters Section -->
+    <div class="px-4 sm:px-6 py-4 sm:py-6">
+      <div class="flex flex-col gap-4">
+        <!-- Search Bar -->
+        <div class="w-full">
+          <label class="block text-sm font-medium text-gray-300 mb-2">Search Bookings</label>
+          <div class="relative search-input-container">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-search search-icon"></i>
+              <!-- Fallback SVG icon in case Font Awesome doesn't load -->
+              <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </div>
+            <input 
+              type="search" 
+              [(ngModel)]="filters.searchTerm" 
+              (ngModelChange)="onFilterChange()"
+              placeholder="Search by user name, email, car, or status..."
+              class="w-full pl-10 pr-4 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
+            />
+          </div>
+        </div>
+
+        <!-- Filters and Actions Row -->
+        <div class="flex flex-col sm:flex-row gap-4">
+          <!-- Filters Group -->
+          <div class="flex flex-col sm:flex-row gap-4 flex-1">
+            <div class="flex-1 min-w-0">
+              <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+              <select 
+                [(ngModel)]="filters.status" 
+                (ngModelChange)="onFilterChange()"
+                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
+              >
+                <option value="all">All Statuses</option>
+                <option value="accepted">Accepted</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <label class="block text-sm font-medium text-gray-300 mb-2">Date Range</label>
+              <select 
+                [(ngModel)]="filters.dateRange" 
+                (ngModelChange)="onFilterChange()"
+                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
+              >
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">Last Week</option>
+                <option value="month">Last Month</option>
+              </select>
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <label class="block text-sm font-medium text-gray-300 mb-2">Sort By</label>
+              <select 
+                [(ngModel)]="filters.sortBy" 
+                (ngModelChange)="onFilterChange()"
+                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
+              >
+                <option value="createdAt">Sort by Created Date</option>
+                <option value="bookingFrom">Sort by Booking Date</option>
+                <option value="status">Sort by Status</option>
+                <option value="user">Sort by User</option>
+                <option value="car">Sort by Car</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-end gap-2 sm:ml-auto">
+            <button 
+              (click)="filters.sortOrder = filters.sortOrder === 'asc' ? 'desc' : 'asc'; onFilterChange()" 
+              class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
+              [title]="'Sort ' + (filters.sortOrder === 'asc' ? 'Ascending' : 'Descending')"
+            >
+              <i class="fas text-sm" [class.fa-sort-up]="filters.sortOrder === 'asc'" [class.fa-sort-down]="filters.sortOrder === 'desc'"></i>
+              <span>{{filters.sortOrder === 'asc' ? 'Asc' : 'Desc'}}</span>
+            </button>
+
+            <button 
+              (click)="clearFilters()" 
+              class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
+            >
+              <i class="fas fa-times text-sm"></i>
+              <span>Clear</span>
+            </button>
+
+            <button 
+              (click)="exportData()" 
+              class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
+            >
+              <i class="fas fa-download text-sm"></i>
+              <span>Export</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 py-4 overflow-auto">
+    <section class="max-w-7xl mx-auto">
+      <div class="h-full rounded-xl border border-gray-700 bg-gray-900 shadow-sm min-w-0">
+        <!-- scrollable table container -->
+        <div class="overflow-x-auto overflow-y-auto no-scrollbar" style="max-height: 72vh;">
+
+          <table class="min-w-full divide-y divide-gray-700" role="table" aria-label="Bookings table">
+          <thead>
+            <tr class="bg-gray-800">
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">User</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Car</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Booking Period</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Created</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-700 bg-gray-900">
+            <tr *ngIf="filteredBookings.length === 0" class="text-center">
+              <td colspan="6" class="px-6 py-12 text-gray-400">
+                <div class="flex flex-col items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 mb-4 text-gray-500">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                  </svg>
+                  <p class="text-lg font-medium text-gray-500 mb-2">No bookings found</p>
+                  <p class="text-sm text-gray-400">Try adjusting your search or filter criteria</p>
+                </div>
+              </td>
+            </tr>
+            <tr *ngFor="let booking of paginatedBookings; trackBy: trackByBookingId" class="hover:bg-gray-800 transition duration-150">
+              <!-- User Column -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-gray-700 bg-gray-700 flex items-center justify-center">
+                    <i class="fas fa-user text-gray-400 text-lg"></i>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-100">{{ getUserName(booking) }}</div>
+                    <div class="text-xs text-gray-400">{{ getUserEmail(booking) }}</div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Car Column -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-gray-700">
+                    <img [src]="getCarImage(booking)" [alt]="getCarName(booking)" class="h-12 w-12 object-cover" (error)="onImageError($event)" />
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-100">{{ getCarName(booking) }}</div>
+                    <div class="text-xs text-gray-400" *ngIf="typeof booking.carid === 'object'">
+                      <i class="fas fa-map-marker-alt"></i>
+                      {{ booking.carid.location }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Booking Period Column -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-300">
+                  <div class="flex items-center mb-1">
+                    <i class="fas fa-calendar-alt text-gray-400 mr-2"></i>
+                    <span class="font-medium">{{ formatDateRange(booking.bookingFrom, booking.bookingTo) }}</span>
+                  </div>
+                  <div class="text-xs text-gray-400" *ngIf="booking.bookingFrom && booking.bookingTo">
+                    {{ getDaysDifference(booking.bookingFrom, booking.bookingTo) }} day(s)
+                  </div>
+                </div>
+              </td>
+
+              <!-- Status Column -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize" 
+                      [class.bg-green-100]="booking.status === 'accepted'"
+                      [class.text-green-800]="booking.status === 'accepted'"
+                      [class.bg-red-100]="booking.status === 'rejected'"
+                      [class.text-red-800]="booking.status === 'rejected'">
+                  <i class="fas mr-1" [class.fa-check]="booking.status === 'accepted'" [class.fa-times]="booking.status === 'rejected'"></i>
+                  {{ booking.status }}
+                </span>
+              </td>
+
+              <!-- Created Column -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-300">{{ formatDate(booking.createdAt!) }}</div>
+              </td>
+
+              <!-- Actions Column -->
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <div class="flex items-center justify-end space-x-2">
+                  <button class="p-2 text-gray-300 hover:text-blue-300 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-blue-300" 
+                          (click)="viewBookingDetails(booking)" title="View Details" [attr.aria-label]="'View details for booking ' + getUserName(booking)">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </button>
+                  
+                  <button *ngIf="booking.status !== 'accepted'"
+                          class="p-2 text-gray-300 hover:text-green-400 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-green-200" 
+                          (click)="initiateStatusUpdate(booking, 'accepted')" title="Accept Booking" [attr.aria-label]="'Accept booking for ' + getUserName(booking)">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  </button>
+                  
+                  <button *ngIf="booking.status !== 'rejected'"
+                          class="p-2 text-gray-300 hover:text-red-400 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-red-200" 
+                          (click)="initiateStatusUpdate(booking, 'rejected')" title="Reject Booking" [attr.aria-label]="'Reject booking for ' + getUserName(booking)">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                  
+                  <button class="p-2 text-gray-300 hover:text-red-400 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-red-200" 
+                          (click)="deleteBooking(booking)" title="Delete Booking" [attr.aria-label]="'Delete booking for ' + getUserName(booking)">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+        
+        <!-- Pagination -->
+        <div class="flex items-center justify-between border-t border-gray-700 bg-gray-900 px-6 py-4">
+          <div class="flex items-center space-x-2 text-sm text-gray-300">
+            <span>Showing</span>
+            <span class="font-medium text-gray-100">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
+            <span>to</span>
+            <span class="font-medium text-gray-100">{{ Math.min(currentPage * itemsPerPage, filteredBookings.length) }}</span>
+            <span>of</span>
+            <span class="font-medium text-gray-100">{{ filteredBookings.length }}</span>
+            <span>bookings</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button [disabled]="currentPage === 1" 
+                    (click)="currentPage = currentPage - 1; applyFilters()"
+                    class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150">
+              Previous
+            </button>
+            <button [disabled]="currentPage === totalPages || totalPages === 0" 
+                    (click)="currentPage = currentPage + 1; applyFilters()"
+                    class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+
+<!-- View Booking Details Modal -->
+<div *ngIf="selectedBooking" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+  <div class="relative top-10 mx-auto p-6 w-full max-w-6xl shadow-2xl rounded-2xl bg-gray-800 border border-gray-700">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-2xl font-semibold text-white">Booking Details</h3>
+      <button (click)="closeBookingDialog()" class="text-gray-400 hover:text-white transition-colors duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Booking Information -->
+      <div class="space-y-6">
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">Booking Information</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-400">Booking From</p>
+              <p class="font-medium text-white">{{ formatDate(selectedBooking.bookingFrom) }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Booking To</p>
+              <p class="font-medium text-white">{{ formatDate(selectedBooking.bookingTo) }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Duration</p>
+              <p class="font-medium text-white">{{ getDaysDifference(selectedBooking.bookingFrom, selectedBooking.bookingTo) }} day(s)</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Status</p>
+              <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
+                    (selectedBooking.status === 'accepted' ? 'bg-green-100 text-green-800' : 
+                     'bg-red-100 text-red-800')">
+                {{ selectedBooking.status }}
+              </span>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Created Date</p>
+              <p class="font-medium text-white">{{ formatDate(selectedBooking.createdAt!) }}</p>
+            </div>
+          </div>
+          <div class="mt-4" *ngIf="selectedBooking.comments">
+            <p class="text-sm text-gray-400">Comments</p>
+            <p class="text-white">{{ selectedBooking.comments }}</p>
+          </div>
+        </div>
+
+        <!-- User Information -->
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">User Information</h4>
+          <div class="flex items-start space-x-4">
+            <div class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-full border border-gray-600 bg-gray-700 flex items-center justify-center">
+              <i class="fas fa-user text-gray-400 text-xl"></i>
+            </div>
+            <div class="flex-1">
+              <h5 class="font-medium text-white">{{ getUserName(selectedBooking) }}</h5>
+              <p class="text-sm text-gray-400">{{ getUserEmail(selectedBooking) }}</p>
+              <p class="text-sm text-gray-400" *ngIf="typeof selectedBooking.userid === 'object' && selectedBooking.userid.phone">{{ selectedBooking.userid.phone }}</p>
+              <div class="mt-2">
+                <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 bg-blue-100 text-blue-800">
+                  User Account
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-4" *ngIf="typeof selectedBooking.userid === 'object'">
+            <div *ngIf="getUserLocation(selectedBooking)">
+              <p class="text-sm text-gray-400">Location</p>
+              <p class="font-medium text-white">{{ getUserLocation(selectedBooking) }}</p>
+            </div>
+            <div *ngIf="getUserDateOfBirth(selectedBooking)">
+              <p class="text-sm text-gray-400">Date of Birth</p>
+              <p class="font-medium text-white">{{ formatDate(getUserDateOfBirth(selectedBooking)) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Car Information -->
+      <div class="space-y-6">
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">Car Information</h4>
+          <div *ngIf="typeof selectedBooking.carid === 'object'" class="space-y-4">
+            <div class="aspect-video rounded-lg overflow-hidden">
+              <img [src]="getCarImage(selectedBooking)" [alt]="getCarName(selectedBooking)" 
+                   class="w-full h-full object-cover" (error)="onImageError($event)">
+            </div>
+            <div class="flex items-start space-x-4">
+              <div class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-gray-600">
+                <img [src]="getCarImage(selectedBooking)" [alt]="getCarName(selectedBooking)" 
+                     class="h-16 w-16 object-cover" (error)="onImageError($event)">
+              </div>
+              <div class="flex-1">
+                <h5 class="font-medium text-white">{{ selectedBooking.carid.carname }}</h5>
+                <p class="text-sm text-gray-400">{{ selectedBooking.carid.brandname }}</p>
+                <p class="text-sm text-gray-400">{{ selectedBooking.carid.color }}<span *ngIf="getCarSeating(selectedBooking)"> • {{ getCarSeating(selectedBooking) }} seats</span></p>
+                <div class="mt-2" *ngIf="getCarStatus(selectedBooking)">
+                  <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + getCarStatusClass(selectedBooking)">
+                    {{ getCarStatus(selectedBooking) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div *ngIf="getCarMileage(selectedBooking)">
+                <p class="text-sm text-gray-400">Mileage</p>
+                <p class="font-medium text-white">{{ getCarMileage(selectedBooking) }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-400">Price</p>
+                <p class="font-medium text-white">₹{{ selectedBooking.carid.price | number }}</p>
+              </div>
+              <div *ngIf="selectedBooking.carid.location">
+                <p class="text-sm text-gray-400">Location</p>
+                <p class="font-medium text-white">{{ selectedBooking.carid.location }}<span *ngIf="getCarPincode(selectedBooking)">, {{ getCarPincode(selectedBooking) }}</span></p>
+              </div>
+              <div *ngIf="getCarTicketsAvailable(selectedBooking)">
+                <p class="text-sm text-gray-400">Tickets Available</p>
+                <p class="font-medium text-white">{{ getCarTicketsAvailable(selectedBooking) }} / {{ getCarTotalTickets(selectedBooking) }}</p>
+              </div>
+            </div>
+            <div *ngIf="getCarFeatures(selectedBooking) && getCarFeatures(selectedBooking).length > 0">
+              <p class="text-sm text-gray-400 mb-2">Features</p>
+              <div class="flex flex-wrap gap-2">
+                <span *ngFor="let feature of getCarFeatures(selectedBooking)" 
+                      class="inline-flex items-center rounded-full bg-blue-900/50 px-3 py-1 text-sm font-medium text-blue-300 border border-blue-700">
+                  {{ feature }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dialog Components -->
+<app-dialog
+  [visible]="showStatusDialog"
+  [config]="dialogConfig"
+  (confirm)="confirmStatusUpdate()"
+  (cancel)="closeStatusDialog()"
+  (close)="closeStatusDialog()">
+</app-dialog>
+
+

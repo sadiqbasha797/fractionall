@@ -10,22 +10,44 @@ body {
   min-height: 100vh;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
+/* Global scrollbar hiding - hide all scrollbars but keep functionality */
+* {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
+*::-webkit-scrollbar {
+  display: none !important; /* Safari and Chrome */
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #c5c5c5;
-  border-radius: 4px;
+*::-webkit-scrollbar-track {
+  display: none !important;
+  background: transparent !important;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #a0a0a0;
+*::-webkit-scrollbar-thumb {
+  display: none !important;
+  background: transparent !important;
+}
+
+*::-webkit-scrollbar-corner {
+  display: none !important;
+  background: transparent !important;
+}
+
+*::-webkit-scrollbar-button {
+  display: none !important;
+}
+
+*::-webkit-scrollbar-track-piece {
+  display: none !important;
+}
+
+*::-webkit-scrollbar-resizer {
+  display: none !important;
 }
 
 /* Admin panel specific styles */

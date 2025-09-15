@@ -6,6 +6,7 @@ import { UserService, User } from '../services/user.service';
 import { CarService, Car } from '../services/car.service';
 import { TicketService, Ticket } from '../services/ticket.service';
 import { DialogComponent, DialogConfig } from '../shared/dialog/dialog.component';
+import { ExportService, ExportOptions } from '../services/export.service';
 
 @Component({
   selector: 'app-amc',
@@ -72,7 +73,8 @@ export class Amc implements OnInit {
     private amcService: AmcService,
     private userService: UserService,
     private carService: CarService,
-    private ticketService: TicketService
+    private ticketService: TicketService,
+    private exportService: ExportService
   ) {}
 
   ngOnInit() {
@@ -544,66 +546,47 @@ export class Amc implements OnInit {
   }
 
   // Export functionality
-  exportToCSV() {
-    const csvData = this.filteredAmcs.map(amc => ({
-      'User Name': this.getUserName(amc),
-      'User Email': this.getUserEmail(amc),
-      'Car': this.getCarName(amc),
-      'Ticket ID': this.getTicketId(amc),
-      'Years': amc.amcamount.map(a => a.year).join(', '),
-      'Total Amount': this.getTotalAmount(amc),
-      'Paid Amount': this.getPaidAmount(amc),
-      'Pending Amount': this.getPendingAmount(amc),
-      'Status': this.getPaymentStatus(amc),
-      'Created Date': this.formatDate(amc.createdAt || ''),
-      'Payment Details': amc.amcamount.map(a => 
+  exportData() {
+    this.exportToExcel();
+  }
+
+  exportToExcel() {
+    const exportData = this.filteredAmcs.map(amc => ({
+      userName: this.getUserName(amc),
+      userEmail: this.getUserEmail(amc),
+      carName: this.getCarName(amc),
+      ticketId: this.getTicketId(amc),
+      years: this.getAMCYears(amc),
+      totalAmount: this.getTotalAmount(amc),
+      paidAmount: this.getPaidAmount(amc),
+      pendingAmount: this.getPendingAmount(amc),
+      status: this.getPaymentStatus(amc),
+      createdDate: this.formatDate(amc.createdAt || ''),
+      paymentDetails: amc.amcamount.map(a => 
         `${a.year}: ${a.paid ? 'Paid' : 'Unpaid'} (${this.formatCurrency(a.amount)})`
       ).join('; ')
     }));
 
-    this.downloadCSV(csvData, 'amc-data.csv');
-  }
+    const options: ExportOptions = {
+      filename: `amc-data-${new Date().toISOString().split('T')[0]}`,
+      title: 'AMC Management Report',
+      columns: [
+        { header: 'User Name', key: 'userName', width: 25 },
+        { header: 'Email', key: 'userEmail', width: 30 },
+        { header: 'Car', key: 'carName', width: 25 },
+        { header: 'Ticket ID', key: 'ticketId', width: 20 },
+        { header: 'Years', key: 'years', width: 15 },
+        { header: 'Total Amount', key: 'totalAmount', width: 20 },
+        { header: 'Paid Amount', key: 'paidAmount', width: 20 },
+        { header: 'Pending Amount', key: 'pendingAmount', width: 20 },
+        { header: 'Status', key: 'status', width: 15 },
+        { header: 'Created Date', key: 'createdDate', width: 20 },
+        { header: 'Payment Details', key: 'paymentDetails', width: 50 }
+      ],
+      data: exportData
+    };
 
-  exportToExcel() {
-    // For Excel export, we'll use a simple CSV format that can be opened in Excel
-    this.exportToCSV();
-  }
-
-  private downloadCSV(data: any[], filename: string) {
-    const csv = this.convertToCSV(data);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', filename);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  }
-
-  private convertToCSV(data: any[]): string {
-    if (data.length === 0) return '';
-    
-    const headers = Object.keys(data[0]);
-    const csvContent = [
-      headers.join(','),
-      ...data.map(row => 
-        headers.map(header => {
-          const value = row[header];
-          // Escape commas and quotes in CSV
-          if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-            return `"${value.replace(/"/g, '""')}"`;
-          }
-          return value;
-        }).join(',')
-      )
-    ].join('\n');
-    
-    return csvContent;
+    this.exportService.exportToExcel(options);
   }
 
   getUserEmail(amc: AMC): string {

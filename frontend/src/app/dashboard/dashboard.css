@@ -1,0 +1,635 @@
+/* Dashboard Container */
+.dashboard-container {
+  min-height: 100vh;
+  background-color: rgb(55, 65, 81); /* gray-700 */
+  color: white;
+}
+
+/* Stats Cards - Minimalistic Design */
+.stat-card-minimal {
+  background: rgba(31, 41, 55, 0.8);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.2s ease-in-out;
+  backdrop-filter: blur(8px);
+}
+
+.stat-card-minimal:hover {
+  background: rgba(31, 41, 55, 0.9);
+  border-color: rgba(75, 85, 99, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stat-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stat-icon-minimal {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(75, 85, 99, 0.2);
+}
+
+.stat-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-label-minimal {
+  font-size: 0.75rem;
+  color: rgb(156, 163, 175);
+  font-weight: 500;
+  margin-bottom: 0.125rem;
+}
+
+.stat-value-minimal {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.125rem;
+  line-height: 1.2;
+}
+
+.stat-change-minimal {
+  font-size: 0.625rem;
+  font-weight: 500;
+}
+
+@media (min-width: 640px) {
+  .stat-card-minimal {
+    padding: 1.25rem;
+  }
+  
+  .stat-content {
+    gap: 1rem;
+  }
+  
+  .stat-icon-minimal {
+    width: 3rem;
+    height: 3rem;
+  }
+  
+  .stat-value-minimal {
+    font-size: 1.5rem;
+  }
+  
+  .stat-label-minimal {
+    font-size: 0.875rem;
+  }
+  
+  .stat-change-minimal {
+    font-size: 0.75rem;
+  }
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stat-card {
+  background: linear-gradient(to bottom right, rgb(31, 41, 55), rgb(17, 24, 39));
+  border: 1px solid rgba(75, 85, 99, 0.5);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(4px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-color: rgba(107, 114, 128, 0.5);
+  transform: scale(1.05);
+}
+
+@media (min-width: 640px) {
+  .stat-card {
+    padding: 1.5rem;
+  }
+}
+
+.stat-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+}
+
+@media (min-width: 640px) {
+  .stat-icon {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.25rem;
+  }
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .stat-value {
+    font-size: 1.875rem;
+    margin-top: 0.75rem;
+  }
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: rgb(156, 163, 175);
+  font-weight: 500;
+}
+
+@media (min-width: 640px) {
+  .stat-label {
+    font-size: 0.875rem;
+  }
+}
+
+.stat-change {
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+@media (min-width: 640px) {
+  .stat-change {
+    margin-top: 0.5rem;
+  }
+}
+
+/* Chart Container */
+.chart-container {
+  background: linear-gradient(to bottom right, rgb(31, 41, 55), rgb(17, 24, 39));
+  border: 1px solid rgba(75, 85, 99, 0.5);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(4px);
+}
+
+@media (min-width: 640px) {
+  .chart-container {
+    padding: 1.5rem;
+  }
+}
+
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .chart-header {
+    margin-bottom: 1.5rem;
+  }
+}
+
+.chart-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: white;
+}
+
+@media (min-width: 640px) {
+  .chart-title {
+    font-size: 1.25rem;
+  }
+}
+
+.chart-subtitle {
+  font-size: 0.75rem;
+  color: rgb(156, 163, 175);
+  margin-top: 0.25rem;
+}
+
+@media (min-width: 640px) {
+  .chart-subtitle {
+    font-size: 0.875rem;
+  }
+}
+
+/* Remove all @apply usage - convert to standard CSS */
+
+/* Recent Activity */
+.activity-container {
+  background: linear-gradient(to bottom right, rgb(31, 41, 55), rgb(17, 24, 39));
+  border: 1px solid rgba(75, 85, 99, 0.5);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(4px);
+}
+
+@media (min-width: 640px) {
+  .activity-container {
+    padding: 1.5rem;
+  }
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 0.75rem;
+  background-color: rgba(55, 65, 81, 0.3);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.activity-item:hover {
+  background-color: rgba(55, 65, 81, 0.5);
+}
+
+@media (min-width: 640px) {
+  .activity-item {
+    padding: 1rem;
+  }
+}
+
+.activity-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  margin-right: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .activity-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1rem;
+    margin-right: 1rem;
+  }
+}
+
+/* Top Cars Grid */
+.top-cars-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .top-cars-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .top-cars-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .top-cars-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.top-car-card {
+  background: linear-gradient(to bottom right, rgb(31, 41, 55), rgb(17, 24, 39));
+  border: 1px solid rgba(75, 85, 99, 0.5);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(4px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.top-car-card:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-color: rgba(107, 114, 128, 0.5);
+  transform: scale(1.05);
+}
+
+@media (min-width: 640px) {
+  .top-car-card {
+    padding: 1rem;
+  }
+}
+
+.top-car-image {
+  width: 100%;
+  height: 5rem;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(75, 85, 99, 0.5);
+}
+
+@media (min-width: 640px) {
+  .top-car-image {
+    height: 6rem;
+  }
+}
+
+/* Revenue Breakdown - Simple Design */
+.revenue-simple-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  background: rgba(31, 41, 55, 0.6);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .revenue-simple-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .revenue-simple-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.revenue-simple-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(55, 65, 81, 0.4);
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.revenue-simple-item:hover {
+  background: rgba(55, 65, 81, 0.6);
+}
+
+.revenue-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.revenue-dot.blue {
+  background: rgb(59, 130, 246);
+}
+
+.revenue-dot.green {
+  background: rgb(34, 197, 94);
+}
+
+.revenue-dot.yellow {
+  background: rgb(245, 158, 11);
+}
+
+.revenue-dot.purple {
+  background: rgb(168, 85, 247);
+}
+
+.revenue-label {
+  font-size: 0.75rem;
+  color: rgb(156, 163, 175);
+  font-weight: 500;
+  min-width: 0;
+  flex: 1;
+}
+
+.revenue-value {
+  font-size: 0.875rem;
+  color: white;
+  font-weight: 600;
+  text-align: right;
+}
+
+
+.revenue-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .revenue-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .revenue-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.revenue-card {
+  border: 1px solid rgba(75, 85, 99, 0.5);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(4px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.revenue-card:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+@media (min-width: 640px) {
+  .revenue-card {
+    padding: 1.5rem;
+  }
+}
+
+.revenue-card.primary {
+  background: linear-gradient(to bottom right, rgba(30, 64, 175, 0.5), rgba(29, 78, 216, 0.5));
+}
+
+.revenue-card.primary:hover {
+  background: linear-gradient(to bottom right, rgba(29, 78, 216, 0.5), rgba(37, 99, 235, 0.5));
+}
+
+.revenue-card.success {
+  background: linear-gradient(to bottom right, rgba(22, 101, 52, 0.5), rgba(20, 83, 45, 0.5));
+}
+
+.revenue-card.success:hover {
+  background: linear-gradient(to bottom right, rgba(21, 128, 61, 0.5), rgba(22, 101, 52, 0.5));
+}
+
+.revenue-card.warning {
+  background: linear-gradient(to bottom right, rgba(146, 64, 14, 0.5), rgba(120, 53, 15, 0.5));
+}
+
+.revenue-card.warning:hover {
+  background: linear-gradient(to bottom right, rgba(180, 83, 9, 0.5), rgba(146, 64, 14, 0.5));
+}
+
+.revenue-card.purple {
+  background: linear-gradient(to bottom right, rgba(107, 33, 168, 0.5), rgba(88, 28, 135, 0.5));
+}
+
+.revenue-card.purple:hover {
+  background: linear-gradient(to bottom right, rgba(124, 58, 237, 0.5), rgba(107, 33, 168, 0.5));
+}
+
+/* Loading States */
+.loading-skeleton {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background-color: rgba(55, 65, 81, 0.5);
+  border-radius: 0.25rem;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading-card {
+  background-color: rgba(31, 41, 55, 0.5);
+  border: 1px solid rgba(75, 85, 99, 0.5);
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .loading-card {
+    padding: 1.5rem;
+  }
+}
+
+/* Status Badges */
+.status-active {
+  background-color: rgba(34, 197, 94, 0.2);
+  color: rgb(74, 222, 128);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-pending {
+  background-color: rgba(234, 179, 8, 0.2);
+  color: rgb(250, 204, 21);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.status-completed {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: rgb(96, 165, 250);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.status-cancelled {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: rgb(248, 113, 113);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-expired {
+  background-color: rgba(107, 114, 128, 0.2);
+  color: rgb(156, 163, 175);
+  border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.priority-high {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: rgb(248, 113, 113);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.priority-medium {
+  background-color: rgba(234, 179, 8, 0.2);
+  color: rgb(250, 204, 21);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.priority-low {
+  background-color: rgba(34, 197, 94, 0.2);
+  color: rgb(74, 222, 128);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+/* Animation Classes */
+.fade-in {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.slide-up {
+  animation: slideUp 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom Scrollbar for Dashboard */
+.dashboard-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dashboard-scroll::-webkit-scrollbar-track {
+  background: rgba(55, 65, 81, 0.3);
+  border-radius: 3px;
+}
+
+.dashboard-scroll::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.8);
+  border-radius: 3px;
+}
+
+.dashboard-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.9);
+}

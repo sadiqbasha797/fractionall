@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ConfigService } from './config.service';
 
 // Define interfaces for our data models
 export interface User {
@@ -76,9 +77,11 @@ export interface RegisterSuperAdminData {
   providedIn: 'root'
 })
 export class AuthService {
-  private baseUrl = 'http://localhost:5000/api/auth';
+  private baseUrl: string;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private configService: ConfigService) {
+    this.baseUrl = this.configService.getApiUrl('/auth');
+  }
 
   // User registration
   registerUser(userData: RegisterUserData): Observable<AuthResponse> {

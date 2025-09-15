@@ -31,7 +31,7 @@ export class SuperAdminLogin {
             localStorage.setItem('superadmin', JSON.stringify(response.body.superAdmin));
             localStorage.setItem('userRole', 'superadmin');
           }
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/cars']);
         } else {
           this.errorMessage = response.message;
         }

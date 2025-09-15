@@ -42,7 +42,10 @@ const NotificationSchema = new mongoose.Schema({
       'user_paid_amc',
       'user_made_booking',
       'user_kyc_approved',
-      'user_kyc_rejected'
+      'user_kyc_rejected',
+      'manual_announcement',
+      'system_maintenance',
+      'security_alert'
     ]
   },
   

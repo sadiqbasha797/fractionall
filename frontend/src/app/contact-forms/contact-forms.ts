@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ContactService, ContactForm, ContactFormStats } from '../services/contact.service';
+import { ContactService, ContactForm } from '../services/contact.service';
 
 @Component({
   selector: 'app-contact-forms',
@@ -12,7 +12,7 @@ import { ContactService, ContactForm, ContactFormStats } from '../services/conta
 })
 export class ContactForms implements OnInit {
   contactForms: ContactForm[] = [];
-  stats: ContactFormStats['body']['stats'] | null = null;
+  totalContactForms = 0;
   loading = false;
   error = '';
   
@@ -40,7 +40,6 @@ export class ContactForms implements OnInit {
 
   ngOnInit() {
     this.loadContactForms();
-    this.loadStats();
   }
 
   loadContactForms() {
@@ -60,6 +59,7 @@ export class ContactForms implements OnInit {
         this.contactForms = response.body.contactForms;
         this.totalItems = response.body.pagination.totalItems;
         this.totalPages = response.body.pagination.totalPages;
+        this.totalContactForms = response.body.pagination.totalItems;
         this.loading = false;
       },
       error: (error) => {
@@ -69,16 +69,7 @@ export class ContactForms implements OnInit {
     });
   }
 
-  loadStats() {
-    this.contactService.getContactFormStats().subscribe({
-      next: (response) => {
-        this.stats = response.body.stats;
-      },
-      error: (error) => {
-        console.error('Failed to load stats:', error);
-      }
-    });
-  }
+
 
   onFilterChange() {
     this.currentPage = 1;
@@ -133,7 +124,6 @@ export class ContactForms implements OnInit {
       next: (response) => {
         this.selectedContactForm = response.body.contactForm;
         this.loadContactForms();
-        this.loadStats();
         this.adminNote = '';
       },
       error: (error) => {
@@ -150,7 +140,6 @@ export class ContactForms implements OnInit {
     this.contactService.deleteContactForm(contactForm._id).subscribe({
       next: () => {
         this.loadContactForms();
-        this.loadStats();
         if (this.selectedContactForm?._id === contactForm._id) {
           this.closeDetailsModal();
         }
@@ -183,4 +172,14 @@ export class ContactForms implements OnInit {
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleString('en-IN');
   }
+
+  clearFilters() {
+    this.statusFilter = '';
+    this.priorityFilter = '';
+    this.searchQuery = '';
+    this.onFilterChange();
+  }
+
+  // Add Math property for template access
+  Math = Math;
 }

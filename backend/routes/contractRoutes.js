@@ -41,9 +41,9 @@ router.delete('/:id', authMiddleware(['admin', 'superadmin']), contractControlle
 
 // User routes
 router.get('/my-contracts', authMiddleware(['user']), contractController.getUserContractDocuments);
-router.get('/download/:contractId/:docIndex', authMiddleware(['user']), contractController.downloadContractDocument);
+router.get('/download/:contractId/:docIndex', authMiddleware(['user', 'admin', 'superadmin']), contractController.downloadContractDocument);
 
 // Test route for contract document URL (for testing purposes)
-router.get('/document-url/:contractId/:docIndex', authMiddleware(['user']), contractController.getContractDocumentUrl);
+router.get('/document-url/:contractId/:docIndex', authMiddleware(['user', 'admin', 'superadmin']), contractController.getContractDocumentUrl);
 
 module.exports = router;

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { ConfigService } from './config.service';
 
 export interface ContactFormData {
   name: string;
@@ -99,9 +99,11 @@ export interface ContactFormStats {
   providedIn: 'root'
 })
 export class ContactService {
-  private apiUrl = environment.apiUrl || 'http://localhost:5000/api';
+  private apiUrl: string;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private configService: ConfigService) {
+    this.apiUrl = this.configService.getBaseUrl();
+  }
 
   // Submit contact form (public)
   submitContactForm(formData: ContactFormData): Observable<ContactFormResponse> {

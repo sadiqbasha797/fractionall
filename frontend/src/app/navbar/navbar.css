@@ -1,0 +1,120 @@
+/* Real-time clock styling */
+.clock-container {
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.clock-container:hover {
+  background-color: rgba(55, 65, 81, 0.7);
+  border-color: rgba(75, 85, 99, 0.8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.clock-time {
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+  animation: pulse 2s infinite;
+}
+
+.clock-date {
+  transition: opacity 0.3s ease;
+}
+
+/* Notification button styling */
+.notification-button {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.notification-button:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.9);
+}
+
+.notification-button:active {
+  transform: scale(0.95);
+}
+
+/* Badge animation */
+.notification-button span {
+  animation: badgePulse 2s infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Subtle pulse animation for the time */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Hover effects for the clock container */
+.clock-container:hover .clock-time {
+  text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+}
+
+.clock-container:hover .clock-date {
+  color: #e5e7eb;
+}
+
+/* Mobile positioning - fixed next to toggle button */
+@media (max-width: 640px) {
+  .clock-container {
+    position: fixed;
+    top: 1rem; /* Same as toggle button (top-4) */
+    left: 5rem; /* Positioned right next to toggle button */
+    z-index: 40;
+    padding: 0.5rem;
+    height: 2.5rem; /* Match toggle button height */
+    display: flex;
+    align-items: center;
+    min-width: fit-content;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  .clock-time {
+    font-size: 0.875rem;
+  }
+  
+  .clock-date {
+    font-size: 0.625rem;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .clock-container {
+    left: 4.5rem; /* Adjust for smaller screens */
+    padding: 0.375rem;
+    height: 2.25rem;
+  }
+  
+  .clock-time {
+    font-size: 0.75rem;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 360px) {
+  .clock-container {
+    left: 4rem;
+    padding: 0.25rem;
+    height: 2rem;
+  }
+  
+  .clock-time {
+    font-size: 0.7rem;
+  }
+}

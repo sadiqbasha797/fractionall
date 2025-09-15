@@ -11,6 +11,7 @@ app.use(express.json());
 app.use(cors({
   origin: [
     'http://localhost:4200', // Angular default port for development
+    'http://localhost:57477', // Additional development port
     'https://fraction.projexino.com', // Production frontend URL
     'https://fractionbackend.projexino.com' // Production backend URL (for self-referencing)
   ],
@@ -96,6 +97,10 @@ app.use('/api/notifications', notificationRoutes);
 // AMC Reminder routes
 const amcReminderRoutes = require('./routes/amcReminderRoutes');
 app.use('/api/amc-reminders', amcReminderRoutes);
+
+// Dashboard routes
+const dashboardRoutes = require('./routes/dashboardRoutes');
+app.use('/api/dashboard', dashboardRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

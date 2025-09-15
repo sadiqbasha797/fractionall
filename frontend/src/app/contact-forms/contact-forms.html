@@ -1,221 +1,398 @@
-<div class="contact-forms-container">
-  <!-- Header -->
-  <div class="header">
-    <h1>Contact Forms</h1>
-    <div class="stats-grid" *ngIf="stats">
-      <div class="stat-card">
-        <div class="stat-number">{{ stats.total }}</div>
-        <div class="stat-label">Total</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">{{ stats.byStatus.new }}</div>
-        <div class="stat-label">New</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">{{ stats.byStatus.replied }}</div>
-        <div class="stat-label">Replied</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">{{ stats.recent }}</div>
-        <div class="stat-label">Last 7 Days</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Filters -->
-  <div class="filters">
-    <div class="filter-group">
-      <label for="statusFilter">Status:</label>
-      <select id="statusFilter" [(ngModel)]="statusFilter" (change)="onFilterChange()">
-        <option value="">All</option>
-        <option value="new">New</option>
-        <option value="read">Read</option>
-        <option value="replied">Replied</option>
-        <option value="closed">Closed</option>
-      </select>
-    </div>
-    
-    <div class="filter-group">
-      <label for="priorityFilter">Priority:</label>
-      <select id="priorityFilter" [(ngModel)]="priorityFilter" (change)="onFilterChange()">
-        <option value="">All</option>
-        <option value="high">High</option>
-        <option value="medium">Medium</option>
-        <option value="low">Low</option>
-      </select>
-    </div>
-    
-    <div class="filter-group">
-      <label for="searchQuery">Search:</label>
-      <input 
-        type="text" 
-        id="searchQuery" 
-        [(ngModel)]="searchQuery" 
-        placeholder="Search by name, email, or subject..."
-        (keyup.enter)="onSearch()"
-      />
-      <button (click)="onSearch()">Search</button>
-    </div>
-  </div>
-
-  <!-- Error Message -->
-  <div *ngIf="error" class="error-message">
-    {{ error }}
-  </div>
-
-  <!-- Loading -->
-  <div *ngIf="loading" class="loading">
-    Loading contact forms...
-  </div>
-
-  <!-- Contact Forms Table -->
-  <div *ngIf="!loading" class="table-container">
-    <table class="contact-forms-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Subject</th>
-          <th>Status</th>
-          <th>Priority</th>
-          <th>Date</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let form of contactForms" class="contact-form-row">
-          <td>{{ form.name }}</td>
-          <td>{{ form.email }}</td>
-          <td class="subject-cell">{{ form.subject }}</td>
-          <td>
-            <span class="status-badge" [ngClass]="getStatusClass(form.status)">
-              {{ form.status | titlecase }}
-            </span>
-          </td>
-          <td>
-            <span class="priority-badge" [ngClass]="getPriorityClass(form.priority)">
-              {{ form.priority | titlecase }}
-            </span>
-          </td>
-          <td>{{ formatDate(form.createdAt) }}</td>
-          <td class="actions">
-            <button class="btn btn-primary" (click)="viewDetails(form)">
-              View
-            </button>
-            <button class="btn btn-danger" (click)="deleteContactForm(form)">
-              Delete
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- Pagination -->
-    <div class="pagination" *ngIf="totalPages > 1">
-      <button 
-        [disabled]="currentPage === 1" 
-        (click)="onPageChange(currentPage - 1)"
-        class="btn btn-secondary"
-      >
-        Previous
-      </button>
-      
-      <span class="page-info">
-        Page {{ currentPage }} of {{ totalPages }}
-      </span>
-      
-      <button 
-        [disabled]="currentPage === totalPages" 
-        (click)="onPageChange(currentPage + 1)"
-        class="btn btn-secondary"
-      >
-        Next
-      </button>
-    </div>
-  </div>
-
-  <!-- Details Modal -->
-  <div *ngIf="showDetailsModal && selectedContactForm" class="modal-overlay" (click)="closeDetailsModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Contact Form Details</h2>
-        <button class="close-btn" (click)="closeDetailsModal()">&times;</button>
-      </div>
-      
-      <div class="modal-body">
-        <div class="form-details">
-          <div class="detail-row">
-            <label>Name:</label>
-            <span>{{ selectedContactForm.name }}</span>
+<div class="flex-1 flex flex-col min-h-screen bg-gray-700 text-gray-100">
+  <!-- Enhanced Header Section -->
+  <header class="bg-gradient-to-r from-gray-800 to-gray-700 border-b border-gray-600 shadow-lg">
+    <!-- Title and Stats Section -->
+    <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/50">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <!-- Title Section -->
+        <div class="flex items-center space-x-3">
+          <div class="p-2 bg-blue-600/20 rounded-lg">
+            <i class="fas fa-envelope text-blue-400 text-xl"></i>
           </div>
-          <div class="detail-row">
-            <label>Email:</label>
-            <span>{{ selectedContactForm.email }}</span>
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-white">Contact Forms</h1>
+            <p class="text-gray-400 text-sm mt-1">Manage customer inquiries and support requests</p>
           </div>
-          <div class="detail-row">
-            <label>Subject:</label>
-            <span>{{ selectedContactForm.subject }}</span>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="flex items-center space-x-3 sm:space-x-4">
+          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600/50 flex-1 sm:flex-none">
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span class="text-xs sm:text-sm text-gray-300">Total Forms</span>
+            </div>
+            <div class="text-xl sm:text-2xl font-bold text-white mt-1">{{totalContactForms}}</div>
           </div>
-          <div class="detail-row">
-            <label>Message:</label>
-            <div class="message-content">{{ selectedContactForm.message }}</div>
+          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600/50 flex-1 sm:flex-none">
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+              <span class="text-xs sm:text-sm text-gray-300">Filtered</span>
+            </div>
+            <div class="text-xl sm:text-2xl font-bold text-white mt-1">{{contactForms.length}}</div>
           </div>
-          <div class="detail-row">
-            <label>Submitted:</label>
-            <span>{{ formatDate(selectedContactForm.createdAt) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search and Filters Section -->
+    <div class="px-4 sm:px-6 py-4 sm:py-6">
+      <div class="flex flex-col gap-4">
+        <!-- Search Bar -->
+        <div class="w-full">
+          <label class="block text-sm font-medium text-gray-300 mb-2">Search Contact Forms</label>
+          <div class="relative search-input-container">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-search search-icon"></i>
+              <!-- Fallback SVG icon in case Font Awesome doesn't load -->
+              <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </div>
+            <input 
+              type="search" 
+              [(ngModel)]="searchQuery" 
+              (ngModelChange)="onSearch()"
+              placeholder="Search by name, email, or subject..."
+              class="w-full pl-10 pr-4 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
+            />
           </div>
         </div>
 
+        <!-- Filters and Actions Row -->
+        <div class="flex flex-col sm:flex-row gap-4">
+          <!-- Filters Group -->
+          <div class="flex flex-col sm:flex-row gap-4 flex-1">
+            <div class="flex-1 min-w-0">
+              <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+              <select 
+                [(ngModel)]="statusFilter" 
+                (ngModelChange)="onFilterChange()"
+                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
+              >
+                <option value="">All Statuses</option>
+                <option value="new">New</option>
+                <option value="read">Read</option>
+                <option value="replied">Replied</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <label class="block text-sm font-medium text-gray-300 mb-2">Priority</label>
+              <select 
+                [(ngModel)]="priorityFilter" 
+                (ngModelChange)="onFilterChange()"
+                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
+              >
+                <option value="">All Priorities</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-end gap-2 sm:ml-auto">
+            <button 
+              (click)="clearFilters()" 
+              class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
+            >
+              <i class="fas fa-times text-sm"></i>
+              <span>Clear</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 py-4 overflow-auto">
+    <section class="max-w-7xl mx-auto">
+      <!-- Error Message -->
+      <div *ngIf="error" class="mb-4 bg-red-900/50 border border-red-700 text-red-100 px-4 py-3 rounded-lg">
+        {{ error }}
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loading" class="text-center py-12">
+        <div class="inline-flex items-center gap-2">
+          <svg class="animate-spin h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="text-gray-300">Loading contact forms...</span>
+        </div>
+      </div>
+
+      <div class="h-full rounded-xl border border-gray-700 bg-gray-900 shadow-sm min-w-0">
+        <!-- scrollable table container -->
+        <div class="overflow-x-auto overflow-y-auto no-scrollbar" style="max-height: 72vh;">
+          <table class="min-w-full divide-y divide-gray-700" role="table" aria-label="Contact forms table">
+          <thead>
+            <tr class="bg-gray-800">
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Contact Details</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Subject</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Priority</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Date</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-700 bg-gray-900">
+            <tr *ngIf="contactForms.length === 0" class="text-center">
+              <td colspan="6" class="px-6 py-12 text-gray-400">
+                <div class="flex flex-col items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 mb-4 text-gray-500">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                  </svg>
+                  <p class="text-lg font-medium text-gray-500 mb-2">No contact forms found</p>
+                  <p class="text-sm text-gray-400">Try adjusting your search or filter criteria</p>
+                </div>
+              </td>
+            </tr>
+            <tr *ngFor="let form of contactForms" class="hover:bg-gray-800 transition duration-150 contact-form-row">
+              <!-- Contact Details Column -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-gray-700 bg-gray-700 flex items-center justify-center">
+                    <i class="fas fa-user text-gray-400 text-lg"></i>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-100">{{ form.name }}</div>
+                    <div class="text-xs text-gray-400">{{ form.email }}</div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Subject Column -->
+              <td class="px-6 py-4">
+                <div class="text-sm text-gray-300 max-w-xs">
+                  <div class="font-medium truncate">{{ form.subject }}</div>
+                </div>
+              </td>
+
+              <!-- Status Column -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize" 
+                      [ngClass]="getStatusClass(form.status)">
+                  <i class="fas mr-1" 
+                     [class.fa-circle]="form.status === 'new'"
+                     [class.fa-eye]="form.status === 'read'"
+                     [class.fa-reply]="form.status === 'replied'"
+                     [class.fa-times-circle]="form.status === 'closed'"></i>
+                  {{ form.status | titlecase }}
+                </span>
+              </td>
+
+              <!-- Priority Column -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize" 
+                      [ngClass]="getPriorityClass(form.priority)">
+                  <i class="fas mr-1" 
+                     [class.fa-exclamation-triangle]="form.priority === 'high'"
+                     [class.fa-minus]="form.priority === 'medium'"
+                     [class.fa-chevron-down]="form.priority === 'low'"></i>
+                  {{ form.priority | titlecase }}
+                </span>
+              </td>
+
+              <!-- Date Column -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-300">{{ formatDate(form.createdAt) }}</div>
+              </td>
+
+              <!-- Actions Column -->
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <div class="flex items-center justify-end space-x-2">
+                  <button class="p-2 text-gray-300 hover:text-blue-300 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-blue-300" 
+                          (click)="viewDetails(form)" title="View Details" [attr.aria-label]="'View details for ' + form.name">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </button>
+                  
+                  <button class="p-2 text-gray-300 hover:text-red-400 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-red-200" 
+                          (click)="deleteContactForm(form)" title="Delete" [attr.aria-label]="'Delete contact form from ' + form.name">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+        
+        <!-- Pagination -->
+        <div class="flex items-center justify-between border-t border-gray-700 bg-gray-900 px-6 py-4" *ngIf="totalPages > 1">
+          <div class="flex items-center space-x-2 text-sm text-gray-300">
+            <span>Showing</span>
+            <span class="font-medium text-gray-100">{{ (currentPage - 1) * 10 + 1 }}</span>
+            <span>to</span>
+            <span class="font-medium text-gray-100">{{ Math.min(currentPage * 10, contactForms.length) }}</span>
+            <span>of</span>
+            <span class="font-medium text-gray-100">{{ contactForms.length }}</span>
+            <span>contact forms</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button 
+              [disabled]="currentPage === 1" 
+              (click)="onPageChange(currentPage - 1)"
+              class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150"
+            >
+              Previous
+            </button>
+            
+            <button 
+              [disabled]="currentPage === totalPages || totalPages === 0" 
+              (click)="onPageChange(currentPage + 1)"
+              class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Contact Form Details Modal -->
+<div *ngIf="showDetailsModal && selectedContactForm" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+  <div class="relative top-10 mx-auto p-6 w-full max-w-6xl shadow-2xl rounded-2xl bg-gray-800 border border-gray-700">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-2xl font-semibold text-white">Contact Form Details</h3>
+      <button (click)="closeDetailsModal()" class="text-gray-400 hover:text-white transition-colors duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Contact Information -->
+      <div class="space-y-6">
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">Contact Information</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-400">Name</p>
+              <p class="font-medium text-white">{{ selectedContactForm.name }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Email</p>
+              <p class="font-medium text-white">{{ selectedContactForm.email }}</p>
+            </div>
+            <div class="col-span-2">
+              <p class="text-sm text-gray-400">Subject</p>
+              <p class="font-medium text-white">{{ selectedContactForm.subject }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Status</p>
+              <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize" 
+                    [ngClass]="getStatusClass(selectedContactForm.status)">
+                {{ selectedContactForm.status | titlecase }}
+              </span>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Priority</p>
+              <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize" 
+                    [ngClass]="getPriorityClass(selectedContactForm.priority)">
+                {{ selectedContactForm.priority | titlecase }}
+              </span>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Submitted</p>
+              <p class="font-medium text-white">{{ formatDate(selectedContactForm.createdAt) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Message Content -->
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">Message</h4>
+          <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
+            <p class="text-gray-300 whitespace-pre-wrap leading-relaxed">{{ selectedContactForm.message }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Panel -->
+      <div class="space-y-6">
         <!-- Admin Notes -->
-        <div class="admin-notes" *ngIf="selectedContactForm.adminNotes.length > 0">
-          <h3>Admin Notes</h3>
-          <div *ngFor="let note of selectedContactForm.adminNotes" class="note-item">
-            <div class="note-content">{{ note.note }}</div>
-            <div class="note-meta">
-              Added by {{ note.addedBy.name }} ({{ note.addedBy.role }}) on {{ formatDate(note.addedAt) }}
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600" *ngIf="selectedContactForm.adminNotes && selectedContactForm.adminNotes.length > 0">
+          <h4 class="text-lg font-semibold text-white mb-4">Admin Notes</h4>
+          <div class="space-y-3">
+            <div *ngFor="let note of selectedContactForm.adminNotes" class="bg-gray-800/50 rounded-lg p-4 border border-gray-600 border-l-4 border-l-blue-500">
+              <p class="text-gray-300 mb-2">{{ note.note }}</p>
+              <div class="text-xs text-gray-400">
+                Added by {{ note.addedBy.name }} ({{ note.addedBy.role }}) on {{ formatDate(note.addedAt) }}
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Update Form -->
-        <div class="update-form">
-          <h3>Update Status</h3>
-          <div class="form-group">
-            <label for="updateStatus">Status:</label>
-            <select id="updateStatus" [(ngModel)]="updateStatus">
-              <option value="new">New</option>
-              <option value="read">Read</option>
-              <option value="replied">Replied</option>
-              <option value="closed">Closed</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label for="updatePriority">Priority:</label>
-            <select id="updatePriority" [(ngModel)]="updatePriority">
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label for="adminNote">Add Note:</label>
-            <textarea 
-              id="adminNote" 
-              [(ngModel)]="adminNote" 
-              placeholder="Add a note about this contact form..."
-              rows="3"
-            ></textarea>
-          </div>
-          
-          <div class="form-actions">
-            <button class="btn btn-primary" (click)="updateContactForm()">
-              Update
-            </button>
-            <button class="btn btn-secondary" (click)="closeDetailsModal()">
-              Cancel
-            </button>
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">Update Status & Notes</h4>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2" for="updateStatus">Status</label>
+              <select 
+                id="updateStatus" 
+                [(ngModel)]="updateStatus"
+                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
+              >
+                <option value="new">New</option>
+                <option value="read">Read</option>
+                <option value="replied">Replied</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2" for="updatePriority">Priority</label>
+              <select 
+                id="updatePriority" 
+                [(ngModel)]="updatePriority"
+                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2" for="adminNote">Add Note</label>
+              <textarea 
+                id="adminNote" 
+                [(ngModel)]="adminNote" 
+                placeholder="Add a note about this contact form..."
+                rows="4"
+                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 resize-vertical"
+              ></textarea>
+            </div>
+            
+            <div class="flex items-center justify-end space-x-3 pt-4">
+              <button 
+                (click)="closeDetailsModal()"
+                class="px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-600 transition-colors duration-200"
+              >
+                Cancel
+              </button>
+              <button 
+                (click)="updateContactForm()"
+                class="px-4 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200"
+              >
+                Update
+              </button>
+            </div>
           </div>
         </div>
       </div>

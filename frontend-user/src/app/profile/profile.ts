@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UserService } from '../services/user.service';
 import { AuthService } from '../services/auth.service';
+import { KycService } from '../services/kyc.service';
 import { TicketService, Ticket } from '../services/ticket.service';
 import { TokenService, Token } from '../services/token.service';
 import { BookingService, Booking } from '../services/booking.service';
@@ -32,6 +33,7 @@ export class Profile implements OnInit {
     profileimage: '',
     verified: false,
     kycStatus: 'pending',
+    rejected_comments: [],
     governmentid: {
       aadharid: '',
       panid: '',
@@ -142,6 +144,7 @@ export class Profile implements OnInit {
   constructor(
     private userService: UserService,
     private authService: AuthService,
+    private kycService: KycService,
     private ticketService: TicketService,
     private tokenService: TokenService,
     private bookingService: BookingService,
@@ -550,6 +553,15 @@ export class Profile implements OnInit {
     }
   }
 
+  // Helper method to get rejection comments from user data
+  getRejectionComments(): Array<{ comment: string; date: Date }> {
+    const userData = this.user();
+    if (userData && userData.rejected_comments && Array.isArray(userData.rejected_comments)) {
+      return userData.rejected_comments;
+    }
+    return [];
+  }
+
   openDocModal() {
     this.showDocModal.set(true);
   }
@@ -710,27 +722,47 @@ export class Profile implements OnInit {
   }
 
   private submitKycDocuments() {
-    // For now, we'll simulate the KYC submission since the backend expects document URLs
-    // In a real implementation, you would upload the file first and get URLs
-    const kycDocs = ['document_url_placeholder']; // This would be actual document URLs
+    if (!this.kycForm().file) {
+      this.fileError.set('Please select a document file to upload.');
+      this.submittingKyc.set(false);
+      return;
+    }
 
-    // Submit KYC documents
-    this.userService.submitKyc({ kycDocs }).subscribe({
-      next: (response) => {
-        this.submittingKyc.set(false);
-        if (response && response.status === 'success') {
-          // Update user's KYC status
-          this.user.set({ ...this.user(), kycStatus: 'submitted' });
-          alert('KYC documents submitted successfully! Your application is under review.');
-          this.closeDocModal();
+    // Upload the document file and get the URL
+    this.userService.uploadKycDocument(this.kycForm().file!, 'kyc-documents').subscribe({
+      next: (uploadResponse) => {
+        if (uploadResponse && uploadResponse.status === 'success' && uploadResponse.body?.documentUrl) {
+          // Use the actual uploaded document URL
+          const kycDocs = [uploadResponse.body.documentUrl];
+          
+          // Submit KYC documents with the real URL
+          this.userService.submitKyc({ kycDocs }).subscribe({
+            next: (response) => {
+              this.submittingKyc.set(false);
+              if (response && response.status === 'success') {
+                // Update user's KYC status
+                this.user.set({ ...this.user(), kycStatus: 'submitted' });
+                alert('KYC documents submitted successfully! Your application is under review.');
+                this.closeDocModal();
+              } else {
+                alert('Failed to submit KYC documents. Please try again.');
+              }
+            },
+            error: (error) => {
+              this.submittingKyc.set(false);
+              console.error('Error submitting KYC documents:', error);
+              alert('Failed to submit KYC documents. Please try again.');
+            }
+          });
         } else {
-          alert('Failed to submit KYC documents. Please try again.');
+          this.submittingKyc.set(false);
+          this.fileError.set('Failed to upload document. Please try again.');
         }
       },
       error: (error) => {
         this.submittingKyc.set(false);
-        console.error('Error submitting KYC documents:', error);
-        alert('Failed to submit KYC documents. Please try again.');
+        console.error('Error uploading document:', error);
+        this.fileError.set('Failed to upload document. Please try again.');
       }
     });
   }

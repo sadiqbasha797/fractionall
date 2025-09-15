@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 export interface PaymentOrder {
   amount: number;
@@ -42,7 +43,7 @@ export interface PaymentVerificationResponse {
   providedIn: 'root'
 })
 export class PaymentService {
-  private baseUrl = 'https://fractionbackend.projexino.com/api/payments';
+  private baseUrl = `${environment.apiUrl}/payments`;
 
   constructor(
     private http: HttpClient,
@@ -68,7 +69,7 @@ export class PaymentService {
 
   // Get Razorpay Key ID
   getRazorpayKey(): Observable<{ key: string }> {
-    return this.http.get<{ key: string }>('https://fractionbackend.projexino.com/api/razorpay-key');
+    return this.http.get<{ key: string }>(`${environment.apiUrl.replace('/api', '')}/api/razorpay-key`);
   }
 
   // Create payment order
@@ -108,7 +109,7 @@ export class PaymentService {
       paiddate
     };
     
-    return this.http.put(`https://fractionbackend.projexino.com/api/amcs/${amcId}/payment-status`, body, {
+    return this.http.put(`${environment.apiUrl}/amcs/${amcId}/payment-status`, body, {
       headers: this.getAuthHeaders()
     });
   }

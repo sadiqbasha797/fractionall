@@ -2,12 +2,13 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
-  private apiUrl = 'https://fractionbackend.projexino.com/api/users';
+  private apiUrl = `${environment.apiUrl}/users`;
 
   constructor(
     private http: HttpClient,
@@ -63,11 +64,11 @@ export class UserService {
 
   // KYC related services
   submitKyc(kycData: { kycDocs: string[] }): Observable<any> {
-    return this.http.post<any>(`https://fractionbackend.projexino.com/api/kyc/submit`, kycData, { headers: this.getAuthHeaders() });
+    return this.http.post<any>(`${environment.apiUrl}/kyc/submit`, kycData, { headers: this.getAuthHeaders() });
   }
 
   getMyKycStatus(): Observable<any> {
-    return this.http.get<any>(`https://fractionbackend.projexino.com/api/kyc/my-status`, { headers: this.getAuthHeaders() });
+    return this.http.get<any>(`${environment.apiUrl}/kyc/my-status`, { headers: this.getAuthHeaders() });
   }
 
   // Upload KYC document
@@ -82,6 +83,6 @@ export class UserService {
       'Authorization': `Bearer ${token}`
     });
     
-    return this.http.post<any>(`https://fractionbackend.projexino.com/api/kyc/upload-document`, formData, { headers });
+    return this.http.post<any>(`${environment.apiUrl}/kyc/upload-document`, formData, { headers });
   }
 }

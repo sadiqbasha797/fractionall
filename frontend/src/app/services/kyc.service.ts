@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ConfigService } from './config.service';
 
 // Define interfaces for our data models
 export interface KYC {
@@ -32,9 +33,11 @@ export interface KYCResponse {
   providedIn: 'root'
 })
 export class KycService {
-  private baseUrl = 'http://localhost:5000/api/kyc';
+  private baseUrl: string;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private configService: ConfigService) {
+    this.baseUrl = this.configService.getApiUrl('/kyc');
+  }
 
   // Submit KYC
   submitKyc(kycData: FormData): Observable<KYCResponse> {
