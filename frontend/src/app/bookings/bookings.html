@@ -214,9 +214,9 @@
               <!-- Status Column -->
               <td class="px-6 py-4 whitespace-nowrap">
                 <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize" 
-                      [class.bg-green-100]="booking.status === 'accepted'"
-                      [class.text-green-800]="booking.status === 'accepted'"
-                      [class.bg-red-100]="booking.status === 'rejected'"
+                      [class.status-badge-approved]="booking.status === 'accepted'"
+                      [class.text-green-400]="booking.status === 'accepted'"
+                      [class.bg-red-600/20]="booking.status === 'rejected'"
                       [class.text-red-800]="booking.status === 'rejected'">
                   <i class="fas mr-1" [class.fa-check]="booking.status === 'accepted'" [class.fa-times]="booking.status === 'rejected'"></i>
                   {{ booking.status }}
@@ -331,8 +331,8 @@
             <div>
               <p class="text-sm text-gray-400">Status</p>
               <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
-                    (selectedBooking.status === 'accepted' ? 'bg-green-100 text-green-800' : 
-                     'bg-red-100 text-red-800')">
+                    (selectedBooking.status === 'accepted' ? 'status-badge-approved text-green-400' : 
+                     'status-badge-rejected')">
                 {{ selectedBooking.status }}
               </span>
             </div>
@@ -359,7 +359,7 @@
               <p class="text-sm text-gray-400">{{ getUserEmail(selectedBooking) }}</p>
               <p class="text-sm text-gray-400" *ngIf="typeof selectedBooking.userid === 'object' && selectedBooking.userid.phone">{{ selectedBooking.userid.phone }}</p>
               <div class="mt-2">
-                <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 bg-blue-100 text-blue-800">
+                <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 status-badge-info">
                   User Account
                 </span>
               </div>

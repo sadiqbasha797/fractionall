@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
@@ -36,5 +35,12 @@ const UserSchema = new mongoose.Schema({
   },
   createdAt: { type: Date, default: Date.now }
 });
+
+// Add indexes for better query performance
+UserSchema.index({ isVerified: 1 });
+UserSchema.index({ kycStatus: 1 });
+UserSchema.index({ createdAt: 1 });
+UserSchema.index({ isVerified: 1, createdAt: 1 });
+UserSchema.index({ kycStatus: 1, createdAt: 1 });
 
 module.exports = mongoose.model('User', UserSchema);

@@ -4,7 +4,11 @@ const {
   getDashboardStats,
   getCarDistribution,
   getBookingTrends,
-  getTopPerformingCars
+  getTopPerformingCars,
+  getUserGrowth,
+  getTicketStatusDistribution,
+  getRevenueVsBookings,
+  getContractStatusDistribution
 } = require('../controllers/dashboardController');
 const authMiddleware = require('../middleware/authMiddleware');
 
@@ -31,5 +35,17 @@ router.get('/bookings/trends', getBookingTrends);
 
 // Top performing cars
 router.get('/cars/top-performing', getTopPerformingCars);
+
+// User growth data (monthly for last 6 months)
+router.get('/users/growth', getUserGrowth);
+
+// Ticket status distribution
+router.get('/tickets/status-distribution', getTicketStatusDistribution);
+
+// Revenue vs bookings correlation
+router.get('/revenue/bookings-correlation', getRevenueVsBookings);
+
+// Contract status distribution
+router.get('/contracts/status-distribution', getContractStatusDistribution);
 
 module.exports = router;

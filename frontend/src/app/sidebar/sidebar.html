@@ -90,8 +90,13 @@
             <span class="text-base font-medium">LLP & Purchase</span>
           </a>
 
-          <!-- KYC Requests -->
-          <!-- Removed - KYC functionality is now integrated into User Management -->
+          <!-- Revenue -->
+          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="revenue" [class.bg-gray-800]="isActive('revenue')" [class.text-white]="isActive('revenue')">
+            <svg class="w-7 h-7 mr-3 p-1 rounded border border-amber-500/50 bg-amber-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span class="text-base font-medium">Revenue</span>
+          </a>
 
           <!-- Contact Forms -->
           <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="contact-forms" [class.bg-gray-800]="isActive('contact-forms')" [class.text-white]="isActive('contact-forms')">
@@ -101,6 +106,8 @@
             </svg>
             <span class="text-base font-medium">Contact Forms</span>
           </a>
+
+       
 
           <!-- Manage Content -->
           <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="manage-content" [class.bg-gray-800]="isActive('manage-content')" [class.text-white]="isActive('manage-content')">
@@ -122,7 +129,7 @@
               <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
               <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
             </svg>
-            <span class="text-base font-medium">User & KYC Management</span>
+            <span class="text-base font-medium">User & KYC</span>
           </a>
         </nav>
       </div>

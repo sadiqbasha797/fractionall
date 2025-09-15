@@ -37,6 +37,11 @@ const contractSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Add indexes for better query performance
+contractSchema.index({ createdAt: 1 });
+contractSchema.index({ carid: 1 });
+contractSchema.index({ userid: 1 });
+
 const Contract = mongoose.model('Contract', contractSchema);
 
 module.exports = Contract;

@@ -345,11 +345,11 @@ export class Bookings implements OnInit {
   getStatusBadgeClass(status: string): string {
     switch (status) {
       case 'accepted':
-        return 'bg-green-100 text-green-800';
+        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-approved';
       case 'rejected':
-        return 'bg-red-100 text-red-800';
+        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-rejected';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-inactive';
     }
   }
   
@@ -449,11 +449,11 @@ export class Bookings implements OnInit {
     const status = this.getCarStatus(booking);
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-800';
+        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-approved';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-pending';
       default:
-        return 'bg-red-100 text-red-800';
+        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-rejected';
     }
   }
 

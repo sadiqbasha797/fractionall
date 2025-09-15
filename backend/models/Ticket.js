@@ -18,4 +18,11 @@ const TicketSchema = new mongoose.Schema({
     createdate: { type: Date, default: Date.now }
 });
 
+// Add indexes for better query performance
+TicketSchema.index({ ticketstatus: 1 });
+TicketSchema.index({ createdAt: 1 });
+TicketSchema.index({ carid: 1 });
+TicketSchema.index({ userid: 1 });
+TicketSchema.index({ ticketstatus: 1, createdAt: 1 });
+
 module.exports = mongoose.model('Ticket', TicketSchema);

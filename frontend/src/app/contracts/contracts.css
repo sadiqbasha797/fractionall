@@ -30,15 +30,15 @@
 
 /* Status badge styling */
 .status-badge[data-status=\"active\"] {
-  @apply bg-green-100 text-green-800;
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-approved;
 }
 
 .status-badge[data-status=\"pending\"] {
-  @apply bg-yellow-100 text-yellow-800;
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-pending;
 }
 
 .status-badge[data-status=\"cancelled\"] {
-  @apply bg-red-100 text-red-800;
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-rejected;
 }
 
 /* Dark theme status badges */

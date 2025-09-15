@@ -57,6 +57,12 @@ const ContactFormSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
+// Add indexes for better query performance
+ContactFormSchema.index({ status: 1 });
+ContactFormSchema.index({ priority: 1 });
+ContactFormSchema.index({ createdAt: 1 });
+ContactFormSchema.index({ status: 1, createdAt: 1 });
+
 // Update the updatedAt field before saving
 ContactFormSchema.pre('save', function(next) {
   this.updatedAt = new Date();

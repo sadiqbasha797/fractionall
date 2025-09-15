@@ -96,7 +96,6 @@ export class Notifications implements OnInit, OnDestroy {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading notifications:', error);
         this.showToast('Failed to load notifications', 'error');
         this.isLoading = false;
       }
@@ -114,7 +113,6 @@ export class Notifications implements OnInit, OnDestroy {
         }
       },
       error: (error) => {
-        console.error('Error loading stats:', error);
       }
     });
   }
@@ -146,7 +144,6 @@ export class Notifications implements OnInit, OnDestroy {
         }
       },
       error: (error) => {
-        console.error('Error marking notification as read:', error);
         this.showToast('Failed to mark notification as read', 'error');
       }
     });
@@ -168,7 +165,6 @@ export class Notifications implements OnInit, OnDestroy {
         }
       },
       error: (error) => {
-        console.error('Error marking all notifications as read:', error);
         this.showToast('Failed to mark all notifications as read', 'error');
       }
     });
@@ -193,7 +189,6 @@ export class Notifications implements OnInit, OnDestroy {
         }
       },
       error: (error) => {
-        console.error('Error deleting notification:', error);
         this.showToast('Failed to delete notification', 'error');
       }
     });
@@ -220,7 +215,6 @@ export class Notifications implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          console.error('Auto-refresh error:', error);
         }
       });
   }

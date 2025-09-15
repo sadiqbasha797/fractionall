@@ -136,7 +136,6 @@ export class ApiSwitcherComponent implements OnInit {
 
   private showNotification(message: string) {
     // Simple notification - you can replace this with a proper notification service
-    console.log(message);
     // You could also use a toast notification library here
   }
 }

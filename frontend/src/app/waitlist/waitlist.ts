@@ -92,16 +92,13 @@ export class Waitlist implements OnInit {
   getTokens(): void {
     this.tokenService.getTokens().subscribe({
       next: (response) => {
-        console.log('Tokens response:', response);
         if (response.status === 'success') {
           this.tokens = response.body.tokens || [];
           this.filteredTokens = [...this.tokens];
         } else {
-          console.error('Failed to get tokens:', response.message);
         }
       },
       error: (error) => {
-        console.error('Error getting tokens:', error);
       }
     });
   }
@@ -109,16 +106,12 @@ export class Waitlist implements OnInit {
   getUsers(): void {
     this.userService.getUsers().subscribe({
       next: (response: any) => {
-        console.log('Users response:', response);
         if (response.status === 'success') {
           this.users = response.body.users;
-          console.log('Users loaded:', this.users);
         } else {
-          console.error('Failed to get users:', response.message);
         }
       },
       error: (error) => {
-        console.error('Error getting users:', error);
       }
     });
   }
@@ -156,7 +149,6 @@ export class Waitlist implements OnInit {
           description: car.description || ''
         }));
       } else {
-        console.error('Failed to get cars:', response.message);
       }
     });
   }
@@ -457,7 +449,6 @@ export class Waitlist implements OnInit {
         });
       }
     } catch (error) {
-      console.error('Error in delete confirmation:', error);
     }
   }
 

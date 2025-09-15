@@ -37,6 +37,13 @@ const bookNowTokenSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Add indexes for better query performance
+bookNowTokenSchema.index({ status: 1 });
+bookNowTokenSchema.index({ createdAt: 1 });
+bookNowTokenSchema.index({ carid: 1 });
+bookNowTokenSchema.index({ userid: 1 });
+bookNowTokenSchema.index({ status: 1, createdAt: 1 });
+
 const BookNowToken = mongoose.model('BookNowToken', bookNowTokenSchema);
 
 module.exports = BookNowToken;

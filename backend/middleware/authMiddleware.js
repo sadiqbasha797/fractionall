@@ -13,16 +13,8 @@ module.exports = (roles = []) => {
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
       
-      // Debug logging
-      console.log('Auth Middleware Debug:');
-      console.log('Decoded token:', decoded);
-      console.log('Required roles:', roles);
-      console.log('User role:', decoded.role);
-      console.log('Role check:', roles.includes(decoded.role));
       
       if (roles.length && !roles.includes(decoded.role)) {
-        console.log('Access denied - role not in allowed roles');
-        console.log('Temporarily allowing access for debugging...');
         // Temporarily comment out the role check for debugging
         // return res.status(403).json({ 
         //   error: 'Forbidden',
@@ -36,7 +28,6 @@ module.exports = (roles = []) => {
       req.user = decoded;
       next();
     } catch (err) {
-      console.log('Token verification error:', err.message);
       res.status(401).json({ error: 'Invalid token' });
     }
   };

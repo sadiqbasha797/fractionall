@@ -1,0 +1,242 @@
+<div class="revenue-container">
+  <div class="page-header">
+    <h1 class="page-title">Revenue Dashboard</h1>
+    <div class="page-actions">
+      <button class="refresh-btn" (click)="refreshData()">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        Refresh
+      </button>
+      <button class="export-btn" (click)="exportData()">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Export
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading revenue data...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="hasError && !isLoading" class="error-container">
+    <div class="error-content">
+      <svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <h3 class="error-title">Error Loading Data</h3>
+      <p class="error-message">{{ errorMessage }}</p>
+      <button class="retry-btn" (click)="refreshData()">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        Try Again
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!isLoading && !hasError" class="revenue-content">
+    <!-- Revenue Overview Cards -->
+    <div class="revenue-overview-grid">
+      <div class="revenue-card">
+        <div class="revenue-card-header">
+          <div class="revenue-icon bg-blue-500/20 text-blue-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="revenue-card-title">Tickets Revenue</h3>
+            <p class="revenue-card-value">{{ formatCurrency(ticketsRevenue) }}</p>
+          </div>
+        </div>
+        <div class="revenue-card-footer">
+          <span class="revenue-source">From {{ totalTickets }} tickets</span>
+        </div>
+      </div>
+
+      <div class="revenue-card">
+        <div class="revenue-card-header">
+          <div class="revenue-icon bg-green-500/20 text-green-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="revenue-card-title">AMC Revenue</h3>
+            <p class="revenue-card-value">{{ formatCurrency(amcRevenue) }}</p>
+          </div>
+        </div>
+        <div class="revenue-card-footer">
+          <span class="revenue-source">From {{ totalAmcs }} AMC contracts</span>
+        </div>
+      </div>
+
+      <div class="revenue-card">
+        <div class="revenue-card-header">
+          <div class="revenue-icon bg-yellow-500/20 text-yellow-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="revenue-card-title">Waitlist Tokens</h3>
+            <p class="revenue-card-value">{{ formatCurrency(waitlistTokensRevenue) }}</p>
+          </div>
+        </div>
+        <div class="revenue-card-footer">
+          <span class="revenue-source">From {{ totalWaitlistTokens }} tokens</span>
+        </div>
+      </div>
+
+      <div class="revenue-card">
+        <div class="revenue-card-header">
+          <div class="revenue-icon bg-purple-500/20 text-purple-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="revenue-card-title">Book Now Tokens</h3>
+            <p class="revenue-card-value">{{ formatCurrency(bookNowTokensRevenue) }}</p>
+          </div>
+        </div>
+        <div class="revenue-card-footer">
+          <span class="revenue-source">From {{ totalBookNowTokens }} tokens</span>
+        </div>
+      </div>
+
+      <div class="revenue-card total-revenue-card">
+        <div class="revenue-card-header">
+          <div class="revenue-icon bg-amber-500/20 text-amber-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="revenue-card-title">Total Revenue</h3>
+            <p class="revenue-card-value total-value">{{ formatCurrency(totalRevenue) }}</p>
+          </div>
+        </div>
+        <div class="revenue-card-footer">
+          <span class="revenue-source">All sources combined</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revenue Breakdown Chart -->
+    <div class="revenue-section">
+      <div class="section-header">
+        <h2 class="section-title">Revenue Breakdown</h2>
+      </div>
+      <div class="revenue-chart-container">
+        <div class="revenue-chart">
+          <div class="chart-bar">
+            <div class="chart-label">Tickets</div>
+            <div class="chart-bar-container">
+              <div class="chart-bar-fill bg-blue-500" [style.width.%]="getPercentage(ticketsRevenue, totalRevenue)"></div>
+            </div>
+            <div class="chart-value">{{ formatCurrency(ticketsRevenue) }}</div>
+          </div>
+          
+          <div class="chart-bar">
+            <div class="chart-label">AMC</div>
+            <div class="chart-bar-container">
+              <div class="chart-bar-fill bg-green-500" [style.width.%]="getPercentage(amcRevenue, totalRevenue)"></div>
+            </div>
+            <div class="chart-value">{{ formatCurrency(amcRevenue) }}</div>
+          </div>
+          
+          <div class="chart-bar">
+            <div class="chart-label">Waitlist Tokens</div>
+            <div class="chart-bar-container">
+              <div class="chart-bar-fill bg-yellow-500" [style.width.%]="getPercentage(waitlistTokensRevenue, totalRevenue)"></div>
+            </div>
+            <div class="chart-value">{{ formatCurrency(waitlistTokensRevenue) }}</div>
+          </div>
+          
+          <div class="chart-bar">
+            <div class="chart-label">Book Now Tokens</div>
+            <div class="chart-bar-container">
+              <div class="chart-bar-fill bg-purple-500" [style.width.%]="getPercentage(bookNowTokensRevenue, totalRevenue)"></div>
+            </div>
+            <div class="chart-value">{{ formatCurrency(bookNowTokensRevenue) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revenue by Car -->
+    <div class="revenue-section">
+      <div class="section-header">
+        <h2 class="section-title">Revenue by Car</h2>
+        <div class="section-actions">
+          <input 
+            type="text" 
+            [(ngModel)]="searchTerm" 
+            (input)="onSearchChange()" 
+            placeholder="Search cars..." 
+            class="search-input">
+        </div>
+      </div>
+      
+      <div class="revenue-table-container">
+        <table class="revenue-table">
+          <thead>
+            <tr>
+              <th>Car</th>
+              <th>Brand</th>
+              <th>Tickets</th>
+              <th>AMC</th>
+              <th>Waitlist Tokens</th>
+              <th>Book Now Tokens</th>
+              <th>Total Revenue</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let carRevenue of getFilteredCarRevenues()">
+              <td>
+                <div class="car-info">
+                  <img [src]="carRevenue.car.images[0] || '/placeholder-car.png'" [alt]="carRevenue.car.carname" class="car-image">
+                  <span class="car-name">{{ carRevenue.car.carname }}</span>
+                </div>
+              </td>
+              <td>{{ carRevenue.car.brandname }}</td>
+              <td>{{ formatCurrency(carRevenue.ticketsRevenue) }}</td>
+              <td>{{ formatCurrency(carRevenue.amcRevenue) }}</td>
+              <td>{{ formatCurrency(carRevenue.waitlistTokensRevenue) }}</td>
+              <td>{{ formatCurrency(carRevenue.bookNowTokensRevenue) }}</td>
+              <td class="total-revenue-cell">{{ formatCurrency(carRevenue.totalRevenue) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="pagination-container" *ngIf="totalPages > 1">
+        <button 
+          class="pagination-btn" 
+          [disabled]="currentPage === 1"
+          (click)="previousPage()">
+          Previous
+        </button>
+        
+        <span class="pagination-info">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
+        
+        <button 
+          class="pagination-btn" 
+          [disabled]="currentPage === totalPages"
+          (click)="nextPage()">
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

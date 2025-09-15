@@ -17,6 +17,7 @@ import { ContractService } from './services/contract.service';
 import { AmcService } from './services/amc.service';
 import { UserService } from './services/user.service';
 import { BookingService } from './services/booking.service';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -25,6 +26,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor]), withFetch()),
     provideClientHydration(withEventReplay()),
+    provideCharts(withDefaultRegisterables()),
     AuthService,
     AuthGuard,
     CarService,

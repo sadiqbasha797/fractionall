@@ -501,12 +501,12 @@ export class Users implements OnInit {
   getKycStatusClass(status: string | undefined): string {
     switch (status) {
       case 'approved':
-        return 'bg-green-100 text-green-800';
+        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-approved';
       case 'rejected':
-        return 'bg-red-100 text-red-800';
+        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-rejected';
       case 'pending':
       default:
-        return 'bg-yellow-100 text-yellow-800';
+        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-pending';
     }
   }
   

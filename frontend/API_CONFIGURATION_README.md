@@ -1,6 +1,6 @@
 # API Configuration Guide
 
-This guide explains how to configure the frontend to use different API endpoints (localhost vs production).
+This guide explains the API configuration for the frontend. The application is now configured to use the production API endpoint.
 
 ## Configuration Files
 
@@ -17,52 +17,44 @@ The `ConfigService` (`src/app/services/config.service.ts`) handles API URL manag
 - Check if using production API
 - Switch between APIs dynamically
 
-## How to Switch APIs
+## API Configuration
 
-### Method 1: Environment Configuration (Recommended)
+### Current Configuration
 
-#### For Development (localhost):
+The application is configured to use the production API endpoint:
+
+#### Development Environment:
 ```typescript
 // src/environments/environment.ts
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5000/api',
+  apiUrl: 'https://fractionbackend.projexino.com/api',
   productionApiUrl: 'https://fractionbackend.projexino.com/api',
-  useProductionApi: false // Set to false for localhost
+  useProductionApi: true // Always use production API
 };
 ```
 
-#### For Production:
+#### Production Environment:
 ```typescript
 // src/environments/environment.prod.ts
 export const environment = {
   production: true,
   apiUrl: 'https://fractionbackend.projexino.com/api',
   productionApiUrl: 'https://fractionbackend.projexino.com/api',
-  useProductionApi: true // Always true in production
+  useProductionApi: true // Always use production API
 };
 ```
 
-### Method 2: Dynamic Switching (For Testing)
+### ConfigService Usage
 
-You can also switch APIs dynamically in your components:
+The `ConfigService` provides methods to get API URLs:
 
 ```typescript
 import { ConfigService } from './services/config.service';
 
 constructor(private configService: ConfigService) {}
 
-// Switch to production API
-switchToProduction() {
-  this.configService.switchApiUrl(true);
-}
-
-// Switch to localhost API
-switchToLocalhost() {
-  this.configService.switchApiUrl(false);
-}
-
-// Check current API
+// Get current API base URL
 getCurrentApi() {
   return this.configService.getBaseUrl();
 }
@@ -84,26 +76,27 @@ All services now use the ConfigService and support both APIs:
 - **TicketService**: `/tickets`
 - **BookNowTokenService**: `/book-now-tokens`
 
-## Building for Different Environments
+## Building the Application
 
-### Development Build (localhost):
+### Development Build:
 ```bash
 ng build
 # or
 ng serve
 ```
 
-### Production Build (production API):
+### Production Build:
 ```bash
 ng build --configuration=production
 ```
 
+Both builds now use the production API endpoint.
+
 ## Testing API Connectivity
 
-You can test if the APIs are working by checking the health endpoints:
+You can test if the API is working by checking the health endpoint:
 
-- **Localhost**: `http://localhost:5000/api/health` (if available)
-- **Production**: `https://fractionbackend.projexino.com/api/health` (if available)
+- **Production API**: `https://fractionbackend.projexino.com/api/health` (if available)
 
 ## Troubleshooting
 

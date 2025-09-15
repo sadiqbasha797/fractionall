@@ -213,7 +213,7 @@
                   <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize status-badge" [attr.data-status]="ticket.ticketstatus">
                     {{ ticket.ticketstatus }}
                   </span>
-                  <span *ngIf="ticket.resold" class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-800">
+                  <span *ngIf="ticket.resold" class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium status-badge-special">
                     <i class="fas fa-exchange-alt mr-1"></i>
                     Resold
                   </span>
@@ -455,9 +455,9 @@
             <div>
               <p class="text-sm text-gray-400">Status</p>
               <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
-                    (selectedTicket.ticketstatus === 'active' ? 'bg-green-100 text-green-800' : 
-                     selectedTicket.ticketstatus === 'expired' ? 'bg-red-100 text-red-800' : 
-                     'bg-gray-100 text-gray-800')">
+                    (selectedTicket.ticketstatus === 'active' ? 'status-badge-approved' : 
+                     selectedTicket.ticketstatus === 'expired' ? 'status-badge-rejected' : 
+                     'status-badge-inactive')">
                 {{ selectedTicket.ticketstatus }}
               </span>
             </div>
@@ -472,7 +472,7 @@
             <div>
               <p class="text-sm text-gray-400">Resold</p>
               <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
-                    (selectedTicket.resold ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800')">
+                    (selectedTicket.resold ? 'status-badge-special' : 'status-badge-inactive')">
                 {{ selectedTicket.resold ? 'Yes' : 'No' }}
               </span>
             </div>
@@ -528,9 +528,9 @@
               <p class="text-sm text-gray-400" *ngIf="getUser(selectedTicket).phone">{{ getUser(selectedTicket).phone }}</p>
               <div class="mt-2">
                 <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
-                      (getUser(selectedTicket).kycStatus === 'approved' ? 'bg-green-100 text-green-800' : 
-                       getUser(selectedTicket).kycStatus === 'rejected' ? 'bg-red-100 text-red-800' : 
-                       'bg-yellow-100 text-yellow-800')">
+                      (getUser(selectedTicket).kycStatus === 'approved' ? 'status-badge-approved' : 
+                       getUser(selectedTicket).kycStatus === 'rejected' ? 'status-badge-rejected' : 
+                       'status-badge-pending')">
                   KYC: {{ getUser(selectedTicket).kycStatus }}
                 </span>
               </div>
@@ -564,9 +564,9 @@
               <p class="text-sm text-gray-400">{{ getCar(selectedTicket).color }} • {{ getCar(selectedTicket).seating }} seats</p>
               <div class="mt-2">
                 <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
-                      (getCar(selectedTicket).status === 'active' ? 'bg-green-100 text-green-800' : 
-                       getCar(selectedTicket).status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                       'bg-red-100 text-red-800')">
+                      (getCar(selectedTicket).status === 'active' ? 'status-badge-approved' : 
+                       getCar(selectedTicket).status === 'pending' ? 'status-badge-pending' : 
+                       'status-badge-rejected')">
                   {{ getCar(selectedTicket).status }}
                 </span>
               </div>

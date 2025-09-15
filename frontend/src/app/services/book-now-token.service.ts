@@ -92,7 +92,6 @@ export class BookNowTokenService {
     const token = localStorage.getItem('token');
     
     if (!token) {
-      console.error('No token found in localStorage');
       return new HttpHeaders({
         'Content-Type': 'application/json'
       });

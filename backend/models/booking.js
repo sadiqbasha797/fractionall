@@ -40,4 +40,11 @@ const bookingSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Add indexes for better query performance
+bookingSchema.index({ status: 1 });
+bookingSchema.index({ createdAt: 1 });
+bookingSchema.index({ carid: 1 });
+bookingSchema.index({ userid: 1 });
+bookingSchema.index({ status: 1, createdAt: 1 });
+
 module.exports = mongoose.model('Booking', bookingSchema);

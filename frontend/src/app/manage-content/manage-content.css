@@ -25,3 +25,53 @@
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Responsive utilities */
+@media (max-width: 480px) {
+  .xs\:hidden {
+    display: none;
+  }
+  
+  .xs\:inline {
+    display: inline;
+  }
+}
+
+/* Mobile-first responsive design improvements */
+@media (max-width: 640px) {
+  /* Ensure forms don't overflow on mobile */
+  .form-input {
+    min-width: 0;
+    width: 100%;
+  }
+  
+  /* Better button spacing on mobile */
+  .mobile-button-stack {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .mobile-button-stack > * {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Improved touch targets for mobile */
+@media (max-width: 768px) {
+  button, .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better spacing for mobile lists */
+  .mobile-list-item {
+    padding: 1rem;
+  }
+  
+  .mobile-list-item .actions {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(75, 85, 99, 0.3);
+  }
+}

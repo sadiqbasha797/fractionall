@@ -15,4 +15,9 @@ const AMCSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+// Add indexes for better query performance
+AMCSchema.index({ createdAt: 1 });
+AMCSchema.index({ carid: 1 });
+AMCSchema.index({ userid: 1 });
+
 module.exports = mongoose.model('AMC', AMCSchema);

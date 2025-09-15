@@ -37,6 +37,13 @@ const tokenSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Add indexes for better query performance
+tokenSchema.index({ status: 1 });
+tokenSchema.index({ createdAt: 1 });
+tokenSchema.index({ carid: 1 });
+tokenSchema.index({ userid: 1 });
+tokenSchema.index({ status: 1, createdAt: 1 });
+
 const Token = mongoose.model('Token', tokenSchema);
 
 module.exports = Token;

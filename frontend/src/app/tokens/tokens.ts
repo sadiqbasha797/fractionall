@@ -143,11 +143,9 @@ export class Tokens implements OnInit {
           this.tokens = response.body.tokens || [];
           this.filteredTokens = [...this.tokens];
         } else {
-          console.error('Failed to get tokens:', response.message);
         }
       },
       error: (error) => {
-        console.error('Error getting tokens:', error);
       }
     });
   }
@@ -159,7 +157,6 @@ export class Tokens implements OnInit {
         this.filteredBookNowTokens = [...this.bookNowTokens];
       },
       error: (error) => {
-        console.error('Error fetching book now tokens:', error);
       }
     });
   }
@@ -170,11 +167,9 @@ export class Tokens implements OnInit {
         if (response.status === 'success') {
           this.users = response.body.users;
         } else {
-          console.error('Failed to get users:', response.message);
         }
       },
       error: (error) => {
-        console.error('Error getting users:', error);
       }
     });
   }
@@ -212,7 +207,6 @@ export class Tokens implements OnInit {
           description: car.description || ''
         }));
       } else {
-        console.error('Failed to get cars:', response.message);
       }
     });
   }
@@ -640,7 +634,6 @@ export class Tokens implements OnInit {
         });
       }
     } catch (error) {
-      console.error('Error in delete confirmation:', error);
     }
   }
 
@@ -707,7 +700,6 @@ export class Tokens implements OnInit {
         });
       }
     } catch (error) {
-      console.error('Error in delete confirmation:', error);
     }
   }
 

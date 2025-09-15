@@ -11,161 +11,104 @@ const ContactForm = require('../models/ContactForm');
 // Get dashboard statistics
 const getDashboardStats = async (req, res) => {
   try {
-    console.log('📊 Dashboard stats request received');
-    console.log('📊 Checking database connection...');
-    
-    // Simple test query first
-    try {
-      const testCount = await Car.countDocuments();
-      console.log('✅ Car model connection test passed, found:', testCount, 'cars');
-    } catch (dbError) {
-      console.error('❌ Database connection failed:', dbError.message);
-      return res.status(500).json({
-        success: false,
-        message: 'Database connection failed',
-        error: dbError.message
-      });
-    }
     
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
 
-    console.log('📊 Starting data collection...');
 
-    // Car Statistics
-    console.log('📊 Fetching car statistics...');
-    const totalCars = await Car.countDocuments();
-    const activeCars = await Car.countDocuments({ status: 'active' });
-    const pendingCars = await Car.countDocuments({ status: 'pending' });
-    const carsThisMonth = await Car.countDocuments({ 
-      createdAt: { $gte: startOfMonth } 
-    });
-    console.log('✅ Car stats:', { totalCars, activeCars, pendingCars, carsThisMonth });
-
-    // User Statistics
-    console.log('📊 Fetching user statistics...');
-    const totalUsers = await User.countDocuments();
-    const verifiedUsers = await User.countDocuments({ isVerified: true });
-    const kycApprovedUsers = await User.countDocuments({ kycStatus: 'approved' });
-    const usersThisMonth = await User.countDocuments({ 
-      createdAt: { $gte: startOfMonth } 
-    });
-    console.log('✅ User stats:', { totalUsers, verifiedUsers, kycApprovedUsers, usersThisMonth });
-
-    // Booking Statistics
-    console.log('📊 Fetching booking statistics...');
-    const totalBookings = await Booking.countDocuments();
-    const activeBookings = await Booking.countDocuments({ status: 'active' });
-    const completedBookings = await Booking.countDocuments({ status: 'completed' });
-    const bookingsThisMonth = await Booking.countDocuments({ 
-      createdAt: { $gte: startOfMonth } 
-    });
-    const bookingsThisWeek = await Booking.countDocuments({ 
-      createdAt: { $gte: startOfWeek } 
-    });
-    console.log('✅ Booking stats:', { totalBookings, activeBookings, completedBookings });
-
-    // AMC Statistics
-    console.log('📊 Fetching AMC statistics...');
-    const totalAmcs = await AMC.countDocuments();
-    const activeAmcs = await AMC.countDocuments({ status: 'active' });
-    const expiredAmcs = await AMC.countDocuments({ status: 'expired' });
-    const amcsThisMonth = await AMC.countDocuments({ 
-      createdAt: { $gte: startOfMonth } 
-    });
-    console.log('✅ AMC stats:', { totalAmcs, activeAmcs, expiredAmcs });
-
-    // Ticket Statistics
-    console.log('📊 Fetching ticket statistics...');
-    const totalTickets = await Ticket.countDocuments();
-    const openTickets = await Ticket.countDocuments({ status: 'open' });
-    const closedTickets = await Ticket.countDocuments({ status: 'closed' });
-    const ticketsThisWeek = await Ticket.countDocuments({ 
-      createdAt: { $gte: startOfWeek } 
-    });
-    console.log('✅ Ticket stats:', { totalTickets, openTickets, closedTickets });
-
-    // Token Statistics
-    console.log('📊 Fetching token statistics...');
-    const totalTokens = await Token.countDocuments();
-    const tokensThisMonth = await Token.countDocuments({ 
-      createdAt: { $gte: startOfMonth } 
-    });
-    
-    const totalBookNowTokens = await BookNowToken.countDocuments();
-    const bookNowTokensThisMonth = await BookNowToken.countDocuments({ 
-      createdAt: { $gte: startOfMonth } 
-    });
-    console.log('✅ Token stats:', { totalTokens, totalBookNowTokens });
-
-    // Contract Statistics
-    console.log('📊 Fetching contract statistics...');
-    const totalContracts = await Contract.countDocuments();
-    const activeContracts = await Contract.countDocuments({ status: 'active' });
-    const contractsThisMonth = await Contract.countDocuments({ 
-      createdAt: { $gte: startOfMonth } 
-    });
-    console.log('✅ Contract stats:', { totalContracts, activeContracts });
-
-    // Contact Form Statistics
-    console.log('📊 Fetching contact form statistics...');
-    const totalContactForms = await ContactForm.countDocuments();
-    const unreadContactForms = await ContactForm.countDocuments({ status: 'pending' });
-    console.log('✅ Contact form stats:', { totalContactForms, unreadContactForms });
-
-    // Revenue Statistics
-    console.log('📊 Fetching revenue statistics...');
-    
-    // Ticket Revenue - use pricepaid field
-    const ticketRevenue = await Ticket.aggregate([
-      { $group: { _id: null, total: { $sum: '$pricepaid' } } }
+    // Execute all count queries in parallel
+    const [
+      totalCars, activeCars, pendingCars, carsThisMonth,
+      totalUsers, verifiedUsers, kycApprovedUsers, usersThisMonth,
+      totalBookings, activeBookings, completedBookings, bookingsThisMonth, bookingsThisWeek,
+      totalAmcs, activeAmcs, expiredAmcs, amcsThisMonth,
+      totalTickets, openTickets, closedTickets, ticketsThisWeek,
+      totalTokens, tokensThisMonth,
+      totalBookNowTokens, bookNowTokensThisMonth,
+      totalContracts, activeContracts, contractsThisMonth,
+      totalContactForms, unreadContactForms
+    ] = await Promise.all([
+      Car.countDocuments(),
+      Car.countDocuments({ status: 'active' }),
+      Car.countDocuments({ status: 'pending' }),
+      Car.countDocuments({ createdAt: { $gte: startOfMonth } }),
+      
+      User.countDocuments(),
+      User.countDocuments({ isVerified: true }),
+      User.countDocuments({ kycStatus: 'approved' }),
+      User.countDocuments({ createdAt: { $gte: startOfMonth } }),
+      
+      Booking.countDocuments(),
+      Booking.countDocuments({ status: 'active' }),
+      Booking.countDocuments({ status: 'completed' }),
+      Booking.countDocuments({ createdAt: { $gte: startOfMonth } }),
+      Booking.countDocuments({ createdAt: { $gte: startOfWeek } }),
+      
+      AMC.countDocuments(),
+      AMC.countDocuments({ status: 'active' }),
+      AMC.countDocuments({ status: 'expired' }),
+      AMC.countDocuments({ createdAt: { $gte: startOfMonth } }),
+      
+      Ticket.countDocuments(),
+      Ticket.countDocuments({ status: 'open' }),
+      Ticket.countDocuments({ status: 'closed' }),
+      Ticket.countDocuments({ createdAt: { $gte: startOfWeek } }),
+      
+      Token.countDocuments(),
+      Token.countDocuments({ createdAt: { $gte: startOfMonth } }),
+      
+      BookNowToken.countDocuments(),
+      BookNowToken.countDocuments({ createdAt: { $gte: startOfMonth } }),
+      
+      Contract.countDocuments(),
+      Contract.countDocuments({ status: 'active' }),
+      Contract.countDocuments({ createdAt: { $gte: startOfMonth } }),
+      
+      ContactForm.countDocuments(),
+      ContactForm.countDocuments({ status: 'pending' })
     ]);
 
-    // AMC Revenue - sum all paid amounts from amcamount array
-    const amcRevenue = await AMC.aggregate([
-      { $unwind: '$amcamount' },
-      { $match: { 'amcamount.paid': true } },
-      { $group: { _id: null, total: { $sum: '$amcamount.amount' } } }
+
+    // Execute all revenue queries in parallel
+    const [ticketRevenue, amcRevenue, tokenRevenue, bookNowTokenRevenue] = await Promise.all([
+      Ticket.aggregate([
+        { $group: { _id: null, total: { $sum: '$pricepaid' } } }
+      ]),
+      AMC.aggregate([
+        { $unwind: '$amcamount' },
+        { $match: { 'amcamount.paid': true } },
+        { $group: { _id: null, total: { $sum: '$amcamount.amount' } } }
+      ]),
+      Token.aggregate([
+        { $group: { _id: null, total: { $sum: '$amountpaid' } } }
+      ]),
+      BookNowToken.aggregate([
+        { $group: { _id: null, total: { $sum: '$amountpaid' } } }
+      ])
     ]);
 
-    // Token Revenue - use amountpaid field
-    const tokenRevenue = await Token.aggregate([
-      { $group: { _id: null, total: { $sum: '$amountpaid' } } }
-    ]);
-
-    // BookNowToken Revenue - use amountpaid field
-    const bookNowTokenRevenue = await BookNowToken.aggregate([
-      { $group: { _id: null, total: { $sum: '$amountpaid' } } }
-    ]);
 
     const totalRevenue = (ticketRevenue[0]?.total || 0) + 
                         (amcRevenue[0]?.total || 0) + 
                         (tokenRevenue[0]?.total || 0) + 
                         (bookNowTokenRevenue[0]?.total || 0);
-    
-    console.log('💰 Revenue breakdown:');
-    console.log('  Tickets:', ticketRevenue[0]?.total || 0);
-    console.log('  AMC:', amcRevenue[0]?.total || 0);
-    console.log('  Tokens:', tokenRevenue[0]?.total || 0);
-    console.log('  BookNow Tokens:', bookNowTokenRevenue[0]?.total || 0);
-    console.log('✅ Total Revenue calculated:', totalRevenue);
 
-    // Recent Activity
-    console.log('📊 Fetching recent activity...');
-    const recentBookings = await Booking.find()
-      .populate('userid', 'name email')
-      .populate('carid', 'carname brand')
-      .sort({ createdAt: -1 })
-      .limit(5);
+    // Execute recent activity queries in parallel
+    const [recentBookings, recentTickets] = await Promise.all([
+      Booking.find()
+        .populate('userid', 'name email')
+        .populate('carid', 'carname brand')
+        .sort({ createdAt: -1 })
+        .limit(5),
+      Ticket.find()
+        .populate('userid', 'name email')
+        .sort({ createdAt: -1 })
+        .limit(5)
+    ]);
 
-    const recentTickets = await Ticket.find()
-      .populate('userid', 'name email')
-      .sort({ createdAt: -1 })
-      .limit(5);
-    console.log('✅ Recent activity fetched:', { bookingsCount: recentBookings.length, ticketsCount: recentTickets.length });
 
-    console.log('✅ All data collected successfully, sending response...');
     res.json({
       success: true,
       data: {
@@ -221,10 +164,7 @@ const getDashboardStats = async (req, res) => {
         }
       }
     });
-    console.log('✅ Response sent successfully!');
   } catch (error) {
-    console.error('🔥 Dashboard stats error:', error);
-    console.error('🔥 Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch dashboard statistics',
@@ -240,7 +180,7 @@ const getCarDistribution = async (req, res) => {
     const carDistribution = await Car.aggregate([
       {
         $group: {
-          _id: '$brand',
+          _id: '$brandname',  // Changed from '$brand' to '$brandname' to match the schema
           count: { $sum: 1 },
           active: {
             $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] }
@@ -258,7 +198,6 @@ const getCarDistribution = async (req, res) => {
       data: carDistribution
     });
   } catch (error) {
-    console.error('Car distribution error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch car distribution',
@@ -298,7 +237,6 @@ const getBookingTrends = async (req, res) => {
       data: bookingTrends
     });
   } catch (error) {
-    console.error('Booking trends error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch booking trends',
@@ -330,7 +268,7 @@ const getTopPerformingCars = async (req, res) => {
       {
         $project: {
           carname: '$car.carname',
-          brand: '$car.brand',
+          brand: '$car.brandname',  // Changed from '$car.brand' to '$car.brandname'
           totalBookings: 1,
           totalRevenue: 1,
           image: { $arrayElemAt: ['$car.images', 0] }
@@ -345,10 +283,154 @@ const getTopPerformingCars = async (req, res) => {
       data: topCars
     });
   } catch (error) {
-    console.error('Top performing cars error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch top performing cars',
+      error: error.message
+    });
+  }
+};
+
+// Get user growth data (monthly for the last 6 months)
+const getUserGrowth = async (req, res) => {
+  try {
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const userGrowth = await User.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: sixMonthsAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { '_id.year': 1, '_id.month': 1 }
+      }
+    ]);
+
+    // Format the data for the frontend
+    const formattedData = userGrowth.map(item => ({
+      date: `${item._id.year}-${item._id.month}`,
+      count: item.count
+    }));
+
+    res.json({
+      success: true,
+      data: formattedData
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch user growth data',
+      error: error.message
+    });
+  }
+};
+
+// Get ticket status distribution
+const getTicketStatusDistribution = async (req, res) => {
+  try {
+    const ticketStatus = await Ticket.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { count: -1 }
+      }
+    ]);
+
+    // Format the data for the frontend
+    const formattedData = ticketStatus.map(item => ({
+      status: item._id,
+      count: item.count
+    }));
+
+    res.json({
+      success: true,
+      data: formattedData
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch ticket status distribution',
+      error: error.message
+    });
+  }
+};
+
+// Get revenue vs bookings correlation data
+const getRevenueVsBookings = async (req, res) => {
+  try {
+    const revenueVsBookings = await Booking.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalBookings: { $sum: 1 },
+          totalRevenue: { $sum: '$amount' }
+        }
+      }
+    ]);
+
+    // For a more detailed correlation, we could group by month or car
+    // For now, we'll return a simple data point
+    const data = revenueVsBookings.length > 0 ? 
+      [{ bookings: revenueVsBookings[0].totalBookings, revenue: revenueVsBookings[0].totalRevenue }] : 
+      [];
+
+    res.json({
+      success: true,
+      data: data
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch revenue vs bookings data',
+      error: error.message
+    });
+  }
+};
+
+// Get contract status distribution
+const getContractStatusDistribution = async (req, res) => {
+  try {
+    const contractStatus = await Contract.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { count: -1 }
+      }
+    ]);
+
+    // Format the data for the frontend
+    const formattedData = contractStatus.map(item => ({
+      status: item._id,
+      count: item.count
+    }));
+
+    res.json({
+      success: true,
+      data: formattedData
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch contract status distribution',
       error: error.message
     });
   }
@@ -358,5 +440,9 @@ module.exports = {
   getDashboardStats,
   getCarDistribution,
   getBookingTrends,
-  getTopPerformingCars
+  getTopPerformingCars,
+  getUserGrowth,
+  getTicketStatusDistribution,
+  getRevenueVsBookings,
+  getContractStatusDistribution
 };

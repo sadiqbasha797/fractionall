@@ -95,7 +95,6 @@ export class Tickets implements OnInit {
         this.tickets = response.body.tickets;
         this.filteredTickets = [...this.tickets];
       } else {
-        console.error('Failed to get tickets:', response.message);
       }
     });
   }
@@ -103,16 +102,12 @@ export class Tickets implements OnInit {
   getUsers(): void {
     this.userService.getUsers().subscribe({
       next: (response: any) => {
-        console.log('Users response:', response);
         if (response.status === 'success') {
           this.users = response.body.users;
-          console.log('Users loaded:', this.users);
         } else {
-          console.error('Failed to get users:', response.message);
         }
       },
       error: (error) => {
-        console.error('Error getting users:', error);
       }
     });
   }
@@ -140,7 +135,6 @@ export class Tickets implements OnInit {
           updatedAt: car.updatedAt || ''
         }));
       } else {
-        console.error('Failed to get cars:', response.message);
       }
     });
   }
@@ -408,7 +402,6 @@ export class Tickets implements OnInit {
         });
       }
     } catch (error) {
-      console.error('Error in delete confirmation:', error);
     }
   }
 

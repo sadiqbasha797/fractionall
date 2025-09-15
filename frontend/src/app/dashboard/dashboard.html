@@ -106,7 +106,45 @@
       </div>
     </section>
 
-    <!-- Revenue Breakdown -->
+    <!-- Charts Section -->
+    <section class="fade-in">
+      <h2 class="text-xl font-bold text-white mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        Data Visualization
+      </h2>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Revenue Breakdown Chart -->
+        <div class="chart-container">
+          <h3 class="chart-title">Revenue Breakdown</h3>
+          <p class="chart-subtitle">Distribution of revenue across different sources</p>
+          <div class="mt-4 h-64">
+            <canvas baseChart
+              [data]="revenueBreakdownChartData"
+              [options]="barChartOptions"
+              [type]="'pie'">
+            </canvas>
+          </div>
+        </div>
+        
+        <!-- Car Distribution Chart -->
+        <div class="chart-container">
+          <h3 class="chart-title">Car Distribution by Brand</h3>
+          <p class="chart-subtitle">Number of cars per brand</p>
+          <div class="mt-4 h-64">
+            <canvas baseChart
+              [data]="carDistributionChartData"
+              [options]="barChartOptions"
+              [type]="'doughnut'">
+            </canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Revenue Breakdown 
     <section class="fade-in">
       <h2 class="text-lg font-semibold text-white mb-4 flex items-center">
         <svg class="w-4 h-4 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,7 +178,7 @@
           <span class="revenue-value">{{ formatCurrency(dashboardStats.revenue?.breakdown?.bookNowTokens || 0) }}</span>
         </div>
       </div>
-    </section>
+    </section> -->
 
     <!-- Recent Activity -->
     <section class="fade-in">
@@ -187,15 +225,15 @@
                 </svg>
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-white truncate">{{ ticket?.subject }}</p>
+                <p class="text-sm font-medium text-white truncate">{{ ticket?.ticketcustomid || 'Ticket ID Not Available' }}</p>
                 <p class="text-xs text-gray-400 truncate">{{ ticket?.userid?.name || 'Unknown User' }}</p>
                 <div class="flex items-center justify-between mt-1">
                   <div class="flex space-x-2">
-                    <span class="inline-flex items-center px-2 py-1 text-xs rounded-full" [class]="getStatusClass(ticket?.status)">
-                      {{ ticket?.status }}
+                    <span class="inline-flex items-center px-2 py-1 text-xs rounded-full" [class]="getStatusClass(ticket?.ticketstatus)">
+                      {{ ticket?.ticketstatus }}
                     </span>
-                    <span class="inline-flex items-center px-2 py-1 text-xs rounded-full" [class]="getPriorityClass(ticket?.priority)">
-                      {{ ticket?.priority }}
+                    <span class="inline-flex items-center px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                      {{ formatCurrency(ticket?.pricepaid || 0) }}
                     </span>
                   </div>
                   <span class="text-xs text-gray-400">{{ formatDate(ticket?.createdAt) }}</span>

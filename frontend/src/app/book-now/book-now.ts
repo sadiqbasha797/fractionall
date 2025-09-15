@@ -101,7 +101,6 @@ export class BookNow implements OnInit {
         this.filteredBookNowTokens = [...this.bookNowTokens];
       },
       error: (error) => {
-        console.error('Error fetching book now tokens:', error);
       }
     });
   }
@@ -109,12 +108,9 @@ export class BookNow implements OnInit {
   getUsers(): void {
     this.userService.getUsers().subscribe({
       next: (response) => {
-        console.log('Users response:', response);
         this.users = response.body.users || [];
-        console.log('Loaded users:', this.users);
       },
       error: (error) => {
-        console.error('Error fetching users:', error);
       }
     });
   }
@@ -153,7 +149,6 @@ export class BookNow implements OnInit {
         }));
       },
       error: (error) => {
-        console.error('Error fetching cars:', error);
       }
     });
   }
@@ -463,7 +458,6 @@ export class BookNow implements OnInit {
         });
       }
     } catch (error) {
-      console.error('Error in delete confirmation:', error);
     }
   }
 

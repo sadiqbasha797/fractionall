@@ -80,7 +80,6 @@ export class NotificationService {
     const token = localStorage.getItem('token');
     
     if (!token) {
-      console.error('No token found in localStorage');
       throw new Error('Authentication token not found');
     }
     

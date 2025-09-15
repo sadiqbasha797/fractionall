@@ -105,6 +105,12 @@ const carSchema = new mongoose.Schema({
     }
 });
 
+// Add indexes for better query performance
+carSchema.index({ status: 1 });
+carSchema.index({ brandname: 1 });
+carSchema.index({ createdAt: 1 });
+carSchema.index({ status: 1, createdAt: 1 });
+
 const Car = mongoose.model('Car', carSchema);
 
 module.exports = Car;

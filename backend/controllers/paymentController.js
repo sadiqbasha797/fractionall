@@ -28,7 +28,6 @@ const createOrder = async (req, res) => {
       order
     });
   } catch (error) {
-    console.error('Error creating Razorpay order:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to create order',
@@ -75,7 +74,6 @@ const verifyPayment = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error verifying payment:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to verify payment',
@@ -104,7 +102,6 @@ const getPaymentDetails = async (req, res) => {
       payment
     });
   } catch (error) {
-    console.error('Error fetching payment details:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch payment details',
@@ -133,7 +130,6 @@ const getOrderDetails = async (req, res) => {
       order
     });
   } catch (error) {
-    console.error('Error fetching order details:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch order details',
@@ -168,7 +164,6 @@ const refundPayment = async (req, res) => {
       refund
     });
   } catch (error) {
-    console.error('Error processing refund:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to process refund',

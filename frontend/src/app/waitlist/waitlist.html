@@ -203,9 +203,9 @@
                 <!-- Status -->
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
-                        (token.status === 'active' ? 'bg-green-100 text-green-800' : 
-                         token.status === 'expired' ? 'bg-red-100 text-red-800' : 
-                         'bg-gray-100 text-gray-800')">
+                        (token.status === 'active' ? 'status-badge-approved' : 
+                         token.status === 'expired' ? 'status-badge-rejected' : 
+                         'status-badge-inactive')">
                     {{ token.status }}
                   </span>
                 </td>
@@ -418,9 +418,9 @@
             <div>
               <p class="text-sm text-gray-400">Status</p>
               <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
-                    (selectedToken.status === 'active' ? 'bg-green-100 text-green-800' : 
-                     selectedToken.status === 'expired' ? 'bg-red-100 text-red-800' : 
-                     'bg-gray-100 text-gray-800')">
+                    (selectedToken.status === 'active' ? 'status-badge-approved' : 
+                     selectedToken.status === 'expired' ? 'status-badge-rejected' : 
+                     'status-badge-inactive')">
                 {{ selectedToken.status }}
               </span>
             </div>
@@ -477,9 +477,9 @@
               <p class="text-sm text-gray-400" *ngIf="getUser(selectedToken).phone">{{ getUser(selectedToken).phone }}</p>
               <div class="mt-2">
                 <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
-                      (getUser(selectedToken).kycStatus === 'approved' ? 'bg-green-100 text-green-800' : 
-                       getUser(selectedToken).kycStatus === 'rejected' ? 'bg-red-100 text-red-800' : 
-                       'bg-yellow-100 text-yellow-800')">
+                      (getUser(selectedToken).kycStatus === 'approved' ? 'status-badge-approved' : 
+                       getUser(selectedToken).kycStatus === 'rejected' ? 'status-badge-rejected' : 
+                       'status-badge-pending')">
                   KYC: {{ getUser(selectedToken).kycStatus }}
                 </span>
               </div>
@@ -513,9 +513,9 @@
               <p class="text-sm text-gray-400">{{ getCar(selectedToken).color }} • {{ getCar(selectedToken).seating }} seats</p>
               <div class="mt-2">
                 <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
-                      (getCar(selectedToken).status === 'active' ? 'bg-green-100 text-green-800' : 
-                       getCar(selectedToken).status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                       'bg-red-100 text-red-800')">
+                      (getCar(selectedToken).status === 'active' ? 'status-badge-approved' : 
+                       getCar(selectedToken).status === 'pending' ? 'status-badge-pending' : 
+                       'status-badge-rejected')">
                   {{ getCar(selectedToken).status }}
                 </span>
               </div>

@@ -4,12 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { HomeService, HeroContent, Brand, SimpleStep, FAQ } from '../services/home.service';
 import { DialogService } from '../shared/dialog/dialog.service';
 import { DialogComponent } from '../shared/dialog/dialog.component';
-import { LoadingDialogComponent } from '../shared/loading-dialog/loading-dialog.component';
+
 
 @Component({
   selector: 'app-manage-content',
   standalone: true,
-  imports: [CommonModule, FormsModule, DialogComponent, LoadingDialogComponent],
+  imports: [CommonModule, FormsModule, DialogComponent],
   templateUrl: './manage-content.html',
   styleUrl: './manage-content.css'
 })

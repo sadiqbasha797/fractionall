@@ -25,6 +25,7 @@
 .notification-button {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
 }
 
 .notification-button:hover {
@@ -90,6 +91,11 @@
   
   .clock-date {
     font-size: 0.625rem;
+  }
+  
+  /* Shift notification icon right on mobile to prevent collision with time */
+  .notification-button {
+    margin-left: 1.5rem;
   }
 }
 

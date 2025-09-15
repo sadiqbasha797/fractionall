@@ -134,12 +134,10 @@ export class Navbar implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          console.error('Error loading unread count:', error);
           this.unreadCount = 0;
         }
       });
     } catch (error) {
-      console.error('Error in loadUnreadCount:', error);
       this.unreadCount = 0;
     }
   }

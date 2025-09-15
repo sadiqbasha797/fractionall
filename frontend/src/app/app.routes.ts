@@ -18,6 +18,7 @@ import { Notifications } from './notifications/notifications';
 import { ManageContent } from './manage-content/manage-content';
 import { Layout } from './layout/layout'; // Import the Layout component
 import { AuthGuard } from './services/auth.guard';
+import { Revenvue } from './revenvue/revenvue';
 
 export const routes: Routes = [
   { path: 'login', component: Login }, // Keep old login for backward compatibility
@@ -42,6 +43,7 @@ export const routes: Routes = [
       { path: 'contact-forms', component: ContactForms },
       { path: 'notifications', component: Notifications },
       { path: 'manage-content', component: ManageContent },
+      { path: 'revenue', component: Revenvue },
       { path: '', redirectTo: 'cars', pathMatch: 'full' } // Default route
     ]
   },

@@ -553,7 +553,7 @@
               <div>
                 <h5 class="font-semibold text-white">{{ ticket.ticketcustomid }}</h5>
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
-                      [class]="ticket.ticketstatus === 'active' ? 'bg-green-100 text-green-800' : ticket.ticketstatus === 'expired' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'">
+                      [class]="ticket.ticketstatus === 'active' ? 'status-badge-approved' : ticket.ticketstatus === 'expired' ? 'status-badge-rejected' : 'status-badge-inactive'">
                   {{ ticket.ticketstatus }}
                 </span>
               </div>
@@ -604,7 +604,7 @@
               <div>
                 <h5 class="font-semibold text-white">{{ token.customtokenid }}</h5>
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
-                      [class]="token.status === 'active' ? 'bg-green-100 text-green-800' : token.status === 'expired' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'">
+                      [class]="token.status === 'active' ? 'status-badge-approved' : token.status === 'expired' ? 'status-badge-rejected' : 'status-badge-inactive'">
                   {{ token.status }}
                 </span>
               </div>
@@ -644,7 +644,7 @@
               <div>
                 <h5 class="font-semibold text-white">{{ token.customtokenid }}</h5>
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
-                      [class]="token.status === 'active' ? 'bg-green-100 text-green-800' : token.status === 'expired' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'">
+                      [class]="token.status === 'active' ? 'status-badge-approved' : token.status === 'expired' ? 'status-badge-rejected' : 'status-badge-inactive'">
                   {{ token.status }}
                 </span>
               </div>
