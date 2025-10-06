@@ -256,6 +256,40 @@ select:focus {
   .booknow-tokens-table td {
     min-width: 100px;
   }
+  
+  /* Mobile responsive styles for action buttons */
+  .flex.items-end.gap-2 {
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  
+  .flex.items-end.gap-2 button {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+  
+  /* Mobile responsive styles for search and filters */
+  .flex.flex-col.sm\\:flex-row.gap-4 {
+    gap: 1rem;
+  }
+  
+  .flex.flex-col.sm\\:flex-row.gap-4 > div {
+    width: 100%;
+  }
+  
+  /* Mobile responsive styles for tabs */
+  .flex.bg-gray-800\/50.rounded-xl.p-1.border.border-gray-600\/50 {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .flex.bg-gray-800\/50.rounded-xl.p-1.border.border-gray-600\/50 button {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem 1rem;
+  }
 }
 
 @media (max-width: 640px) {
@@ -265,5 +299,122 @@ select:focus {
   .booknow-tokens-table td {
     padding: 0.5rem;
     font-size: 0.75rem;
+  }
+  
+  /* Extra small screens - further button adjustments */
+  .flex.items-end.gap-2 button {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Better spacing for mobile forms */
+  .px-4.sm\\:px-6.py-4.sm\\:py-6 {
+    padding: 1rem;
+  }
+  
+  /* Mobile modal adjustments */
+  .modal > div {
+    margin: 0.5rem;
+    max-width: none;
+    width: calc(100% - 1rem);
+    padding: 1rem;
+  }
+  
+  .modal h3 {
+    font-size: 1.25rem;
+  }
+  
+  /* Mobile form adjustments */
+  .modal form {
+    gap: 1rem;
+  }
+  
+  .modal input,
+  .modal select,
+  .modal textarea {
+    padding: 0.75rem;
+    font-size: 16px; /* Prevent zoom on iOS */
+    min-height: 44px;
+  }
+  
+  .modal .col-span-2 {
+    grid-column: 1;
+  }
+  
+  .modal .col-span-2.flex {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  
+  .modal .col-span-2.flex button {
+    width: 100%;
+    padding: 0.75rem 1rem;
+  }
+  
+  /* Force single column layout for tokens modal forms on mobile */
+  .modal form.grid.grid-cols-1.md\\:grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Mobile view modal adjustments */
+  .modal .grid.grid-cols-1.lg\\:grid-cols-2 {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .modal .grid.grid-cols-2 {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .modal .flex.justify-end.space-x-3 {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .modal .flex.justify-end.space-x-3 button {
+    width: 100%;
+  }
+}
+
+/* Additional mobile optimizations for tokens page */
+@media (max-width: 768px) {
+  /* Ensure proper touch targets */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better modal positioning on mobile */
+  .modal {
+    padding: 0;
+  }
+  
+  .modal > div {
+    border-radius: 0.75rem;
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
+    overflow-y: auto;
+  }
+  
+  /* Ensure proper scrolling on mobile */
+  .modal {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Better focus states for mobile */
+  .modal input:focus,
+  .modal select:focus,
+  .modal textarea:focus {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+  }
+  
+  /* Prevent horizontal scroll on mobile */
+  .modal form {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 }

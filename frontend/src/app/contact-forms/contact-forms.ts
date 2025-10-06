@@ -86,6 +86,18 @@ export class ContactForms implements OnInit {
     this.loadContactForms();
   }
 
+  getPageNumbers(): number[] {
+    const maxVisible = 5;
+    let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(this.totalPages, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  }
+
   viewDetails(contactForm: ContactForm) {
     this.selectedContactForm = contactForm;
     this.updateStatus = contactForm.status;

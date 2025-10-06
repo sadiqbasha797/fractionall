@@ -6,17 +6,36 @@
           <!-- Hero Section with Dynamic Background -->
           <section class="about-hero relative min-h-[600px] flex items-center justify-center overflow-hidden rounded-2xl mb-16" data-animation="fade-up">
             <div class="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] opacity-90"></div>
-            <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')"></div>
+            <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" 
+                 [style.background-image]="backgroundImageStyle"></div>
             <div class="relative z-10 text-center px-4 max-w-4xl mx-auto">
-              <h1 class="text-5xl md:text-7xl font-black leading-tight tracking-[-0.033em] text-white mb-6" data-animation="fade-up">
-                Redefining Car Ownership
-              </h1>
-              <p class="text-xl md:text-2xl text-[#90adcb] mb-8 max-w-3xl mx-auto leading-relaxed" data-animation="fade-up" data-delay="100">
-                India's first fractional car ownership platform, making luxury cars accessible without financial burden
-              </p>
-              <button (click)="scrollToSection('story-section')" class="btn-outline-white px-8 py-4 text-lg font-bold rounded-xl transform hover:scale-105 transition-all duration-300" data-animation="fade-up" data-delay="200">
-                Explore Our Story
-              </button>
+              <!-- Loading State -->
+              <div *ngIf="loading" class="flex flex-col items-center justify-center py-20">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mb-4"></div>
+                <p class="text-white text-lg">Loading...</p>
+              </div>
+              
+              <!-- Error State -->
+              <div *ngIf="error && !loading" class="flex flex-col items-center justify-center py-20">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                <p class="text-white text-lg mb-4">{{ error }}</p>
+                <button (click)="loadAboutContent()" class="btn-outline-white px-6 py-3 text-lg font-bold rounded-xl">
+                  Try Again
+                </button>
+              </div>
+              
+              <!-- Dynamic Content -->
+              <div *ngIf="!loading && !error">
+                <h1 class="text-5xl md:text-7xl font-black leading-tight tracking-[-0.033em] text-white mb-6" data-animation="fade-up">
+                  {{ aboutContent?.aboutherotext || 'Redefining Car Ownership' }}
+                </h1>
+                <p class="text-xl md:text-2xl text-[#90adcb] mb-8 max-w-3xl mx-auto leading-relaxed" data-animation="fade-up" data-delay="100">
+                  {{ aboutContent?.aboutherosubtext || 'India\'s first fractional car ownership platform, making luxury cars accessible without financial burden' }}
+                </p>
+                <button (click)="scrollToSection('story-section')" class="btn-outline-white px-8 py-4 text-lg font-bold rounded-xl transform hover:scale-105 transition-all duration-300" data-animation="fade-up" data-delay="200">
+                  Explore Our Story
+                </button>
+              </div>
             </div>
           </section>
 

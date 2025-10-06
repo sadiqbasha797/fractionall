@@ -1,0 +1,573 @@
+/* Scrollbar styling removed - using global hidden scrollbars */
+
+/* Enhanced header styling */
+.header-gradient {
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+}
+
+/* Glass morphism effect for cards */
+.glass-card {
+  background: rgba(31, 41, 55, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+/* Enhanced button hover effects */
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+}
+
+.btn-secondary {
+  background: rgba(55, 65, 81, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(55, 65, 81, 0.7);
+  border-color: rgba(75, 85, 99, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Search input enhancements */
+.search-input {
+  background: rgba(31, 41, 55, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  background: rgba(31, 41, 55, 0.7);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Table container styling */
+.table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+.table-container::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
+
+/* Ensure table has minimum width for proper horizontal scrolling */
+.table-container table {
+  min-width: 1200px;
+}
+
+/* Sticky table headers */
+.table-container thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #1f2937; /* bg-gray-800 */
+}
+
+/* Touch device scrolling */
+@media (hover: none) and (pointer: coarse) {
+  .table-container {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* Table row hover effects */
+.hover\:bg-gray-800:hover {
+  background-color: #1f2937;
+}
+
+/* Search Input Container */
+.search-input-container {
+  position: relative;
+}
+
+/* Search icon styling */
+.search-icon {
+  color: #9ca3af !important; /* text-gray-400 */
+  font-size: 1rem !important; /* slightly larger */
+  z-index: 10;
+  pointer-events: none;
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 16px !important;
+  height: 16px !important;
+  line-height: 1 !important;
+  position: absolute;
+  top: 50%;
+  left: 0.75rem; /* pl-3 */
+  transform: translateY(-50%);
+}
+
+.search-icon:hover {
+  color: #d1d5db !important; /* text-gray-300 */
+}
+
+/* SVG fallback icon styling */
+.search-icon-svg {
+  color: #9ca3af !important; /* text-gray-400 */
+  position: absolute;
+  top: 50%;
+  left: 0.75rem; /* pl-3 */
+  transform: translateY(-50%);
+  z-index: 10;
+  pointer-events: none;
+  display: none !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Show SVG icon if Font Awesome fails to load */
+.search-input-container:not(.fa-loaded) .search-icon-svg {
+  display: block !important;
+}
+
+.search-input-container:not(.fa-loaded) .search-icon {
+  display: none !important;
+}
+
+/* Stats card animations */
+.stats-card {
+  transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Hide scrollbars but keep scrolling for .no-scrollbar containers */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Table header sticky with subtle background */
+thead tr {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #111827; /* gray-900 header */
+  color: #e5e7eb; /* light text */
+}
+
+/* Prevent text from wrapping in table cells where utility class used */
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+
+/* Status badges with clear, accessible colors */
+.status-badge[data-status="captured"] {
+  background-color: #ecfdf5; /* green-50 */
+  color: #065f46; /* green-800 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.status-badge[data-status="authorized"] {
+  background-color: #fffbeb; /* yellow-50 */
+  color: #92400e; /* yellow-800 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.status-badge[data-status="failed"] {
+  background-color: #fef2f2; /* red-50 */
+  color: #991b1b; /* red-800 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.status-badge[data-status="pending"] {
+  background-color: #f3f4f6; /* gray-50 */
+  color: #374151; /* gray-700 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+/* Refund status badges */
+.status-badge[data-status="initiated"] {
+  background-color: #fffbeb; /* yellow-50 */
+  color: #92400e; /* yellow-800 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.status-badge[data-status="processed"] {
+  background-color: #eff6ff; /* blue-50 */
+  color: #1e40af; /* blue-800 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.status-badge[data-status="successful"] {
+  background-color: #ecfdf5; /* green-50 */
+  color: #065f46; /* green-800 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.status-badge[data-status="failed"] {
+  background-color: #fef2f2; /* red-50 */
+  color: #991b1b; /* red-800 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.status-badge[data-status="cancelled"] {
+  background-color: #f3f4f6; /* gray-50 */
+  color: #374151; /* gray-700 */
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #1f2937;
+  border-radius: 1rem;
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.modal-header h2 {
+  color: #f9fafb;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  color: #f9fafb;
+  background: rgba(75, 85, 99, 0.3);
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+/* Transaction details modal */
+.transaction-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(75, 85, 99, 0.2);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row label {
+  font-weight: 600;
+  color: #d1d5db;
+  min-width: 120px;
+}
+
+.detail-row span {
+  color: #f9fafb;
+  text-align: right;
+}
+
+/* Refund form */
+.refund-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #d1d5db;
+}
+
+.form-control {
+  background: rgba(31, 41, 55, 0.5);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  color: #f9fafb;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+/* Refund details */
+.refund-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+/* Refunds list */
+.refunds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.refund-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(31, 41, 55, 0.3);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(75, 85, 99, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refund-item:hover {
+  background: rgba(31, 41, 55, 0.5);
+  border-color: rgba(75, 85, 99, 0.4);
+}
+
+.refund-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.refund-id {
+  font-weight: 600;
+  color: #f9fafb;
+  font-size: 0.875rem;
+}
+
+.refund-amount {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.refund-type {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
+/* Export modal */
+.export-options {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #9ca3af;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  color: #d1d5db;
+  margin-bottom: 0.5rem;
+}
+
+/* Loading state */
+.loading-container {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #9ca3af;
+}
+
+.spinner {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid rgba(75, 85, 99, 0.3);
+  border-radius: 50%;
+  border-top-color: #3b82f6;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Button styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  color: #d1d5db;
+}
+
+.btn-outline:hover {
+  background: rgba(75, 85, 99, 0.3);
+  color: #f9fafb;
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.btn-warning:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .modal-content {
+    margin: 1rem;
+    max-width: calc(100vw - 2rem);
+  }
+  
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .detail-row span {
+    text-align: left;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .refund-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

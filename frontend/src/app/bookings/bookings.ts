@@ -1,10 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BookingService, Booking } from '../services/booking.service';
 import { AuthService } from '../services/auth.service';
-import { DialogComponent, DialogConfig } from '../shared/dialog/dialog.component';
 import { ExportService, ExportOptions } from '../services/export.service';
+import { UserService, User } from '../services/user.service';
+import { CarService, Car } from '../services/car.service';
+import { TicketService, Ticket } from '../services/ticket.service';
 
 interface FilterOptions {
   status: string;
@@ -17,7 +19,7 @@ interface FilterOptions {
 @Component({
   selector: 'app-bookings',
   standalone: true,
-  imports: [CommonModule, FormsModule, DialogComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './bookings.html',
   styleUrl: './bookings.css'
 })
@@ -25,6 +27,10 @@ export class Bookings implements OnInit {
   bookings: Booking[] = [];
   filteredBookings: Booking[] = [];
   selectedBooking: Booking | null = null;
+  users: User[] = [];
+  cars: Car[] = [];
+  filteredCars: Car[] = []; // Cars filtered based on selected user's tickets
+  userTickets: Ticket[] = []; // Tickets for the selected user
   
   // Filter and search options
   filters: FilterOptions = {
@@ -43,26 +49,174 @@ export class Bookings implements OnInit {
   // Dialog states
   showBookingDialog = false;
   showStatusDialog = false;
-  dialogConfig: DialogConfig = {
-    title: '',
-    message: '',
-    type: 'info'
-  };
+  showBookingFormDialog = false;
+  
+  // Dialog element
+  private dialogElement: HTMLElement | null = null;
   
   // Status update
   statusUpdateBooking: Booking | null = null;
   newStatus: 'accepted' | 'rejected' = 'accepted';
   
+  // Booking form
+  isEditMode = false;
+  currentBookingId: string | null = null;
+  newBooking: Partial<Booking> = {
+    userid: '',
+    carid: '',
+    bookingFrom: '',
+    bookingTo: '',
+    comments: '',
+    status: 'accepted'
+  };
+  
+  // Calendar view
+  showCalendarView = false;
+  currentDate = new Date();
+  
   constructor(
     private bookingService: BookingService,
     private authService: AuthService,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private userService: UserService,
+    private carService: CarService,
+    private ticketService: TicketService,
+    private renderer: Renderer2
   ) {}
   
   ngOnInit() {
     this.loadBookings();
+    this.loadUsers();
+    this.loadCars();
   }
-  
+
+  // Local dialog methods
+  showConfirmDialog(title: string, message: string, confirmCallback: () => void): void {
+    this.removeDialog();
+    const backdrop = this.renderer.createElement('div');
+    this.renderer.setStyle(backdrop, 'position', 'fixed');
+    this.renderer.setStyle(backdrop, 'top', '0');
+    this.renderer.setStyle(backdrop, 'left', '0');
+    this.renderer.setStyle(backdrop, 'width', '100vw');
+    this.renderer.setStyle(backdrop, 'height', '100vh');
+    this.renderer.setStyle(backdrop, 'background', 'rgba(0, 0, 0, 0.8)');
+    this.renderer.setStyle(backdrop, 'z-index', '999999');
+    this.renderer.setStyle(backdrop, 'display', 'flex');
+    this.renderer.setStyle(backdrop, 'align-items', 'center');
+    this.renderer.setStyle(backdrop, 'justify-content', 'center');
+    const dialog = this.renderer.createElement('div');
+    this.renderer.setStyle(dialog, 'background', '#374151');
+    this.renderer.setStyle(dialog, 'border-radius', '12px');
+    this.renderer.setStyle(dialog, 'max-width', '500px');
+    this.renderer.setStyle(dialog, 'width', '90%');
+    this.renderer.setStyle(dialog, 'padding', '24px');
+    const titleEl = this.renderer.createElement('h3');
+    this.renderer.setStyle(titleEl, 'color', 'white');
+    this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
+    this.renderer.setStyle(titleEl, 'font-size', '1.5rem');
+    const titleText = this.renderer.createText(title);
+    this.renderer.appendChild(titleEl, titleText);
+    const messageEl = this.renderer.createElement('div');
+    this.renderer.setProperty(messageEl, 'innerHTML', message);
+    this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
+    this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
+    const btnContainer = this.renderer.createElement('div');
+    this.renderer.setStyle(btnContainer, 'display', 'flex');
+    this.renderer.setStyle(btnContainer, 'justify-content', 'flex-end');
+    this.renderer.setStyle(btnContainer, 'gap', '12px');
+    const cancelBtn = this.renderer.createElement('button');
+    const cancelText = this.renderer.createText('Cancel');
+    this.renderer.appendChild(cancelBtn, cancelText);
+    this.renderer.setStyle(cancelBtn, 'background', '#6B7280');
+    this.renderer.setStyle(cancelBtn, 'color', 'white');
+    this.renderer.setStyle(cancelBtn, 'border', 'none');
+    this.renderer.setStyle(cancelBtn, 'padding', '10px 20px');
+    this.renderer.setStyle(cancelBtn, 'border-radius', '8px');
+    this.renderer.setStyle(cancelBtn, 'cursor', 'pointer');
+    this.renderer.listen(cancelBtn, 'click', () => this.removeDialog());
+    const confirmBtn = this.renderer.createElement('button');
+    const confirmText = this.renderer.createText('Confirm');
+    this.renderer.appendChild(confirmBtn, confirmText);
+    this.renderer.setStyle(confirmBtn, 'background', '#DC2626');
+    this.renderer.setStyle(confirmBtn, 'color', 'white');
+    this.renderer.setStyle(confirmBtn, 'border', 'none');
+    this.renderer.setStyle(confirmBtn, 'padding', '10px 20px');
+    this.renderer.setStyle(confirmBtn, 'border-radius', '8px');
+    this.renderer.setStyle(confirmBtn, 'cursor', 'pointer');
+    this.renderer.listen(confirmBtn, 'click', () => {
+      this.removeDialog();
+      confirmCallback();
+    });
+    this.renderer.appendChild(btnContainer, cancelBtn);
+    this.renderer.appendChild(btnContainer, confirmBtn);
+    this.renderer.appendChild(dialog, titleEl);
+    this.renderer.appendChild(dialog, messageEl);
+    this.renderer.appendChild(dialog, btnContainer);
+    this.renderer.appendChild(backdrop, dialog);
+    this.renderer.appendChild(document.body, backdrop);
+    this.dialogElement = backdrop;
+    this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
+    this.renderer.listen(backdrop, 'click', () => this.removeDialog());
+  }
+  removeDialog(): void {
+    if (this.dialogElement) {
+      this.renderer.removeChild(document.body, this.dialogElement);
+      this.dialogElement = null;
+    }
+  }
+  showMessageDialog(title: string, message: string, color: string): void {
+    this.removeDialog();
+    const backdrop = this.renderer.createElement('div');
+    this.renderer.setStyle(backdrop, 'position', 'fixed');
+    this.renderer.setStyle(backdrop, 'top', '0');
+    this.renderer.setStyle(backdrop, 'left', '0');
+    this.renderer.setStyle(backdrop, 'width', '100vw');
+    this.renderer.setStyle(backdrop, 'height', '100vh');
+    this.renderer.setStyle(backdrop, 'background', 'rgba(0, 0, 0, 0.8)');
+    this.renderer.setStyle(backdrop, 'z-index', '999999');
+    this.renderer.setStyle(backdrop, 'display', 'flex');
+    this.renderer.setStyle(backdrop, 'align-items', 'center');
+    this.renderer.setStyle(backdrop, 'justify-content', 'center');
+    const dialog = this.renderer.createElement('div');
+    this.renderer.setStyle(dialog, 'background', '#374151');
+    this.renderer.setStyle(dialog, 'border-radius', '12px');
+    this.renderer.setStyle(dialog, 'max-width', '400px');
+    this.renderer.setStyle(dialog, 'width', '90%');
+    this.renderer.setStyle(dialog, 'padding', '24px');
+    this.renderer.setStyle(dialog, 'text-align', 'center');
+    const titleEl = this.renderer.createElement('h3');
+    this.renderer.setStyle(titleEl, 'color', color);
+    this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
+    this.renderer.setStyle(titleEl, 'font-size', '1.5rem');
+    this.renderer.setStyle(titleEl, 'font-weight', '600');
+    const titleText = this.renderer.createText(title);
+    this.renderer.appendChild(titleEl, titleText);
+    const messageEl = this.renderer.createElement('div');
+    this.renderer.setProperty(messageEl, 'innerHTML', message);
+    this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
+    this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
+    const okBtn = this.renderer.createElement('button');
+    const okText = this.renderer.createText('OK');
+    this.renderer.appendChild(okBtn, okText);
+    this.renderer.setStyle(okBtn, 'background', color);
+    this.renderer.setStyle(okBtn, 'color', 'white');
+    this.renderer.setStyle(okBtn, 'border', 'none');
+    this.renderer.setStyle(okBtn, 'padding', '10px 30px');
+    this.renderer.setStyle(okBtn, 'border-radius', '8px');
+    this.renderer.setStyle(okBtn, 'cursor', 'pointer');
+    this.renderer.setStyle(okBtn, 'font-size', '14px');
+    this.renderer.setStyle(okBtn, 'font-weight', '600');
+    this.renderer.listen(okBtn, 'click', () => this.removeDialog());
+    this.renderer.appendChild(dialog, titleEl);
+    this.renderer.appendChild(dialog, messageEl);
+    this.renderer.appendChild(dialog, okBtn);
+    this.renderer.appendChild(backdrop, dialog);
+    this.renderer.appendChild(document.body, backdrop);
+    this.dialogElement = backdrop;
+    this.renderer.listen(backdrop, 'click', () => this.removeDialog());
+    this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
+  }
+
   loadBookings() {
     this.bookingService.getBookings().subscribe({
       next: (response) => {
@@ -76,6 +230,89 @@ export class Bookings implements OnInit {
         this.showErrorDialog('Failed to load bookings. Please try again.');
       }
     });
+  }
+
+  loadUsers() {
+    this.userService.getUsers().subscribe({
+      next: (response) => {
+        if (response.status === 'success' && response.body.users) {
+          this.users = response.body.users;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading users:', error);
+      }
+    });
+  }
+
+  loadCars() {
+    this.carService.getCars().subscribe({
+      next: (response) => {
+        if (response.status === 'success' && response.body.cars) {
+          this.cars = response.body.cars;
+          this.filteredCars = [...this.cars]; // Initialize filtered cars
+        }
+      },
+      error: (error) => {
+        console.error('Error loading cars:', error);
+      }
+    });
+  }
+
+  // Get tickets for a specific user
+  getUserTickets(userId: string) {
+    if (!userId) {
+      this.userTickets = [];
+      this.filteredCars = [...this.cars];
+      return;
+    }
+
+    this.ticketService.getTickets().subscribe({
+      next: (response) => {
+        if (response.status === 'success' && response.body.tickets) {
+          // Filter tickets for the selected user
+          this.userTickets = response.body.tickets.filter((ticket: Ticket) => {
+            const ticketUserId = typeof ticket.userid === 'string' ? ticket.userid : ticket.userid._id;
+            return ticketUserId === userId && ticket.ticketstatus === 'active';
+          });
+          
+          // Filter cars based on user's tickets
+          this.filterCarsByUserTickets();
+        }
+      },
+      error: (error) => {
+        console.error('Error loading user tickets:', error);
+        this.userTickets = [];
+        this.filteredCars = [...this.cars];
+      }
+    });
+  }
+
+  // Filter cars based on user's tickets
+  filterCarsByUserTickets() {
+    if (this.userTickets.length === 0) {
+      this.filteredCars = [];
+      return;
+    }
+
+    // Get car IDs from user's tickets
+    const userCarIds = this.userTickets.map(ticket => {
+      return typeof ticket.carid === 'string' ? ticket.carid : ticket.carid._id;
+    });
+
+    // Filter cars to only include those the user has tickets for
+    this.filteredCars = this.cars.filter(car => userCarIds.includes(car._id!));
+  }
+
+  // Handle user selection change
+  onUserSelectionChange() {
+    if (this.newBooking.userid) {
+      const userId = typeof this.newBooking.userid === 'string' ? this.newBooking.userid : this.newBooking.userid._id;
+      this.getUserTickets(userId);
+    } else {
+      this.userTickets = [];
+      this.filteredCars = [...this.cars];
+    }
   }
   
   applyFilters() {
@@ -206,14 +443,11 @@ export class Bookings implements OnInit {
   initiateStatusUpdate(booking: Booking, status: 'accepted' | 'rejected') {
     this.statusUpdateBooking = booking;
     this.newStatus = status;
-    this.dialogConfig = {
-      title: `${status === 'accepted' ? 'Accept' : 'Reject'} Booking`,
-      message: `Are you sure you want to ${status === 'accepted' ? 'accept' : 'reject'} this booking?`,
-      type: 'confirm',
-      confirmText: status === 'accepted' ? 'Accept' : 'Reject',
-      cancelText: 'Cancel'
-    };
-    this.showStatusDialog = true;
+    this.showConfirmDialog(
+      `${status === 'accepted' ? 'Accept' : 'Reject'} Booking`,
+      `Are you sure you want to ${status === 'accepted' ? 'accept' : 'reject'} this booking?`,
+      () => this.confirmStatusUpdate()
+    );
   }
   
   confirmStatusUpdate() {
@@ -240,17 +474,14 @@ export class Bookings implements OnInit {
   }
   
   deleteBooking(booking: Booking) {
-    this.dialogConfig = {
-      title: 'Delete Booking',
-      message: 'Are you sure you want to delete this booking? This action cannot be undone.',
-      type: 'error',
-      confirmText: 'Delete',
-      cancelText: 'Cancel'
-    };
-    
-    // We'll use the status dialog for delete confirmation
-    this.statusUpdateBooking = booking;
-    this.showStatusDialog = true;
+    this.showConfirmDialog(
+      'Delete Booking',
+      'Are you sure you want to delete this booking? This action cannot be undone.',
+      () => {
+        this.statusUpdateBooking = booking;
+        this.confirmDelete();
+      }
+    );
   }
   
   confirmDelete() {
@@ -281,6 +512,12 @@ export class Bookings implements OnInit {
       this.currentPage = page;
     }
   }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
   
   getPageNumbers(): number[] {
     const pages: number[] = [];
@@ -307,6 +544,30 @@ export class Bookings implements OnInit {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  formatDateForInput(dateString: string): string {
+    // Convert ISO date string to YYYY-MM-DD format for HTML date input
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  openDatePicker(fieldId: string) {
+    // Programmatically trigger the date picker
+    const dateInput = document.getElementById(fieldId) as HTMLInputElement;
+    if (dateInput) {
+      dateInput.focus();
+      // Try modern showPicker() method first
+      if (dateInput.showPicker) {
+        dateInput.showPicker();
+      } else {
+        // Fallback: trigger click event to open picker
+        dateInput.click();
+      }
+    }
   }
   
   formatDateRange(from: string, to: string): string {
@@ -345,11 +606,11 @@ export class Bookings implements OnInit {
   getStatusBadgeClass(status: string): string {
     switch (status) {
       case 'accepted':
-        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-approved';
+        return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium status-badge-approved';
       case 'rejected':
-        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-rejected';
+        return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium status-badge-rejected';
       default:
-        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-inactive';
+        return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium status-badge-inactive';
     }
   }
   
@@ -388,29 +649,201 @@ export class Bookings implements OnInit {
   trackByBookingId(index: number, booking: Booking): string {
     return booking._id || index.toString();
   }
+
+  // Permission checks
+  canCreateBooking(): boolean {
+    return this.authService.isAdmin() || this.authService.isSuperAdmin();
+  }
+
+  canEditBooking(): boolean {
+    return this.authService.isAdmin() || this.authService.isSuperAdmin();
+  }
+
+  // Booking form methods
+  showCreateBookingModal() {
+    this.isEditMode = false;
+    this.currentBookingId = null;
+    this.newBooking = {
+      userid: '',
+      carid: '',
+      bookingFrom: '',
+      bookingTo: '',
+      comments: '',
+      status: 'accepted'
+    };
+    // Reset filtered cars and user tickets
+    this.userTickets = [];
+    this.filteredCars = [...this.cars];
+    this.showBookingFormDialog = true;
+  }
+
+  editBooking(booking: Booking) {
+    this.isEditMode = true;
+    this.currentBookingId = booking._id!;
+    this.newBooking = {
+      userid: typeof booking.userid === 'object' ? booking.userid._id : booking.userid,
+      carid: typeof booking.carid === 'object' ? booking.carid._id : booking.carid,
+      bookingFrom: this.formatDateForInput(booking.bookingFrom),
+      bookingTo: this.formatDateForInput(booking.bookingTo),
+      comments: booking.comments || '',
+      status: booking.status
+    };
+    // Load user tickets and filter cars for editing
+    if (this.newBooking.userid) {
+      const userId = typeof this.newBooking.userid === 'string' ? this.newBooking.userid : this.newBooking.userid._id;
+      this.getUserTickets(userId);
+    }
+    this.showBookingFormDialog = true;
+  }
+
+  submitBookingForm() {
+    if (!this.newBooking.userid || !this.newBooking.carid || !this.newBooking.bookingFrom || !this.newBooking.bookingTo) {
+      this.showErrorDialog('Please fill in all required fields.');
+      return;
+    }
+
+    if (new Date(this.newBooking.bookingFrom) >= new Date(this.newBooking.bookingTo)) {
+      this.showErrorDialog('Booking end date must be after start date.');
+      return;
+    }
+
+    // Convert dates to ISO format for backend
+    const bookingData = {
+      ...this.newBooking,
+      bookingFrom: new Date(this.newBooking.bookingFrom).toISOString(),
+      bookingTo: new Date(this.newBooking.bookingTo).toISOString()
+    };
+
+    if (this.isEditMode && this.currentBookingId) {
+      this.updateBooking(bookingData);
+    } else {
+      this.createBooking(bookingData);
+    }
+  }
+
+  createBooking(bookingData: any) {
+    this.bookingService.createBooking(bookingData).subscribe({
+      next: (response) => {
+        if (response.status === 'success') {
+          this.showSuccessDialog('Booking created successfully!');
+          this.closeBookingFormDialog();
+          this.loadBookings();
+        } else {
+          this.showErrorDialog('Failed to create booking.');
+        }
+      },
+      error: (error) => {
+        console.error('Error creating booking:', error);
+        this.showErrorDialog('Failed to create booking. Please try again.');
+      }
+    });
+  }
+
+  updateBooking(bookingData: any) {
+    if (!this.currentBookingId) return;
+
+    this.bookingService.updateBooking(this.currentBookingId, bookingData).subscribe({
+      next: (response) => {
+        if (response.status === 'success') {
+          this.showSuccessDialog('Booking updated successfully!');
+          this.closeBookingFormDialog();
+          this.loadBookings();
+        } else {
+          this.showErrorDialog('Failed to update booking.');
+        }
+      },
+      error: (error) => {
+        console.error('Error updating booking:', error);
+        this.showErrorDialog('Failed to update booking. Please try again.');
+      }
+    });
+  }
+
+  closeBookingFormDialog() {
+    this.showBookingFormDialog = false;
+    this.isEditMode = false;
+    this.currentBookingId = null;
+    this.newBooking = {
+      userid: '',
+      carid: '',
+      bookingFrom: '',
+      bookingTo: '',
+      comments: '',
+      status: 'accepted'
+    };
+    // Reset filtered cars and user tickets
+    this.userTickets = [];
+    this.filteredCars = [...this.cars];
+  }
+
+  // Calendar view methods
+  toggleCalendarView() {
+    this.showCalendarView = !this.showCalendarView;
+  }
+
+  getBookingsForDate(date: Date): Booking[] {
+    const dateStr = date.toISOString().split('T')[0];
+    return this.filteredBookings.filter(booking => {
+      const fromDate = new Date(booking.bookingFrom).toISOString().split('T')[0];
+      const toDate = new Date(booking.bookingTo).toISOString().split('T')[0];
+      return dateStr >= fromDate && dateStr <= toDate;
+    });
+  }
+
+  getCalendarDays(): Date[] {
+    const year = this.currentDate.getFullYear();
+    const month = this.currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const days: Date[] = [];
+    
+    // Add previous month's trailing days
+    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+      days.push(new Date(year, month, -i));
+    }
+    
+    // Add current month's days
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(new Date(year, month, day));
+    }
+    
+    // Add next month's leading days to fill the grid
+    const remainingDays = 42 - days.length; // 6 weeks * 7 days
+    for (let day = 1; day <= remainingDays; day++) {
+      days.push(new Date(year, month + 1, day));
+    }
+    
+    return days;
+  }
+
+  navigateMonth(direction: 'prev' | 'next') {
+    if (direction === 'prev') {
+      this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, 1);
+    } else {
+      this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 1);
+    }
+  }
+
+  isToday(date: Date): boolean {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  }
+
+  isCurrentMonth(date: Date): boolean {
+    return date.getMonth() === this.currentDate.getMonth();
+  }
   
   private showSuccessDialog(message: string) {
-    this.dialogConfig = {
-      title: 'Success',
-      message,
-      type: 'success',
-      showCancel: false,
-      confirmText: 'OK'
-    };
-    this.showStatusDialog = true;
+    this.showMessageDialog('Success', message, '#10B981');
   }
   
   private showErrorDialog(message: string) {
-    this.dialogConfig = {
-      title: 'Error',
-      message,
-      type: 'error',
-      showCancel: false,
-      confirmText: 'OK'
-    };
-    this.showStatusDialog = true;
+    this.showMessageDialog('Error', message, '#DC2626');
   }
-  
+
   closeBookingDialog() {
     this.showBookingDialog = false;
     this.selectedBooking = null;
@@ -449,11 +882,11 @@ export class Bookings implements OnInit {
     const status = this.getCarStatus(booking);
     switch (status) {
       case 'active':
-        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-approved';
+        return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium status-badge-approved';
       case 'pending':
-        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-pending';
+        return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium status-badge-pending';
       default:
-        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-rejected';
+        return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium status-badge-rejected';
     }
   }
 

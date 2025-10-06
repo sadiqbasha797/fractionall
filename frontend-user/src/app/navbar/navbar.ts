@@ -80,6 +80,20 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.router.navigate(['/contact-us'], { queryParams: { type: 'investor' } });
   }
 
+  scrollToFAQ() {
+    this.closeMenu();
+    // First navigate to home page
+    this.router.navigate(['/home']).then(() => {
+      // Wait for navigation to complete, then scroll to FAQ section
+      setTimeout(() => {
+        const faqElement = document.querySelector('[data-faq-section]');
+        if (faqElement) {
+          faqElement.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    });
+  }
+
   logout() {
     this.authService.logout();
     this.checkAuthState();

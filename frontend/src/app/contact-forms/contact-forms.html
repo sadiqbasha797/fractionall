@@ -42,21 +42,19 @@
         <div class="w-full">
           <label class="block text-sm font-medium text-gray-300 mb-2">Search Contact Forms</label>
           <div class="relative search-input-container">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i class="fas fa-search search-icon"></i>
-              <!-- Fallback SVG icon in case Font Awesome doesn't load -->
-              <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-              </svg>
-            </div>
             <input 
               type="search" 
               [(ngModel)]="searchQuery" 
               (ngModelChange)="onSearch()"
               placeholder="Search by name, email, or subject..."
-              class="w-full pl-10 pr-4 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
+              class="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
             />
+            <i class="fas fa-search search-icon"></i>
+            <!-- Fallback SVG icon in case Font Awesome doesn't load -->
+            <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
           </div>
         </div>
 
@@ -69,7 +67,7 @@
               <select 
                 [(ngModel)]="statusFilter" 
                 (ngModelChange)="onFilterChange()"
-                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
+                class="w-full px-3 py-3 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
               >
                 <option value="">All Statuses</option>
                 <option value="new">New</option>
@@ -84,7 +82,7 @@
               <select 
                 [(ngModel)]="priorityFilter" 
                 (ngModelChange)="onFilterChange()"
-                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
+                class="w-full px-3 py-3 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
               >
                 <option value="">All Priorities</option>
                 <option value="high">High</option>
@@ -98,7 +96,7 @@
           <div class="flex items-end gap-2 sm:ml-auto">
             <button 
               (click)="clearFilters()" 
-              class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
+              class="inline-flex items-center justify-center gap-1.5 px-3 py-3 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
             >
               <i class="fas fa-times text-sm"></i>
               <span>Clear</span>
@@ -129,28 +127,22 @@
 
       <div class="h-full rounded-xl border border-gray-700 bg-gray-900 shadow-sm min-w-0">
         <!-- scrollable table container -->
-        <div class="overflow-x-auto overflow-y-auto no-scrollbar" style="max-height: 72vh;">
+        <div class="table-container" style="max-height: 72vh;">
           <table class="min-w-full divide-y divide-gray-700" role="table" aria-label="Contact forms table">
           <thead>
             <tr class="bg-gray-800">
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Contact Details</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Subject</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Status</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Priority</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Date</th>
-              <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Actions</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Contact Details</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Subject</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Priority</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Date</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-700 bg-gray-900">
             <tr *ngIf="contactForms.length === 0" class="text-center">
               <td colspan="6" class="px-6 py-12 text-gray-400">
-                <div class="flex flex-col items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 mb-4 text-gray-500">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                  </svg>
-                  <p class="text-lg font-medium text-gray-500 mb-2">No contact forms found</p>
-                  <p class="text-sm text-gray-400">Try adjusting your search or filter criteria</p>
-                </div>
+                <p class="text-lg font-medium text-gray-500 mb-2">No contact forms found</p>
               </td>
             </tr>
             <tr *ngFor="let form of contactForms" class="hover:bg-gray-800 transition duration-150 contact-form-row">
@@ -176,7 +168,7 @@
 
               <!-- Status Column -->
               <td class="px-6 py-4 whitespace-nowrap">
-                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize" 
+                <span class="inline-flex items-center rounded-full px-3 py-0.5 text-xs font-medium capitalize" 
                       [ngClass]="getStatusClass(form.status)">
                   <i class="fas mr-1" 
                      [class.fa-circle]="form.status === 'new'"
@@ -189,7 +181,7 @@
 
               <!-- Priority Column -->
               <td class="px-6 py-4 whitespace-nowrap">
-                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize" 
+                <span class="inline-flex items-center rounded-full px-3 py-0.5 text-xs font-medium capitalize" 
                       [ngClass]="getPriorityClass(form.priority)">
                   <i class="fas mr-1" 
                      [class.fa-exclamation-triangle]="form.priority === 'high'"
@@ -205,21 +197,16 @@
               </td>
 
               <!-- Actions Column -->
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div class="flex items-center justify-end space-x-2">
-                  <button class="p-2 text-gray-300 hover:text-blue-300 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-blue-300" 
-                          (click)="viewDetails(form)" title="View Details" [attr.aria-label]="'View details for ' + form.name">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <div class="flex items-center justify-center space-x-2">
+                  <button (click)="viewDetails(form)" class="p-2 text-gray-300 hover:text-blue-300 rounded-lg hover:bg-gray-800 transition" 
+                          title="View Details" [attr.aria-label]="'View details for ' + form.name">
+                    <i class="fas fa-eye text-sm"></i>
                   </button>
                   
-                  <button class="p-2 text-gray-300 hover:text-red-400 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-red-200" 
-                          (click)="deleteContactForm(form)" title="Delete" [attr.aria-label]="'Delete contact form from ' + form.name">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                    </svg>
+                  <button (click)="deleteContactForm(form)" class="p-2 text-gray-300 hover:text-red-300 rounded-lg hover:bg-gray-800 transition" 
+                          title="Delete" [attr.aria-label]="'Delete contact form from ' + form.name">
+                    <i class="fas fa-trash text-sm"></i>
                   </button>
                 </div>
               </td>
@@ -229,14 +216,14 @@
       </div>
         
         <!-- Pagination -->
-        <div class="flex items-center justify-between border-t border-gray-700 bg-gray-900 px-6 py-4" *ngIf="totalPages > 1">
+        <div class="flex items-center justify-between border-t border-gray-700 bg-gray-900 px-6 py-4" *ngIf="totalPages > 1 && !loading">
           <div class="flex items-center space-x-2 text-sm text-gray-300">
             <span>Showing</span>
-            <span class="font-medium text-gray-100">{{ (currentPage - 1) * 10 + 1 }}</span>
+            <span class="font-medium text-gray-100">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
             <span>to</span>
-            <span class="font-medium text-gray-100">{{ Math.min(currentPage * 10, contactForms.length) }}</span>
+            <span class="font-medium text-gray-100">{{ Math.min(currentPage * itemsPerPage, totalItems) }}</span>
             <span>of</span>
-            <span class="font-medium text-gray-100">{{ contactForms.length }}</span>
+            <span class="font-medium text-gray-100">{{ totalItems }}</span>
             <span>contact forms</span>
           </div>
           <div class="flex items-center space-x-2">
@@ -247,6 +234,15 @@
             >
               Previous
             </button>
+            
+            <!-- Page Numbers -->
+            <div class="flex items-center space-x-1">
+              <button *ngFor="let page of getPageNumbers()" 
+                      (click)="onPageChange(page)" 
+                      [class]="'px-3 py-2 rounded-lg text-sm font-medium transition ' + (page === currentPage ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 border border-gray-700')">
+                {{ page }}
+              </button>
+            </div>
             
             <button 
               [disabled]="currentPage === totalPages || totalPages === 0" 
@@ -263,7 +259,7 @@
 </div>
 
 <!-- Contact Form Details Modal -->
-<div *ngIf="showDetailsModal && selectedContactForm" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+<div *ngIf="showDetailsModal && selectedContactForm" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm overflow-y-auto h-full w-full z-[80]">
   <div class="relative top-10 mx-auto p-6 w-full max-w-6xl shadow-2xl rounded-2xl bg-gray-800 border border-gray-700">
     <div class="flex justify-between items-center mb-6">
       <h3 class="text-2xl font-semibold text-white">Contact Form Details</h3>
@@ -294,14 +290,14 @@
             </div>
             <div>
               <p class="text-sm text-gray-400">Status</p>
-              <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize" 
+              <span class="inline-flex items-center rounded-full px-3 py-0.5 text-xs font-medium capitalize" 
                     [ngClass]="getStatusClass(selectedContactForm.status)">
                 {{ selectedContactForm.status | titlecase }}
               </span>
             </div>
             <div>
               <p class="text-sm text-gray-400">Priority</p>
-              <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize" 
+              <span class="inline-flex items-center rounded-full px-3 py-0.5 text-xs font-medium capitalize" 
                     [ngClass]="getPriorityClass(selectedContactForm.priority)">
                 {{ selectedContactForm.priority | titlecase }}
               </span>
@@ -346,7 +342,7 @@
               <select 
                 id="updateStatus" 
                 [(ngModel)]="updateStatus"
-                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
+                class="w-full px-3 py-3 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
               >
                 <option value="new">New</option>
                 <option value="read">Read</option>
@@ -360,7 +356,7 @@
               <select 
                 id="updatePriority" 
                 [(ngModel)]="updatePriority"
-                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
+                class="w-full px-3 py-3 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -375,20 +371,20 @@
                 [(ngModel)]="adminNote" 
                 placeholder="Add a note about this contact form..."
                 rows="4"
-                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 resize-vertical"
+                class="w-full px-3 py-3 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 resize-vertical"
               ></textarea>
             </div>
             
             <div class="flex items-center justify-end space-x-3 pt-4">
               <button 
                 (click)="closeDetailsModal()"
-                class="px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-600 transition-colors duration-200"
+                class="px-4 py-3 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-600 transition-colors duration-200"
               >
                 Cancel
               </button>
               <button 
                 (click)="updateContactForm()"
-                class="px-4 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200"
+                class="px-4 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200"
               >
                 Update
               </button>

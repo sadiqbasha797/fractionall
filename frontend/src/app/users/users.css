@@ -49,6 +49,46 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
+/* Table container styling */
+.table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+.table-container::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
+
+/* Ensure table has minimum width for proper horizontal scrolling */
+.table-container table {
+  min-width: 1200px;
+}
+
+/* Sticky table headers */
+.table-container thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #1f2937; /* bg-gray-800 */
+}
+
+/* Touch device scrolling */
+@media (hover: none) and (pointer: coarse) {
+  .table-container {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* Table row hover effects */
+.hover\:bg-gray-800:hover {
+  background-color: #1f2937;
+}
+
 /* Stats card animations */
 .stats-card {
   transition: all 0.3s ease;
@@ -253,5 +293,310 @@ tbody tr:hover {
   
   .stats-card .text-2xl {
     font-size: 1.25rem;
+  }
+}
+
+/* Mobile responsive styles for users page */
+@media (max-width: 768px) {
+  /* Mobile responsive styles for action buttons */
+  .flex.items-end.gap-2.sm\\:ml-auto {
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    margin-left: 0;
+  }
+  
+  .flex.items-end.gap-2.sm\\:ml-auto button {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+  
+  /* Mobile responsive styles for search and filters */
+  .flex.flex-col.sm\\:flex-row.gap-4 {
+    gap: 1rem;
+  }
+  
+  .flex.flex-col.sm\\:flex-row.gap-4 > div {
+    width: 100%;
+  }
+  
+  /* Mobile responsive styles for Add User button */
+  .flex.items-end.gap-2.sm\\:ml-auto button:last-child {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    font-weight: 600;
+    padding: 0.875rem 1.5rem;
+  }
+  
+  .flex.items-end.gap-2.sm\\:ml-auto button:last-child:hover {
+    background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+    transform: translateY(-1px);
+  }
+  
+  /* Mobile modal adjustments */
+  .modal > div {
+    margin: 0.5rem;
+    max-width: none;
+    width: calc(100% - 1rem);
+    padding: 1rem;
+  }
+  
+  .modal h3 {
+    font-size: 1.25rem;
+  }
+  
+  /* Mobile form adjustments */
+  .modal form {
+    gap: 1rem;
+  }
+  
+  .modal input,
+  .modal select,
+  .modal textarea {
+    padding: 0.75rem;
+    font-size: 16px; /* Prevent zoom on iOS */
+    min-height: 44px;
+  }
+  
+  .modal .col-span-2 {
+    grid-column: 1;
+  }
+  
+  .modal .col-span-2.flex {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  
+  .modal .col-span-2.flex button {
+    width: 100%;
+    padding: 0.75rem 1rem;
+  }
+  
+  /* Force single column layout for users modal forms on mobile */
+  .modal form .grid.grid-cols-1.md\\:grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Force single column layout for all grid forms in modals */
+  .modal .grid.grid-cols-1.md\\:grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Mobile view modal adjustments */
+  .modal .grid.grid-cols-1.lg\\:grid-cols-2 {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .modal .grid.grid-cols-2 {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .modal .flex.justify-end.space-x-3 {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .modal .flex.justify-end.space-x-3 button {
+    width: 100%;
+  }
+  
+  /* Mobile table adjustments */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .min-w-full th,
+  .min-w-full td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
+  }
+  
+  /* Mobile user avatar adjustments */
+  .h-12.w-12 {
+    height: 2.5rem;
+    width: 2.5rem;
+  }
+  
+  /* Mobile action buttons in table */
+  .flex.space-x-2 button {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Extra small screens - further button adjustments */
+  .flex.items-end.gap-2.sm\\:ml-auto button {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Better spacing for mobile forms */
+  .px-4.sm\\:px-6.py-4.sm\\:py-6 {
+    padding: 1rem;
+  }
+  
+  /* Mobile modal adjustments */
+  .modal > div {
+    margin: 0.25rem;
+    padding: 0.75rem;
+    width: calc(100% - 0.5rem);
+  }
+  
+  .modal h3 {
+    font-size: 1.125rem;
+  }
+  
+  .modal input,
+  .modal select,
+  .modal textarea {
+    padding: 0.625rem;
+    font-size: 16px;
+  }
+  
+  .modal .flex.justify-end.space-x-3 button {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Add User button text wrapping for very small screens */
+  .flex.items-end.gap-2.sm\\:ml-auto button:last-child span {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+  }
+  
+  /* Mobile table further adjustments */
+  .min-w-full th,
+  .min-w-full td {
+    padding: 0.25rem 0.125rem;
+    font-size: 0.625rem;
+  }
+  
+  .h-12.w-12 {
+    height: 2rem;
+    width: 2rem;
+  }
+  
+  .flex.space-x-2 button {
+    padding: 0.125rem 0.25rem;
+    font-size: 0.625rem;
+  }
+}
+
+/* Additional mobile optimizations for users page */
+@media (max-width: 768px) {
+  /* Ensure proper touch targets */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better modal positioning on mobile */
+  .modal {
+    padding: 0;
+  }
+  
+  .modal > div {
+    border-radius: 0.75rem;
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
+    overflow-y: auto;
+  }
+  
+  /* Ensure proper scrolling on mobile */
+  .modal {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Better focus states for mobile */
+  .modal input:focus,
+  .modal select:focus,
+  .modal textarea:focus {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+  }
+  
+  /* Prevent horizontal scroll on mobile */
+  .modal form {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  /* Better spacing for mobile forms */
+  .modal form > div {
+    margin-bottom: 1rem;
+  }
+  
+  /* Ensure labels are properly sized for mobile */
+  .modal label {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  
+  /* Mobile table container improvements */
+  .overflow-x-auto {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .overflow-x-auto::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Mobile table cell content adjustments */
+  .whitespace-nowrap {
+    white-space: normal;
+  }
+  
+  /* Mobile status badges */
+  .status-badge {
+    font-size: 0.625rem;
+    padding: 0.125rem 0.375rem;
+  }
+  
+  /* Mobile table row improvements */
+  .hover\\:bg-gray-800:hover {
+    background-color: rgba(31, 41, 55, 0.5);
+  }
+  
+  /* Mobile table header improvements */
+  .bg-gray-800 th {
+    font-size: 0.625rem;
+    padding: 0.5rem 0.25rem;
+  }
+  
+  /* Mobile table cell improvements */
+  .px-6.py-4 {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  /* Mobile user info display improvements */
+  .text-sm.font-medium {
+    font-size: 0.75rem;
+  }
+  
+  .text-xs.text-gray-400 {
+    font-size: 0.625rem;
+  }
+  
+  /* Mobile action button improvements */
+  .inline-flex.items-center.gap-2 {
+    gap: 0.25rem;
+  }
+  
+  /* Mobile modal form improvements */
+  .space-y-4 > div {
+    margin-bottom: 1rem;
+  }
+  
+  /* Mobile textarea improvements */
+  .modal textarea {
+    min-height: 80px;
   }
 }

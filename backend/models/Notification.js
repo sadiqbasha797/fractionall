@@ -45,7 +45,18 @@ const NotificationSchema = new mongoose.Schema({
       'user_kyc_rejected',
       'manual_announcement',
       'system_maintenance',
-      'security_alert'
+      'security_alert',
+      'retargeting_notification',
+      'token_refund_requested',
+      'booknow_token_refund_requested',
+      'token_refund_approved',
+      'booknow_token_refund_approved',
+      'token_refund_rejected',
+      'booknow_token_refund_rejected',
+      'token_refund_initiated',
+      'booknow_token_refund_initiated',
+      'token_refund_processed',
+      'booknow_token_refund_processed'
     ]
   },
   

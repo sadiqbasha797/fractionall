@@ -1,0 +1,558 @@
+<div class="flex-1 flex flex-col bg-gray-700 text-gray-100">
+  <!-- Enhanced Header Section -->
+  <header class="bg-gradient-to-r from-gray-800 to-gray-700 border-b border-gray-600 shadow-lg">
+    <!-- Title and Stats Section -->
+    <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/50">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <!-- Title Section -->
+        <div class="flex items-center space-x-3">
+          <div class="p-2 bg-green-600/20 rounded-lg">
+            <i class="fas fa-credit-card text-green-400 text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-white">Payment Transactions</h1>
+            <p class="text-gray-400 text-sm mt-1">Manage and view all Razorpay payment transactions</p>
+          </div>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="flex items-center space-x-3 sm:space-x-4" *ngIf="stats && !loadingStats">
+          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600/50 flex-1 sm:flex-none">
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span class="text-xs sm:text-sm text-gray-300">Successful</span>
+            </div>
+            <div class="text-xl sm:text-2xl font-bold text-white mt-1">{{ stats.successful_payments }}</div>
+          </div>
+          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600/50 flex-1 sm:flex-none">
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+              <span class="text-xs sm:text-sm text-gray-300">Total</span>
+            </div>
+            <div class="text-xl sm:text-2xl font-bold text-white mt-1">{{ stats.total_payments }}</div>
+          </div>
+          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600/50 flex-1 sm:flex-none">
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-yellow-400 rounded-full"></div>
+              <span class="text-xs sm:text-sm text-gray-300">Amount</span>
+            </div>
+            <div class="text-lg sm:text-xl font-bold text-white mt-1">₹{{ stats.successful_amount | number:'1.0-0' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search and Filters Section -->
+    <div class="px-4 sm:px-6 py-4 sm:py-6">
+      <div class="flex flex-col gap-4">
+        <!-- Search Bar -->
+        <div class="w-full">
+          <label class="block text-sm font-medium text-gray-300 mb-2">Search Transactions</label>
+          <div class="relative search-input-container">
+            <input
+              type="text"
+              [(ngModel)]="searchTerm"
+              (input)="applyFilters()"
+              placeholder="Search by payment ID, email, or amount..."
+              class="search-input w-full pl-10 pr-4 py-3 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300">
+            <i class="fas fa-search search-icon"></i>
+            <!-- Fallback SVG icon in case Font Awesome doesn't load -->
+            <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Filters Row -->
+        <div class="flex flex-wrap gap-3">
+          <!-- Status Filter -->
+          <div class="flex-1 min-w-[200px]">
+            <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+            <select 
+              [(ngModel)]="statusFilter" 
+              (change)="applyFilters()"
+              class="w-full px-4 py-3 rounded-xl bg-gray-700/50 backdrop-blur-sm border border-gray-600/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300">
+              <option value="">All Statuses</option>
+              <option value="captured">Successful</option>
+              <option value="authorized">Authorized</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+
+          <!-- Method Filter -->
+          <div class="flex-1 min-w-[200px]">
+            <label class="block text-sm font-medium text-gray-300 mb-2">Payment Method</label>
+            <select 
+              [(ngModel)]="methodFilter" 
+              (change)="applyFilters()"
+              class="w-full px-4 py-3 rounded-xl bg-gray-700/50 backdrop-blur-sm border border-gray-600/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300">
+              <option value="">All Methods</option>
+              <option value="card">Card</option>
+              <option value="netbanking">Net Banking</option>
+              <option value="wallet">Wallet</option>
+              <option value="upi">UPI</option>
+            </select>
+          </div>
+
+          <!-- Date Range -->
+          <div class="flex-1 min-w-[200px]">
+            <label class="block text-sm font-medium text-gray-300 mb-2">From Date</label>
+            <input 
+              type="date" 
+              [(ngModel)]="fromDate" 
+              (change)="applyFilters()"
+              class="w-full px-4 py-3 rounded-xl bg-gray-700/50 backdrop-blur-sm border border-gray-600/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 cursor-pointer"
+              (click)="openDatePicker('fromDate')"
+              id="fromDate">
+          </div>
+
+          <div class="flex-1 min-w-[200px]">
+            <label class="block text-sm font-medium text-gray-300 mb-2">To Date</label>
+            <input 
+              type="date" 
+              [(ngModel)]="toDate" 
+              (change)="applyFilters()"
+              class="w-full px-4 py-3 rounded-xl bg-gray-700/50 backdrop-blur-sm border border-gray-600/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 cursor-pointer"
+              (click)="openDatePicker('toDate')"
+              id="toDate">
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-3">
+          <button 
+            (click)="showRefundsList()" 
+            class="btn-secondary px-6 py-3 rounded-xl flex items-center space-x-2 hover:bg-gray-600/50 transition-all duration-300">
+            <i class="fas fa-undo"></i>
+            <span>Refunds</span>
+          </button>
+          <button 
+            (click)="exportTransactions()" 
+            class="btn-primary px-6 py-3 rounded-xl flex items-center space-x-2 hover:bg-blue-600 transition-all duration-300">
+            <i class="fas fa-download"></i>
+            <span>Export CSV</span>
+          </button>
+          <button 
+            (click)="clearFilters()" 
+            class="px-6 py-3 rounded-xl bg-gray-600/50 hover:bg-gray-600 text-white flex items-center space-x-2 transition-all duration-300">
+            <i class="fas fa-times"></i>
+            <span>Clear Filters</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 py-4 overflow-auto">
+    <section class="max-w-7xl mx-auto">
+      <div class="h-full rounded-xl border border-gray-700 bg-gray-900 shadow-sm min-w-0">
+        <!-- scrollable table container -->
+        <div class="table-container" style="max-height: 72vh;">
+          <table class="min-w-full divide-y divide-gray-700" role="table" aria-label="Transactions table">
+          <thead>
+            <tr class="bg-gray-800">
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Transaction</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Payment Method</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Customer</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Amount</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Date</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-700 bg-gray-900">
+            <tr *ngIf="filteredTransactions.length === 0" class="text-center">
+              <td colspan="7" class="px-6 py-12 text-gray-400">
+                <p class="text-lg font-medium text-gray-500 mb-2">No transactions found</p>
+              </td>
+            </tr>
+      <tr *ngFor="let transaction of filteredTransactions" class="hover:bg-gray-800 transition duration-150">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-gray-700 bg-gray-800 flex items-center justify-center">
+                    <i class="fas fa-credit-card text-green-400 text-xl"></i>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-100">{{ transaction.id }}</div>
+                    <div class="text-xs text-gray-300">{{ transaction.order_id }}</div>
+                    <div class="text-xs text-gray-400">{{ transaction.currency }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
+                      (transaction.status === 'captured' || transaction.status === 'paid' ? 'status-badge-approved' : 
+                       transaction.status === 'created' || transaction.status === 'pending' ? 'status-badge-pending' : 'status-badge-rejected')">
+                  {{ getStatusDisplayName(transaction.status) }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center space-x-2">
+                  <i class="fas fa-credit-card text-gray-400"></i>
+                  <span class="text-sm text-gray-300">{{ getMethodDisplayName(transaction.method) }}</span>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-300">{{ transaction.email }}</div>
+                <div class="text-xs text-gray-400">{{ transaction.contact }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-300">
+                  <span class="font-medium text-green-400">₹{{ formatAmount(transaction.amount) }}</span>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-300">{{ formatDate(transaction.created_at) }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <div class="flex items-center justify-center space-x-2">
+                  <button (click)="showTransactionDetails(transaction)" class="p-2 text-gray-300 hover:text-blue-300 rounded-lg hover:bg-gray-800 transition" 
+                          title="View Details" aria-label="View details for {{transaction.id}}">
+                    <i class="fas fa-eye text-sm"></i>
+                  </button>
+                  <button *ngIf="canRefundTransaction(transaction)"
+                          (click)="showRefundModalForTransaction(transaction)" class="p-2 text-gray-300 hover:text-yellow-300 rounded-lg hover:bg-gray-800 transition" 
+                          title="Refund" aria-label="Refund {{transaction.id}}">
+                    <i class="fas fa-undo text-sm"></i>
+                  </button>
+                  <span *ngIf="hasExistingRefund(transaction.id)"
+                        class="p-2 text-green-400 rounded-lg bg-green-900/20" 
+                        title="Already Refunded" aria-label="Transaction {{transaction.id}} already refunded">
+                    <i class="fas fa-check text-sm"></i>
+                  </span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+        
+        <!-- Pagination -->
+        <div *ngIf="filteredTransactions.length > 0" class="flex items-center justify-between border-t border-gray-700 bg-gray-900 px-6 py-4">
+          <div class="flex items-center space-x-2 text-sm text-gray-300">
+            <span>Showing</span>
+            <span class="font-medium text-gray-100">{{ (currentPage - 1) * pageSize + 1 }}</span>
+            <span>to</span>
+            <span class="font-medium text-gray-100">{{ getMin(currentPage * pageSize, totalItems) }}</span>
+            <span>of</span>
+            <span class="font-medium text-gray-100">{{ totalItems }}</span>
+            <span>transactions</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button [disabled]="currentPage === 1" 
+                    (click)="goToPage(currentPage - 1)"
+                    class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150">
+              Previous
+            </button>
+            
+            <!-- Page Numbers -->
+            <div class="flex items-center space-x-1">
+              <button *ngFor="let page of getPageNumbers()" 
+                      (click)="goToPage(page)" 
+                      [class]="'px-3 py-2 rounded-lg text-sm font-medium transition ' + (page === currentPage ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 border border-gray-700')">
+                {{ page }}
+              </button>
+            </div>
+            
+            <button [disabled]="currentPage === totalPages || totalPages === 0" 
+                    (click)="goToPage(currentPage + 1)"
+                    class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Token Refunds Section -->
+    <section class="bg-gray-800 rounded-xl border border-gray-700 shadow-sm mb-6" *ngIf="pendingTokenRefunds.length > 0">
+      <div class="px-6 py-4 border-b border-gray-700">
+        <h2 class="text-xl font-semibold text-white flex items-center">
+          <i class="fas fa-undo text-yellow-400 mr-3"></i>
+          Pending Token Refunds
+        </h2>
+        <p class="text-gray-400 text-sm mt-1">Tokens approved for refund - ready for processing</p>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-700">
+          <thead class="bg-gray-900">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Token Details</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User Info</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Payment ID</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-gray-800 divide-y divide-gray-700">
+            <tr *ngFor="let refund of pendingTokenRefunds" class="hover:bg-gray-700 transition duration-150">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-gray-700 bg-gray-800 flex items-center justify-center">
+                    <i class="fas fa-ticket-alt text-blue-400 text-xl"></i>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-100">{{ refund.customtokenid }}</div>
+                    <div class="text-xs text-gray-400">{{ refund.tokenType === 'token' ? 'Waitlist Token' : 'Book Now Token' }}</div>
+                    <div class="text-xs text-gray-500">{{ refund.carName }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-300">{{ refund.userName }}</div>
+                <div class="text-xs text-gray-400">{{ refund.userEmail }}</div>
+                <div class="text-xs text-gray-500">{{ refund.userPhone }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-green-400">₹{{ refund.amountpaid | number:'1.0-0' }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-300">{{ refund.razorpayPaymentId || 'N/A' }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <button (click)="processTokenRefund(refund)" 
+                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150">
+                  <i class="fas fa-credit-card mr-2"></i>
+                  Process Refund
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+        <!-- Loading State -->
+        <div *ngIf="loading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <p class="mt-2 text-gray-400">Loading transactions...</p>
+        </div>
+</div>
+
+<!-- Transaction Details Modal -->
+<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
+  <div class="modal-content transaction-details-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Transaction Details</h2>
+      <button class="modal-close" (click)="closeDetailsModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body" *ngIf="selectedTransaction">
+      <div class="transaction-details">
+        <div class="detail-row">
+          <label>Payment ID</label>
+          <span>{{ selectedTransaction.id }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Order ID</label>
+          <span>{{ selectedTransaction.order_id }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Amount</label>
+          <span>₹{{ formatAmount(selectedTransaction.amount) }} {{ selectedTransaction.currency }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Status</label>
+          <span class="status-badge" [attr.data-status]="selectedTransaction.status">
+            {{ getStatusDisplayName(selectedTransaction.status) }}
+          </span>
+        </div>
+        <div class="detail-row">
+          <label>Payment Method</label>
+          <span>{{ getMethodDisplayName(selectedTransaction.method) }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Email</label>
+          <span>{{ selectedTransaction.email }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Contact</label>
+          <span>{{ selectedTransaction.contact }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Date</label>
+          <span>{{ formatDate(selectedTransaction.created_at) }}</span>
+        </div>
+        <div class="detail-row" *ngIf="selectedTransaction.description">
+          <label>Description</label>
+          <span>{{ selectedTransaction.description }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Refund Modal -->
+<div class="modal-overlay" *ngIf="showRefundModal" (click)="closeRefundModal()">
+  <div class="modal-content refund-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Initiate Refund</h2>
+      <button class="modal-close" (click)="closeRefundModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="refund-form">
+        <div class="form-group">
+          <label>Payment ID</label>
+          <input type="text" class="form-control" [value]="refundForm.paymentId" readonly>
+        </div>
+
+        <div class="form-group">
+          <label>Refund Amount (₹)</label>
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="refundForm.refundAmount"
+            min="0"
+            step="0.01">
+        </div>
+
+        <div class="form-group">
+          <label>Refund Reason *</label>
+          <textarea
+            class="form-control"
+            [(ngModel)]="refundForm.reason"
+            rows="3"
+            placeholder="Please provide a reason for the refund..."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-outline" (click)="closeRefundModal()">Cancel</button>
+          <button class="btn btn-warning" (click)="initiateRefund()">
+            <i class="fas fa-undo"></i>
+            Initiate Refund
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Refund Details Modal -->
+<div class="modal-overlay" *ngIf="showRefundDetailsModal" (click)="closeRefundDetailsModal()">
+  <div class="modal-content refund-details-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Refund Details</h2>
+      <button class="modal-close" (click)="closeRefundDetailsModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedRefund">
+      <div class="refund-details">
+        <div class="detail-row">
+          <label>Refund ID</label>
+          <span>{{ selectedRefund._id }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Payment ID</label>
+          <span>{{ selectedRefund.originalPaymentId }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Amount</label>
+          <span>₹{{ formatAmount(selectedRefund.refundAmount) }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Status</label>
+          <span class="status-badge" [attr.data-status]="selectedRefund.refundStatus">
+            {{ getRefundStatusDisplayName(selectedRefund.refundStatus) }}
+          </span>
+        </div>
+        <div class="detail-row">
+          <label>Reason</label>
+          <span>{{ selectedRefund.refundReason }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Initiated At</label>
+          <span>{{ formatDate(selectedRefund.refundInitiatedAt) }}</span>
+        </div>
+        <div class="detail-row" *ngIf="selectedRefund.refundProcessedAt">
+          <label>Processed At</label>
+          <span>{{ formatDate(selectedRefund.refundProcessedAt) }}</span>
+        </div>
+        <div class="detail-row" *ngIf="selectedRefund.refundCompletedAt">
+          <label>Completed At</label>
+          <span>{{ formatDate(selectedRefund.refundCompletedAt) }}</span>
+        </div>
+      </div>
+
+      <div class="detail-actions" *ngIf="selectedRefund.refundStatus === 'initiated'">
+        <button class="btn btn-danger" (click)="cancelRefund(selectedRefund._id)">
+          <i class="fas fa-times"></i>
+          Cancel Refund
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Refunds List Modal -->
+<div class="modal-overlay" *ngIf="showRefundsListModal" (click)="closeRefundsListModal()">
+  <div class="modal-content refunds-list-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>All Refunds</h2>
+      <button class="modal-close" (click)="closeRefundsListModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="refunds-list">
+        <div class="refund-item" *ngFor="let refund of refunds" (click)="showRefundDetails(refund)">
+          <div class="refund-info">
+            <div class="refund-id">{{ refund._id }}</div>
+            <div class="refund-amount">₹{{ formatAmount(refund.refundAmount) }}</div>
+            <div class="refund-type">{{ getTransactionTypeDisplayName(refund.transactionType) }}</div>
+          </div>
+          <div class="refund-status">
+            <span class="status-badge" [attr.data-status]="refund.refundStatus">
+              {{ getRefundStatusDisplayName(refund.refundStatus) }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="empty-state" *ngIf="refunds.length === 0">
+          <i class="fas fa-undo"></i>
+          <h3>No refunds found</h3>
+          <p>There are no refunds to display.</p>
+        </div>
+      </div>
+      
+      <div class="loading-container" *ngIf="loadingRefunds">
+        <div class="spinner"></div>
+        <p>Loading refunds...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" *ngIf="showExportModal" (click)="closeExportModal()">
+  <div class="modal-content export-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Export Transactions</h2>
+      <button class="modal-close" (click)="closeExportModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <p>Export current filtered transactions ({{ filteredTransactions.length }} records)</p>
+      
+      <div class="export-options">
+        <button class="btn btn-primary" (click)="downloadCSV()">
+          <i class="fas fa-file-csv"></i>
+          Download as CSV
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

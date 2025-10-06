@@ -94,9 +94,22 @@ export class Bookings implements OnInit {
     to: ''
   };
 
+  // Booking rules validation
+  protected validationErrors = signal<string[]>([]);
+  protected weekendBookingsCount = signal<number>(0);
+  protected maxWeekendBookings = 5;
+  protected maxAdvanceBookingMonths = 3;
+
   // Get today's date in YYYY-MM-DD format for date input min attribute
   get todayDate(): string {
     return new Date().toISOString().split('T')[0];
+  }
+
+  // Get maximum date for advance booking (3 months from today)
+  protected get maxAdvanceDate(): string {
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + this.maxAdvanceBookingMonths);
+    return maxDate.toISOString().split('T')[0];
   }
 
   // Booked dates (for calendar display)
@@ -277,6 +290,59 @@ export class Bookings implements OnInit {
     }, 0);
   }
 
+  // Real-time validation when form fields change
+  protected onFormFieldChange(): void {
+    if (this.bookingForm.fromDate && this.bookingForm.toDate && this.bookingForm.selectedCar) {
+      this.validateBookingRules();
+      this.updateWeekendBookingCount();
+    } else {
+      this.validationErrors.set([]);
+      this.weekendBookingsCount.set(0);
+    }
+  }
+
+  // Update weekend booking count for display
+  private updateWeekendBookingCount(): void {
+    if (!this.bookingForm.selectedCar) {
+      this.weekendBookingsCount.set(0);
+      return;
+    }
+
+    const selectedCar = this.bookingForm.selectedCar;
+    const currentYear = new Date().getFullYear();
+
+    // Find the selected car from user's cars to get the car name
+    const selectedCarData = this.userCars().find(car => car.carid._id === selectedCar);
+    if (!selectedCarData) {
+      this.weekendBookingsCount.set(0);
+      return;
+    }
+
+    const weekendBookings = this.bookings().filter(booking => {
+      const bookingFrom = new Date(booking.fromDate);
+      const bookingTo = new Date(booking.toDate);
+      const bookingYear = bookingFrom.getFullYear();
+      
+      // Check if booking is for the same car and in the current year
+      if (bookingYear !== currentYear || !booking.carName.includes(selectedCarData.carid.carname)) {
+        return false;
+      }
+
+      // Check if booking includes any weekend days
+      let currentDate = new Date(bookingFrom);
+      while (currentDate <= bookingTo) {
+        const dayOfWeek = currentDate.getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 6) { // Sunday or Saturday
+          return true;
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      return false;
+    });
+
+    this.weekendBookingsCount.set(weekendBookings.length);
+  }
+
   // Event handlers
   async onBookingSubmit(event: Event): Promise<void> {
     event.preventDefault();
@@ -305,6 +371,13 @@ export class Bookings implements OnInit {
     
     if (fromDate > toDate) {
       alert('From date cannot be after To date. Please select valid date range.');
+      return;
+    }
+
+    // Validate booking rules
+    if (!this.validateBookingRules()) {
+      const errorMessage = this.validationErrors().join('\n');
+      alert(errorMessage);
       return;
     }
 
@@ -548,6 +621,168 @@ export class Bookings implements OnInit {
       return response?.body?.isAvailable || false;
     } catch (error) {
       return false;
+    }
+  }
+
+  // Validate booking rules
+  private validateBookingRules(): boolean {
+    this.validationErrors.set([]);
+    const errors: string[] = [];
+
+    if (!this.bookingForm.fromDate || !this.bookingForm.toDate || !this.bookingForm.selectedCar) {
+      return true; // Let the existing validation handle this
+    }
+
+    const fromDate = new Date(this.bookingForm.fromDate);
+    const toDate = new Date(this.bookingForm.toDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Rule 1: Min 1 day, Max 4 days
+    const duration = this.getBookingDuration(fromDate, toDate);
+    if (duration < 1) {
+      errors.push('Minimum booking duration is 1 day.');
+    }
+    if (duration > 4) {
+      errors.push('Maximum booking duration is 4 days.');
+    }
+
+    // Rule 2: Advance booking limit (3 months)
+    const maxAdvanceDate = new Date();
+    maxAdvanceDate.setMonth(maxAdvanceDate.getMonth() + this.maxAdvanceBookingMonths);
+    if (fromDate > maxAdvanceDate) {
+      errors.push(`Advance booking is only allowed up to ${this.maxAdvanceBookingMonths} months ahead.`);
+    }
+
+    // Rule 3: Same car booking restriction
+    if (this.hasExistingBookingForSameCar()) {
+      errors.push('You already have an active booking for this car. Please wait for it to complete before booking again.');
+    }
+
+    // Rule 4: Weekend booking limit
+    if (this.exceedsWeekendBookingLimit()) {
+      errors.push(`You have reached the maximum limit of ${this.maxWeekendBookings} weekend bookings per year for this car.`);
+    }
+
+    this.validationErrors.set(errors);
+    return errors.length === 0;
+  }
+
+  // Calculate booking duration in days
+  private getBookingDuration(fromDate: Date, toDate: Date): number {
+    const diffTime = Math.abs(toDate.getTime() - fromDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end days
+  }
+
+  // Check if user has existing booking for the same car
+  private hasExistingBookingForSameCar(): boolean {
+    const selectedCar = this.bookingForm.selectedCar;
+    const fromDate = new Date(this.bookingForm.fromDate);
+    const toDate = new Date(this.bookingForm.toDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Find the selected car from user's cars to get the car name
+    const selectedCarData = this.userCars().find(car => car.carid._id === selectedCar);
+    if (!selectedCarData) return false;
+
+    return this.bookings().some(booking => {
+      const bookingFrom = new Date(booking.fromDate);
+      const bookingTo = new Date(booking.toDate);
+      
+      // Check if booking is for the same car and overlaps with the new booking period
+      // and the existing booking hasn't completed yet
+      return booking.carName.includes(selectedCarData.carid.carname) && 
+             bookingTo >= today && 
+             ((fromDate >= bookingFrom && fromDate <= bookingTo) ||
+              (toDate >= bookingFrom && toDate <= bookingTo) ||
+              (fromDate <= bookingFrom && toDate >= bookingTo));
+    });
+  }
+
+  // Check if weekend booking limit is exceeded
+  private exceedsWeekendBookingLimit(): boolean {
+    const selectedCar = this.bookingForm.selectedCar;
+    const fromDate = new Date(this.bookingForm.fromDate);
+    const toDate = new Date(this.bookingForm.toDate);
+    const currentYear = new Date().getFullYear();
+
+    // Find the selected car from user's cars to get the car name
+    const selectedCarData = this.userCars().find(car => car.carid._id === selectedCar);
+    if (!selectedCarData) return false;
+
+    // Count weekend bookings for this car in the current year
+    const weekendBookings = this.bookings().filter(booking => {
+      const bookingFrom = new Date(booking.fromDate);
+      const bookingTo = new Date(booking.toDate);
+      const bookingYear = bookingFrom.getFullYear();
+      
+      // Check if booking is for the same car and in the current year
+      if (bookingYear !== currentYear || !booking.carName.includes(selectedCarData.carid.carname)) {
+        return false;
+      }
+
+      // Check if booking includes any weekend days
+      let currentDate = new Date(bookingFrom);
+      while (currentDate <= bookingTo) {
+        const dayOfWeek = currentDate.getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 6) { // Sunday or Saturday
+          return true;
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      return false;
+    });
+
+    // Check if the new booking includes weekends
+    let includesWeekend = false;
+    let currentDate = new Date(fromDate);
+    while (currentDate <= toDate) {
+      const dayOfWeek = currentDate.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) { // Sunday or Saturday
+        includesWeekend = true;
+        break;
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return includesWeekend && weekendBookings.length >= this.maxWeekendBookings;
+  }
+
+  // Check if booking can be cancelled (before 1 day of booking date)
+  protected canCancelBooking(booking: Booking): boolean {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const bookingFrom = new Date(booking.fromDate);
+    const oneDayBefore = new Date(bookingFrom);
+    oneDayBefore.setDate(oneDayBefore.getDate() - 1);
+    
+    return today < oneDayBefore;
+  }
+
+  // Cancel a booking
+  protected cancelBooking(booking: Booking): void {
+    if (!this.canCancelBooking(booking)) {
+      alert('You can only cancel bookings at least 1 day before the booking date.');
+      return;
+    }
+
+    if (confirm('Are you sure you want to cancel this booking?')) {
+      this.bookingService.deleteBooking(booking.id).subscribe({
+        next: (response: any) => {
+          if (response.status === 'success') {
+            alert('Booking cancelled successfully!');
+            // Reload bookings
+            this.loadUserBookings();
+            this.loadCarBookings();
+          } else {
+            alert('Failed to cancel booking. Please try again.');
+          }
+        },
+        error: (error: any) => {
+          alert('Failed to cancel booking. Please try again.');
+        }
+      });
     }
   }
 }

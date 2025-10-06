@@ -1,6 +1,6 @@
 # API Configuration Guide
 
-This guide explains the API configuration for the frontend. The application is now configured to use the production API endpoint.
+This guide explains the API configuration for the frontend. The application is now configured to use the localhost:2000 API endpoint.
 
 ## Configuration Files
 
@@ -21,15 +21,15 @@ The `ConfigService` (`src/app/services/config.service.ts`) handles API URL manag
 
 ### Current Configuration
 
-The application is configured to use the production API endpoint:
+The application is configured to use the localhost:2000 API endpoint:
 
 #### Development Environment:
 ```typescript
 // src/environments/environment.ts
 export const environment = {
   production: false,
-  apiUrl: 'https://fractionbackend.projexino.com/api',
-  productionApiUrl: 'https://fractionbackend.projexino.com/api',
+  apiUrl: 'http://localhost:2000/api',
+  productionApiUrl: 'http://localhost:2000/api',
   useProductionApi: true // Always use production API
 };
 ```
@@ -39,8 +39,8 @@ export const environment = {
 // src/environments/environment.prod.ts
 export const environment = {
   production: true,
-  apiUrl: 'https://fractionbackend.projexino.com/api',
-  productionApiUrl: 'https://fractionbackend.projexino.com/api',
+  apiUrl: 'http://localhost:2000/api',
+  productionApiUrl: 'http://localhost:2000/api',
   useProductionApi: true // Always use production API
 };
 ```
@@ -90,18 +90,18 @@ ng serve
 ng build --configuration=production
 ```
 
-Both builds now use the production API endpoint.
+Both builds now use the localhost:2000 API endpoint.
 
 ## Testing API Connectivity
 
 You can test if the API is working by checking the health endpoint:
 
-- **Production API**: `https://fractionbackend.projexino.com/api/health` (if available)
+- **Local API**: `http://localhost:2000/api/health` (if available)
 
 ## Troubleshooting
 
 1. **CORS Issues**: Make sure your backend allows requests from your frontend domain
-2. **Network Issues**: Check if the production API is accessible from your network
+2. **Network Issues**: Check if the local API is accessible from your network
 3. **Authentication**: Ensure tokens are valid for the API you're using
 4. **Environment Variables**: Verify the environment configuration is correct
 

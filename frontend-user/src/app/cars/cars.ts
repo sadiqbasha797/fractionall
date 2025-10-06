@@ -1,10 +1,11 @@
-import { Component, AfterViewInit, OnInit, Renderer2, ElementRef, signal, computed, effect, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, AfterViewInit, OnInit, Renderer2, ElementRef, signal, computed, effect, Inject, PLATFORM_ID, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CarPublicService } from '../services/car-public.service';
 import { AnimationService } from '../services/animation.service';
+import { LocationSuggestionsService, LocationSuggestion } from '../services/location-suggestions.service';
 
 @Component({
   selector: 'app-cars',
@@ -29,10 +30,192 @@ export class Cars implements OnInit, AfterViewInit {
   protected locationSearchQuery = signal<string>('');
   protected locationSearchType = signal<string>('');
   protected isLocationSearchActive = signal<boolean>(false);
+  protected isLocationDropdownOpen = signal<boolean>(false);
+  protected locationSuggestions = signal<LocationSuggestion[]>([]);
+  protected isLocationLoading = signal<boolean>(false);
+  
+  // Computed filtered cities based on search query
+  protected filteredCities = computed(() => {
+    const query = this.locationSearchQuery().toLowerCase().trim();
+    if (!query) {
+      return this.indianCities;
+    }
+    return this.indianCities.filter(city => 
+      city.toLowerCase().includes(query)
+    ).sort((a, b) => {
+      // Sort by relevance: exact matches first, then starts with, then contains
+      const aLower = a.toLowerCase();
+      const bLower = b.toLowerCase();
+      const queryLower = query.toLowerCase();
+      
+      if (aLower === queryLower) return -1;
+      if (bLower === queryLower) return 1;
+      if (aLower.startsWith(queryLower) && !bLower.startsWith(queryLower)) return -1;
+      if (bLower.startsWith(queryLower) && !aLower.startsWith(queryLower)) return 1;
+      
+      return a.localeCompare(b);
+    });
+  });
+
+  // Combined suggestions from both static cities and API suggestions
+  protected allLocationSuggestions = computed(() => {
+    const query = this.locationSearchQuery().toLowerCase().trim();
+    const staticCities = this.filteredCities();
+    const apiSuggestions = this.locationSuggestions();
+    const selectedLocation = this.locationSearchQuery().trim();
+    const isLocationSelected = this.isLocationSearchActive() && selectedLocation;
+    
+    // Create base suggestions array
+    let suggestions: any[] = [];
+    
+    // If a location is selected, show all cities (not filtered by query)
+    if (isLocationSelected) {
+      // Use all cities from the indianCities array, not filtered ones
+      suggestions = this.indianCities.map(city => ({ 
+        name: city, 
+        display_name: city, 
+        state: '', 
+        country: 'India', 
+        lat: '', 
+        lon: '', 
+        type: 'city' 
+      }));
+    } else if (!query) {
+      suggestions = staticCities.map(city => ({ name: city, display_name: city, state: '', country: 'India', lat: '', lon: '', type: 'city' }));
+    } else {
+      // If we have API suggestions, prioritize them and add static cities that aren't already included
+      if (apiSuggestions.length > 0) {
+        const apiCityNames = apiSuggestions.map(s => s.name.toLowerCase());
+        const additionalStaticCities = staticCities.filter(city => 
+          !apiCityNames.includes(city.toLowerCase())
+        );
+        
+        suggestions = [
+          ...apiSuggestions,
+          ...additionalStaticCities.map(city => ({ 
+            name: city, 
+            display_name: city, 
+            state: '', 
+            country: 'India', 
+            lat: '', 
+            lon: '', 
+            type: 'city' 
+          }))
+        ];
+        
+        suggestions = this.sortSuggestionsByRelevance(suggestions, query);
+      } else {
+        // Fallback to static cities only
+        suggestions = staticCities.map(city => ({ 
+          name: city, 
+          display_name: city, 
+          state: '', 
+          country: 'India', 
+          lat: '', 
+          lon: '', 
+          type: 'city' 
+        }));
+      }
+    }
+    
+    // If there's a selected location, ensure it appears at the top
+    if (isLocationSelected) {
+      const selectedLocationLower = selectedLocation.toLowerCase();
+      
+      // Remove the selected location from the suggestions if it exists
+      const filteredSuggestions = suggestions.filter(suggestion => 
+        suggestion.name.toLowerCase() !== selectedLocationLower
+      );
+      
+      // Add the selected location at the top with a special flag
+      const selectedSuggestion = {
+        name: selectedLocation,
+        display_name: selectedLocation,
+        state: '',
+        country: 'India',
+        lat: '',
+        lon: '',
+        type: 'city',
+        isSelected: true
+      };
+      
+      // Combine selected location at top with remaining suggestions
+      suggestions = [selectedSuggestion, ...filteredSuggestions];
+    }
+    
+    return suggestions.slice(0, 10);
+  });
+
+  /**
+   * Sort suggestions by relevance to the search query
+   */
+  private sortSuggestionsByRelevance(suggestions: any[], query: string): any[] {
+    const queryLower = query.toLowerCase();
+    
+    return suggestions.sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      
+      // Exact match gets highest priority
+      if (aName === queryLower) return -1;
+      if (bName === queryLower) return 1;
+      
+      // Starts with query gets second priority
+      const aStartsWith = aName.startsWith(queryLower);
+      const bStartsWith = bName.startsWith(queryLower);
+      if (aStartsWith && !bStartsWith) return -1;
+      if (bStartsWith && !aStartsWith) return 1;
+      
+      // Contains query gets third priority
+      const aContains = aName.includes(queryLower);
+      const bContains = bName.includes(queryLower);
+      if (aContains && !bContains) return -1;
+      if (bContains && !aContains) return 1;
+      
+      // Shorter names get priority for same relevance
+      if (aContains && bContains) {
+        return aName.length - bName.length;
+      }
+      
+      // Alphabetical order as fallback
+      return aName.localeCompare(bName);
+    });
+  }
+  
+  // Indian cities list
+  protected indianCities = [
+    'Bangalore',
+    'Mysore', 
+    'Mangalore',
+    'Visakhapatnam',
+    'Vijaywada',
+    'Chennai',
+    'Coimbatore',
+    'Mumbai',
+    'Pune',
+    'Gurgaon',
+    'Delhi-NCR',
+    'Ahmedabad',
+    'Jaipur',
+    'Bhuvneshwar',
+    'Hyderabad',
+    'Surat',
+    'Kolkata',
+    'Cochin',
+    'Nagpur',
+    'Indore',
+    'Dehradun',
+    'Chandigarh'
+  ];
   
   // Brand filter functionality
   brandFilter = signal<string>('');
   isBrandFilterActive = signal<boolean>(false);
+  
+  // Most browsed cars functionality
+  protected mostBrowsedCars = signal<any[]>([]);
+  protected isLoadingMostBrowsed = signal<boolean>(false);
+  protected showMostBrowsed = signal<boolean>(false);
   
   protected isLoading = signal<boolean>(true);
   private dropdownsInitialized: boolean = false;
@@ -85,6 +268,7 @@ export class Cars implements OnInit, AfterViewInit {
     private router: Router,
     private route: ActivatedRoute,
     private animationService: AnimationService,
+    private locationSuggestionsService: LocationSuggestionsService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     // Effect to reinitialize animations when cars data changes
@@ -97,6 +281,20 @@ export class Cars implements OnInit, AfterViewInit {
         setTimeout(() => {
           this.initAngularAnimations();
         }, 200);
+      }
+    });
+
+    // Subscribe to location suggestions
+    this.locationSuggestionsService.searchResults$.subscribe({
+      next: (suggestions) => {
+        this.locationSuggestions.set(suggestions);
+        this.isLocationLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error fetching location suggestions:', error);
+        this.isLocationLoading.set(false);
+        // Show fallback suggestions on error
+        this.locationSuggestions.set(this.locationSuggestionsService.getFallbackSuggestions());
       }
     });
   }
@@ -140,7 +338,9 @@ export class Cars implements OnInit, AfterViewInit {
       next: (res: any) => {
         // API returns { status, body: { cars }, message }
         const carsData = (res && res.body && res.body.cars) ? res.body.cars : (Array.isArray(res) ? res : []);
-        this.allCars.set(carsData);
+        // Filter out cars with stopped bookings
+        const activeCars = carsData.filter((car: any) => !car.stopBookings);
+        this.allCars.set(activeCars);
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -531,6 +731,13 @@ export class Cars implements OnInit, AfterViewInit {
           return dateB.getTime() - dateA.getTime(); // Newest first
         });
         break;
+      case 'Most Browsed':
+        result = sortedCars.sort((a, b) => {
+          const viewCountA = a.viewCount || 0;
+          const viewCountB = b.viewCount || 0;
+          return viewCountB - viewCountA; // Most browsed first
+        });
+        break;
       case 'Top Selling':
         result = sortedCars.sort((a, b) => {
           // Sort by tickets sold (totaltickets - ticketsavilble)
@@ -579,6 +786,7 @@ export class Cars implements OnInit, AfterViewInit {
     this.isSearchActive.set(false);
     this.locationSearchQuery.set('');
     this.isLocationSearchActive.set(false);
+    this.locationSuggestions.set([]);
     this.brandFilter.set('');
     this.isBrandFilterActive.set(false);
     this.currentPage.set(1);
@@ -723,6 +931,9 @@ export class Cars implements OnInit, AfterViewInit {
       this.locationSearchType.set(this.isPincode(this.locationSearchQuery().trim()) ? 'pincode' : 'location');
       this.currentPage.set(1); // Reset to first page when searching
       
+      // Close dropdown after search
+      this.closeLocationDropdown();
+      
       // Update URL with location search parameters
       this.router.navigate([], {
         relativeTo: this.route,
@@ -745,6 +956,7 @@ export class Cars implements OnInit, AfterViewInit {
     this.locationSearchQuery.set('');
     this.isLocationSearchActive.set(false);
     this.locationSearchType.set('');
+    this.locationSuggestions.set([]);
     this.currentPage.set(1); // Reset to first page when clearing search
     
     // Remove location search parameters from URL
@@ -753,6 +965,62 @@ export class Cars implements OnInit, AfterViewInit {
       queryParams: {},
       queryParamsHandling: 'merge'
     });
+  }
+
+  toggleLocationDropdown(): void {
+    this.isLocationDropdownOpen.set(!this.isLocationDropdownOpen());
+  }
+
+  closeLocationDropdown(): void {
+    this.isLocationDropdownOpen.set(false);
+    // Clear suggestions when dropdown is closed
+    this.locationSuggestions.set([]);
+  }
+
+  selectCity(city: string | LocationSuggestion): void {
+    let cityName: string;
+    let searchType: string;
+    
+    if (typeof city === 'string') {
+      cityName = city;
+      searchType = this.locationSuggestionsService.isPincode(city) ? 'pincode' : 'location';
+    } else {
+      cityName = this.locationSuggestionsService.getFormattedLocation(city);
+      searchType = 'location';
+    }
+    
+    this.locationSearchQuery.set(cityName);
+    this.locationSearchType.set(searchType);
+    this.isLocationSearchActive.set(true);
+    // Keep dropdown open instead of closing it
+    // this.closeLocationDropdown();
+    this.currentPage.set(1);
+    
+    // Update URL with location search
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        locationSearch: cityName,
+        locationType: searchType
+      },
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  onLocationInputChange(value: string): void {
+    this.locationSearchQuery.set(value);
+    if (!this.isLocationDropdownOpen()) {
+      this.isLocationDropdownOpen.set(true);
+    }
+    
+    // Trigger location suggestions search if query is long enough
+    if (value && value.trim().length >= 1) { // Reduced from 2 to 1 for better responsiveness
+      this.isLocationLoading.set(true);
+      this.locationSuggestionsService.search(value);
+    } else {
+      this.locationSuggestions.set([]);
+      this.isLocationLoading.set(false);
+    }
   }
 
   clearBrandFilter(): void {
@@ -774,6 +1042,7 @@ export class Cars implements OnInit, AfterViewInit {
     this.locationSearchQuery.set('');
     this.isLocationSearchActive.set(false);
     this.locationSearchType.set('');
+    this.locationSuggestions.set([]);
     this.brandFilter.set('');
     this.isBrandFilterActive.set(false);
     this.currentPage.set(1); // Reset to first page when clearing search
@@ -807,6 +1076,51 @@ export class Cars implements OnInit, AfterViewInit {
     }
   }
 
+  // Track car view when navigating to details
+  trackCarView(carId: string): void {
+    this.carService.trackCarView(carId).subscribe({
+      next: (res: any) => {
+        // View tracked successfully
+        console.log('Car view tracked:', res);
+      },
+      error: (error) => {
+        console.error('Error tracking car view:', error);
+        // Don't prevent navigation if tracking fails
+      }
+    });
+  }
+
+  // Load most browsed cars
+  loadMostBrowsedCars(): void {
+    this.isLoadingMostBrowsed.set(true);
+    this.carService.getMostBrowsedCars(6).subscribe({
+      next: (res: any) => {
+        const carsData = (res && res.body && res.body.cars) ? res.body.cars : (Array.isArray(res) ? res : []);
+        this.mostBrowsedCars.set(carsData);
+        this.isLoadingMostBrowsed.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading most browsed cars:', error);
+        this.mostBrowsedCars.set([]);
+        this.isLoadingMostBrowsed.set(false);
+      }
+    });
+  }
+
+  // Toggle most browsed cars section
+  toggleMostBrowsedCars(): void {
+    this.showMostBrowsed.set(!this.showMostBrowsed());
+    if (this.showMostBrowsed() && this.mostBrowsedCars().length === 0) {
+      this.loadMostBrowsedCars();
+    }
+  }
+
+  // Navigate to car details with view tracking
+  navigateToCarDetailsWithTracking(carId: string): void {
+    this.trackCarView(carId);
+    this.navigateToCarDetails(carId);
+  }
+
   private initAngularAnimations(): void {
     // Initialize animations using the animation service
     this.animationService.initAnimations(this.elementRef, this.renderer);
@@ -828,5 +1142,21 @@ export class Cars implements OnInit, AfterViewInit {
         el.classList.add('animation-visible');
       }
     });
+  }
+
+  // Close dropdown when clicking outside
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    if (!this.isLocationDropdownOpen()) return;
+    
+    const target = event.target as HTMLElement;
+    const dropdown = this.elementRef.nativeElement.querySelector('.location-dropdown');
+    const button = this.elementRef.nativeElement.querySelector('.location-search-input');
+    const input = this.elementRef.nativeElement.querySelector('.location-search-input input');
+    
+    // Don't close if clicking on dropdown, button, or input
+    if (!dropdown?.contains(target) && !button?.contains(target) && !input?.contains(target)) {
+      this.closeLocationDropdown();
+    }
   }
 }

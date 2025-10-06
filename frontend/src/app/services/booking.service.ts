@@ -70,6 +70,11 @@ export class BookingService {
     return this.http.put<BookingResponse>(`${this.baseUrl}/${id}/status`, { status });
   }
 
+  // Update a booking
+  updateBooking(id: string, bookingData: Partial<Booking>): Observable<BookingResponse> {
+    return this.http.put<BookingResponse>(`${this.baseUrl}/${id}`, bookingData);
+  }
+
   // Delete a booking by ID
   deleteBooking(id: string): Observable<BookingResponse> {
     return this.http.delete<BookingResponse>(`${this.baseUrl}/${id}`);

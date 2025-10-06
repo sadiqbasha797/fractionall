@@ -78,6 +78,13 @@ body {
   background: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
+.slanted-tag.most-browsed {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  top: 15px;
+  left: -15px;
+  right: auto;
+}
+
 /* Location search bar styles */
 .location-search-input {
   transition: all 0.3s ease;
@@ -100,4 +107,14 @@ body {
 
 .location-search-button:hover svg {
   color: #ffffff !important;
+}
+
+/* Hide scrollbars for location dropdown */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
 }

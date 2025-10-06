@@ -1,18 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Renderer2 } from '@angular/core';
 import { TokenService, Token, User, Car } from '../services/token.service';
 import { UserService } from '../services/user.service';
 import { CarService, Car as CarType } from '../services/car.service';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DialogService } from '../shared/dialog/dialog.service';
-import { DialogComponent } from '../shared/dialog/dialog.component';
 import { LoadingDialogComponent } from '../shared/loading-dialog/loading-dialog.component';
 import { ExportService, ExportOptions } from '../services/export.service';
 
 @Component({
   selector: 'app-waitlist',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe, DialogComponent, LoadingDialogComponent],
+  imports: [CommonModule, FormsModule, DecimalPipe, LoadingDialogComponent],
   templateUrl: './waitlist.html',
   styleUrl: './waitlist.css'
 })
@@ -47,13 +45,16 @@ export class Waitlist implements OnInit {
 
   // Make Math available in template
   Math = Math;
+  
+  // Dialog element
+  private dialogElement: HTMLElement | null = null;
 
   constructor(
     private tokenService: TokenService,
     private userService: UserService,
     private carService: CarService,
-    public dialogService: DialogService,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private renderer: Renderer2
   ) { }
 
   ngOnInit(): void {
@@ -61,6 +62,139 @@ export class Waitlist implements OnInit {
     this.getUsers();
     this.getCars();
     this.checkFontAwesomeLoaded();
+  }
+
+  // Local dialog methods
+  showConfirmDialog(title: string, message: string, confirmCallback: () => void): void {
+    this.removeDialog();
+    const backdrop = this.renderer.createElement('div');
+    this.renderer.setStyle(backdrop, 'position', 'fixed');
+    this.renderer.setStyle(backdrop, 'top', '0');
+    this.renderer.setStyle(backdrop, 'left', '0');
+    this.renderer.setStyle(backdrop, 'width', '100vw');
+    this.renderer.setStyle(backdrop, 'height', '100vh');
+    this.renderer.setStyle(backdrop, 'background', 'rgba(0, 0, 0, 0.8)');
+    this.renderer.setStyle(backdrop, 'z-index', '999999');
+    this.renderer.setStyle(backdrop, 'display', 'flex');
+    this.renderer.setStyle(backdrop, 'align-items', 'center');
+    this.renderer.setStyle(backdrop, 'justify-content', 'center');
+    const dialog = this.renderer.createElement('div');
+    this.renderer.setStyle(dialog, 'background', '#374151');
+    this.renderer.setStyle(dialog, 'border-radius', '12px');
+    this.renderer.setStyle(dialog, 'max-width', '500px');
+    this.renderer.setStyle(dialog, 'width', '90%');
+    this.renderer.setStyle(dialog, 'padding', '24px');
+    const titleEl = this.renderer.createElement('h3');
+    this.renderer.setStyle(titleEl, 'color', 'white');
+    this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
+    this.renderer.setStyle(titleEl, 'font-size', '1.5rem');
+    const titleText = this.renderer.createText(title);
+    this.renderer.appendChild(titleEl, titleText);
+    const messageEl = this.renderer.createElement('div');
+    this.renderer.setProperty(messageEl, 'innerHTML', message);
+    this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
+    this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
+    const btnContainer = this.renderer.createElement('div');
+    this.renderer.setStyle(btnContainer, 'display', 'flex');
+    this.renderer.setStyle(btnContainer, 'justify-content', 'flex-end');
+    this.renderer.setStyle(btnContainer, 'gap', '12px');
+    const cancelBtn = this.renderer.createElement('button');
+    const cancelText = this.renderer.createText('Cancel');
+    this.renderer.appendChild(cancelBtn, cancelText);
+    this.renderer.setStyle(cancelBtn, 'background', '#6B7280');
+    this.renderer.setStyle(cancelBtn, 'color', 'white');
+    this.renderer.setStyle(cancelBtn, 'border', 'none');
+    this.renderer.setStyle(cancelBtn, 'padding', '10px 20px');
+    this.renderer.setStyle(cancelBtn, 'border-radius', '8px');
+    this.renderer.setStyle(cancelBtn, 'cursor', 'pointer');
+    this.renderer.listen(cancelBtn, 'click', () => this.removeDialog());
+    const confirmBtn = this.renderer.createElement('button');
+    const confirmText = this.renderer.createText('Confirm');
+    this.renderer.appendChild(confirmBtn, confirmText);
+    this.renderer.setStyle(confirmBtn, 'background', '#DC2626');
+    this.renderer.setStyle(confirmBtn, 'color', 'white');
+    this.renderer.setStyle(confirmBtn, 'border', 'none');
+    this.renderer.setStyle(confirmBtn, 'padding', '10px 20px');
+    this.renderer.setStyle(confirmBtn, 'border-radius', '8px');
+    this.renderer.setStyle(confirmBtn, 'cursor', 'pointer');
+    this.renderer.listen(confirmBtn, 'click', () => {
+      this.removeDialog();
+      confirmCallback();
+    });
+    this.renderer.appendChild(btnContainer, cancelBtn);
+    this.renderer.appendChild(btnContainer, confirmBtn);
+    this.renderer.appendChild(dialog, titleEl);
+    this.renderer.appendChild(dialog, messageEl);
+    this.renderer.appendChild(dialog, btnContainer);
+    this.renderer.appendChild(backdrop, dialog);
+    this.renderer.appendChild(document.body, backdrop);
+    this.dialogElement = backdrop;
+    this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
+    this.renderer.listen(backdrop, 'click', () => this.removeDialog());
+  }
+  removeDialog(): void {
+    if (this.dialogElement) {
+      this.renderer.removeChild(document.body, this.dialogElement);
+      this.dialogElement = null;
+    }
+  }
+  showSuccessDialog(message: string): void {
+    this.showMessageDialog('Success', message, '#10B981');
+  }
+  showErrorDialog(message: string): void {
+    this.showMessageDialog('Error', message, '#DC2626');
+  }
+  showMessageDialog(title: string, message: string, color: string): void {
+    this.removeDialog();
+    const backdrop = this.renderer.createElement('div');
+    this.renderer.setStyle(backdrop, 'position', 'fixed');
+    this.renderer.setStyle(backdrop, 'top', '0');
+    this.renderer.setStyle(backdrop, 'left', '0');
+    this.renderer.setStyle(backdrop, 'width', '100vw');
+    this.renderer.setStyle(backdrop, 'height', '100vh');
+    this.renderer.setStyle(backdrop, 'background', 'rgba(0, 0, 0, 0.8)');
+    this.renderer.setStyle(backdrop, 'z-index', '999999');
+    this.renderer.setStyle(backdrop, 'display', 'flex');
+    this.renderer.setStyle(backdrop, 'align-items', 'center');
+    this.renderer.setStyle(backdrop, 'justify-content', 'center');
+    const dialog = this.renderer.createElement('div');
+    this.renderer.setStyle(dialog, 'background', '#374151');
+    this.renderer.setStyle(dialog, 'border-radius', '12px');
+    this.renderer.setStyle(dialog, 'max-width', '400px');
+    this.renderer.setStyle(dialog, 'width', '90%');
+    this.renderer.setStyle(dialog, 'padding', '24px');
+    this.renderer.setStyle(dialog, 'text-align', 'center');
+    const titleEl = this.renderer.createElement('h3');
+    this.renderer.setStyle(titleEl, 'color', color);
+    this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
+    this.renderer.setStyle(titleEl, 'font-size', '1.5rem');
+    this.renderer.setStyle(titleEl, 'font-weight', '600');
+    const titleText = this.renderer.createText(title);
+    this.renderer.appendChild(titleEl, titleText);
+    const messageEl = this.renderer.createElement('div');
+    this.renderer.setProperty(messageEl, 'innerHTML', message);
+    this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
+    this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
+    const okBtn = this.renderer.createElement('button');
+    const okText = this.renderer.createText('OK');
+    this.renderer.appendChild(okBtn, okText);
+    this.renderer.setStyle(okBtn, 'background', color);
+    this.renderer.setStyle(okBtn, 'color', 'white');
+    this.renderer.setStyle(okBtn, 'border', 'none');
+    this.renderer.setStyle(okBtn, 'padding', '10px 30px');
+    this.renderer.setStyle(okBtn, 'border-radius', '8px');
+    this.renderer.setStyle(okBtn, 'cursor', 'pointer');
+    this.renderer.setStyle(okBtn, 'font-size', '14px');
+    this.renderer.setStyle(okBtn, 'font-weight', '600');
+    this.renderer.listen(okBtn, 'click', () => this.removeDialog());
+    this.renderer.appendChild(dialog, titleEl);
+    this.renderer.appendChild(dialog, messageEl);
+    this.renderer.appendChild(dialog, okBtn);
+    this.renderer.appendChild(backdrop, dialog);
+    this.renderer.appendChild(document.body, backdrop);
+    this.dialogElement = backdrop;
+    this.renderer.listen(backdrop, 'click', () => this.removeDialog());
+    this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
   }
 
   checkFontAwesomeLoaded(): void {
@@ -95,6 +229,8 @@ export class Waitlist implements OnInit {
         if (response.status === 'success') {
           this.tokens = response.body.tokens || [];
           this.filteredTokens = [...this.tokens];
+          // Initialize pagination after loading tokens
+          this.applyFilters();
         } else {
         }
       },
@@ -195,6 +331,12 @@ export class Waitlist implements OnInit {
   }
 
   getUser(token: Token): User {
+    // If userid is already populated (object), return it directly
+    if (typeof token.userid === 'object' && token.userid !== null) {
+      return token.userid as User;
+    }
+    
+    // If userid is a string, try to find it in the users array
     if (typeof token.userid === 'string') {
       const user = this.users.find(u => u._id === token.userid);
       return user || {
@@ -213,10 +355,31 @@ export class Waitlist implements OnInit {
         updatedAt: ''
       };
     }
-    return token.userid;
+    
+    return {
+      _id: '',
+      name: 'Unknown User',
+      email: 'unknown@example.com',
+      phone: '',
+      dateofbirth: '',
+      address: '',
+      location: '',
+      pincode: '',
+      kycStatus: 'pending',
+      profileimage: '',
+      governmentid: {},
+      createdAt: '',
+      updatedAt: ''
+    };
   }
 
   getCar(token: Token): Car {
+    // If carid is already populated (object), return it directly
+    if (typeof token.carid === 'object' && token.carid !== null) {
+      return token.carid as Car;
+    }
+    
+    // If carid is a string, try to find it in the cars array
     if (typeof token.carid === 'string') {
       const car = this.cars.find(c => c._id === token.carid);
       return car || {
@@ -245,11 +408,38 @@ export class Waitlist implements OnInit {
         createdBy: '',
         createdByModel: '',
         status: 'inactive',
-        createdAt: '',
-        updatedAt: ''
+        createdAt: ''
       };
     }
-    return token.carid;
+    
+    return {
+      _id: '',
+      carname: 'Unknown Car',
+      color: '',
+      milege: '',
+      seating: 0,
+      features: [],
+      brandname: 'Unknown Brand',
+      price: 0,
+      fractionprice: 0,
+      tokenprice: 0,
+      expectedpurchasedate: '',
+      ticketsavilble: 0,
+      totaltickets: 0,
+      tokensavailble: 0,
+      bookNowTokenAvailable: 0,
+      bookNowTokenPrice: 0,
+      amcperticket: 0,
+      contractYears: 0,
+      location: '',
+      pincode: '',
+      description: '',
+      images: [],
+      createdBy: '',
+      createdByModel: '',
+      status: 'inactive',
+      createdAt: ''
+    };
   }
 
   formatDate(dateString: string | undefined): string {
@@ -260,6 +450,21 @@ export class Waitlist implements OnInit {
       month: 'short',
       day: 'numeric'
     });
+  }
+
+  openDatePicker(fieldId: string) {
+    // Programmatically trigger the date picker
+    const dateInput = document.getElementById(fieldId) as HTMLInputElement;
+    if (dateInput) {
+      dateInput.focus();
+      // Try modern showPicker() method first
+      if (dateInput.showPicker) {
+        dateInput.showPicker();
+      } else {
+        // Fallback: trigger click event to open picker
+        dateInput.click();
+      }
+    }
   }
 
   // Pagination methods
@@ -378,7 +583,7 @@ export class Waitlist implements OnInit {
         if (response.status === 'success') {
           this.getTokens(); // Refresh the list
           this.closeModal();
-          this.dialogService.showSuccess('Success', 'Token created successfully!');
+          this.showSuccessDialog('Token created successfully!');
           // Reset form
           this.newToken = {
             carid: '',
@@ -389,12 +594,12 @@ export class Waitlist implements OnInit {
             status: 'active'
           };
         } else {
-          this.dialogService.showError('Error', `Failed to create token: ${response.message}`);
+          this.showErrorDialog(`Failed to create token: ${response.message}`);
         }
       },
       error: (error) => {
         this.showLoadingDialog = false;
-        this.dialogService.showError('Error', `Error creating token: ${error.message || 'Unknown error'}`);
+        this.showErrorDialog(`Error creating token: ${error.message || 'Unknown error'}`);
       }
     });
   }
@@ -411,45 +616,41 @@ export class Waitlist implements OnInit {
         if (response.status === 'success') {
           this.getTokens(); // Refresh the list
           this.closeModal();
-          this.dialogService.showSuccess('Success', 'Token updated successfully!');
+          this.showSuccessDialog('Token updated successfully!');
         } else {
-          this.dialogService.showError('Error', `Failed to update token: ${response.message}`);
+          this.showErrorDialog(`Failed to update token: ${response.message}`);
         }
       },
       error: (error) => {
         this.showLoadingDialog = false;
-        this.dialogService.showError('Error', `Error updating token: ${error.message || 'Unknown error'}`);
+        this.showErrorDialog(`Error updating token: ${error.message || 'Unknown error'}`);
       }
     });
   }
 
-  async deleteToken(token: Token): Promise<void> {
+  deleteToken(token: Token): void {
     if (!token._id) return;
 
-    try {
-      const confirmed = await this.dialogService.confirmDelete(`Token ${token.customtokenid}`);
-      if (confirmed) {
-        this.showLoadingDialog = true;
-        this.loadingMessage = 'Deleting token...';
-        
-        this.tokenService.deleteToken(token._id).subscribe({
-          next: (response) => {
-            this.showLoadingDialog = false;
-            if (response.status === 'success') {
-              this.getTokens(); // Refresh the list
-              this.dialogService.showSuccess('Success', 'Token deleted successfully!');
-            } else {
-              this.dialogService.showError('Error', `Failed to delete token: ${response.message}`);
-            }
-          },
-          error: (error) => {
-            this.showLoadingDialog = false;
-            this.dialogService.showError('Error', `Error deleting token: ${error.message || 'Unknown error'}`);
+    this.showConfirmDialog('Confirm Delete', `Are you sure you want to delete Token ${token.customtokenid}?`, () => {
+      this.showLoadingDialog = true;
+      this.loadingMessage = 'Deleting token...';
+      
+      this.tokenService.deleteToken(token._id!).subscribe({
+        next: (response) => {
+          this.showLoadingDialog = false;
+          if (response.status === 'success') {
+            this.getTokens(); // Refresh the list
+            this.showSuccessDialog('Token deleted successfully!');
+          } else {
+            this.showErrorDialog(`Failed to delete token: ${response.message}`);
           }
-        });
-      }
-    } catch (error) {
-    }
+        },
+        error: (error) => {
+          this.showLoadingDialog = false;
+          this.showErrorDialog(`Error deleting token: ${error.message || 'Unknown error'}`);
+        }
+      });
+    });
   }
 
   // Export functionality

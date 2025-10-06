@@ -12,6 +12,7 @@ import { BookNowTokenService, BookNowToken } from '../services/book-now-token.se
 import { AMCService, AMC } from '../services/amc.service';
 import { PaymentService, PaymentOrder, PaymentVerification } from '../services/payment.service';
 import { ContractService, ContractDocument } from '../services/contract.service';
+import { SharedMemberService, SharedMember, CreateSharedMemberRequest } from '../services/shared-member.service';
 
 @Component({
   selector: 'app-profile',
@@ -67,6 +68,26 @@ export class Profile implements OnInit {
   protected contractDocumentsLoading = signal<boolean>(false);
   protected contractDocumentsError = signal<string>('');
 
+  // Real shared members data from API
+  protected sharedMembers = signal<SharedMember[]>([]);
+  protected sharedMembersLoading = signal<boolean>(false);
+  protected sharedMembersError = signal<string>('');
+  protected selectedTicketForSharing = signal<string | null>(null);
+  protected showSharedMemberModal = signal<boolean>(false);
+  protected sharedMemberForm = signal<CreateSharedMemberRequest>({
+    name: '',
+    email: '',
+    mobileNumber: '',
+    aadharNumber: '',
+    panNumber: '',
+    ticketid: '',
+    userid: ''
+  });
+  protected sharedMemberSubmitting = signal<boolean>(false);
+  protected sharedMemberSuccessMessage = signal<string>('');
+  protected sharedMemberErrorMessage = signal<string>('');
+  protected sharedMemberFiles = signal<File[]>([]);
+
   // Real bookings data from API
   protected bookings = signal<Booking[]>([]);
   protected bookingsLoading = signal<boolean>(false);
@@ -82,11 +103,6 @@ export class Profile implements OnInit {
   });
 
   protected showDocModal = signal<boolean>(false);
-  protected fileError = signal<string>('');
-  protected fileInfo = signal<string>('');
-  protected aadharError = signal<string>('');
-  protected panError = signal<string>('');
-  protected submittingKyc = signal<boolean>(false);
 
   protected loading = signal<boolean>(false);
   protected error = signal<string>('');
@@ -152,6 +168,7 @@ export class Profile implements OnInit {
     private amcService: AMCService,
     private paymentService: PaymentService,
     private contractService: ContractService,
+    private sharedMemberService: SharedMemberService,
     private router: Router,
     private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
@@ -166,11 +183,9 @@ export class Profile implements OnInit {
       const bookingsData = this.bookings();
       const contractDocumentsData = this.contractDocuments();
       
-      // Trigger change detection when any data changes
+      // Trigger change detection immediately when any data changes
       if (isPlatformBrowser(this.platformId)) {
-        setTimeout(() => {
-          this.cdr.detectChanges();
-        }, 0);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -214,6 +229,7 @@ export class Profile implements OnInit {
           this.loadUserAMCs();
           this.loadUserBookings();
           this.loadUserContractDocuments();
+          this.loadUserSharedMembers();
         }
       },
       error: (error) => {
@@ -577,131 +593,19 @@ export class Profile implements OnInit {
       panId: '',
       file: null
     });
-    this.fileError.set('');
-    this.fileInfo.set('');
-    this.aadharError.set('');
-    this.panError.set('');
-    this.submittingKyc.set(false);
   }
 
   onFileSelect(event: any) {
     const file = event.target.files[0];
-    if (!file) {
-      this.resetFileMessages();
-      return;
-    }
-
-    if (file.type !== 'application/pdf') {
-      this.fileError.set('Only PDF files are accepted. Please upload a single PDF with front and back pages.');
-      event.target.value = '';
-      return;
-    }
-
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      this.fileError.set('File is too large. Please upload a PDF smaller than 10 MB.');
-      event.target.value = '';
-      return;
-    }
-
-    this.kycForm.set({ ...this.kycForm(), file: file });
-    this.fileInfo.set(`Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
-    this.fileError.set('');
-  }
-
-  resetFileMessages() {
-    this.fileError.set('');
-    this.fileInfo.set('');
-  }
-
-  // Validate Aadhar ID format
-  validateAadharId(aadharId: string): { valid: boolean; message?: string } {
-    if (!aadharId || aadharId.trim().length === 0) {
-      return { valid: false, message: 'Aadhar ID is required' };
-    }
-
-    // Remove any spaces or dashes
-    const cleanAadharId = aadharId.replace(/[\s-]/g, '');
-    
-    // Check if it's exactly 12 digits
-    const aadharRegex = /^\d{12}$/;
-    if (!aadharRegex.test(cleanAadharId)) {
-      return { valid: false, message: 'Aadhar number must be exactly 12 digits' };
-    }
-
-    return { valid: true };
-  }
-
-  // Validate PAN ID format
-  validatePanId(panId: string): { valid: boolean; message?: string } {
-    if (!panId || panId.trim().length === 0) {
-      return { valid: false, message: 'PAN ID is required' };
-    }
-
-    // Convert to uppercase and remove spaces
-    const cleanPanId = panId.replace(/\s/g, '').toUpperCase();
-    
-    // Check PAN format: 5 letters, 4 digits, 1 letter
-    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-    if (!panRegex.test(cleanPanId)) {
-      return { valid: false, message: 'Invalid PAN format. Use format like ABCDE1234F' };
-    }
-
-    return { valid: true };
-  }
-
-  // Real-time validation for Aadhar ID
-  onAadharIdChange() {
-    this.aadharError.set('');
-    if (this.kycForm().aadharId.trim()) {
-      const validation = this.validateAadharId(this.kycForm().aadharId);
-      if (!validation.valid) {
-        this.aadharError.set(validation.message || '');
-      }
+    if (file) {
+      this.kycForm.set({ ...this.kycForm(), file: file });
     }
   }
 
-  // Real-time validation for PAN ID
-  onPanIdChange() {
-    this.panError.set('');
-    if (this.kycForm().panId.trim()) {
-      const validation = this.validatePanId(this.kycForm().panId);
-      if (!validation.valid) {
-        this.panError.set(validation.message || '');
-      }
-    }
-  }
+
 
   onSubmitKyc() {
-    // Clear previous errors
-    this.aadharError.set('');
-    this.panError.set('');
-    this.fileError.set('');
-
-    // Validate Aadhar ID
-    const aadharValidation = this.validateAadharId(this.kycForm().aadharId);
-    if (!aadharValidation.valid) {
-      this.aadharError.set(aadharValidation.message || '');
-      return;
-    }
-
-    // Validate PAN ID
-    const panValidation = this.validatePanId(this.kycForm().panId);
-    if (!panValidation.valid) {
-      this.panError.set(panValidation.message || '');
-      return;
-    }
-
-    // Validate file
-    if (!this.kycForm().file) {
-      this.fileError.set('Please upload the PDF containing both Aadhar and PAN card images.');
-      return;
-    }
-
-    // Set submitting state
-    this.submittingKyc.set(true);
-
-    // First, update the government IDs in user profile
+    // Simple form submission without any validations or loading states
     const governmentIds = {
       aadharid: this.kycForm().aadharId.replace(/[\s-]/g, ''),
       panid: this.kycForm().panId.replace(/\s/g, '').toUpperCase()
@@ -714,7 +618,6 @@ export class Profile implements OnInit {
         this.submitKycDocuments();
       },
       error: (error) => {
-        this.submittingKyc.set(false);
         console.error('Error updating government IDs:', error);
         alert('Failed to update government IDs. Please try again.');
       }
@@ -723,8 +626,7 @@ export class Profile implements OnInit {
 
   private submitKycDocuments() {
     if (!this.kycForm().file) {
-      this.fileError.set('Please select a document file to upload.');
-      this.submittingKyc.set(false);
+      alert('Please select a document file to upload.');
       return;
     }
 
@@ -738,7 +640,6 @@ export class Profile implements OnInit {
           // Submit KYC documents with the real URL
           this.userService.submitKyc({ kycDocs }).subscribe({
             next: (response) => {
-              this.submittingKyc.set(false);
               if (response && response.status === 'success') {
                 // Update user's KYC status
                 this.user.set({ ...this.user(), kycStatus: 'submitted' });
@@ -749,20 +650,17 @@ export class Profile implements OnInit {
               }
             },
             error: (error) => {
-              this.submittingKyc.set(false);
               console.error('Error submitting KYC documents:', error);
               alert('Failed to submit KYC documents. Please try again.');
             }
           });
         } else {
-          this.submittingKyc.set(false);
-          this.fileError.set('Failed to upload document. Please try again.');
+          alert('Failed to upload document. Please try again.');
         }
       },
       error: (error) => {
-        this.submittingKyc.set(false);
         console.error('Error uploading document:', error);
-        this.fileError.set('Failed to upload document. Please try again.');
+        alert('Failed to upload document. Please try again.');
       }
     });
   }
@@ -1441,7 +1339,7 @@ export class Profile implements OnInit {
   getContractDocumentsForTicket(ticketId: string | undefined): ContractDocument[] {
     if (!ticketId) return [];
     return this.contractDocuments().filter(contract => 
-      contract.ticketid._id === ticketId
+      contract.ticketid && contract.ticketid._id === ticketId
     );
   }
 
@@ -1457,5 +1355,423 @@ export class Profile implements OnInit {
 
   isProfileExpanded(): boolean {
     return this.profileExpanded();
+  }
+
+  // =============== Shared Members Methods ===============
+  loadUserSharedMembers() {
+    // Check if user is authenticated before making the request
+    const token = this.authService.getToken();
+    if (!token) {
+      this.sharedMembersError.set('Please login to view your shared members');
+      return;
+    }
+
+    this.sharedMembersLoading.set(true);
+    this.sharedMembersError.set('');
+
+    this.sharedMemberService.getMySharedMembers().subscribe({
+      next: (response) => {
+        this.sharedMembersLoading.set(false);
+        if (response && response.body && response.body.sharedMembers) {
+          this.sharedMembers.set(response.body.sharedMembers);
+        }
+      },
+      error: (error) => {
+        this.sharedMembersLoading.set(false);
+        console.error('Error loading shared members:', error);
+        
+        if (error.status === 401) {
+          this.sharedMembersError.set('Authentication failed. Please login again.');
+        } else if (error.status === 403) {
+          this.sharedMembersError.set('Access denied. You do not have permission to view shared members.');
+        } else {
+          this.sharedMembersError.set('Failed to load shared members. Please try again later.');
+        }
+      }
+    });
+  }
+
+  // Open shared member modal for a specific ticket
+  openSharedMemberModal(ticketId: string) {
+    this.selectedTicketForSharing.set(ticketId);
+    this.sharedMemberForm.set({
+      name: '',
+      email: '',
+      mobileNumber: '',
+      aadharNumber: '',
+      panNumber: '',
+      ticketid: ticketId,
+      userid: ''
+    });
+    this.sharedMemberSuccessMessage.set('');
+    this.sharedMemberErrorMessage.set('');
+    this.showSharedMemberModal.set(true);
+  }
+
+  // Close shared member modal
+  closeSharedMemberModal() {
+    this.showSharedMemberModal.set(false);
+    this.selectedTicketForSharing.set(null);
+    this.sharedMemberForm.set({
+      name: '',
+      email: '',
+      mobileNumber: '',
+      aadharNumber: '',
+      panNumber: '',
+      ticketid: '',
+      userid: ''
+    });
+    this.sharedMemberSuccessMessage.set('');
+    this.sharedMemberErrorMessage.set('');
+    this.sharedMemberFiles.set([]);
+  }
+
+  // Update shared member form fields
+  updateSharedMemberName(value: string) {
+    this.sharedMemberForm.set({ ...this.sharedMemberForm(), name: value });
+  }
+
+  updateSharedMemberEmail(value: string) {
+    this.sharedMemberForm.set({ ...this.sharedMemberForm(), email: value });
+  }
+
+  updateSharedMemberMobile(value: string) {
+    this.sharedMemberForm.set({ ...this.sharedMemberForm(), mobileNumber: value });
+  }
+
+  updateSharedMemberAadhar(value: string) {
+    this.sharedMemberForm.set({ ...this.sharedMemberForm(), aadharNumber: value });
+  }
+
+  updateSharedMemberPan(value: string) {
+    this.sharedMemberForm.set({ ...this.sharedMemberForm(), panNumber: value });
+  }
+
+  // Handle file selection for shared member
+  onSharedMemberFileSelect(event: any) {
+    const files = Array.from(event.target.files) as File[];
+    
+    // Validate file types
+    const validFiles = files.filter(file => {
+      if (file.type !== 'application/pdf') {
+        this.sharedMemberErrorMessage.set(`File "${file.name}" is not a PDF. Please select only PDF files.`);
+        return false;
+      }
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        this.sharedMemberErrorMessage.set(`File "${file.name}" is too large. Please select files smaller than 10MB.`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length > 0) {
+      this.sharedMemberErrorMessage.set('');
+      this.sharedMemberFiles.set([...this.sharedMemberFiles(), ...validFiles]);
+    }
+  }
+
+  // Remove file from shared member files
+  removeSharedMemberFile(index: number) {
+    const files = [...this.sharedMemberFiles()];
+    files.splice(index, 1);
+    this.sharedMemberFiles.set(files);
+  }
+
+  // Clear all shared member files
+  clearAllSharedMemberFiles() {
+    this.sharedMemberFiles.set([]);
+  }
+
+  // Trigger shared member file input click
+  triggerSharedMemberFileInput() {
+    const fileInput = document.querySelector('.hidden-file-input') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
+  // Format file size for display
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  // Submit shared member form
+  onSubmitSharedMember() {
+    const form = this.sharedMemberForm();
+    
+    // Validate required fields
+    if (!form.name || !form.email || !form.mobileNumber || !form.aadharNumber || !form.panNumber) {
+      this.sharedMemberErrorMessage.set('All fields are required');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      this.sharedMemberErrorMessage.set('Please enter a valid email address');
+      return;
+    }
+
+    // Validate mobile number (10 digits)
+    const mobileRegex = /^[6-9]\d{9}$/;
+    if (!mobileRegex.test(form.mobileNumber)) {
+      this.sharedMemberErrorMessage.set('Please enter a valid 10-digit mobile number');
+      return;
+    }
+
+    // Validate Aadhar number (12 digits)
+    const aadharRegex = /^\d{12}$/;
+    if (!aadharRegex.test(form.aadharNumber)) {
+      this.sharedMemberErrorMessage.set('Please enter a valid 12-digit Aadhar number');
+      return;
+    }
+
+    // Validate PAN number
+    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    if (!panRegex.test(form.panNumber.toUpperCase())) {
+      this.sharedMemberErrorMessage.set('Please enter a valid PAN number');
+      return;
+    }
+
+    this.sharedMemberSubmitting.set(true);
+    this.sharedMemberErrorMessage.set('');
+    this.sharedMemberSuccessMessage.set('');
+
+    // Convert PAN to uppercase and clean up empty fields
+    const formData: CreateSharedMemberRequest = {
+      name: form.name,
+      email: form.email,
+      mobileNumber: form.mobileNumber,
+      aadharNumber: form.aadharNumber,
+      panNumber: form.panNumber.toUpperCase(),
+      ticketid: form.ticketid || undefined,
+      userid: form.userid || undefined
+    };
+
+    console.log('Creating shared member with data:', formData);
+
+    this.sharedMemberService.createSharedMember(formData).subscribe({
+      next: (response) => {
+        if (response && response.status === 'success') {
+          const sharedMemberId = response.body.sharedMember._id;
+          
+          // Upload KYC documents if any files are selected
+          if (this.sharedMemberFiles().length > 0) {
+            this.uploadSharedMemberDocuments(sharedMemberId);
+          } else {
+            this.sharedMemberSubmitting.set(false);
+            this.sharedMemberSuccessMessage.set('Shared member created successfully! They will be notified once approved.');
+            // Reload shared members
+            this.loadUserSharedMembers();
+            // Close modal after 2 seconds
+            setTimeout(() => {
+              this.closeSharedMemberModal();
+            }, 2000);
+          }
+        } else {
+          this.sharedMemberSubmitting.set(false);
+          this.sharedMemberErrorMessage.set(response.message || 'Failed to create shared member');
+        }
+      },
+      error: (error) => {
+        this.sharedMemberSubmitting.set(false);
+        console.error('Error creating shared member:', error);
+        
+        if (error.error && error.error.message) {
+          // Show the specific error message from backend
+          if (error.error.message.includes('already exists')) {
+            this.sharedMemberErrorMessage.set('A shared member with these details already exists in the system. Please use different contact information.');
+          } else {
+            this.sharedMemberErrorMessage.set(error.error.message);
+          }
+        } else if (error.status === 400) {
+          this.sharedMemberErrorMessage.set('Invalid data provided. Please check all fields and try again.');
+        } else if (error.status === 401) {
+          this.sharedMemberErrorMessage.set('Authentication failed. Please login again.');
+        } else if (error.status === 403) {
+          this.sharedMemberErrorMessage.set('Access denied. You do not have permission to create shared members.');
+        } else {
+          this.sharedMemberErrorMessage.set('Failed to create shared member. Please try again later.');
+        }
+      }
+    });
+  }
+
+  // Delete shared member
+  deleteSharedMember(sharedMemberId: string) {
+    if (!confirm('Are you sure you want to delete this shared member?')) {
+      return;
+    }
+
+    this.sharedMemberService.deleteSharedMember(sharedMemberId).subscribe({
+      next: (response) => {
+        if (response && response.status === 'success') {
+          // Reload shared members
+          this.loadUserSharedMembers();
+        } else {
+          alert(response.message || 'Failed to delete shared member');
+        }
+      },
+      error: (error) => {
+        console.error('Error deleting shared member:', error);
+        
+        if (error.error && error.error.message) {
+          alert(error.error.message);
+        } else if (error.status === 401) {
+          alert('Authentication failed. Please login again.');
+        } else if (error.status === 403) {
+          alert('Access denied. You do not have permission to delete shared members.');
+        } else {
+          alert('Failed to delete shared member. Please try again later.');
+        }
+      }
+    });
+  }
+
+  // Get shared members for a specific ticket
+  getSharedMembersForTicket(ticketId: string): SharedMember[] {
+    return this.sharedMembers().filter(member => member.ticketid === ticketId);
+  }
+
+  // Get status badge class for shared member
+  getSharedMemberStatusClass(status: string): string {
+    switch (status) {
+      case 'accepted':
+        return 'status-badge accepted';
+      case 'rejected':
+        return 'status-badge rejected';
+      case 'pending':
+      default:
+        return 'status-badge pending';
+    }
+  }
+
+  // Get status display text for shared member
+  getSharedMemberStatusDisplay(status: string): string {
+    switch (status) {
+      case 'accepted':
+        return 'Approved';
+      case 'rejected':
+        return 'Rejected';
+      case 'pending':
+      default:
+        return 'Pending';
+    }
+  }
+
+  // Upload KYC documents for shared member
+  uploadSharedMemberDocuments(sharedMemberId: string) {
+    const files = this.sharedMemberFiles();
+    let uploadCount = 0;
+    let successCount = 0;
+    let errorCount = 0;
+
+    files.forEach((file, index) => {
+      const documentType = index === 0 ? 'aadhar_front' : 
+                          index === 1 ? 'pan_card' : 'other';
+      
+      this.sharedMemberService.uploadKycDocument(sharedMemberId, documentType, file).subscribe({
+        next: (response) => {
+          uploadCount++;
+          if (response && response.status === 'success') {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+          
+          // Check if all uploads are complete
+          if (uploadCount === files.length) {
+            this.sharedMemberSubmitting.set(false);
+            
+            if (successCount === files.length) {
+              this.sharedMemberSuccessMessage.set(`Shared member created successfully with ${successCount} document(s) uploaded! They will be notified once approved.`);
+            } else if (successCount > 0) {
+              this.sharedMemberSuccessMessage.set(`Shared member created successfully! ${successCount} document(s) uploaded, ${errorCount} failed. They will be notified once approved.`);
+            } else {
+              this.sharedMemberErrorMessage.set('Shared member created but document upload failed. Please try uploading documents again later.');
+            }
+            
+            // Reload shared members
+            this.loadUserSharedMembers();
+            // Close modal after 3 seconds
+            setTimeout(() => {
+              this.closeSharedMemberModal();
+            }, 3000);
+          }
+        },
+        error: (error) => {
+          uploadCount++;
+          errorCount++;
+          
+          // Check if all uploads are complete
+          if (uploadCount === files.length) {
+            this.sharedMemberSubmitting.set(false);
+            
+            if (successCount > 0) {
+              this.sharedMemberSuccessMessage.set(`Shared member created successfully! ${successCount} document(s) uploaded, ${errorCount} failed. They will be notified once approved.`);
+            } else {
+              this.sharedMemberErrorMessage.set('Shared member created but document upload failed. Please try uploading documents again later.');
+            }
+            
+            // Reload shared members
+            this.loadUserSharedMembers();
+            // Close modal after 3 seconds
+            setTimeout(() => {
+              this.closeSharedMemberModal();
+            }, 3000);
+          }
+        }
+      });
+    });
+  }
+
+  // Cancel token method
+  cancelToken(token: any) {
+    const reason = prompt('Please provide a reason for cancellation (optional):');
+    
+    if (reason !== null) { // User didn't cancel the prompt
+      this.tokenService.cancelToken(token._id, reason).subscribe({
+        next: (response) => {
+          if (response.status === 'success') {
+            alert('Token cancellation request submitted successfully. You will be notified once it\'s processed.');
+            // Reload tokens to show updated status
+            this.loadUserTokens();
+          } else {
+            alert('Failed to submit cancellation request: ' + response.message);
+          }
+        },
+        error: (error) => {
+          console.error('Error cancelling token:', error);
+          alert('Failed to submit cancellation request. Please try again.');
+        }
+      });
+    }
+  }
+
+  // Cancel book now token method
+  cancelBookNowToken(bookNowToken: any) {
+    const reason = prompt('Please provide a reason for cancellation (optional):');
+    
+    if (reason !== null) { // User didn't cancel the prompt
+      this.bookNowTokenService.cancelBookNowToken(bookNowToken._id, reason).subscribe({
+        next: (response) => {
+          if (response.status === 'success') {
+            alert('Book now token cancellation request submitted successfully. You will be notified once it\'s processed.');
+            // Reload book now tokens to show updated status
+            this.loadUserBookNowTokens();
+          } else {
+            alert('Failed to submit cancellation request: ' + response.message);
+          }
+        },
+        error: (error) => {
+          console.error('Error cancelling book now token:', error);
+          alert('Failed to submit cancellation request. Please try again.');
+        }
+      });
+    }
   }
 }

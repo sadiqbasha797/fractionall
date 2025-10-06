@@ -5,8 +5,10 @@ import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { authInterceptor } from './services/auth.interceptor';
+import { errorInterceptor } from './services/error.interceptor';
 import { AuthService } from './services/auth.service';
 import { AuthGuard } from './services/auth.guard';
+import { SessionExpirationService } from './services/session-expiration.service';
 import { CarService } from './services/car.service';
 import { ContactService } from './services/contact.service';
 import { TokenService } from './services/token.service';
@@ -24,11 +26,12 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor]), withFetch()),
+    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor]), withFetch()),
     provideClientHydration(withEventReplay()),
     provideCharts(withDefaultRegisterables()),
     AuthService,
     AuthGuard,
+    SessionExpirationService,
     CarService,
     ContactService,
     TokenService,

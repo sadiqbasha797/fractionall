@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
 import { AuthService, LoginCredentials } from '../services/auth.service';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-superadmin-login',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, RouterModule],
   templateUrl: './superadmin-login.html',
   styleUrl: './superadmin-login.css'
 })
@@ -31,7 +31,7 @@ export class SuperAdminLogin {
             localStorage.setItem('superadmin', JSON.stringify(response.body.superAdmin));
             localStorage.setItem('userRole', 'superadmin');
           }
-          this.router.navigate(['/cars']);
+          this.router.navigate(['/dashboard']);
         } else {
           this.errorMessage = response.message;
         }

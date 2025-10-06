@@ -3,25 +3,89 @@
   position: relative;
 }
 
+/* Search icon styling */
 .search-icon {
-  width: 16px;
-  height: 16px;
-  color: #9CA3AF;
+  color: #9ca3af !important; /* text-gray-400 */
+  font-size: 1rem !important; /* slightly larger */
+  z-index: 10;
+  pointer-events: none;
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 16px !important;
+  height: 16px !important;
+  line-height: 1 !important;
+  position: absolute;
+  top: 50%;
+  left: 0.75rem; /* pl-3 */
+  transform: translateY(-50%);
 }
 
+.search-icon:hover {
+  color: #d1d5db !important; /* text-gray-300 */
+}
+
+/* SVG fallback icon styling */
 .search-icon-svg {
-  width: 16px;
-  height: 16px;
-  color: #9CA3AF;
+  color: #9ca3af !important; /* text-gray-400 */
+  position: absolute;
+  top: 50%;
+  left: 0.75rem; /* pl-3 */
+  transform: translateY(-50%);
+  z-index: 10;
+  pointer-events: none;
+  display: none !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
-/* Show SVG fallback if Font Awesome is not loaded */
-.search-input-container:not(.fa-loaded) .search-icon {
-  display: none;
-}
-
+/* Show SVG icon if Font Awesome fails to load */
 .search-input-container:not(.fa-loaded) .search-icon-svg {
   display: block !important;
+}
+
+.search-input-container:not(.fa-loaded) .search-icon {
+  display: none !important;
+}
+
+/* Table container styling */
+.table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+.table-container::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
+
+/* Ensure table has minimum width for proper horizontal scrolling */
+.table-container table {
+  min-width: 1200px;
+}
+
+/* Sticky table headers */
+.table-container thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #1f2937; /* bg-gray-800 */
+}
+
+/* Touch device scrolling */
+@media (hover: none) and (pointer: coarse) {
+  .table-container {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* Table row hover effects */
+.hover\:bg-gray-800:hover {
+  background-color: #1f2937;
 }
 
 /* No scrollbar utility */

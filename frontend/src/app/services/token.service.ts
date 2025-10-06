@@ -63,7 +63,7 @@ export interface Token {
   amountpaid: number;
   date?: string;
   expirydate: string;
-  status: 'active' | 'expired' | 'dropped';
+  status: 'active' | 'expired' | 'dropped' | 'refund_requested' | 'refund_initiated' | 'refund_processed';
   createdAt?: string;
   updatedAt?: string;
 }
@@ -134,6 +134,20 @@ export class TokenService {
   // Delete a token by ID
   deleteToken(id: string): Observable<TokenResponse> {
     return this.http.delete<TokenResponse>(`${this.baseUrl}/${id}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  // Approve token refund
+  approveTokenRefund(id: string): Observable<TokenResponse> {
+    return this.http.post<TokenResponse>(`${this.baseUrl}/${id}/approve-refund`, {}, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  // Reject token refund
+  rejectTokenRefund(id: string, reason: string): Observable<TokenResponse> {
+    return this.http.post<TokenResponse>(`${this.baseUrl}/${id}/reject-refund`, { reason }, {
       headers: this.getAuthHeaders()
     });
   }

@@ -1,15 +1,13 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { UserService, User } from '../services/user.service';
+import { UserService, User, UserStatusResponse, UsersByStatusResponse, UserStatusHistoryResponse, SuspensionStatsResponse, UserPermissionsResponse } from '../services/user.service';
 import { KycService, KYCResponse } from '../services/kyc.service';
 import { TicketService } from '../services/ticket.service';
 import { TokenService } from '../services/token.service';
 import { BookNowTokenService } from '../services/book-now-token.service';
 import { AuthService } from '../services/auth.service';
-import { DialogService } from '../shared/dialog/dialog.service';
-import { DialogComponent } from '../shared/dialog/dialog.component';
 import { LoadingDialogComponent } from '../shared/loading-dialog/loading-dialog.component';
 import { ExportService, ExportOptions } from '../services/export.service';
 
@@ -31,7 +29,7 @@ interface ExtendedUser extends User {
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, DialogComponent, LoadingDialogComponent],
+  imports: [CommonModule, FormsModule, LoadingDialogComponent],
   templateUrl: './users.html',
   styleUrl: './users.css'
 })
@@ -47,6 +45,7 @@ export class Users implements OnInit {
   // Filter and search
   searchTerm = signal('');
   kycStatusFilter = signal<'all' | 'pending' | 'submitted' | 'approved' | 'rejected'>('all');
+  userStatusFilter = signal<'all' | 'active' | 'suspended' | 'deactivated'>('all');
   dateRangeFilter = signal('all');
   
   // Pagination
@@ -59,6 +58,9 @@ export class Users implements OnInit {
   showRejectModal = signal(false);
   showAddUserModal = signal(false);
   showEditUserModal = signal(false);
+  showStatusModal = signal(false);
+  showStatusHistoryModal = signal(false);
+  showSuspensionStatsModal = signal(false);
   
   // User details data
   userTickets = signal<any[]>([]);
@@ -70,15 +72,23 @@ export class Users implements OnInit {
   // Rejection form
   rejectionComment = signal('');
   
+  // Status management forms
+  statusAction = signal<'suspend' | 'deactivate' | 'reactivate'>('suspend');
+  statusReason = signal('');
+  statusHistory = signal<any>(null);
+  suspensionStats = signal<any>(null);
+  
   // User form data
   userForm = {
     name: '',
     email: '',
+    password: '',
     phone: '',
     dateofbirth: '',
     location: '',
     pincode: '',
-    address: ''
+    address: '',
+    kycFile: null as File | null
   };
   
   editingUserId = signal<string | null>(null);
@@ -87,6 +97,35 @@ export class Users implements OnInit {
   loading: boolean = false;
   showLoadingDialog: boolean = false;
   loadingMessage: string = '';
+  private dialogElement: HTMLElement | null = null;
+  
+  // File handling
+  onKycFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type (PDF only)
+      if (file.type !== 'application/pdf') {
+        this.error.set('Please select a PDF file for KYC documents');
+        return;
+      }
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        this.error.set('File size must be less than 10MB');
+        return;
+      }
+      this.userForm.kycFile = file;
+      this.error.set(null); // Clear any previous errors
+    }
+  }
+  
+  removeKycFile() {
+    this.userForm.kycFile = null;
+    // Reset the file input
+    const fileInput = document.getElementById('kycFileInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
   
   // KYC Status options
   uniqueKycStatuses: string[] = ['pending', 'submitted', 'approved', 'rejected'];
@@ -95,9 +134,14 @@ export class Users implements OnInit {
   filteredKycUsers = computed(() => {
     let usersArray = this.users();
     
-    // Filter by status
+    // Filter by KYC status
     if (this.kycStatusFilter() !== 'all') {
       usersArray = usersArray.filter(user => user.kycStatus === this.kycStatusFilter());
+    }
+    
+    // Filter by user status
+    if (this.userStatusFilter() !== 'all') {
+      usersArray = usersArray.filter(user => user.status === this.userStatusFilter());
     }
     
     // Filter by search term
@@ -132,6 +176,9 @@ export class Users implements OnInit {
     const usersArray = this.users();
     return {
       total: usersArray.length,
+      active: usersArray.filter(u => u.status === 'active' || !u.status).length,
+      suspended: usersArray.filter(u => u.status === 'suspended').length,
+      deactivated: usersArray.filter(u => u.status === 'deactivated').length,
       pending: usersArray.filter(u => u.kycStatus === 'pending').length,
       submitted: usersArray.filter(u => u.kycStatus === 'submitted').length,
       approved: usersArray.filter(u => u.kycStatus === 'approved').length,
@@ -152,12 +199,165 @@ export class Users implements OnInit {
     private bookNowTokenService: BookNowTokenService,
     private authService: AuthService,
     private router: Router,
-    public dialogService: DialogService,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private renderer: Renderer2
   ) {}
   
   ngOnInit(): void {
     this.loadUsers();
+  }
+  
+  // Local dialog methods
+  showConfirmDialog(title: string, message: string, confirmCallback: () => void): void {
+    this.removeDialog();
+    
+    const backdrop = this.renderer.createElement('div');
+    this.renderer.setStyle(backdrop, 'position', 'fixed');
+    this.renderer.setStyle(backdrop, 'top', '0');
+    this.renderer.setStyle(backdrop, 'left', '0');
+    this.renderer.setStyle(backdrop, 'width', '100vw');
+    this.renderer.setStyle(backdrop, 'height', '100vh');
+    this.renderer.setStyle(backdrop, 'background', 'rgba(0, 0, 0, 0.8)');
+    this.renderer.setStyle(backdrop, 'z-index', '999999');
+    this.renderer.setStyle(backdrop, 'display', 'flex');
+    this.renderer.setStyle(backdrop, 'align-items', 'center');
+    this.renderer.setStyle(backdrop, 'justify-content', 'center');
+    
+    const dialog = this.renderer.createElement('div');
+    this.renderer.setStyle(dialog, 'background', '#374151');
+    this.renderer.setStyle(dialog, 'border-radius', '12px');
+    this.renderer.setStyle(dialog, 'max-width', '500px');
+    this.renderer.setStyle(dialog, 'width', '90%');
+    this.renderer.setStyle(dialog, 'padding', '24px');
+    
+    const titleEl = this.renderer.createElement('h3');
+    this.renderer.setStyle(titleEl, 'color', 'white');
+    this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
+    this.renderer.setStyle(titleEl, 'font-size', '1.5rem');
+    const titleText = this.renderer.createText(title);
+    this.renderer.appendChild(titleEl, titleText);
+    
+    const messageEl = this.renderer.createElement('div');
+    this.renderer.setProperty(messageEl, 'innerHTML', message);
+    this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
+    this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
+    
+    const btnContainer = this.renderer.createElement('div');
+    this.renderer.setStyle(btnContainer, 'display', 'flex');
+    this.renderer.setStyle(btnContainer, 'justify-content', 'flex-end');
+    this.renderer.setStyle(btnContainer, 'gap', '12px');
+    
+    const cancelBtn = this.renderer.createElement('button');
+    const cancelText = this.renderer.createText('Cancel');
+    this.renderer.appendChild(cancelBtn, cancelText);
+    this.renderer.setStyle(cancelBtn, 'background', '#6B7280');
+    this.renderer.setStyle(cancelBtn, 'color', 'white');
+    this.renderer.setStyle(cancelBtn, 'border', 'none');
+    this.renderer.setStyle(cancelBtn, 'padding', '10px 20px');
+    this.renderer.setStyle(cancelBtn, 'border-radius', '8px');
+    this.renderer.setStyle(cancelBtn, 'cursor', 'pointer');
+    this.renderer.listen(cancelBtn, 'click', () => this.removeDialog());
+    
+    const confirmBtn = this.renderer.createElement('button');
+    const confirmText = this.renderer.createText('Confirm');
+    this.renderer.appendChild(confirmBtn, confirmText);
+    this.renderer.setStyle(confirmBtn, 'background', '#DC2626');
+    this.renderer.setStyle(confirmBtn, 'color', 'white');
+    this.renderer.setStyle(confirmBtn, 'border', 'none');
+    this.renderer.setStyle(confirmBtn, 'padding', '10px 20px');
+    this.renderer.setStyle(confirmBtn, 'border-radius', '8px');
+    this.renderer.setStyle(confirmBtn, 'cursor', 'pointer');
+    this.renderer.listen(confirmBtn, 'click', () => {
+      this.removeDialog();
+      confirmCallback();
+    });
+    
+    this.renderer.appendChild(btnContainer, cancelBtn);
+    this.renderer.appendChild(btnContainer, confirmBtn);
+    this.renderer.appendChild(dialog, titleEl);
+    this.renderer.appendChild(dialog, messageEl);
+    this.renderer.appendChild(dialog, btnContainer);
+    this.renderer.appendChild(backdrop, dialog);
+    this.renderer.appendChild(document.body, backdrop);
+    this.dialogElement = backdrop;
+    
+    this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
+    this.renderer.listen(backdrop, 'click', () => this.removeDialog());
+  }
+  
+  removeDialog(): void {
+    if (this.dialogElement) {
+      this.renderer.removeChild(document.body, this.dialogElement);
+      this.dialogElement = null;
+    }
+  }
+
+  showSuccessDialog(message: string): void {
+    this.showMessageDialog('Success', message, '#10B981');
+  }
+
+  showErrorDialog(message: string): void {
+    this.showMessageDialog('Error', message, '#DC2626');
+  }
+
+  showMessageDialog(title: string, message: string, color: string): void {
+    this.removeDialog();
+    
+    const backdrop = this.renderer.createElement('div');
+    this.renderer.setStyle(backdrop, 'position', 'fixed');
+    this.renderer.setStyle(backdrop, 'top', '0');
+    this.renderer.setStyle(backdrop, 'left', '0');
+    this.renderer.setStyle(backdrop, 'width', '100vw');
+    this.renderer.setStyle(backdrop, 'height', '100vh');
+    this.renderer.setStyle(backdrop, 'background', 'rgba(0, 0, 0, 0.8)');
+    this.renderer.setStyle(backdrop, 'z-index', '999999');
+    this.renderer.setStyle(backdrop, 'display', 'flex');
+    this.renderer.setStyle(backdrop, 'align-items', 'center');
+    this.renderer.setStyle(backdrop, 'justify-content', 'center');
+    
+    const dialog = this.renderer.createElement('div');
+    this.renderer.setStyle(dialog, 'background', '#374151');
+    this.renderer.setStyle(dialog, 'border-radius', '12px');
+    this.renderer.setStyle(dialog, 'max-width', '400px');
+    this.renderer.setStyle(dialog, 'width', '90%');
+    this.renderer.setStyle(dialog, 'padding', '24px');
+    this.renderer.setStyle(dialog, 'text-align', 'center');
+    
+    const titleEl = this.renderer.createElement('h3');
+    this.renderer.setStyle(titleEl, 'color', color);
+    this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
+    this.renderer.setStyle(titleEl, 'font-size', '1.5rem');
+    this.renderer.setStyle(titleEl, 'font-weight', '600');
+    const titleText = this.renderer.createText(title);
+    this.renderer.appendChild(titleEl, titleText);
+    
+    const messageEl = this.renderer.createElement('div');
+    this.renderer.setProperty(messageEl, 'innerHTML', message);
+    this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
+    this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
+    
+    const okBtn = this.renderer.createElement('button');
+    const okText = this.renderer.createText('OK');
+    this.renderer.appendChild(okBtn, okText);
+    this.renderer.setStyle(okBtn, 'background', color);
+    this.renderer.setStyle(okBtn, 'color', 'white');
+    this.renderer.setStyle(okBtn, 'border', 'none');
+    this.renderer.setStyle(okBtn, 'padding', '10px 30px');
+    this.renderer.setStyle(okBtn, 'border-radius', '8px');
+    this.renderer.setStyle(okBtn, 'cursor', 'pointer');
+    this.renderer.setStyle(okBtn, 'font-size', '14px');
+    this.renderer.setStyle(okBtn, 'font-weight', '600');
+    this.renderer.listen(okBtn, 'click', () => this.removeDialog());
+    
+    this.renderer.appendChild(dialog, titleEl);
+    this.renderer.appendChild(dialog, messageEl);
+    this.renderer.appendChild(dialog, okBtn);
+    this.renderer.appendChild(backdrop, dialog);
+    this.renderer.appendChild(document.body, backdrop);
+    this.dialogElement = backdrop;
+    
+    this.renderer.listen(backdrop, 'click', () => this.removeDialog());
+    this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
   }
   
   async loadUsers() {
@@ -209,12 +409,28 @@ export class Users implements OnInit {
   onDateRangeFilterChange() {
     this.filteredUsers.set(this.filteredKycUsers());
   }
+
+  onUserStatusFilterChange() {
+    this.filteredUsers.set(this.filteredKycUsers());
+  }
   
   // Pagination methods
   goToPage(page: number) {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
     }
+  }
+
+  getPageNumbers(): number[] {
+    const maxVisible = 5;
+    let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(this.totalPages, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
   getMin(a: number, b: number): number {
@@ -228,6 +444,7 @@ export class Users implements OnInit {
   clearFilters(): void {
     this.searchTerm.set('');
     this.kycStatusFilter.set('all');
+    this.userStatusFilter.set('all');
     this.dateRangeFilter.set('all');
     this.currentPage = 1;
     this.onSearchChange();
@@ -355,14 +572,156 @@ export class Users implements OnInit {
       this.isLoading.set(false);
     }
   }
+
+  // Status management methods
+  openStatusModal(user: ExtendedUser, action: 'suspend' | 'deactivate' | 'reactivate') {
+    this.selectedUser.set(user);
+    this.statusAction.set(action);
+    this.statusReason.set('');
+    this.showStatusModal.set(true);
+  }
+
+  async performStatusAction() {
+    if (!this.selectedUser() || !this.statusReason().trim()) {
+      this.error.set('Please provide a reason for this action');
+      return;
+    }
+
+    this.isLoading.set(true);
+    try {
+      let response: UserStatusResponse;
+      const userId = this.selectedUser()!._id!;
+      const reason = this.statusReason();
+
+      switch (this.statusAction()) {
+        case 'suspend':
+          response = await this.userService.suspendUser(userId, reason).toPromise() as UserStatusResponse;
+          break;
+        case 'deactivate':
+          response = await this.userService.deactivateUser(userId, reason).toPromise() as UserStatusResponse;
+          break;
+        case 'reactivate':
+          response = await this.userService.reactivateUser(userId, reason).toPromise() as UserStatusResponse;
+          break;
+        default:
+          throw new Error('Invalid status action');
+      }
+
+      if (response?.status === 'success') {
+        this.success.set(`User ${this.statusAction()}d successfully`);
+        await this.loadUsers();
+        this.closeModals();
+      } else {
+        this.error.set(response?.message || `Failed to ${this.statusAction()} user`);
+      }
+    } catch (err: any) {
+      this.error.set(err.error?.message || err.message || `Failed to ${this.statusAction()} user`);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  async viewStatusHistory(user: ExtendedUser) {
+    this.isLoading.set(true);
+    try {
+      const response = await this.userService.getUserStatusHistory(user._id!).toPromise() as UserStatusHistoryResponse;
+      if (response?.status === 'success') {
+        this.statusHistory.set(response.body.history);
+        this.selectedUser.set(user);
+        this.showStatusHistoryModal.set(true);
+      } else {
+        this.error.set('Failed to load status history');
+      }
+    } catch (err: any) {
+      this.error.set(err.error?.message || err.message || 'Failed to load status history');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  async viewSuspensionStats() {
+    this.isLoading.set(true);
+    try {
+      const response = await this.userService.getSuspensionStats().toPromise() as SuspensionStatsResponse;
+      if (response?.status === 'success') {
+        this.suspensionStats.set(response.body.stats);
+        this.showSuspensionStatsModal.set(true);
+      } else {
+        this.error.set('Failed to load suspension statistics');
+      }
+    } catch (err: any) {
+      this.error.set(err.error?.message || err.message || 'Failed to load suspension statistics');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  async checkUserPermissions(user: ExtendedUser) {
+    try {
+      const response = await this.userService.checkUserPermissions(user._id!).toPromise() as UserPermissionsResponse;
+      if (response?.status === 'success') {
+        const permissions = response.body.permissions;
+        if (!permissions.canPerform) {
+          this.error.set(`User cannot perform actions: ${permissions.reason}`);
+        } else {
+          this.success.set('User can perform actions normally');
+        }
+      }
+    } catch (err: any) {
+      this.error.set(err.error?.message || err.message || 'Failed to check user permissions');
+    }
+  }
+
+  getStatusClass(status: string | undefined): string {
+    switch (status) {
+      case 'active':
+        return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800';
+      case 'suspended':
+        return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800';
+      case 'deactivated':
+        return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800';
+      default:
+        return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800';
+    }
+  }
+
+  getStatusIcon(status: string | undefined): string {
+    switch (status) {
+      case 'active':
+        return '✓';
+      case 'suspended':
+        return '⚠';
+      case 'deactivated':
+        return '✗';
+      default:
+        return '?';
+    }
+  }
+
+  formatSuspensionEndDate(dateString: string | undefined): string {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
   
   closeModals() {
     this.showDetailsModal.set(false);
     this.showRejectModal.set(false);
     this.showAddUserModal.set(false);
     this.showEditUserModal.set(false);
+    this.showStatusModal.set(false);
+    this.showStatusHistoryModal.set(false);
+    this.showSuspensionStatsModal.set(false);
     this.selectedUser.set(null);
     this.rejectionComment.set('');
+    this.statusReason.set('');
+    this.statusHistory.set(null);
+    this.suspensionStats.set(null);
     this.editingUserId.set(null);
     this.resetUserForm();
     this.error.set(null);
@@ -379,11 +738,13 @@ export class Users implements OnInit {
     this.userForm = {
       name: '',
       email: '',
+      password: '',
       phone: '',
       dateofbirth: '',
       location: '',
       pincode: '',
-      address: ''
+      address: '',
+      kycFile: null
     };
   }
 
@@ -396,11 +757,13 @@ export class Users implements OnInit {
     this.userForm = {
       name: user.name || '',
       email: user.email || '',
+      password: '', // Don't populate password for editing
       phone: user.phone || '',
       dateofbirth: user.dateofbirth || '',
       location: user.location || '',
       pincode: user.pincode || '',
-      address: user.address || ''
+      address: user.address || '',
+      kycFile: null // Reset KYC file
     };
     this.editingUserId.set(user._id!);
     this.showEditUserModal.set(true);
@@ -415,29 +778,104 @@ export class Users implements OnInit {
       return;
     }
 
+    // For new users, password is required
+    const isEditing = this.editingUserId();
+    if (!isEditing && !formData.password.trim()) {
+      this.error.set('Password is required for new users');
+      return;
+    }
+
     this.isLoading.set(true);
     
     try {
-      const isEditing = this.editingUserId();
-      
       if (isEditing) {
         // Update existing user
-        const response = await this.userService.updateProfile(formData).toPromise();
+        let updateData: any;
+        
+        if (formData.kycFile) {
+          // If KYC file is present, use FormData
+          updateData = new FormData();
+          updateData.append('name', formData.name.trim());
+          updateData.append('email', formData.email.trim());
+          updateData.append('phone', formData.phone.trim());
+          updateData.append('dateofbirth', formData.dateofbirth);
+          updateData.append('location', formData.location.trim());
+          updateData.append('pincode', formData.pincode.trim());
+          updateData.append('address', formData.address.trim());
+          if (formData.password.trim()) {
+            updateData.append('password', formData.password.trim());
+          }
+          updateData.append('kycFile', formData.kycFile);
+        } else {
+          // No file, use regular object with trimmed values
+          updateData = {
+            ...formData,
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone.trim(),
+            location: formData.location.trim(),
+            pincode: formData.pincode.trim(),
+            address: formData.address.trim()
+          };
+          // Remove password if empty (don't update password)
+          if (!updateData.password.trim()) {
+            delete updateData.password;
+          } else {
+            updateData.password = updateData.password.trim();
+          }
+          delete updateData.kycFile; // Remove kycFile from regular object
+        }
+        
+        const response = await this.userService.updateUserById(isEditing, updateData).toPromise();
         if (response?.status === 'success') {
           this.success.set('User updated successfully');
           await this.loadUsers();
           this.closeModals();
         } else {
-          this.error.set('Failed to update user');
+          this.error.set(response?.message || 'Failed to update user');
         }
       } else {
-        // Create new user - Note: You'll need to add a createUser method to UserService
-        // For now, simulating the creation
-        this.success.set('User creation functionality needs to be implemented in the backend');
-        this.closeModals();
+        // Create new user
+        let createData: any;
+        
+        if (formData.kycFile) {
+          // If KYC file is present, use FormData
+          createData = new FormData();
+          createData.append('name', formData.name.trim());
+          createData.append('email', formData.email.trim());
+          createData.append('password', formData.password.trim());
+          createData.append('phone', formData.phone.trim());
+          createData.append('dateofbirth', formData.dateofbirth);
+          createData.append('location', formData.location.trim());
+          createData.append('pincode', formData.pincode.trim());
+          createData.append('address', formData.address.trim());
+          createData.append('kycFile', formData.kycFile);
+        } else {
+          // No file, use regular object with trimmed values
+          createData = {
+            ...formData,
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            password: formData.password.trim(),
+            phone: formData.phone.trim(),
+            location: formData.location.trim(),
+            pincode: formData.pincode.trim(),
+            address: formData.address.trim()
+          };
+          delete createData.kycFile; // Remove kycFile from regular object
+        }
+        
+        const response = await this.userService.createUser(createData).toPromise();
+        if (response?.status === 'success') {
+          this.success.set('User created successfully');
+          await this.loadUsers();
+          this.closeModals();
+        } else {
+          this.error.set(response?.message || 'Failed to create user');
+        }
       }
     } catch (err: any) {
-      this.error.set(err.message || 'Failed to save user');
+      this.error.set(err.error?.message || err.message || 'Failed to save user');
     } finally {
       this.isLoading.set(false);
     }
@@ -449,42 +887,38 @@ export class Users implements OnInit {
   }
   
   deleteUser(user: ExtendedUser): void {
-    this.dialogService.showDialog({
-      title: 'Delete User',
-      message: `Are you sure you want to delete ${user.name}? This action cannot be undone.`,
-      type: 'error',
-      confirmText: 'Yes, Delete',
-      cancelText: 'Cancel'
-    }).then((confirmed) => {
-      if (confirmed) {
-        this.performDeleteUser(user);
-      }
+    this.showConfirmDialog('Delete User', `Are you sure you want to delete ${user.name}? This action cannot be undone.`, () => {
+      this.performDeleteUser(user);
     });
   }
   
-  private performDeleteUser(user: ExtendedUser): void {
+  private async performDeleteUser(user: ExtendedUser): Promise<void> {
     this.loading = true;
     this.showLoadingDialog = true;
     this.loadingMessage = 'Deleting user...';
     
-    // Remove user locally
-    const usersArray = this.users();
-    const userIndex = usersArray.findIndex(u => u._id === user._id);
-    if (userIndex !== -1) {
-      usersArray.splice(userIndex, 1);
-      this.users.set([...usersArray]);
-    }
-    
-    // Simulate API call (replace with actual API call when available)
-    setTimeout(() => {
+    try {
+      const response = await this.userService.deleteUserById(user._id!).toPromise();
+      
+      if (response?.status === 'success') {
+        // Remove user from local array
+        const usersArray = this.users();
+        const userIndex = usersArray.findIndex(u => u._id === user._id);
+        if (userIndex !== -1) {
+          usersArray.splice(userIndex, 1);
+          this.users.set([...usersArray]);
+        }
+        
+        this.showSuccessDialog('User deleted successfully!');
+      } else {
+        this.showErrorDialog(response?.message || 'Failed to delete user');
+      }
+    } catch (error: any) {
+      this.showErrorDialog(error.error?.message || error.message || 'Failed to delete user');
+    } finally {
       this.loading = false;
       this.showLoadingDialog = false;
-      this.dialogService.showDialog({
-        title: 'Success',
-        message: 'User deleted successfully!',
-        type: 'success'
-      });
-    }, 1000);
+    }
   }
   
   formatDate(date: string | Date | undefined): string {
@@ -497,16 +931,31 @@ export class Users implements OnInit {
       minute: '2-digit'
     });
   }
+
+  openDatePicker(fieldId: string) {
+    // Programmatically trigger the date picker
+    const dateInput = document.getElementById(fieldId) as HTMLInputElement;
+    if (dateInput) {
+      dateInput.focus();
+      // Try modern showPicker() method first
+      if (dateInput.showPicker) {
+        dateInput.showPicker();
+      } else {
+        // Fallback: trigger click event to open picker
+        dateInput.click();
+      }
+    }
+  }
   
   getKycStatusClass(status: string | undefined): string {
     switch (status) {
       case 'approved':
-        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-approved';
+        return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium status-badge-approved';
       case 'rejected':
-        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-rejected';
+        return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium status-badge-rejected';
       case 'pending':
       default:
-        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-pending';
+        return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium status-badge-pending';
     }
   }
   

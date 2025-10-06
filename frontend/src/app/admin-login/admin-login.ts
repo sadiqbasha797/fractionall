@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
 import { AuthService, LoginCredentials } from '../services/auth.service';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-admin-login',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, RouterModule],
   templateUrl: './admin-login.html',
   styleUrl: './admin-login.css'
 })
@@ -31,7 +31,7 @@ export class AdminLogin {
             localStorage.setItem('admin', JSON.stringify(response.body.admin));
             localStorage.setItem('userRole', 'admin');
           }
-          this.router.navigate(['/cars']);
+          this.router.navigate(['/dashboard']);
         } else {
           this.errorMessage = response.message;
         }

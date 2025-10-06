@@ -7,6 +7,7 @@ const simpleStepsSchema = new mongoose.Schema({
     stepName: {
         type: String
     },
+    // Removed video1 and video2 fields
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Admin'

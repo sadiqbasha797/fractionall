@@ -1,17 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
+import { PincodeService } from '../services/pincode.service';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, HttpClientModule],
   templateUrl: './register.html',
   styleUrl: './register.css'
 })
-export class Register implements OnInit {
+export class Register implements OnInit, OnDestroy {
   registerData = {
     name: '',
     email: '',
@@ -25,9 +27,13 @@ export class Register implements OnInit {
   errorMessage = '';
   successMessage = '';
   showPassword = false;
+  isPincodeLoading = false;
+  pincodeError = '';
+  private pincodeTimeout: any;
 
   constructor(
     private authService: AuthService,
+    private pincodeService: PincodeService,
     private router: Router
   ) {}
 
@@ -155,5 +161,64 @@ export class Register implements OnInit {
 
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
+  }
+
+  onPincodeChange() {
+    this.pincodeError = '';
+    
+    // Clear any existing timeout
+    if (this.pincodeTimeout) {
+      clearTimeout(this.pincodeTimeout);
+    }
+    
+    // Clear location if pincode is not valid
+    if (this.registerData.pincode.length > 0 && this.registerData.pincode.length < 6) {
+      this.registerData.location = '';
+      this.pincodeError = 'Pincode must be 6 digits';
+      return;
+    }
+    
+    if (this.registerData.pincode.length > 0 && !/^\d{6}$/.test(this.registerData.pincode)) {
+      this.registerData.location = '';
+      this.pincodeError = 'Please enter a valid 6-digit pincode';
+      return;
+    }
+    
+    if (this.registerData.pincode.length === 0) {
+      this.registerData.location = '';
+      this.pincodeError = '';
+      return;
+    }
+    
+    // Only fetch location if pincode is exactly 6 digits - with debounce
+    if (this.registerData.pincode.length === 6 && /^\d{6}$/.test(this.registerData.pincode)) {
+      this.pincodeTimeout = setTimeout(() => {
+        this.isPincodeLoading = true;
+        
+        this.pincodeService.getFormattedLocation(this.registerData.pincode).subscribe({
+          next: (location) => {
+            this.isPincodeLoading = false;
+            if (location && location.trim() !== '') {
+              this.registerData.location = location;
+              this.pincodeError = '';
+            } else {
+              this.pincodeError = 'Invalid pincode. Please check and try again.';
+              this.registerData.location = '';
+            }
+          },
+          error: (error) => {
+            this.isPincodeLoading = false;
+            this.pincodeError = 'Unable to fetch location. Please enter manually.';
+          }
+        });
+      }, 500); // 500ms debounce
+    }
+  }
+
+  ngOnDestroy() {
+    // Clean up timeout when component is destroyed
+    if (this.pincodeTimeout) {
+      clearTimeout(this.pincodeTimeout);
+    }
   }
 }

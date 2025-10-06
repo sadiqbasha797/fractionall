@@ -23,7 +23,7 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private route: ActivatedRoute,
-    private router: Router,
+    public router: Router,
     private carService: CarPublicService,
     private paymentService: PaymentService,
     private tokenService: TokenService,
@@ -53,6 +53,12 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   protected carData = signal<any>(null);
   protected loading = signal<boolean>(true);
   protected error = signal<string | null>(null);
+  
+  // Computed property to check if bookings are stopped
+  protected isBookingStopped = computed(() => {
+    const car = this.carData();
+    return car?.stopBookings === true;
+  });
 
   // User data properties
   protected user = signal<any>({
@@ -196,6 +202,9 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
           this.carData.set(response.body.car);
           this.totalSlides.set(this.carData().images?.length || 1);
           this.loading.set(false);
+          
+          // Track car view for retargeting
+          this.trackCarView();
         } else {
           this.error.set(response.message || 'Failed to load car data');
           this.loading.set(false);
@@ -205,6 +214,47 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
         console.error('Error loading car data:', error);
         this.error.set('Failed to load car data');
         this.loading.set(false);
+      }
+    });
+  }
+
+  trackCarView() {
+    if (!this.carId()) {
+      return;
+    }
+
+    // Check if user has a token (more lenient check for retargeting)
+    const token = this.authService.getToken();
+    
+    if (token) {
+      // Use authenticated endpoint for retargeting (even if user not fully verified)
+      this.carService.trackCarViewWithRetargeting(this.carId()).subscribe({
+        next: (response) => {
+          console.log('Car view tracked with retargeting:', response);
+        },
+        error: (error) => {
+          console.error('Error tracking car view with retargeting:', error);
+          // Fallback to anonymous tracking if authenticated tracking fails
+          this.trackAnonymousView();
+        }
+      });
+    } else {
+      // Use anonymous endpoint for basic tracking
+      this.trackAnonymousView();
+    }
+  }
+
+  trackAnonymousView() {
+    if (!this.carId()) {
+      return;
+    }
+
+    this.carService.trackCarView(this.carId()).subscribe({
+      next: (response) => {
+        console.log('Anonymous car view tracked:', response);
+      },
+      error: (error) => {
+        console.error('Error tracking anonymous car view:', error);
       }
     });
   }
@@ -241,6 +291,8 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
           this.user.set({ ...this.user(), ...response.body.user });
           // Update stored user data
           this.authService.setUserData(this.user());
+          // Track car view now that user is authenticated (for retargeting)
+          this.trackCarView();
           // Now load tokens and book now tokens since user is authenticated
           this.loadUserTokens();
           this.loadUserBookNowTokens();
@@ -792,6 +844,9 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
     this.closeLoginModal();
     this.loadUserProfile();
     
+    // Track car view now that user is authenticated (for retargeting)
+    this.trackCarView();
+    
     // If there was a pending payment, show success message (don't auto-process)
     const pendingPayment = this.pendingPaymentType();
     if (pendingPayment) {
@@ -827,6 +882,12 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   }
 
   initiatePayment(type: 'book-now' | 'waitlist') {
+    // Check if bookings are stopped for this car
+    if (this.isBookingStopped()) {
+      this.paymentError.set('Bookings are currently stopped for this car. Please try again later.');
+      return;
+    }
+    
     // First check if user is authenticated
     if (!this.authService.isLoggedIn()) {
       this.pendingPaymentType.set(type);
@@ -976,7 +1037,11 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
         amountpaid: this.getPaymentAmount(),
         date: currentDate,
         expirydate: expiryDate.toISOString(),
-        status: 'active'
+        status: 'active',
+        // Add payment information for refund tracking
+        paymentTransactionId: paymentData?.payment_id || '',
+        razorpayOrderId: paymentData?.order_id || '',
+        razorpayPaymentId: paymentData?.payment_id || ''
       };
 
       this.bookNowTokenService.createBookNowToken(bookNowTokenData).subscribe({
@@ -1008,7 +1073,11 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
         amountpaid: this.getPaymentAmount(),
         date: currentDate,
         expirydate: expiryDate.toISOString(),
-        status: 'active'
+        status: 'active',
+        // Add payment information for refund tracking
+        paymentTransactionId: paymentData?.payment_id || '',
+        razorpayOrderId: paymentData?.order_id || '',
+        razorpayPaymentId: paymentData?.payment_id || ''
       };
 
       this.tokenService.createToken(tokenData).subscribe({

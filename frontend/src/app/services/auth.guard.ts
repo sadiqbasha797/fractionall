@@ -29,6 +29,7 @@ export class AuthGuard implements CanActivate {
     if (token && userRole) {
       // Check if the route requires specific role permissions
       const requiredRole = route.data?.['role'];
+      
       if (requiredRole) {
         if (userRole === requiredRole || (requiredRole === 'admin' && userRole === 'superadmin')) {
           return of(true);

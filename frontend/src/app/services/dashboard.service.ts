@@ -25,6 +25,7 @@ export interface ContractStatus {
 }
 
 export interface DashboardStats {
+  // Dashboard statistics interface
   overview?: {
     totalCars?: number;
     activeCars?: number;
@@ -47,6 +48,12 @@ export interface DashboardStats {
     openTickets?: number;
     closedTickets?: number;
     ticketsThisWeek?: number;
+    totalShares?: number;
+    openShares?: number;
+    activeShares?: number;
+    closedShares?: number;
+    expiredShares?: number;
+    sharesThisWeek?: number;
     totalTokens?: number;
     tokensThisMonth?: number;
     totalBookNowTokens?: number;
@@ -62,6 +69,7 @@ export interface DashboardStats {
     total?: number;
     breakdown?: {
       tickets?: number;
+      shares?: number;
       amc?: number;
       tokens?: number;
       bookNowTokens?: number;
@@ -94,6 +102,17 @@ export interface DashboardStats {
       pricepaid?: number;
       pendingamount?: number;
       ticketstatus?: 'active' | 'expired' | 'cancelled';
+      comments?: string;
+      createdAt?: string;
+    }>;
+    shares?: Array<{
+      _id?: string;
+      userid?: { name?: string; email?: string };
+      sharecustomid?: string;
+      shareprice?: number;
+      pricepaid?: number;
+      pendingamount?: number;
+      sharestatus?: 'active' | 'expired' | 'cancelled';
       comments?: string;
       createdAt?: string;
     }>;

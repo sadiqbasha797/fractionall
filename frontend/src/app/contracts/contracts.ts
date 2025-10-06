@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Renderer2 } from '@angular/core';
 import { ContractService, Contract, CreateContractData } from '../services/contract.service';
 import { CarService, Car } from '../services/car.service';
 import { UserService, User } from '../services/user.service';
@@ -6,14 +6,12 @@ import { TicketService, Ticket } from '../services/ticket.service';
 import { AuthService } from '../services/auth.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DialogService } from '../shared/dialog/dialog.service';
-import { DialogComponent } from '../shared/dialog/dialog.component';
 import { ExportService, ExportOptions } from '../services/export.service';
 
 @Component({
   selector: 'app-contracts',
   standalone: true,
-  imports: [CommonModule, FormsModule, DialogComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './contracts.html',
   styleUrl: './contracts.css'
 })
@@ -30,6 +28,16 @@ export class Contracts implements OnInit {
   searchTerm: string = '';
   createdByFilter: string = 'all';
   documentsFilter: string = 'all';
+  
+  // Pagination
+  currentPage = 1;
+  itemsPerPage = 10;
+  totalPages = 0;
+  
+  // Helper method for template
+  getMin(a: number, b: number): number {
+    return Math.min(a, b);
+  }
 
   // Modal states
   showCreateEditModal: boolean = false;
@@ -59,14 +67,17 @@ export class Contracts implements OnInit {
   isAdmin: boolean = false;
   isSuperAdmin: boolean = false;
 
+  // Dialog element
+  private dialogElement: HTMLElement | null = null;
+
   constructor(
     private contractService: ContractService,
     private carService: CarService,
     private userService: UserService,
     private ticketService: TicketService,
     private authService: AuthService,
-    public dialogService: DialogService,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private renderer: Renderer2
   ) { }
 
   ngOnInit(): void {
@@ -79,6 +90,143 @@ export class Contracts implements OnInit {
     this.isSuperAdmin = this.authService.isSuperAdmin();
   }
 
+  // Local dialog methods
+  showConfirmDialog(title: string, message: string, confirmCallback: () => void): void {
+    this.removeDialog();
+    const backdrop = this.renderer.createElement('div');
+    this.renderer.setStyle(backdrop, 'position', 'fixed');
+    this.renderer.setStyle(backdrop, 'top', '0');
+    this.renderer.setStyle(backdrop, 'left', '0');
+    this.renderer.setStyle(backdrop, 'width', '100vw');
+    this.renderer.setStyle(backdrop, 'height', '100vh');
+    this.renderer.setStyle(backdrop, 'background', 'rgba(0, 0, 0, 0.8)');
+    this.renderer.setStyle(backdrop, 'z-index', '999999');
+    this.renderer.setStyle(backdrop, 'display', 'flex');
+    this.renderer.setStyle(backdrop, 'align-items', 'center');
+    this.renderer.setStyle(backdrop, 'justify-content', 'center');
+    const dialog = this.renderer.createElement('div');
+    this.renderer.setStyle(dialog, 'background', '#374151');
+    this.renderer.setStyle(dialog, 'border-radius', '12px');
+    this.renderer.setStyle(dialog, 'max-width', '500px');
+    this.renderer.setStyle(dialog, 'width', '90%');
+    this.renderer.setStyle(dialog, 'padding', '24px');
+    const titleEl = this.renderer.createElement('h3');
+    this.renderer.setStyle(titleEl, 'color', 'white');
+    this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
+    this.renderer.setStyle(titleEl, 'font-size', '1.5rem');
+    const titleText = this.renderer.createText(title);
+    this.renderer.appendChild(titleEl, titleText);
+    const messageEl = this.renderer.createElement('div');
+    this.renderer.setProperty(messageEl, 'innerHTML', message);
+    this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
+    this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
+    const btnContainer = this.renderer.createElement('div');
+    this.renderer.setStyle(btnContainer, 'display', 'flex');
+    this.renderer.setStyle(btnContainer, 'justify-content', 'flex-end');
+    this.renderer.setStyle(btnContainer, 'gap', '12px');
+    const cancelBtn = this.renderer.createElement('button');
+    const cancelText = this.renderer.createText('Cancel');
+    this.renderer.appendChild(cancelBtn, cancelText);
+    this.renderer.setStyle(cancelBtn, 'background', '#6B7280');
+    this.renderer.setStyle(cancelBtn, 'color', 'white');
+    this.renderer.setStyle(cancelBtn, 'border', 'none');
+    this.renderer.setStyle(cancelBtn, 'padding', '10px 20px');
+    this.renderer.setStyle(cancelBtn, 'border-radius', '8px');
+    this.renderer.setStyle(cancelBtn, 'cursor', 'pointer');
+    this.renderer.listen(cancelBtn, 'click', () => this.removeDialog());
+    const confirmBtn = this.renderer.createElement('button');
+    const confirmText = this.renderer.createText('Confirm');
+    this.renderer.appendChild(confirmBtn, confirmText);
+    this.renderer.setStyle(confirmBtn, 'background', '#DC2626');
+    this.renderer.setStyle(confirmBtn, 'color', 'white');
+    this.renderer.setStyle(confirmBtn, 'border', 'none');
+    this.renderer.setStyle(confirmBtn, 'padding', '10px 20px');
+    this.renderer.setStyle(confirmBtn, 'border-radius', '8px');
+    this.renderer.setStyle(confirmBtn, 'cursor', 'pointer');
+    this.renderer.listen(confirmBtn, 'click', () => {
+      this.removeDialog();
+      confirmCallback();
+    });
+    this.renderer.appendChild(btnContainer, cancelBtn);
+    this.renderer.appendChild(btnContainer, confirmBtn);
+    this.renderer.appendChild(dialog, titleEl);
+    this.renderer.appendChild(dialog, messageEl);
+    this.renderer.appendChild(dialog, btnContainer);
+    this.renderer.appendChild(backdrop, dialog);
+    this.renderer.appendChild(document.body, backdrop);
+    this.dialogElement = backdrop;
+    this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
+    this.renderer.listen(backdrop, 'click', () => this.removeDialog());
+  }
+
+  removeDialog(): void {
+    if (this.dialogElement) {
+      this.renderer.removeChild(document.body, this.dialogElement);
+      this.dialogElement = null;
+    }
+  }
+
+  showSuccessDialog(message: string): void {
+    this.showMessageDialog('Success', message, '#10B981');
+  }
+
+  showErrorDialog(message: string): void {
+    this.showMessageDialog('Error', message, '#DC2626');
+  }
+
+  showMessageDialog(title: string, message: string, color: string): void {
+    this.removeDialog();
+    const backdrop = this.renderer.createElement('div');
+    this.renderer.setStyle(backdrop, 'position', 'fixed');
+    this.renderer.setStyle(backdrop, 'top', '0');
+    this.renderer.setStyle(backdrop, 'left', '0');
+    this.renderer.setStyle(backdrop, 'width', '100vw');
+    this.renderer.setStyle(backdrop, 'height', '100vh');
+    this.renderer.setStyle(backdrop, 'background', 'rgba(0, 0, 0, 0.8)');
+    this.renderer.setStyle(backdrop, 'z-index', '999999');
+    this.renderer.setStyle(backdrop, 'display', 'flex');
+    this.renderer.setStyle(backdrop, 'align-items', 'center');
+    this.renderer.setStyle(backdrop, 'justify-content', 'center');
+    const dialog = this.renderer.createElement('div');
+    this.renderer.setStyle(dialog, 'background', '#374151');
+    this.renderer.setStyle(dialog, 'border-radius', '12px');
+    this.renderer.setStyle(dialog, 'max-width', '400px');
+    this.renderer.setStyle(dialog, 'width', '90%');
+    this.renderer.setStyle(dialog, 'padding', '24px');
+    this.renderer.setStyle(dialog, 'text-align', 'center');
+    const titleEl = this.renderer.createElement('h3');
+    this.renderer.setStyle(titleEl, 'color', color);
+    this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
+    this.renderer.setStyle(titleEl, 'font-size', '1.5rem');
+    this.renderer.setStyle(titleEl, 'font-weight', '600');
+    const titleText = this.renderer.createText(title);
+    this.renderer.appendChild(titleEl, titleText);
+    const messageEl = this.renderer.createElement('div');
+    this.renderer.setProperty(messageEl, 'innerHTML', message);
+    this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
+    this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
+    const okBtn = this.renderer.createElement('button');
+    const okText = this.renderer.createText('OK');
+    this.renderer.appendChild(okBtn, okText);
+    this.renderer.setStyle(okBtn, 'background', color);
+    this.renderer.setStyle(okBtn, 'color', 'white');
+    this.renderer.setStyle(okBtn, 'border', 'none');
+    this.renderer.setStyle(okBtn, 'padding', '10px 30px');
+    this.renderer.setStyle(okBtn, 'border-radius', '8px');
+    this.renderer.setStyle(okBtn, 'cursor', 'pointer');
+    this.renderer.setStyle(okBtn, 'font-size', '14px');
+    this.renderer.setStyle(okBtn, 'font-weight', '600');
+    this.renderer.listen(okBtn, 'click', () => this.removeDialog());
+    this.renderer.appendChild(dialog, titleEl);
+    this.renderer.appendChild(dialog, messageEl);
+    this.renderer.appendChild(dialog, okBtn);
+    this.renderer.appendChild(backdrop, dialog);
+    this.renderer.appendChild(document.body, backdrop);
+    this.dialogElement = backdrop;
+    this.renderer.listen(backdrop, 'click', () => this.removeDialog());
+    this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
+  }
+
   async loadInitialData(): Promise<void> {
     try {
       await Promise.all([
@@ -89,7 +237,7 @@ export class Contracts implements OnInit {
       ]);
     } catch (error) {
       console.error('Error loading initial data:', error);
-      this.dialogService.showError('Error', 'Failed to load contracts data');
+      this.showErrorDialog('Failed to load contracts data');
     }
   }
 
@@ -100,6 +248,8 @@ export class Contracts implements OnInit {
           if (response.status === 'success') {
             this.contracts = response.body.contracts || [];
             this.filteredContracts = [...this.contracts];
+            // Initialize pagination after loading contracts
+            this.applyFilters();
             resolve();
           } else {
             reject(new Error(response.message));
@@ -187,12 +337,43 @@ export class Contracts implements OnInit {
       
       return matchesSearch && matchesCreatedBy && matchesDocuments;
     });
+    
+    // Update pagination
+    this.totalPages = Math.ceil(this.filteredContracts.length / this.itemsPerPage);
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = 1;
+    }
+  }
+
+  get paginatedContracts(): Contract[] {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    return this.filteredContracts.slice(startIndex, endIndex);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const maxVisible = 5;
+    let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(this.totalPages, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
   clearFilters(): void {
     this.searchTerm = '';
     this.createdByFilter = 'all';
     this.documentsFilter = 'all';
+    this.currentPage = 1;
     this.applyFilters();
   }
 
@@ -245,30 +426,27 @@ export class Contracts implements OnInit {
     this.showCreateEditModal = true;
   }
 
-  async deleteContract(contract: Contract): Promise<void> {
-    try {
-      const confirmed = await this.dialogService.confirmDelete(
-        `Contract ${this.getContractDisplayId(contract._id)}`
-      );
-      if (confirmed) {
+  deleteContract(contract: Contract): void {
+    this.showConfirmDialog(
+      'Confirm Delete',
+      `Are you sure you want to delete <strong>Contract ${this.getContractDisplayId(contract._id)}</strong>? This action cannot be undone.`,
+      () => {
         this.contractService.deleteContract(contract._id!).subscribe({
           next: (response) => {
             if (response.status === 'success') {
               this.contracts = this.contracts.filter(c => c._id !== contract._id);
               this.applyFilters();
-              this.dialogService.showSuccess('Success', 'Contract deleted successfully!');
+              this.showSuccessDialog('Contract deleted successfully!');
             } else {
-              this.dialogService.showError('Error', `Failed to delete contract: ${response.message}`);
+              this.showErrorDialog(`Failed to delete contract: ${response.message}`);
             }
           },
           error: (err) => {
-            this.dialogService.showError('Error', `Error deleting contract: ${err.message || 'Unknown error'}`);
+            this.showErrorDialog(`Error deleting contract: ${err.message || 'Unknown error'}`);
           }
         });
       }
-    } catch (error) {
-      console.error('Error in delete confirmation:', error);
-    }
+    );
   }
 
   // File handling
@@ -301,7 +479,7 @@ export class Contracts implements OnInit {
   // Form submission
   submitContractForm(): void {
     if (!this.contractData.carid || !this.contractData.userid || !this.contractData.ticketid) {
-      this.dialogService.showError('Error', 'Please fill in all required fields');
+      this.showErrorDialog('Please fill in all required fields');
       return;
     }
 
@@ -315,14 +493,14 @@ export class Contracts implements OnInit {
           if (response.status === 'success') {
             this.loadContracts();
             this.closeCreateEditModal();
-            this.dialogService.showSuccess('Success', 'Contract updated successfully!');
+            this.showSuccessDialog('Contract updated successfully!');
           } else {
-            this.dialogService.showError('Error', `Failed to update contract: ${response.message}`);
+            this.showErrorDialog(`Failed to update contract: ${response.message}`);
           }
         },
         error: (err) => {
           this.isSubmitting = false;
-          this.dialogService.showError('Error', `Error updating contract: ${err.message || 'Unknown error'}`);
+          this.showErrorDialog(`Error updating contract: ${err.message || 'Unknown error'}`);
         }
       });
     } else {
@@ -334,14 +512,14 @@ export class Contracts implements OnInit {
             if (response.status === 'success') {
               this.loadContracts();
               this.closeCreateEditModal();
-              this.dialogService.showSuccess('Success', 'Contract created successfully with documents!');
+              this.showSuccessDialog('Contract created successfully with documents!');
             } else {
-              this.dialogService.showError('Error', `Failed to create contract: ${response.message}`);
+              this.showErrorDialog(`Failed to create contract: ${response.message}`);
             }
           },
           error: (err) => {
             this.isSubmitting = false;
-            this.dialogService.showError('Error', `Error creating contract: ${err.message || 'Unknown error'}`);
+            this.showErrorDialog(`Error creating contract: ${err.message || 'Unknown error'}`);
           }
         });
       } else {
@@ -351,14 +529,14 @@ export class Contracts implements OnInit {
             if (response.status === 'success') {
               this.loadContracts();
               this.closeCreateEditModal();
-              this.dialogService.showSuccess('Success', 'Contract created successfully!');
+              this.showSuccessDialog('Contract created successfully!');
             } else {
-              this.dialogService.showError('Error', `Failed to create contract: ${response.message}`);
+              this.showErrorDialog(`Failed to create contract: ${response.message}`);
             }
           },
           error: (err) => {
             this.isSubmitting = false;
-            this.dialogService.showError('Error', `Error creating contract: ${err.message || 'Unknown error'}`);
+            this.showErrorDialog(`Error creating contract: ${err.message || 'Unknown error'}`);
           }
         });
       }
@@ -410,13 +588,13 @@ export class Contracts implements OnInit {
           if (this.currentContract) {
             this.selectedDocuments = new Array(this.currentContract.contract_docs?.length || 0).fill(false);
           }
-          this.dialogService.showSuccess('Success', 'Documents deleted successfully!');
+          this.showSuccessDialog('Documents deleted successfully!');
         } else {
-          this.dialogService.showError('Error', `Failed to delete documents: ${response.message}`);
+          this.showErrorDialog(`Failed to delete documents: ${response.message}`);
         }
       },
       error: (err) => {
-        this.dialogService.showError('Error', `Error deleting documents: ${err.message || 'Unknown error'}`);
+        this.showErrorDialog(`Error deleting documents: ${err.message || 'Unknown error'}`);
       }
     });
   }
@@ -437,14 +615,14 @@ export class Contracts implements OnInit {
           if (this.currentContract) {
             this.selectedDocuments = new Array(this.currentContract.contract_docs?.length || 0).fill(false);
           }
-          this.dialogService.showSuccess('Success', 'Documents uploaded successfully!');
+          this.showSuccessDialog('Documents uploaded successfully!');
         } else {
-          this.dialogService.showError('Error', `Failed to upload documents: ${response.message}`);
+          this.showErrorDialog(`Failed to upload documents: ${response.message}`);
         }
       },
       error: (err) => {
         this.isUploading = false;
-        this.dialogService.showError('Error', `Error uploading documents: ${err.message || 'Unknown error'}`);
+        this.showErrorDialog(`Error uploading documents: ${err.message || 'Unknown error'}`);
       }
     });
   }
@@ -455,11 +633,11 @@ export class Contracts implements OnInit {
         if (response.status === 'success' && response.body.documentUrl) {
           window.open(response.body.documentUrl, '_blank');
         } else {
-          this.dialogService.showError('Error', 'Failed to get document URL');
+          this.showErrorDialog('Failed to get document URL');
         }
       },
       error: (err) => {
-        this.dialogService.showError('Error', `Error viewing document: ${err.message || 'Unknown error'}`);
+        this.showErrorDialog(`Error viewing document: ${err.message || 'Unknown error'}`);
       }
     });
   }
@@ -477,7 +655,7 @@ export class Contracts implements OnInit {
         window.URL.revokeObjectURL(url);
       },
       error: (err) => {
-        this.dialogService.showError('Error', `Error downloading document: ${err.message || 'Unknown error'}`);
+        this.showErrorDialog(`Error downloading document: ${err.message || 'Unknown error'}`);
       }
     });
   }
@@ -673,11 +851,12 @@ export class Contracts implements OnInit {
     this.exportService.exportToExcel(options);
   }
 
-  private formatCurrency(amount: number): string {
+  private   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR'
     }).format(amount);
   }
+
 
 }

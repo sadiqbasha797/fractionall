@@ -1,5 +1,19 @@
 <div class="dashboard-container">
-
+  <!-- Dashboard Selector -->
+  <div class="dashboard-selector mb-6 mx-4 sm:mx-6">
+    <div class="flex flex-wrap gap-2 bg-gray-800/50 rounded-lg p-2">
+      <button 
+        *ngFor="let view of dashboardViews" 
+        (click)="switchView(view.id)"
+        [class]="currentView === view.id ? 'dashboard-tab-active' : 'dashboard-tab'"
+        class="flex items-center space-x-2 px-4 py-2 rounded-md transition-all duration-200">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="view.icon"/>
+        </svg>
+        <span>{{ view.name }}</span>
+      </button>
+    </div>
+  </div>
 
   <!-- Error Message -->
   <div *ngIf="hasError" class="mb-6 mx-4 sm:mx-6">
@@ -26,8 +40,8 @@
     </div>
   </div>
 
-  <!-- Dashboard Content -->
-  <div *ngIf="!isLoading && dashboardStats" class="px-4 sm:px-6 space-y-6 sm:space-y-8">
+  <!-- Overview Dashboard Content -->
+  <div *ngIf="!isLoading && dashboardStats && currentView === 'overview'" class="px-4 sm:px-6 space-y-6 sm:space-y-8">
     
     <!-- Overview Stats Grid -->
     <section class="fade-in">
@@ -156,8 +170,8 @@
       <div class="revenue-simple-grid">
         <div class="revenue-simple-item">
           <span class="revenue-dot blue"></span>
-          <span class="revenue-label">Tickets</span>
-          <span class="revenue-value">{{ formatCurrency(dashboardStats.revenue?.breakdown?.tickets || 0) }}</span>
+          <span class="revenue-label">Shares</span>
+          <span class="revenue-value">{{ formatCurrency(dashboardStats.revenue?.breakdown?.shares || 0) }}</span>
         </div>
         
         <div class="revenue-simple-item">
@@ -214,29 +228,29 @@
           </div>
         </div>
 
-        <!-- Recent Tickets -->
+        <!-- Recent Shares -->
         <div class="activity-container">
-          <h3 class="text-lg font-semibold text-white mb-4">Recent Tickets</h3>
+          <h3 class="text-lg font-semibold text-white mb-4">Recent Shares</h3>
           <div class="space-y-3">
-            <div *ngFor="let ticket of dashboardStats.recentActivity?.tickets || []" class="activity-item">
+            <div *ngFor="let share of dashboardStats.recentActivity?.shares || []" class="activity-item">
               <div class="activity-icon bg-red-500/20 text-red-400">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
                 </svg>
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-white truncate">{{ ticket?.ticketcustomid || 'Ticket ID Not Available' }}</p>
-                <p class="text-xs text-gray-400 truncate">{{ ticket?.userid?.name || 'Unknown User' }}</p>
+                <p class="text-sm font-medium text-white truncate">{{ share?.sharecustomid || 'Share ID Not Available' }}</p>
+                <p class="text-xs text-gray-400 truncate">{{ share?.userid?.name || 'Unknown User' }}</p>
                 <div class="flex items-center justify-between mt-1">
                   <div class="flex space-x-2">
-                    <span class="inline-flex items-center px-2 py-1 text-xs rounded-full" [class]="getStatusClass(ticket?.ticketstatus)">
-                      {{ ticket?.ticketstatus }}
+                    <span class="inline-flex items-center px-2 py-1 text-xs rounded-full" [class]="getStatusClass(share?.sharestatus)">
+                      {{ share?.sharestatus }}
                     </span>
                     <span class="inline-flex items-center px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                      {{ formatCurrency(ticket?.pricepaid || 0) }}
+                      {{ formatCurrency(share?.pricepaid || 0) }}
                     </span>
                   </div>
-                  <span class="text-xs text-gray-400">{{ formatDate(ticket?.createdAt) }}</span>
+                  <span class="text-xs text-gray-400">{{ formatDate(share?.createdAt) }}</span>
                 </div>
               </div>
             </div>
@@ -271,6 +285,402 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Revenue Dashboard Content -->
+  <div *ngIf="!isLoading && dashboardStats && currentView === 'revenue'" class="px-4 sm:px-6 space-y-6 sm:space-y-8">
+    <!-- Revenue Overview Stats -->
+    <section class="fade-in">
+      <h2 class="text-xl font-bold text-white mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Revenue Dashboard
+      </h2>
+      
+      <div class="stats-grid">
+        <!-- Total Revenue -->
+        <div class="stat-card-minimal slide-up">
+          <div class="stat-content">
+            <div class="stat-icon-minimal bg-green-500/10 text-green-400">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label-minimal">Total Revenue</div>
+              <div class="stat-value-minimal">{{ formatCurrency(dashboardStats.revenue?.total || 0) }}</div>
+              <div class="stat-change-minimal text-blue-400">All time</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Share Revenue -->
+        <div class="stat-card-minimal slide-up">
+          <div class="stat-content">
+            <div class="stat-icon-minimal bg-blue-500/10 text-blue-400">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label-minimal">Share Revenue</div>
+              <div class="stat-value-minimal">{{ formatCurrency(dashboardStats.revenue?.breakdown?.shares || 0) }}</div>
+              <div class="stat-change-minimal text-green-400">From shares</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AMC Revenue -->
+        <div class="stat-card-minimal slide-up">
+          <div class="stat-content">
+            <div class="stat-icon-minimal bg-purple-500/10 text-purple-400">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label-minimal">AMC Revenue</div>
+              <div class="stat-value-minimal">{{ formatCurrency(dashboardStats.revenue?.breakdown?.amc || 0) }}</div>
+              <div class="stat-change-minimal text-green-400">From AMC</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Token Revenue -->
+        <div class="stat-card-minimal slide-up">
+          <div class="stat-content">
+            <div class="stat-icon-minimal bg-amber-500/10 text-amber-400">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label-minimal">Token Revenue</div>
+              <div class="stat-value-minimal">{{ formatCurrency((dashboardStats.revenue?.breakdown?.tokens || 0) + (dashboardStats.revenue?.breakdown?.bookNowTokens || 0)) }}</div>
+              <div class="stat-change-minimal text-green-400">From tokens</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Revenue Breakdown Chart -->
+    <section class="fade-in">
+      <h2 class="text-xl font-bold text-white mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        Revenue Breakdown
+      </h2>
+      
+      <div class="chart-container">
+        <h3 class="chart-title">Revenue Sources</h3>
+        <p class="chart-subtitle">Distribution of revenue across different sources</p>
+        <div class="mt-4 h-64">
+          <canvas baseChart
+            [data]="revenueBreakdownChartData"
+            [options]="barChartOptions"
+            [type]="'pie'">
+          </canvas>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Shares Dashboard Content -->
+  <div *ngIf="!isLoading && dashboardStats && currentView === 'shares'" class="px-4 sm:px-6 space-y-6 sm:space-y-8">
+    <!-- Shares Overview Stats -->
+    <section class="fade-in">
+      <h2 class="text-xl font-bold text-white mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+        </svg>
+        Shares Dashboard
+      </h2>
+      
+      <div class="stats-grid">
+        <!-- Total Shares -->
+        <div class="stat-card-minimal slide-up">
+          <div class="stat-content">
+            <div class="stat-icon-minimal bg-blue-500/10 text-blue-400">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label-minimal">Total Shares</div>
+              <div class="stat-value-minimal">{{ formatNumber(dashboardStats.overview?.totalShares || 0) }}</div>
+              <div class="stat-change-minimal text-blue-400">All time</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Shares -->
+        <div class="stat-card-minimal slide-up">
+          <div class="stat-content">
+            <div class="stat-icon-minimal bg-green-500/10 text-green-400">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label-minimal">Active Shares</div>
+              <div class="stat-value-minimal">{{ formatNumber(dashboardStats.overview?.activeShares || 0) }}</div>
+              <div class="stat-change-minimal text-green-400">Currently active</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Closed Shares -->
+        <div class="stat-card-minimal slide-up">
+          <div class="stat-content">
+            <div class="stat-icon-minimal bg-gray-500/10 text-gray-400">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label-minimal">Closed Shares</div>
+              <div class="stat-value-minimal">{{ formatNumber(dashboardStats.overview?.closedShares || 0) }}</div>
+              <div class="stat-change-minimal text-gray-400">Completed</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- This Week Shares -->
+        <div class="stat-card-minimal slide-up">
+          <div class="stat-content">
+            <div class="stat-icon-minimal bg-purple-500/10 text-purple-400">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label-minimal">This Week</div>
+              <div class="stat-value-minimal">{{ formatNumber(dashboardStats.overview?.sharesThisWeek || 0) }}</div>
+              <div class="stat-change-minimal text-purple-400">New this week</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Shares Charts -->
+    <section class="fade-in">
+      <h2 class="text-xl font-bold text-white mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        Share Analytics
+      </h2>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Share Status Distribution -->
+        <div class="chart-container">
+          <h3 class="chart-title">Share Status Distribution</h3>
+          <p class="chart-subtitle">Breakdown of shares by status</p>
+          <div class="mt-4 h-64">
+            <canvas baseChart
+              [data]="shareStatusChartData"
+              [options]="shareChartOptions"
+              [type]="'doughnut'">
+            </canvas>
+          </div>
+        </div>
+        
+        <!-- Share Trends -->
+        <div class="chart-container">
+          <h3 class="chart-title">Weekly Share Trends</h3>
+          <p class="chart-subtitle">Share activity over the week</p>
+          <div class="mt-4 h-64">
+            <canvas baseChart
+              [data]="shareTrendsChartData"
+              [options]="shareLineChartOptions"
+              [type]="'line'">
+            </canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent Shares -->
+    <section class="fade-in">
+      <h2 class="text-xl font-bold text-white mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Recent Shares
+      </h2>
+      
+      <div class="activity-container">
+        <div class="space-y-3">
+          <div *ngFor="let share of dashboardStats.recentActivity?.shares || []" class="activity-item">
+            <div class="activity-icon bg-red-500/20 text-red-400">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-white truncate">{{ share?.sharecustomid || 'Share ID Not Available' }}</p>
+              <p class="text-xs text-gray-400 truncate">{{ share?.userid?.name || 'Unknown User' }}</p>
+              <div class="flex items-center justify-between mt-1">
+                <div class="flex space-x-2">
+                  <span class="inline-flex items-center px-2 py-1 text-xs rounded-full" [class]="getStatusClass(share?.sharestatus)">
+                    {{ share?.sharestatus }}
+                  </span>
+                  <span class="inline-flex items-center px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                    {{ formatCurrency(share?.pricepaid || 0) }}
+                  </span>
+                </div>
+                <span class="text-xs text-gray-400">{{ formatDate(share?.createdAt) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Tokens Dashboard Content -->
+  <div *ngIf="!isLoading && dashboardStats && currentView === 'tokens'" class="px-4 sm:px-6 space-y-6 sm:space-y-8">
+    <!-- Tokens Overview Stats -->
+    <section class="fade-in">
+      <h2 class="text-xl font-bold text-white mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Tokens Dashboard
+      </h2>
+      
+      <div class="stats-grid">
+        <!-- Total Tokens -->
+        <div class="stat-card-minimal slide-up">
+          <div class="stat-content">
+            <div class="stat-icon-minimal bg-blue-500/10 text-blue-400">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label-minimal">Total Tokens</div>
+              <div class="stat-value-minimal">{{ formatNumber(dashboardStats.overview?.totalTokens || 0) }}</div>
+              <div class="stat-change-minimal text-blue-400">All time</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Waitlist Tokens -->
+        <div class="stat-card-minimal slide-up">
+          <div class="stat-content">
+            <div class="stat-icon-minimal bg-purple-500/10 text-purple-400">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label-minimal">Waitlist Tokens</div>
+              <div class="stat-value-minimal">{{ formatNumber(dashboardStats.overview?.totalTokens || 0) }}</div>
+              <div class="stat-change-minimal text-purple-400">Waitlist</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Book Now Tokens -->
+        <div class="stat-card-minimal slide-up">
+          <div class="stat-content">
+            <div class="stat-icon-minimal bg-green-500/10 text-green-400">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label-minimal">Book Now Tokens</div>
+              <div class="stat-value-minimal">{{ formatNumber(dashboardStats.overview?.totalBookNowTokens || 0) }}</div>
+              <div class="stat-change-minimal text-green-400">Book Now</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- This Month Tokens -->
+        <div class="stat-card-minimal slide-up">
+          <div class="stat-content">
+            <div class="stat-icon-minimal bg-amber-500/10 text-amber-400">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label-minimal">This Month</div>
+              <div class="stat-value-minimal">{{ formatNumber((dashboardStats.overview?.tokensThisMonth || 0) + (dashboardStats.overview?.bookNowTokensThisMonth || 0)) }}</div>
+              <div class="stat-change-minimal text-amber-400">New this month</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Token Charts -->
+    <section class="fade-in">
+      <h2 class="text-xl font-bold text-white mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        Token Analytics
+      </h2>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Token Distribution -->
+        <div class="chart-container">
+          <h3 class="chart-title">Token Distribution</h3>
+          <p class="chart-subtitle">Waitlist vs Book Now tokens</p>
+          <div class="mt-4 h-64">
+            <canvas baseChart
+              [data]="tokenDistributionChartData"
+              [options]="tokenChartOptions"
+              [type]="'pie'">
+            </canvas>
+          </div>
+        </div>
+        
+        <!-- Token Revenue -->
+        <div class="chart-container">
+          <h3 class="chart-title">Token Revenue Comparison</h3>
+          <p class="chart-subtitle">Revenue generated by token types</p>
+          <div class="mt-4 h-64">
+            <canvas baseChart
+              [data]="tokenRevenueChartData"
+              [options]="tokenBarChartOptions"
+              [type]="'bar'">
+            </canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Token Revenue Breakdown -->
+    <section class="fade-in">
+      <h2 class="text-xl font-bold text-white mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Token Revenue Breakdown
+      </h2>
+      
+      <div class="revenue-simple-grid">
+        <div class="revenue-simple-item">
+          <span class="revenue-dot purple"></span>
+          <span class="revenue-label">Waitlist Tokens</span>
+          <span class="revenue-value">{{ formatCurrency(dashboardStats.revenue?.breakdown?.tokens || 0) }}</span>
+        </div>
+        
+        <div class="revenue-simple-item">
+          <span class="revenue-dot green"></span>
+          <span class="revenue-label">Book Now Tokens</span>
+          <span class="revenue-value">{{ formatCurrency(dashboardStats.revenue?.breakdown?.bookNowTokens || 0) }}</span>
         </div>
       </div>
     </section>

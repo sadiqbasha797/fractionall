@@ -42,6 +42,7 @@ export interface BookNowToken {
 }
 
 export interface BookNowTokenResponse {
+  status: string;
   body: {
     bookNowToken?: BookNowToken;
     bookNowTokens?: BookNowToken[];
@@ -101,6 +102,13 @@ export class BookNowTokenService {
   // Update a book now token
   updateBookNowToken(id: string, tokenData: Partial<BookNowToken>): Observable<BookNowTokenResponse> {
     return this.http.put<BookNowTokenResponse>(`${this.baseUrl}/${id}`, tokenData, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  // Cancel a book now token
+  cancelBookNowToken(id: string, reason?: string): Observable<BookNowTokenResponse> {
+    return this.http.post<BookNowTokenResponse>(`${this.baseUrl}/${id}/cancel`, { reason }, {
       headers: this.getAuthHeaders()
     });
   }

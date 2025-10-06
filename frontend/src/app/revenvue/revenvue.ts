@@ -53,6 +53,10 @@ export class Revenvue implements OnInit {
   itemsPerPage = 10;
   totalPages = 1;
 
+  // Loading state management
+  private loadingTasks = 0;
+  private completedTasks = 0;
+
   constructor(
     private dashboardService: DashboardService,
     private ticketService: TicketService,
@@ -70,6 +74,8 @@ export class Revenvue implements OnInit {
   loadData(): void {
     this.isLoading = true;
     this.hasError = false;
+    this.loadingTasks = 6; // Total number of API calls
+    this.completedTasks = 0;
     
     // Load all required data
     this.loadDashboardStats();
@@ -78,6 +84,13 @@ export class Revenvue implements OnInit {
     this.loadAmcs();
     this.loadWaitlistTokens();
     this.loadBookNowTokens();
+  }
+
+  private checkLoadingComplete(): void {
+    this.completedTasks++;
+    if (this.completedTasks >= this.loadingTasks) {
+      this.isLoading = false;
+    }
   }
 
   loadDashboardStats(): void {
@@ -95,8 +108,11 @@ export class Revenvue implements OnInit {
           this.totalWaitlistTokens = response.data.overview.totalTokens || 0;
           this.totalBookNowTokens = response.data.overview.totalBookNowTokens || 0;
         }
+        this.checkLoadingComplete();
       },
       error: (error) => {
+        console.error('Error loading dashboard stats:', error);
+        this.checkLoadingComplete();
       }
     });
   }
@@ -108,9 +124,11 @@ export class Revenvue implements OnInit {
           this.cars = response.body.cars;
           this.initializeCarRevenues();
         }
+        this.checkLoadingComplete();
       },
       error: (error) => {
-        this.handleError('Failed to load car data');
+        console.error('Error loading cars:', error);
+        this.checkLoadingComplete();
       }
     });
   }
@@ -122,8 +140,11 @@ export class Revenvue implements OnInit {
           const tickets = response.body.tickets || [];
           this.calculateTicketsRevenue(tickets);
         }
+        this.checkLoadingComplete();
       },
       error: (error) => {
+        console.error('Error loading tickets:', error);
+        this.checkLoadingComplete();
       }
     });
   }
@@ -135,8 +156,11 @@ export class Revenvue implements OnInit {
           const amcs = response.body.amcs || [];
           this.calculateAmcRevenue(amcs);
         }
+        this.checkLoadingComplete();
       },
       error: (error) => {
+        console.error('Error loading AMCs:', error);
+        this.checkLoadingComplete();
       }
     });
   }
@@ -148,8 +172,11 @@ export class Revenvue implements OnInit {
           const tokens = response.body.tokens || [];
           this.calculateWaitlistTokensRevenue(tokens);
         }
+        this.checkLoadingComplete();
       },
       error: (error) => {
+        console.error('Error loading waitlist tokens:', error);
+        this.checkLoadingComplete();
       }
     });
   }
@@ -161,8 +188,11 @@ export class Revenvue implements OnInit {
           const tokens = response.body.bookNowTokens || [];
           this.calculateBookNowTokensRevenue(tokens);
         }
+        this.checkLoadingComplete();
       },
       error: (error) => {
+        console.error('Error loading book now tokens:', error);
+        this.checkLoadingComplete();
       }
     });
   }
@@ -244,7 +274,6 @@ export class Revenvue implements OnInit {
     });
     
     this.updateFilteredCarRevenues();
-    this.isLoading = false;
   }
 
   updateFilteredCarRevenues(): void {
@@ -283,6 +312,24 @@ export class Revenvue implements OnInit {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
     }
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const maxVisible = 5;
+    let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(this.totalPages, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
   refreshData(): void {

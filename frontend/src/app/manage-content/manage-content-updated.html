@@ -1,0 +1,473 @@
+<div class="flex-1 flex flex-col min-h-screen bg-gray-700 text-gray-100">
+  <!-- Enhanced Header Section -->
+  <header class="bg-gradient-to-r from-gray-800 to-gray-700 border-b border-gray-600 shadow-lg">
+    <!-- Title and Stats Section -->
+    <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/50">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <!-- Title Section -->
+        <div class="flex items-center space-x-3">
+          <div class="p-2 bg-green-600/20 rounded-lg">
+            <i class="fas fa-edit text-green-400 text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-white">Manage Website Content</h1>
+            <p class="text-gray-400 text-sm mt-1">Manage hero content, brands, simple steps, FAQs, and featured cars for your website</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="px-4 sm:px-6 py-4 sm:py-6">
+      <div class="flex flex-wrap gap-2 sm:gap-3">
+        <button 
+          (click)="setActiveTab('hero')"
+          [class]="'inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 ' + 
+                   (activeTab === 'hero' ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-sm' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 hover:text-white border border-gray-600/50')">
+          <i class="fas fa-image text-xs sm:text-sm"></i>
+          <span class="hidden xs:inline sm:inline">Hero Content</span>
+          <span class="xs:hidden sm:hidden">Hero</span>
+        </button>
+        <button 
+          (click)="setActiveTab('brands')"
+          [class]="'inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 ' + 
+                   (activeTab === 'brands' ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 hover:text-white border border-gray-600/50')">
+          <i class="fas fa-building text-xs sm:text-sm"></i>
+          <span>Brands</span>
+        </button>
+        <button 
+          (click)="setActiveTab('steps')"
+          [class]="'inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 ' + 
+                   (activeTab === 'steps' ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-sm' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 hover:text-white border border-gray-600/50')">
+          <i class="fas fa-list-ol text-xs sm:text-sm"></i>
+          <span class="hidden sm:inline">Simple Steps</span>
+          <span class="sm:hidden">Steps</span>
+        </button>
+        <button 
+          (click)="setActiveTab('step-videos')"
+          [class]="'inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 ' + 
+                   (activeTab === 'step-videos' ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-sm' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 hover:text-white border border-gray-600/50')">
+          <i class="fas fa-video text-xs sm:text-sm"></i>
+          <span class="hidden sm:inline">Step Videos</span>
+          <span class="sm:hidden">Videos</span>
+        </button>
+        <button 
+          (click)="setActiveTab('faqs')"
+          [class]="'inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 ' + 
+                   (activeTab === 'faqs' ? 'bg-gradient-to-r from-yellow-600 to-yellow-700 text-white shadow-sm' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 hover:text-white border border-gray-600/50')">
+          <i class="fas fa-question-circle text-xs sm:text-sm"></i>
+          <span>FAQs</span>
+        </button>
+        <button 
+          (click)="setActiveTab('featured-cars')"
+          [class]="'inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 ' + 
+                   (activeTab === 'featured-cars' ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-sm' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 hover:text-white border border-gray-600/50')">
+          <i class="fas fa-star text-xs sm:text-sm"></i>
+          <span class="hidden sm:inline">Featured Cars</span>
+          <span class="sm:hidden">Featured</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex items-center justify-center py-12">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    <span class="ml-2 text-gray-400">Loading content...</span>
+  </div>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 py-4 overflow-auto">
+    <section class="max-w-7xl mx-auto px-4 sm:px-6">
+      
+      <!-- Hero Content Tab -->
+      <div *ngIf="activeTab === 'hero' && !loading" class="space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h2 class="text-xl font-semibold text-white">Hero Content Management</h2>
+          <button 
+            (click)="showAddHeroForm = true"
+            [disabled]="showAddHeroForm"
+            class="inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg text-white text-xs sm:text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
+            <i class="fas fa-plus text-xs sm:text-sm"></i>
+            <span class="hidden sm:inline">Add Hero Content</span>
+            <span class="sm:hidden">Add Hero</span>
+          </button>
+        </div>
+
+        <!-- Add/Edit Hero Form -->
+        <div *ngIf="showAddHeroForm" class="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-600/50 p-6">
+          <h3 class="text-lg font-semibold text-white mb-4">{{ editingHero ? 'Edit' : 'Add' }} Hero Content</h3>
+          <form (ngSubmit)="saveHeroContent()" #heroFormRef="ngForm" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="heroText" class="block text-sm font-medium text-gray-300 mb-2">Hero Text *</label>
+                <input 
+                  type="text" 
+                  id="heroText" 
+                  [(ngModel)]="heroForm.heroText" 
+                  name="heroText"
+                  placeholder="Enter hero text"
+                  required
+                  class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all duration-200">
+              </div>
+              <div>
+                <label for="subText" class="block text-sm font-medium text-gray-300 mb-2">Sub Text *</label>
+                <input 
+                  type="text" 
+                  id="subText" 
+                  [(ngModel)]="heroForm.subText" 
+                  name="subText"
+                  placeholder="Enter sub text"
+                  required
+                  class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all duration-200">
+              </div>
+            </div>
+            
+            
+            <div>
+              <label for="bgImageUrl" class="block text-sm font-medium text-gray-300 mb-2">Background Image URL</label>
+              <input 
+                type="url" 
+                id="bgImageUrl" 
+                [(ngModel)]="heroForm.bgImage" 
+                name="bgImageUrl"
+                placeholder="https://example.com/image.jpg"
+                class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all duration-200">
+            </div>
+            
+            <div>
+              <label for="heroImageFile" class="block text-sm font-medium text-gray-300 mb-2">Or Upload Background Image</label>
+              <input 
+                type="file" 
+                id="heroImageFile" 
+                (change)="onHeroImageSelected($event)"
+                accept="image/*"
+                class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all duration-200">
+              <small *ngIf="selectedHeroImage" class="text-green-400 text-xs mt-1 block">
+                Selected: {{ selectedHeroImage.name }}
+              </small>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-3 pt-4">
+              <button 
+                type="submit" 
+                [disabled]="submitting || !heroFormRef.form.valid"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg text-white text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
+                <i class="fas fa-save"></i>
+                {{ submitting ? 'Saving...' : (editingHero ? 'Update' : 'Create') }}
+              </button>
+              <button 
+                type="button" 
+                (click)="cancelEditHero()"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-600 hover:bg-gray-700 rounded-lg text-white text-sm font-medium transition-all duration-200 w-full sm:w-auto">
+                <i class="fas fa-times"></i>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Hero Content List -->
+        <div class="bg-gray-900 rounded-xl border border-gray-700 shadow-sm">
+          <div *ngIf="heroContents.length === 0" class="flex flex-col items-center py-12 text-gray-400">
+            <i class="fas fa-image text-4xl mb-4 opacity-50"></i>
+            <p class="text-lg font-medium text-gray-500 mb-2">No hero content found</p>
+            <p class="text-sm text-gray-400">Add your first hero content above</p>
+          </div>
+          
+          <div *ngFor="let hero of heroContents" class="border-b border-gray-700 last:border-b-0 p-4 sm:p-6 hover:bg-gray-800/50 transition-colors duration-200">
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div *ngIf="hero.bgImage" class="flex-shrink-0 w-full sm:w-20 h-32 sm:h-20 rounded-lg overflow-hidden bg-gray-800">
+                <img [src]="hero.bgImage" [alt]="hero.heroText" class="w-full h-full object-cover" loading="lazy">
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="text-base sm:text-lg font-semibold text-white mb-1">{{ hero.heroText }}</h4>
+                <p class="text-sm sm:text-base text-gray-300 mb-2">{{ hero.subText }}</p>
+                <div class="flex flex-wrap gap-2 sm:gap-4 text-xs text-gray-400">
+                  <span *ngIf="hero.createdBy">Created by: {{ hero.createdBy.name }}</span>
+                  <span *ngIf="hero.createdAt">{{ hero.createdAt | date:'short' }}</span>
+                </div>
+              </div>
+              <div class="flex gap-2 self-start sm:self-center">
+                <button 
+                  (click)="editHero(hero)" 
+                  class="p-2 text-gray-300 hover:text-amber-400 rounded-lg hover:bg-gray-800 transition duration-150 flex-shrink-0"
+                  title="Edit">
+                  <i class="fas fa-edit w-4 h-4"></i>
+                </button>
+                <button 
+                  (click)="deleteHero(hero)" 
+                  class="p-2 text-gray-300 hover:text-red-400 rounded-lg hover:bg-gray-800 transition duration-150 flex-shrink-0"
+                  title="Delete">
+                  <i class="fas fa-trash w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Brands Tab -->
+      <div *ngIf="activeTab === 'brands' && !loading" class="space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h2 class="text-xl font-semibold text-white">Brands Management</h2>
+          <button 
+            (click)="showAddBrandForm = true"
+            [disabled]="showAddBrandForm"
+            class="inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white text-xs sm:text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
+            <i class="fas fa-plus text-xs sm:text-sm"></i>
+            Add Brand
+          </button>
+        </div>
+
+        <!-- Add/Edit Brand Form -->
+        <div *ngIf="showAddBrandForm" class="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-600/50 p-6">
+          <h3 class="text-lg font-semibold text-white mb-4">{{ editingBrand ? 'Edit' : 'Add' }} Brand</h3>
+          <form (ngSubmit)="saveBrand()" #brandFormRef="ngForm" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="brandName" class="block text-sm font-medium text-gray-300 mb-2">Brand Name *</label>
+                <input 
+                  type="text" 
+                  id="brandName" 
+                  [(ngModel)]="brandForm.brandName" 
+                  name="brandName"
+                  placeholder="Enter brand name"
+                  required
+                  class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200">
+              </div>
+              <div>
+                <label for="brandSubText" class="block text-sm font-medium text-gray-300 mb-2">Sub Text *</label>
+                <input 
+                  type="text" 
+                  id="brandSubText" 
+                  [(ngModel)]="brandForm.subText" 
+                  name="brandSubText"
+                  placeholder="Enter sub text"
+                  required
+                  class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200">
+              </div>
+            </div>
+            
+            <div>
+              <label for="brandLogoUrl" class="block text-sm font-medium text-gray-300 mb-2">Brand Logo URL</label>
+              <input 
+                type="url" 
+                id="brandLogoUrl" 
+                [(ngModel)]="brandForm.brandLogo" 
+                name="brandLogoUrl"
+                placeholder="https://example.com/logo.png"
+                class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200">
+            </div>
+            
+            <div>
+              <label for="brandLogoFile" class="block text-sm font-medium text-gray-300 mb-2">Or Upload Brand Logo</label>
+              <input 
+                type="file" 
+                id="brandLogoFile" 
+                (change)="onBrandLogoSelected($event)"
+                accept="image/*"
+                class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all duration-200">
+              <small *ngIf="selectedBrandLogo" class="text-blue-400 text-xs mt-1 block">
+                Selected: {{ selectedBrandLogo.name }}
+              </small>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-3 pt-4">
+              <button 
+                type="submit" 
+                [disabled]="submitting || !brandFormRef.form.valid"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
+                <i class="fas fa-save"></i>
+                {{ submitting ? 'Saving...' : (editingBrand ? 'Update' : 'Create') }}
+              </button>
+              <button 
+                type="button" 
+                (click)="cancelEditBrand()"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-600 hover:bg-gray-700 rounded-lg text-white text-sm font-medium transition-all duration-200 w-full sm:w-auto">
+                <i class="fas fa-times"></i>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Brands List -->
+        <div class="bg-gray-900 rounded-xl border border-gray-700 shadow-sm">
+          <div *ngIf="brands.length === 0" class="flex flex-col items-center py-12 text-gray-400">
+            <i class="fas fa-building text-4xl mb-4 opacity-50"></i>
+            <p class="text-lg font-medium text-gray-500 mb-2">No brands found</p>
+            <p class="text-sm text-gray-400">Add your first brand above</p>
+          </div>
+          
+          <div *ngFor="let brand of brands" class="border-b border-gray-700 last:border-b-0 p-4 sm:p-6 hover:bg-gray-800/50 transition-colors duration-200">
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div *ngIf="brand.brandLogo" class="flex-shrink-0 w-full sm:w-16 h-16 rounded-lg overflow-hidden bg-gray-800">
+                <img [src]="brand.brandLogo" [alt]="brand.brandName" class="w-full h-full object-contain" loading="lazy">
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="text-base sm:text-lg font-semibold text-white mb-1">{{ brand.brandName }}</h4>
+                <p class="text-sm sm:text-base text-gray-300 mb-2">{{ brand.subText }}</p>
+                <div class="flex flex-wrap gap-2 sm:gap-4 text-xs text-gray-400">
+                  <span *ngIf="brand.createdBy">Created by: {{ brand.createdBy.name }}</span>
+                  <span *ngIf="brand.createdAt">{{ brand.createdAt | date:'short' }}</span>
+                </div>
+              </div>
+              <div class="flex gap-2 self-start sm:self-center">
+                <button 
+                  (click)="editBrand(brand)" 
+                  class="p-2 text-gray-300 hover:text-amber-400 rounded-lg hover:bg-gray-800 transition duration-150 flex-shrink-0"
+                  title="Edit">
+                  <i class="fas fa-edit w-4 h-4"></i>
+                </button>
+                <button 
+                  (click)="deleteBrand(brand)" 
+                  class="p-2 text-gray-300 hover:text-red-400 rounded-lg hover:bg-gray-800 transition duration-150 flex-shrink-0"
+                  title="Delete">
+                  <i class="fas fa-trash w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Simple Steps Tab -->
+      <div *ngIf="activeTab === 'steps' && !loading" class="space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h2 class="text-xl font-semibold text-white">Simple Steps Management</h2>
+          <button 
+            (click)="showAddStepForm = true"
+            [disabled]="showAddStepForm"
+            class="inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 rounded-lg text-white text-xs sm:text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
+            <i class="fas fa-plus text-xs sm:text-sm"></i>
+            Add Step
+          </button>
+        </div>
+
+        <!-- Add/Edit Simple Step Form -->
+        <div *ngIf="showAddStepForm" class="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-600/50 p-6">
+          <h3 class="text-lg font-semibold text-white mb-4">{{ editingStep ? 'Edit' : 'Add' }} Simple Step</h3>
+          <form (ngSubmit)="saveSimpleStep()" #stepFormRef="ngForm" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="stepTitle" class="block text-sm font-medium text-gray-300 mb-2">Step Title *</label>
+                <input 
+                  type="text" 
+                  id="stepTitle" 
+                  [(ngModel)]="stepForm.stepTitle" 
+                  name="stepTitle"
+                  placeholder="Enter step title"
+                  required
+                  class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200">
+              </div>
+              <div>
+                <label for="stepName" class="block text-sm font-medium text-gray-300 mb-2">Step Name *</label>
+                <input 
+                  type="text" 
+                  id="stepName" 
+                  [(ngModel)]="stepForm.stepName" 
+                  name="stepName"
+                  placeholder="Enter step name"
+                  required
+                  class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200">
+              </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-3 pt-4">
+              <button 
+                type="submit" 
+                [disabled]="submitting || !stepFormRef.form.valid"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 rounded-lg text-white text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
+                <i class="fas fa-save"></i>
+                {{ submitting ? 'Saving...' : (editingStep ? 'Update' : 'Create') }}
+              </button>
+              <button 
+                type="button" 
+                (click)="cancelEditStep()"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-600 hover:bg-gray-700 rounded-lg text-white text-sm font-medium transition-all duration-200 w-full sm:w-auto">
+                <i class="fas fa-times"></i>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Simple Steps List -->
+        <div class="bg-gray-900 rounded-xl border border-gray-700 shadow-sm">
+          <div *ngIf="simpleSteps.length === 0" class="flex flex-col items-center py-12 text-gray-400">
+            <i class="fas fa-list-ol text-4xl mb-4 opacity-50"></i>
+            <p class="text-lg font-medium text-gray-500 mb-2">No simple steps found</p>
+            <p class="text-sm text-gray-400">Add your first step above</p>
+          </div>
+          
+          <div *ngFor="let step of simpleSteps; let i = index" class="border-b border-gray-700 last:border-b-0 p-4 sm:p-6 hover:bg-gray-800/50 transition-colors duration-200">
+            <div class="flex gap-3 sm:gap-4">
+              <div class="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-purple-600 text-white rounded-full flex items-center justify-center font-semibold text-sm sm:text-base">
+                {{ i + 1 }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="text-base sm:text-lg font-semibold text-white mb-1">{{ step.stepTitle }}</h4>
+                <p class="text-sm sm:text-base text-gray-300 mb-2">{{ step.stepName }}</p>
+                <div class="flex flex-wrap gap-2 sm:gap-4 text-xs text-gray-400">
+                  <span *ngIf="step.createdBy">Created by: {{ step.createdBy.name }}</span>
+                  <span *ngIf="step.createdAt">{{ step.createdAt | date:'short' }}</span>
+                </div>
+              </div>
+              <div class="flex gap-2 self-start sm:self-center">
+                <button 
+                  (click)="editStep(step)" 
+                  class="p-2 text-gray-300 hover:text-amber-400 rounded-lg hover:bg-gray-800 transition duration-150 flex-shrink-0"
+                  title="Edit">
+                  <i class="fas fa-edit w-4 h-4"></i>
+                </button>
+                <button 
+                  (click)="deleteStep(step)" 
+                  class="p-2 text-gray-300 hover:text-red-400 rounded-lg hover:bg-gray-800 transition duration-150 flex-shrink-0"
+                  title="Delete">
+                  <i class="fas fa-trash w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Simple Steps Videos Tab -->
+      <div *ngIf="activeTab === 'step-videos' && !loading" class="space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h2 class="text-xl font-semibold text-white">Simple Steps Videos Management</h2>
+          <button 
+            (click)="showAddStepVideoForm = true"
+            [disabled]="showAddStepVideoForm"
+            class="inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 rounded-lg text-white text-xs sm:text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
+            <i class="fas fa-plus text-xs sm:text-sm"></i>
+            Add Video Entry
+          </button>
+        </div>
+
+        <!-- Add/Edit Simple Steps Video Form -->
+        <div *ngIf="showAddStepVideoForm" class="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-600/50 p-6">
+          <h3 class="text-lg font-semibold text-white mb-4">{{ editingStepVideo ? 'Edit' : 'Add' }} Simple Steps Video</h3>
+          <form (ngSubmit)="saveSimpleStepsVideo()" #stepVideoFormRef="ngForm" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="block text-sm font-medium text-gray-300">Video 1</label>
+                  <div class="flex bg-gray-700 rounded-lg p-1">
+                    <button 
+                      type="button"
+                      (click)="stepVideo1InputType = 'url'; onStepVideo1InputTypeChange()"
+                      [class]="'px-2 py-1 text-xs rounded-md transition-colors ' + (stepVideo1InputType === 'url' ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-600')">
+                      URL
+                    </button>
+                    <button 
+                      type="button"
+                      (click)="stepVideo1InputType = 'file'; onStepVideo1InputTypeChange()"
+                      [class]="'px-2 py-1 text-xs rounded-md transition-colors ' + (stepVideo1InputType === 'file' ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-600')">
+                      File
+                    </button>
+                  </div>
+                </div>
+                
+                <div *ngIf="stepVideo1InputType === 'url'">

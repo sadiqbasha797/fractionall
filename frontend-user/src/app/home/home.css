@@ -29,6 +29,11 @@
   background: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
+.slanted-tag.featured-tag {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
 /* Optional: small fade-in utility if any element relies purely on CSS */
 .fade-in {
 	opacity: 0;
@@ -435,5 +440,63 @@
   }
   100% {
     background-position: 200% 0;
+  }
+}
+
+/* Video iframe styles */
+.video-iframe {
+  border: 2px solid #374151;
+  transition: border-color 0.3s ease;
+  pointer-events: auto;
+  position: relative;
+  background: #000;
+}
+
+.video-iframe:hover {
+  border-color: #3b82f6;
+}
+
+.video-iframe:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Video container styles */
+.video-container {
+  position: relative;
+  background: #1f2937;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.video-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 49%, rgba(59, 130, 246, 0.1) 50%, transparent 51%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Prevent iframe click interference with page elements */
+.image-card {
+  position: relative;
+  z-index: 2;
+}
+
+.image-card iframe {
+  display: block;
+  border: none;
+  border-radius: 8px;
+}
+
+/* Responsive video styles */
+@media (max-width: 768px) {
+  .video-iframe {
+    border-width: 1px;
   }
 }

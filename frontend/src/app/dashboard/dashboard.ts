@@ -6,6 +6,8 @@ import { takeUntil, startWith, switchMap } from 'rxjs/operators';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 
+export type DashboardView = 'overview' | 'revenue' | 'shares' | 'tokens';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -15,6 +17,15 @@ import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 })
 export class Dashboard implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  
+  // Dashboard view management
+  currentView: DashboardView = 'overview';
+  dashboardViews: { id: DashboardView; name: string; icon: string }[] = [
+    { id: 'overview', name: 'Overview', icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z' },
+    { id: 'revenue', name: 'Revenue', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+    { id: 'shares', name: 'Shares', icon: 'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z' },
+    { id: 'tokens', name: 'Tokens', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' }
+  ];
   
   // Data properties
   dashboardStats: DashboardStats | null = null;
@@ -41,6 +52,13 @@ export class Dashboard implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadDashboardData();
     this.startAutoRefresh();
+  }
+
+  // Method to switch dashboard views
+  switchView(view: DashboardView): void {
+    this.currentView = view;
+    // Optionally reload data specific to the view
+    this.loadDashboardData();
   }
   
   ngOnDestroy(): void {
@@ -283,6 +301,98 @@ export class Dashboard implements OnInit, OnDestroy {
       }
     }
   };
+
+  // Chart options for shares dashboard
+  public shareChartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          color: 'white'
+        }
+      }
+    }
+  };
+
+  public shareLineChartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)'
+        },
+        ticks: {
+          color: 'white'
+        }
+      },
+      y: {
+        min: 0,
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)'
+        },
+        ticks: {
+          color: 'white'
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          color: 'white'
+        }
+      }
+    }
+  };
+
+  // Chart options for tokens dashboard
+  public tokenChartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          color: 'white'
+        }
+      }
+    }
+  };
+
+  public tokenBarChartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          color: 'white'
+        }
+      },
+      y: {
+        min: 0,
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)'
+        },
+        ticks: {
+          color: 'white'
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          color: 'white'
+        }
+      }
+    }
+  };
   
   public barChartType: ChartType = 'bar';
   
@@ -333,7 +443,7 @@ export class Dashboard implements OnInit, OnDestroy {
   };
   
   public revenueBreakdownChartData: ChartData<'pie'> = {
-    labels: ['Tickets', 'AMC', 'Tokens', 'Book Now'],
+    labels: ['Shares', 'AMC', 'Tokens', 'Book Now'],
     datasets: [
       {
         data: [],
@@ -350,6 +460,80 @@ export class Dashboard implements OnInit, OnDestroy {
           'rgba(153, 102, 255, 1)'
         ],
         borderWidth: 0
+      }
+    ]
+  };
+
+  // Shares Dashboard Charts
+  public shareStatusChartData: ChartData<'doughnut'> = {
+    labels: ['Active', 'Closed', 'Expired'],
+    datasets: [
+      {
+        data: [],
+        backgroundColor: [
+          'rgba(34, 197, 94, 0.8)',
+          'rgba(59, 130, 246, 0.8)',
+          'rgba(107, 114, 128, 0.8)'
+        ],
+        hoverBackgroundColor: [
+          'rgba(34, 197, 94, 1)',
+          'rgba(59, 130, 246, 1)',
+          'rgba(107, 114, 128, 1)'
+        ],
+        borderWidth: 2
+      }
+    ]
+  };
+
+  public shareTrendsChartData: ChartData<'line'> = {
+    labels: [],
+    datasets: [
+      {
+        label: 'Shares This Week',
+        data: [],
+        borderColor: 'rgba(239, 68, 68, 1)',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4
+      }
+    ]
+  };
+
+  // Tokens Dashboard Charts
+  public tokenDistributionChartData: ChartData<'pie'> = {
+    labels: ['Waitlist Tokens', 'Book Now Tokens'],
+    datasets: [
+      {
+        data: [],
+        backgroundColor: [
+          'rgba(168, 85, 247, 0.8)',
+          'rgba(34, 197, 94, 0.8)'
+        ],
+        hoverBackgroundColor: [
+          'rgba(168, 85, 247, 1)',
+          'rgba(34, 197, 94, 1)'
+        ],
+        borderWidth: 2
+      }
+    ]
+  };
+
+  public tokenRevenueChartData: ChartData<'bar'> = {
+    labels: ['Waitlist Tokens', 'Book Now Tokens'],
+    datasets: [
+      {
+        label: 'Revenue (₹)',
+        data: [],
+        backgroundColor: [
+          'rgba(168, 85, 247, 0.8)',
+          'rgba(34, 197, 94, 0.8)'
+        ],
+        borderColor: [
+          'rgba(168, 85, 247, 1)',
+          'rgba(34, 197, 94, 1)'
+        ],
+        borderWidth: 2
       }
     ]
   };
@@ -374,11 +558,51 @@ export class Dashboard implements OnInit, OnDestroy {
     // Update revenue breakdown chart
     if (this.dashboardStats?.revenue?.breakdown) {
       this.revenueBreakdownChartData.datasets[0].data = [
-        this.dashboardStats.revenue.breakdown.tickets || 0,
+        (this.dashboardStats.revenue.breakdown as any).shares || 0,
         this.dashboardStats.revenue.breakdown.amc || 0,
         this.dashboardStats.revenue.breakdown.tokens || 0,
         this.dashboardStats.revenue.breakdown.bookNowTokens || 0
       ];
+    }
+
+    // Update shares dashboard charts
+    if (this.dashboardStats?.overview) {
+      // Share status distribution
+      const activeShares = (this.dashboardStats.overview as any).activeShares || 0;
+      const expiredShares = (this.dashboardStats.overview as any).expiredShares || 0;
+      const totalShares = (this.dashboardStats.overview as any).totalShares || 0;
+      const closedShares = Math.max(0, totalShares - activeShares - expiredShares);
+      
+      this.shareStatusChartData.datasets[0].data = [
+        activeShares,
+        closedShares,
+        expiredShares
+      ];
+
+      // Share trends (using actual weekly data instead of random)
+      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      this.shareTrendsChartData.labels = days;
+      // Distribute weekly shares evenly across days (or use actual daily data if available)
+      const sharesThisWeek = (this.dashboardStats.overview as any).sharesThisWeek || 0;
+      const dailyAverage = Math.ceil(sharesThisWeek / 7);
+      this.shareTrendsChartData.datasets[0].data = days.map(() => dailyAverage);
+    }
+
+    // Update tokens dashboard charts
+    if (this.dashboardStats?.overview) {
+      // Token distribution
+      this.tokenDistributionChartData.datasets[0].data = [
+        this.dashboardStats.overview.totalTokens || 0,
+        this.dashboardStats.overview.totalBookNowTokens || 0
+      ];
+
+      // Token revenue
+      if (this.dashboardStats?.revenue?.breakdown) {
+        this.tokenRevenueChartData.datasets[0].data = [
+          this.dashboardStats.revenue.breakdown.tokens || 0,
+          this.dashboardStats.revenue.breakdown.bookNowTokens || 0
+        ];
+      }
     }
   }
 }

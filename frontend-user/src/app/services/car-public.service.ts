@@ -30,4 +30,25 @@ export class CarPublicService {
   updateBookNowTokenCount(id: string, bookNowTokenAvailable: number): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/${id}/book-now-token-count`, { bookNowTokenAvailable });
   }
+
+  trackCarView(id: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${id}/view`, {});
+  }
+
+  trackCarViewWithRetargeting(id: string): Observable<any> {
+    const token = localStorage.getItem('token');
+    const headers: { [key: string]: string } = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return this.http.post<any>(`${environment.apiUrl}/cars/${id}/view`, {}, { headers });
+  }
+
+  getMostBrowsedCars(limit?: number): Observable<any> {
+    let url = `${this.apiUrl}/most-browsed`;
+    if (limit) {
+      url += `?limit=${limit}`;
+    }
+    return this.http.get<any>(url);
+  }
 }

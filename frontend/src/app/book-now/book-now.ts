@@ -1,18 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { BookNowTokenService, BookNowToken, Car, User } from '../services/book-now-token.service';
 import { UserService } from '../services/user.service';
 import { CarService, Car as CarType } from '../services/car.service';
-import { DialogService } from '../shared/dialog/dialog.service';
-import { DialogComponent } from '../shared/dialog/dialog.component';
 import { LoadingDialogComponent } from '../shared/loading-dialog/loading-dialog.component';
 
 @Component({
   selector: 'app-book-now',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe, DialogComponent, LoadingDialogComponent],
+  imports: [CommonModule, FormsModule, DecimalPipe, LoadingDialogComponent],
   templateUrl: './book-now.html',
   styleUrl: './book-now.css'
 })
@@ -54,12 +52,15 @@ export class BookNow implements OnInit {
 
   // Make Math available in template
   Math = Math;
+  
+  // Dialog element
+  private dialogElement: HTMLElement | null = null;
 
   constructor(
     private bookNowTokenService: BookNowTokenService,
     private userService: UserService,
     private carService: CarService,
-    public dialogService: DialogService
+    private renderer: Renderer2
   ) {}
 
   ngOnInit(): void {
@@ -69,8 +70,141 @@ export class BookNow implements OnInit {
     this.checkFontAwesomeLoaded();
   }
 
+  // Local dialog methods
+  showConfirmDialog(title: string, message: string, confirmCallback: () => void): void {
+    this.removeDialog();
+    const backdrop = this.renderer.createElement('div');
+    this.renderer.setStyle(backdrop, 'position', 'fixed');
+    this.renderer.setStyle(backdrop, 'top', '0');
+    this.renderer.setStyle(backdrop, 'left', '0');
+    this.renderer.setStyle(backdrop, 'width', '100vw');
+    this.renderer.setStyle(backdrop, 'height', '100vh');
+    this.renderer.setStyle(backdrop, 'background', 'rgba(0, 0, 0, 0.8)');
+    this.renderer.setStyle(backdrop, 'z-index', '999999');
+    this.renderer.setStyle(backdrop, 'display', 'flex');
+    this.renderer.setStyle(backdrop, 'align-items', 'center');
+    this.renderer.setStyle(backdrop, 'justify-content', 'center');
+    const dialog = this.renderer.createElement('div');
+    this.renderer.setStyle(dialog, 'background', '#374151');
+    this.renderer.setStyle(dialog, 'border-radius', '12px');
+    this.renderer.setStyle(dialog, 'max-width', '500px');
+    this.renderer.setStyle(dialog, 'width', '90%');
+    this.renderer.setStyle(dialog, 'padding', '24px');
+    const titleEl = this.renderer.createElement('h3');
+    this.renderer.setStyle(titleEl, 'color', 'white');
+    this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
+    this.renderer.setStyle(titleEl, 'font-size', '1.5rem');
+    const titleText = this.renderer.createText(title);
+    this.renderer.appendChild(titleEl, titleText);
+    const messageEl = this.renderer.createElement('div');
+    this.renderer.setProperty(messageEl, 'innerHTML', message);
+    this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
+    this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
+    const btnContainer = this.renderer.createElement('div');
+    this.renderer.setStyle(btnContainer, 'display', 'flex');
+    this.renderer.setStyle(btnContainer, 'justify-content', 'flex-end');
+    this.renderer.setStyle(btnContainer, 'gap', '12px');
+    const cancelBtn = this.renderer.createElement('button');
+    const cancelText = this.renderer.createText('Cancel');
+    this.renderer.appendChild(cancelBtn, cancelText);
+    this.renderer.setStyle(cancelBtn, 'background', '#6B7280');
+    this.renderer.setStyle(cancelBtn, 'color', 'white');
+    this.renderer.setStyle(cancelBtn, 'border', 'none');
+    this.renderer.setStyle(cancelBtn, 'padding', '10px 20px');
+    this.renderer.setStyle(cancelBtn, 'border-radius', '8px');
+    this.renderer.setStyle(cancelBtn, 'cursor', 'pointer');
+    this.renderer.listen(cancelBtn, 'click', () => this.removeDialog());
+    const confirmBtn = this.renderer.createElement('button');
+    const confirmText = this.renderer.createText('Confirm');
+    this.renderer.appendChild(confirmBtn, confirmText);
+    this.renderer.setStyle(confirmBtn, 'background', '#DC2626');
+    this.renderer.setStyle(confirmBtn, 'color', 'white');
+    this.renderer.setStyle(confirmBtn, 'border', 'none');
+    this.renderer.setStyle(confirmBtn, 'padding', '10px 20px');
+    this.renderer.setStyle(confirmBtn, 'border-radius', '8px');
+    this.renderer.setStyle(confirmBtn, 'cursor', 'pointer');
+    this.renderer.listen(confirmBtn, 'click', () => {
+      this.removeDialog();
+      confirmCallback();
+    });
+    this.renderer.appendChild(btnContainer, cancelBtn);
+    this.renderer.appendChild(btnContainer, confirmBtn);
+    this.renderer.appendChild(dialog, titleEl);
+    this.renderer.appendChild(dialog, messageEl);
+    this.renderer.appendChild(dialog, btnContainer);
+    this.renderer.appendChild(backdrop, dialog);
+    this.renderer.appendChild(document.body, backdrop);
+    this.dialogElement = backdrop;
+    this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
+    this.renderer.listen(backdrop, 'click', () => this.removeDialog());
+  }
+  removeDialog(): void {
+    if (this.dialogElement) {
+      this.renderer.removeChild(document.body, this.dialogElement);
+      this.dialogElement = null;
+    }
+  }
+  showSuccessDialog(message: string): void {
+    this.showMessageDialog('Success', message, '#10B981');
+  }
+  showErrorDialog(message: string): void {
+    this.showMessageDialog('Error', message, '#DC2626');
+  }
+  showMessageDialog(title: string, message: string, color: string): void {
+    this.removeDialog();
+    const backdrop = this.renderer.createElement('div');
+    this.renderer.setStyle(backdrop, 'position', 'fixed');
+    this.renderer.setStyle(backdrop, 'top', '0');
+    this.renderer.setStyle(backdrop, 'left', '0');
+    this.renderer.setStyle(backdrop, 'width', '100vw');
+    this.renderer.setStyle(backdrop, 'height', '100vh');
+    this.renderer.setStyle(backdrop, 'background', 'rgba(0, 0, 0, 0.8)');
+    this.renderer.setStyle(backdrop, 'z-index', '999999');
+    this.renderer.setStyle(backdrop, 'display', 'flex');
+    this.renderer.setStyle(backdrop, 'align-items', 'center');
+    this.renderer.setStyle(backdrop, 'justify-content', 'center');
+    const dialog = this.renderer.createElement('div');
+    this.renderer.setStyle(dialog, 'background', '#374151');
+    this.renderer.setStyle(dialog, 'border-radius', '12px');
+    this.renderer.setStyle(dialog, 'max-width', '400px');
+    this.renderer.setStyle(dialog, 'width', '90%');
+    this.renderer.setStyle(dialog, 'padding', '24px');
+    this.renderer.setStyle(dialog, 'text-align', 'center');
+    const titleEl = this.renderer.createElement('div');
+    this.renderer.setStyle(titleEl, 'color', color);
+    this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
+    this.renderer.setStyle(titleEl, 'font-size', '1.5rem');
+    this.renderer.setStyle(titleEl, 'font-weight', '600');
+    const titleText = this.renderer.createText(title);
+    this.renderer.appendChild(titleEl, titleText);
+    const messageEl = this.renderer.createElement('div');
+    this.renderer.setProperty(messageEl, 'innerHTML', message);
+    this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
+    this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
+    const okBtn = this.renderer.createElement('button');
+    const okText = this.renderer.createText('OK');
+    this.renderer.appendChild(okBtn, okText);
+    this.renderer.setStyle(okBtn, 'background', color);
+    this.renderer.setStyle(okBtn, 'color', 'white');
+    this.renderer.setStyle(okBtn, 'border', 'none');
+    this.renderer.setStyle(okBtn, 'padding', '10px 30px');
+    this.renderer.setStyle(okBtn, 'border-radius', '8px');
+    this.renderer.setStyle(okBtn, 'cursor', 'pointer');
+    this.renderer.setStyle(okBtn, 'font-size', '14px');
+    this.renderer.setStyle(okBtn, 'font-weight', '600');
+    this.renderer.listen(okBtn, 'click', () => this.removeDialog());
+    this.renderer.appendChild(dialog, titleEl);
+    this.renderer.appendChild(dialog, messageEl);
+    this.renderer.appendChild(dialog, okBtn);
+    this.renderer.appendChild(backdrop, dialog);
+    this.renderer.appendChild(document.body, backdrop);
+    this.dialogElement = backdrop;
+    this.renderer.listen(backdrop, 'click', () => this.removeDialog());
+    this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
+  }
+
   // Font Awesome loading detection
-  checkFontAwesomeLoaded(): void {
+  checkFontAwesomeLoaded(): void{
     setTimeout(() => {
       const testElement = document.createElement('i');
       testElement.className = 'fas fa-test';
@@ -99,6 +233,8 @@ export class BookNow implements OnInit {
       next: (response) => {
         this.bookNowTokens = response.body.bookNowTokens || [];
         this.filteredBookNowTokens = [...this.bookNowTokens];
+        // Initialize pagination after loading book now tokens
+        this.applyFilters();
       },
       error: (error) => {
       }
@@ -282,6 +418,21 @@ export class BookNow implements OnInit {
     });
   }
 
+  openDatePicker(fieldId: string) {
+    // Programmatically trigger the date picker
+    const dateInput = document.getElementById(fieldId) as HTMLInputElement;
+    if (dateInput) {
+      dateInput.focus();
+      // Try modern showPicker() method first
+      if (dateInput.showPicker) {
+        dateInput.showPicker();
+      } else {
+        // Fallback: trigger click event to open picker
+        dateInput.click();
+      }
+    }
+  }
+
   // Pagination methods
   updatePagination(): void {
     this.totalPages = Math.ceil(this.filteredBookNowTokens.length / this.itemsPerPage);
@@ -406,11 +557,11 @@ export class BookNow implements OnInit {
         this.getBookNowTokens();
         this.closeModal();
         this.resetForm();
-        this.dialogService.showSuccess('Success', 'Book now token created successfully!');
+        this.showSuccessDialog('Book now token created successfully!');
       },
       error: (error) => {
         this.showLoadingDialog = false;
-        this.dialogService.showError('Error', `Error creating book now token: ${error.message || 'Unknown error'}`);
+        this.showErrorDialog(`Error creating book now token: ${error.message || 'Unknown error'}`);
       }
     });
   }
@@ -427,38 +578,34 @@ export class BookNow implements OnInit {
         this.getBookNowTokens();
         this.closeModal();
         this.resetForm();
-        this.dialogService.showSuccess('Success', 'Book now token updated successfully!');
+        this.showSuccessDialog('Book now token updated successfully!');
       },
       error: (error) => {
         this.showLoadingDialog = false;
-        this.dialogService.showError('Error', `Error updating book now token: ${error.message || 'Unknown error'}`);
+        this.showErrorDialog(`Error updating book now token: ${error.message || 'Unknown error'}`);
       }
     });
   }
 
-  async deleteBookNowToken(token: BookNowToken): Promise<void> {
+  deleteBookNowToken(token: BookNowToken): void {
     if (!token._id) return;
 
-    try {
-      const confirmed = await this.dialogService.confirmDelete(`Book Now Token ${token.customtokenid}`);
-      if (confirmed) {
-        this.showLoadingDialog = true;
-        this.loadingMessage = 'Deleting book now token...';
-        
-        this.bookNowTokenService.deleteBookNowToken(token._id).subscribe({
-          next: (response) => {
-            this.showLoadingDialog = false;
-            this.getBookNowTokens();
-            this.dialogService.showSuccess('Success', 'Book now token deleted successfully!');
-          },
-          error: (error) => {
-            this.showLoadingDialog = false;
-            this.dialogService.showError('Error', `Error deleting book now token: ${error.message || 'Unknown error'}`);
-          }
-        });
-      }
-    } catch (error) {
-    }
+    this.showConfirmDialog('Confirm Delete', `Are you sure you want to delete Book Now Token ${token.customtokenid}?`, () => {
+      this.showLoadingDialog = true;
+      this.loadingMessage = 'Deleting book now token...';
+      
+      this.bookNowTokenService.deleteBookNowToken(token._id!).subscribe({
+        next: (response) => {
+          this.showLoadingDialog = false;
+          this.getBookNowTokens();
+          this.showSuccessDialog('Book now token deleted successfully!');
+        },
+        error: (error) => {
+          this.showLoadingDialog = false;
+          this.showErrorDialog(`Error deleting book now token: ${error.message || 'Unknown error'}`);
+        }
+      });
+    });
   }
 
   private resetForm(): void {

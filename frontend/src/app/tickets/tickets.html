@@ -1,4 +1,4 @@
-<div class="flex-1 flex flex-col min-h-screen bg-gray-700 text-gray-100">
+<div class="flex-1 flex flex-col bg-gray-700 text-gray-100">
   <!-- Enhanced Header Section -->
   <header class="bg-gradient-to-r from-gray-800 to-gray-700 border-b border-gray-600 shadow-lg">
     <!-- Title and Stats Section -->
@@ -7,11 +7,11 @@
         <!-- Title Section -->
         <div class="flex items-center space-x-3">
           <div class="p-2 bg-blue-600/20 rounded-lg">
-            <i class="fas fa-ticket-alt text-blue-400 text-xl"></i>
+            <i class="fas fa-share-alt text-blue-400 text-xl"></i>
           </div>
           <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-white">Manage Tickets</h1>
-            <p class="text-gray-400 text-sm mt-1">Track and manage all ticket transactions</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-white">Share Management</h1>
+            <p class="text-gray-400 text-sm mt-1">Track and manage all share transactions and shared members</p>
           </div>
         </div>
         
@@ -20,18 +20,51 @@
           <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600/50 flex-1 sm:flex-none">
             <div class="flex items-center space-x-2">
               <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span class="text-xs sm:text-sm text-gray-300">Total</span>
+              <span class="text-xs sm:text-sm text-gray-300">{{ activeTab === 'tickets' ? 'Total Shares' : 'Total Members' }}</span>
             </div>
-            <div class="text-xl sm:text-2xl font-bold text-white mt-1">{{tickets.length}}</div>
+            <div class="text-xl sm:text-2xl font-bold text-white mt-1">
+              {{ activeTab === 'tickets' ? tickets.length : (sharedMemberStats?.total || 0) }}
+            </div>
           </div>
           <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600/50 flex-1 sm:flex-none">
             <div class="flex items-center space-x-2">
               <div class="w-2 h-2 bg-yellow-400 rounded-full"></div>
               <span class="text-xs sm:text-sm text-gray-300">Filtered</span>
             </div>
-            <div class="text-xl sm:text-2xl font-bold text-white mt-1">{{filteredTickets.length}}</div>
+            <div class="text-xl sm:text-2xl font-bold text-white mt-1">
+              {{ activeTab === 'tickets' ? filteredTickets.length : filteredSharedMembers.length }}
+            </div>
+          </div>
+          <div *ngIf="activeTab === 'shared-members' && sharedMemberStats" class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600/50 flex-1 sm:flex-none">
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+              <span class="text-xs sm:text-sm text-gray-300">Pending</span>
+            </div>
+            <div class="text-xl sm:text-2xl font-bold text-white mt-1">{{ sharedMemberStats.statusCounts.pending }}</div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="px-4 sm:px-6 py-2 border-b border-gray-600/50">
+      <div class="flex space-x-1">
+        <button 
+          (click)="switchTab('tickets')"
+          [class]="'px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ' + 
+                   (activeTab === 'tickets' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700/50')"
+        >
+          <i class="fas fa-share-alt mr-2"></i>
+          Share Transactions
+        </button>
+        <button 
+          (click)="switchTab('shared-members')"
+          [class]="'px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ' + 
+                   (activeTab === 'shared-members' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700/50')"
+        >
+          <i class="fas fa-users mr-2"></i>
+          Shared Members
+        </button>
       </div>
     </div>
 
@@ -40,16 +73,18 @@
       <div class="flex flex-col gap-4">
         <!-- Search Bar -->
         <div class="w-full">
-          <label class="block text-sm font-medium text-gray-300 mb-2">Search Tickets</label>
+          <label class="block text-sm font-medium text-gray-300 mb-2">
+            {{ activeTab === 'tickets' ? 'Search Shares' : 'Search Shared Members' }}
+          </label>
           <div class="relative search-input-container">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <i class="fas fa-search search-icon"></i>
             </div>
             <input 
               type="search" 
-              [(ngModel)]="searchTerm" 
-              (ngModelChange)="onSearchChange()"
-              placeholder="Search by ticket ID, user name, car name, status..."
+              [ngModel]="activeTab === 'tickets' ? searchTerm : sharedMemberSearchTerm" 
+              (ngModelChange)="activeTab === 'tickets' ? onSearchChange() : onSharedMemberSearchChange()"
+              [placeholder]="activeTab === 'tickets' ? 'Search by share ID, user name, car name, status...' : 'Search by name, email, mobile, Aadhar, PAN...'"
               class="w-full pl-10 pr-4 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
             />
           </div>
@@ -59,7 +94,8 @@
         <div class="flex flex-col sm:flex-row gap-4">
           <!-- Filters Group -->
           <div class="flex flex-col sm:flex-row gap-4 flex-1">
-            <div class="flex-1 min-w-0">
+            <!-- Tickets Filters -->
+            <div *ngIf="activeTab === 'tickets'" class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
               <select 
                 [(ngModel)]="statusFilter" 
@@ -73,7 +109,7 @@
               </select>
             </div>
 
-            <div class="flex-1 min-w-0">
+            <div *ngIf="activeTab === 'tickets'" class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-300 mb-2">Resold</label>
               <select 
                 [(ngModel)]="resoldFilter" 
@@ -85,12 +121,27 @@
                 <option value="false">Not Resold</option>
               </select>
             </div>
+
+            <!-- Shared Members Filters -->
+            <div *ngIf="activeTab === 'shared-members'" class="flex-1 min-w-0">
+              <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+              <select 
+                [(ngModel)]="sharedMemberStatusFilter" 
+                (ngModelChange)="onSharedMemberStatusFilterChange()"
+                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
+              >
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="accepted">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
           </div>
 
           <!-- Action Buttons -->
           <div class="flex items-end gap-2 sm:ml-auto">
             <button 
-              (click)="clearFilters()" 
+              (click)="activeTab === 'tickets' ? clearFilters() : clearSharedMemberFilters()" 
               class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
             >
               <i class="fas fa-times text-sm"></i>
@@ -98,7 +149,7 @@
             </button>
 
             <button 
-              (click)="exportData()" 
+              (click)="activeTab === 'tickets' ? exportData() : exportSharedMembersData()" 
               class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
               title="Export data"
               aria-label="Export data"
@@ -108,11 +159,21 @@
             </button>
 
             <button 
+              *ngIf="activeTab === 'tickets'"
               (click)="showCreateTicketModal()" 
               class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 h-10"
             >
               <i class="fas fa-plus text-sm"></i>
-              <span>Add Ticket</span>
+              <span>Add Share</span>
+            </button>
+
+            <button 
+              *ngIf="activeTab === 'shared-members'"
+              (click)="showCreateSharedMemberModal()" 
+              class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg text-white text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 h-10"
+            >
+              <i class="fas fa-user-plus text-sm"></i>
+              <span>Add Member</span>
             </button>
           </div>
         </div>
@@ -125,35 +186,30 @@
       <div class="h-full rounded-xl border border-gray-700 bg-gray-900 shadow-sm min-w-0">
         <!-- scrollable table container -->
         <div class="table-container" style="max-height: 72vh;">
-          <table class="tickets-table min-w-full divide-y divide-gray-700" role="table" aria-label="Tickets table">
+          <!-- Tickets Table -->
+          <table *ngIf="activeTab === 'tickets'" class="tickets-table min-w-full divide-y divide-gray-700" role="table" aria-label="Shares table">
           <thead>
             <tr class="bg-gray-800">
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Ticket Details</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">User Info</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Car Info</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Financial</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Status</th>
-              <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider" scope="col">Actions</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Share Details</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">User Info</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Car Info</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Financial</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-700 bg-gray-900">
             <tr *ngIf="filteredTickets.length === 0" class="text-center">
               <td colspan="6" class="px-6 py-12 text-gray-400">
-                <div class="flex flex-col items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 mb-4 text-gray-500">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                  </svg>
-                  <p class="text-lg font-medium text-gray-500 mb-2">No tickets found</p>
-                  <p class="text-sm text-gray-400">Try adjusting your search or filter criteria</p>
-                </div>
+                <p class="text-lg font-medium text-gray-500 mb-2">No shares found</p>
               </td>
             </tr>
-            <tr *ngFor="let ticket of filteredTickets" class="hover:bg-gray-800 transition duration-150">
+            <tr *ngFor="let ticket of paginatedTickets" class="hover:bg-gray-800 transition duration-150">
               <!-- Ticket Details -->
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                   <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-gray-700 bg-gray-800 flex items-center justify-center">
-                    <i class="fas fa-ticket-alt text-blue-400 text-xl"></i>
+                    <i class="fas fa-share-alt text-blue-400 text-xl"></i>
                   </div>
                   <div class="ml-4">
                     <div class="text-sm font-medium text-gray-100">{{ ticket.ticketcustomid }}</div>
@@ -210,7 +266,7 @@
               <!-- Status -->
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex flex-col space-y-1">
-                  <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize status-badge" [attr.data-status]="ticket.ticketstatus">
+                  <span class="inline-flex items-center rounded-full px-3 py-0.5 text-xs font-medium capitalize status-badge" [attr.data-status]="ticket.ticketstatus">
                     {{ ticket.ticketstatus }}
                   </span>
                   <span *ngIf="ticket.resold" class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium status-badge-special">
@@ -221,23 +277,155 @@
               </td>
 
               <!-- Actions -->
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <div class="flex items-center justify-center space-x-2">
+                  <button (click)="viewTicketDetails(ticket)" class="p-2 text-gray-300 hover:text-blue-300 rounded-lg hover:bg-gray-800 transition" 
+                          title="View Details" aria-label="View details for ticket {{ticket.ticketcustomid}}">
+                    <i class="fas fa-eye text-sm"></i>
+                  </button>
+                  <button (click)="editTicket(ticket)" class="p-2 text-gray-300 hover:text-yellow-300 rounded-lg hover:bg-gray-800 transition" 
+                          title="Edit" aria-label="Edit ticket {{ticket.ticketcustomid}}">
+                    <i class="fas fa-edit text-sm"></i>
+                  </button>
+                  <button (click)="deleteTicket(ticket)" class="p-2 text-gray-300 hover:text-red-300 rounded-lg hover:bg-gray-800 transition" 
+                          title="Delete" aria-label="Delete ticket {{ticket.ticketcustomid}}">
+                    <i class="fas fa-trash text-sm"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Shared Members Table -->
+        <table *ngIf="activeTab === 'shared-members'" class="min-w-full divide-y divide-gray-700" role="table" aria-label="Shared members table">
+          <thead>
+            <tr class="bg-gray-800">
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Member Details</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Contact Info</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Identity</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Associated Ticket</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Associated User</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">KYC Documents</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-700 bg-gray-900">
+            <tr *ngIf="filteredSharedMembers.length === 0" class="text-center">
+              <td colspan="8" class="px-6 py-12 text-gray-400">
+                <p class="text-lg font-medium text-gray-500 mb-2">No shared members found</p>
+              </td>
+            </tr>
+            <tr *ngFor="let member of paginatedSharedMembers" class="hover:bg-gray-800 transition duration-150">
+              <!-- Member Details -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border border-gray-700 bg-gray-800 flex items-center justify-center">
+                    <i class="fas fa-user text-blue-400 text-xl"></i>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-100">{{ member.name }}</div>
+                    <div class="text-xs text-gray-300">Created: {{ formatSharedMemberDate(member.created_at) }}</div>
+                    <div class="text-xs text-gray-400" *ngIf="typeof member.createdBy === 'object'">
+                      By: {{ member.createdBy.name }} ({{ member.createdByModel }})
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Contact Info -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-300">
+                  <div class="font-medium">{{ member.email }}</div>
+                  <div class="text-xs text-gray-400">{{ member.mobileNumber }}</div>
+                </div>
+              </td>
+
+              <!-- Identity -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-300">
+                  <div class="font-medium">Aadhar: {{ member.aadharNumber }}</div>
+                  <div class="text-xs text-gray-400">PAN: {{ member.panNumber }}</div>
+                </div>
+              </td>
+
+              <!-- Associated Ticket -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-300" *ngIf="getTicketInfo(member).ticketcustomid !== 'N/A'">
+                  <div class="font-medium">{{ getTicketInfo(member).ticketcustomid }}</div>
+                  <div class="text-xs text-gray-400">₹{{ getTicketInfo(member).ticketprice | number:'1.0-0' }}</div>
+                  <div class="text-xs text-gray-400">{{ getTicketInfo(member).ticketstatus }}</div>
+                </div>
+                <div class="text-sm text-gray-500" *ngIf="getTicketInfo(member).ticketcustomid === 'N/A'">
+                  No ticket associated
+                </div>
+              </td>
+
+              <!-- Associated User -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-300" *ngIf="getUserInfo(member).name !== 'N/A'">
+                  <div class="font-medium">{{ getUserInfo(member).name }}</div>
+                  <div class="text-xs text-gray-400">{{ getUserInfo(member).email }}</div>
+                  <div class="text-xs text-gray-400" *ngIf="getUserInfo(member).phone">{{ getUserInfo(member).phone }}</div>
+                </div>
+                <div class="text-sm text-gray-500" *ngIf="getUserInfo(member).name === 'N/A'">
+                  No user associated
+                </div>
+              </td>
+
+              <!-- KYC Documents -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-300">
+                  <div class="font-medium">{{ member.kycDocuments.length }} Documents</div>
+                  <div class="text-xs text-gray-400" *ngIf="member.kycDocuments.length > 0">
+                    {{ getDocumentTypeDisplayName(member.kycDocuments[0].documentType) }}
+                    <span *ngIf="member.kycDocuments.length > 1">+{{ member.kycDocuments.length - 1 }} more</span>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Status -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center rounded-full px-3 py-0.5 text-xs font-medium border"
+                      [class]="getStatusColorClass(member.status)">
+                  {{ getStatusDisplayName(member.status) }}
+                </span>
+                <div *ngIf="member.rejectedComments" class="text-xs text-red-400 mt-1 max-w-xs truncate">
+                  {{ member.rejectedComments }}
+                </div>
+              </td>
+
+              <!-- Actions -->
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex items-center justify-end space-x-2">
                   <button class="p-2 text-gray-300 hover:text-blue-300 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-blue-300" 
-                          (click)="viewTicketDetails(ticket)" title="View Details" aria-label="View details for ticket {{ticket.ticketcustomid}}">
+                          (click)="viewSharedMemberDetails(member)" title="View Details" aria-label="View details for {{member.name}}">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                       <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                   </button>
                   <button class="p-2 text-gray-300 hover:text-amber-400 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-amber-200" 
-                          (click)="editTicket(ticket)" title="Edit" aria-label="Edit ticket {{ticket.ticketcustomid}}">
+                          (click)="editSharedMember(member)" title="Edit" aria-label="Edit {{member.name}}">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                     </svg>
                   </button>
+                  <button *ngIf="member.status === 'pending'" class="p-2 text-gray-300 hover:text-green-400 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-green-200" 
+                          (click)="approveSharedMember(member)" title="Approve" aria-label="Approve {{member.name}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  </button>
+                  <button *ngIf="member.status === 'pending'" class="p-2 text-gray-300 hover:text-red-400 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-red-200" 
+                          (click)="showRejectModal(member)" title="Reject" aria-label="Reject {{member.name}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                   <button class="p-2 text-gray-300 hover:text-red-400 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-red-200" 
-                          (click)="deleteTicket(ticket)" title="Delete" aria-label="Delete ticket {{ticket.ticketcustomid}}">
+                          (click)="deleteSharedMember(member)" title="Delete" aria-label="Delete {{member.name}}">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                     </svg>
@@ -250,21 +438,35 @@
       </div>
         
         <!-- Pagination -->
-        <div class="flex items-center justify-between border-t border-gray-700 bg-gray-900 px-6 py-4">
+        <div *ngIf="(activeTab === 'tickets' && filteredTickets.length > 0) || (activeTab === 'shared-members' && filteredSharedMembers.length > 0)" class="flex items-center justify-between border-t border-gray-700 bg-gray-900 px-6 py-4">
           <div class="flex items-center space-x-2 text-sm text-gray-300">
             <span>Showing</span>
-            <span class="font-medium text-gray-100">1</span>
+            <span class="font-medium text-gray-100">{{ activeTab === 'tickets' ? (currentPage - 1) * itemsPerPage + 1 : (sharedMemberCurrentPage - 1) * sharedMemberItemsPerPage + 1 }}</span>
             <span>to</span>
-            <span class="font-medium text-gray-100">{{ filteredTickets.length }}</span>
+            <span class="font-medium text-gray-100">{{ activeTab === 'tickets' ? getMin(currentPage * itemsPerPage, filteredTickets.length) : getMin(sharedMemberCurrentPage * sharedMemberItemsPerPage, filteredSharedMembers.length) }}</span>
             <span>of</span>
-            <span class="font-medium text-gray-100">{{ tickets.length }}</span>
-            <span>tickets</span>
+            <span class="font-medium text-gray-100">{{ activeTab === 'tickets' ? filteredTickets.length : filteredSharedMembers.length }}</span>
+            <span>{{ activeTab === 'tickets' ? 'shares' : 'members' }}</span>
           </div>
           <div class="flex items-center space-x-2">
-            <button class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150">
+            <button [disabled]="activeTab === 'tickets' ? currentPage === 1 : sharedMemberCurrentPage === 1" 
+                    (click)="activeTab === 'tickets' ? goToPage(currentPage - 1) : goToSharedMemberPage(sharedMemberCurrentPage - 1)"
+                    class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150">
               Previous
             </button>
-            <button class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150">
+            
+            <!-- Page Numbers -->
+            <div class="flex items-center space-x-1">
+              <button *ngFor="let page of activeTab === 'tickets' ? getPageNumbers() : getSharedMemberPageNumbers()" 
+                      (click)="activeTab === 'tickets' ? goToPage(page) : goToSharedMemberPage(page)" 
+                      [class]="'px-3 py-2 rounded-lg text-sm font-medium transition ' + (page === (activeTab === 'tickets' ? currentPage : sharedMemberCurrentPage) ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 border border-gray-700')">
+                {{ page }}
+              </button>
+            </div>
+            
+            <button [disabled]="activeTab === 'tickets' ? (currentPage === totalPages || totalPages === 0) : (sharedMemberCurrentPage === sharedMemberTotalPages || sharedMemberTotalPages === 0)" 
+                    (click)="activeTab === 'tickets' ? goToPage(currentPage + 1) : goToSharedMemberPage(sharedMemberCurrentPage + 1)"
+                    class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150">
               Next
             </button>
           </div>
@@ -275,11 +477,11 @@
 </div>
 
 <!-- Create/Edit Ticket Modal -->
-<div class="modal fixed inset-0 bg-gray-900/80 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50" style="display: none;">
+<div class="modal fixed inset-0 bg-gray-900/80 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-[80]" style="display: none;">
   <div class="relative top-10 mx-auto p-6 w-full max-w-4xl shadow-2xl rounded-2xl bg-gray-800 border border-gray-700">
     <div class="mt-3">
       <div class="flex justify-between items-center mb-6">
-        <h3 class="text-2xl font-semibold text-white">{{ isEditMode ? 'Edit Ticket Details' : 'Create New Ticket' }}</h3>
+        <h3 class="text-2xl font-semibold text-white">{{ isEditMode ? 'Edit Share Details' : 'Create New Share' }}</h3>
         <button (click)="closeModal()" class="text-gray-400 hover:text-white transition-colors duration-200">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -323,34 +525,36 @@
           <!-- Ticket Custom ID -->
           <div class="space-y-2">
             <label class="block text-gray-300 text-sm font-medium" for="ticketcustomid">
-              Ticket Custom ID
+              Share Custom ID
             </label>
             <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                   id="ticketcustomid" type="text" placeholder="Enter ticket custom ID" 
+                   id="ticketcustomid" type="text" placeholder="Enter share custom ID" 
                    [(ngModel)]="newTicket.ticketcustomid" name="ticketcustomid" required>
           </div>
 
           <!-- Ticket Brought Date -->
           <div class="space-y-2">
             <label class="block text-gray-300 text-sm font-medium" for="ticketbroughtdate">
-              Ticket Brought Date
+              Share Brought Date
             </label>
             <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 cursor-pointer" 
                    id="ticketbroughtdate" type="date" 
-                   [(ngModel)]="newTicket.ticketbroughtdate" name="ticketbroughtdate" required>
+                   [(ngModel)]="newTicket.ticketbroughtdate" name="ticketbroughtdate" required
+                   (click)="openDatePicker('ticketbroughtdate')">
           </div>
 
           <!-- Ticket Price -->
           <div class="space-y-2">
             <label class="block text-gray-300 text-sm font-medium" for="ticketprice">
-              Ticket Price
+              Share Price
             </label>
             <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                   id="ticketprice" type="number" placeholder="Enter ticket price" 
-                   [(ngModel)]="newTicket.ticketprice" name="ticketprice" required>
+                   id="ticketprice" type="number" placeholder="Enter share price" 
+                   [(ngModel)]="newTicket.ticketprice" name="ticketprice" 
+                   (ngModelChange)="calculatePendingAmount()" required>
           </div>
 
           <!-- Price Paid -->
@@ -361,7 +565,8 @@
             <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
                    id="pricepaid" type="number" placeholder="Enter amount paid" 
-                   [(ngModel)]="newTicket.pricepaid" name="pricepaid" required>
+                   [(ngModel)]="newTicket.pricepaid" name="pricepaid" 
+                   (ngModelChange)="calculatePendingAmount()" required>
           </div>
 
           <!-- Pending Amount -->
@@ -369,16 +574,16 @@
             <label class="block text-gray-300 text-sm font-medium" for="pendingamount">
               Pending Amount
             </label>
-            <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+            <input class="w-full bg-gray-600 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                   id="pendingamount" type="number" placeholder="Enter pending amount" 
-                   [(ngModel)]="newTicket.pendingamount" name="pendingamount" required>
+                   id="pendingamount" type="number" placeholder="Calculated automatically" 
+                   [(ngModel)]="newTicket.pendingamount" name="pendingamount" readonly>
           </div>
 
           <!-- Ticket Status -->
           <div class="space-y-2">
             <label class="block text-gray-300 text-sm font-medium" for="ticketstatus">
-              Ticket Status
+              Share Status
             </label>
             <select class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white
                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
@@ -421,7 +626,7 @@
             </button>
             <button type="submit"
                     class="px-6 py-2.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200">
-              {{ isEditMode ? 'Update Ticket' : 'Create Ticket' }}
+              {{ isEditMode ? 'Update Share' : 'Create Share' }}
             </button>
           </div>
         </form>
@@ -431,10 +636,10 @@
 </div>
 
 <!-- View Ticket Details Modal -->
-<div *ngIf="selectedTicket" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+<div *ngIf="selectedTicket" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm overflow-y-auto h-full w-full z-[80]">
   <div class="relative top-10 mx-auto p-6 w-full max-w-6xl shadow-2xl rounded-2xl bg-gray-800 border border-gray-700">
     <div class="flex justify-between items-center mb-6">
-      <h3 class="text-2xl font-semibold text-white">Ticket Details</h3>
+      <h3 class="text-2xl font-semibold text-white">Share Details</h3>
       <button (click)="closeViewModal()" class="text-gray-400 hover:text-white transition-colors duration-200">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -446,10 +651,10 @@
       <!-- Ticket Information -->
       <div class="space-y-6">
         <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
-          <h4 class="text-lg font-semibold text-white mb-4">Ticket Information</h4>
+          <h4 class="text-lg font-semibold text-white mb-4">Share Information</h4>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <p class="text-sm text-gray-400">Ticket ID</p>
+              <p class="text-sm text-gray-400">Share ID</p>
               <p class="font-medium text-white">{{ selectedTicket.ticketcustomid }}</p>
             </div>
             <div>
@@ -488,7 +693,7 @@
           <h4 class="text-lg font-semibold text-white mb-4">Financial Details</h4>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <p class="text-sm text-gray-400">Ticket Price</p>
+              <p class="text-sm text-gray-400">Share Price</p>
               <p class="font-medium text-white">₹{{ selectedTicket.ticketprice | number:'1.0-0' }}</p>
             </div>
             <div>
@@ -601,16 +806,306 @@
   </div>
 </div>
 
-<!-- Dialog Components -->
-<app-dialog
-  [visible]="dialogService.currentState.visible"
-  [config]="dialogService.currentState.config"
-  [loading]="dialogService.currentState.loading"
-  (confirm)="dialogService.confirm(true)"
-  (cancel)="dialogService.confirm(false)"
-  (close)="dialogService.hideDialog()">
-</app-dialog>
+<!-- Create/Edit Shared Member Modal -->
+<div class="shared-member-modal fixed inset-0 bg-gray-900/80 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-[80]" style="display: none;">
+  <div class="relative top-10 mx-auto p-6 w-full max-w-4xl shadow-2xl rounded-2xl bg-gray-800 border border-gray-700">
+    <div class="mt-3">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-semibold text-white">{{ isSharedMemberEditMode ? 'Edit Shared Member' : 'Create New Shared Member' }}</h3>
+        <button (click)="closeSharedMemberModal()" class="text-gray-400 hover:text-white transition-colors duration-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="mt-2">
+        <form (ngSubmit)="submitSharedMemberForm()" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Name -->
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="name">
+              Full Name
+            </label>
+            <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                   id="name" type="text" placeholder="Enter full name" 
+                   [(ngModel)]="newSharedMember.name" name="name" required>
+          </div>
 
+          <!-- Email -->
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="email">
+              Email Address
+            </label>
+            <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                   id="email" type="email" placeholder="Enter email address" 
+                   [(ngModel)]="newSharedMember.email" name="email" required>
+          </div>
+
+          <!-- Mobile Number -->
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="mobileNumber">
+              Mobile Number
+            </label>
+            <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                   id="mobileNumber" type="tel" placeholder="Enter mobile number" 
+                   [(ngModel)]="newSharedMember.mobileNumber" name="mobileNumber" required>
+          </div>
+
+          <!-- Aadhar Number -->
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="aadharNumber">
+              Aadhar Number
+            </label>
+            <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                   id="aadharNumber" type="text" placeholder="Enter 12-digit Aadhar number" 
+                   [(ngModel)]="newSharedMember.aadharNumber" name="aadharNumber" required>
+          </div>
+
+          <!-- PAN Number -->
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="panNumber">
+              PAN Number
+            </label>
+            <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                   id="panNumber" type="text" placeholder="Enter PAN number" 
+                   [(ngModel)]="newSharedMember.panNumber" name="panNumber" required>
+          </div>
+
+          <!-- Ticket Selection -->
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="ticketid">
+              Associated Ticket
+            </label>
+            <select class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                    id="ticketid" [(ngModel)]="newSharedMember.ticketid" name="ticketid">
+              <option value="">Select a ticket</option>
+              <option *ngFor="let ticket of tickets" [value]="ticket._id">
+                {{ ticket.ticketcustomid }} - {{ getUser(ticket).name }} - ₹{{ ticket.ticketprice | number:'1.0-0' }}
+              </option>
+            </select>
+          </div>
+
+          <!-- User Selection -->
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="userid">
+              Associated User
+            </label>
+            <select class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                    id="userid" [(ngModel)]="newSharedMember.userid" name="userid">
+              <option value="">Select a user</option>
+              <option *ngFor="let user of users" [value]="user._id">
+                {{ user.name }} ({{ user.email }})
+              </option>
+            </select>
+          </div>
+
+          <!-- Status (only for edit mode) -->
+          <div class="space-y-2" *ngIf="isSharedMemberEditMode">
+            <label class="block text-gray-300 text-sm font-medium" for="status">
+              Status
+            </label>
+            <select class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white
+                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                    id="status" [(ngModel)]="newSharedMember.status" name="status">
+              <option value="pending">Pending</option>
+              <option value="accepted">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+
+          <!-- Rejected Comments (only for edit mode and rejected status) -->
+          <div class="space-y-2 col-span-2" *ngIf="isSharedMemberEditMode && newSharedMember.status === 'rejected'">
+            <label class="block text-gray-300 text-sm font-medium" for="rejectedComments">
+              Rejection Comments
+            </label>
+            <textarea class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                      id="rejectedComments" rows="3" placeholder="Enter reason for rejection" 
+                      [(ngModel)]="newSharedMember.rejectedComments" name="rejectedComments"></textarea>
+          </div>
+
+          <div class="col-span-2 flex items-center justify-end space-x-4 mt-6">
+            <button type="button" 
+                    (click)="closeSharedMemberModal()"
+                    class="px-6 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-600 transition-colors duration-200">
+              Cancel
+            </button>
+            <button type="submit"
+                    class="px-6 py-2.5 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors duration-200">
+              {{ isSharedMemberEditMode ? 'Update Member' : 'Create Member' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Shared Member Details Modal -->
+<div *ngIf="selectedSharedMember" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm overflow-y-auto h-full w-full z-[80]">
+  <div class="relative top-10 mx-auto p-6 w-full max-w-6xl shadow-2xl rounded-2xl bg-gray-800 border border-gray-700">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-2xl font-semibold text-white">Shared Member Details</h3>
+      <button (click)="closeSharedMemberViewModal()" class="text-gray-400 hover:text-white transition-colors duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Member Information -->
+      <div class="space-y-6">
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">Member Information</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-400">Name</p>
+              <p class="font-medium text-white">{{ selectedSharedMember.name }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Status</p>
+              <span class="inline-flex items-center rounded-full px-2 text-xs font-semibold leading-5 border"
+                    [class]="getStatusColorClass(selectedSharedMember.status)">
+                {{ getStatusDisplayName(selectedSharedMember.status) }}
+              </span>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Email</p>
+              <p class="font-medium text-white">{{ selectedSharedMember.email }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Mobile</p>
+              <p class="font-medium text-white">{{ selectedSharedMember.mobileNumber }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Aadhar</p>
+              <p class="font-medium text-white">{{ selectedSharedMember.aadharNumber }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">PAN</p>
+              <p class="font-medium text-white">{{ selectedSharedMember.panNumber }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Created</p>
+              <p class="font-medium text-white">{{ formatSharedMemberDate(selectedSharedMember.created_at) }}</p>
+            </div>
+            <div *ngIf="typeof selectedSharedMember.createdBy === 'object'">
+              <p class="text-sm text-gray-400">Created By</p>
+              <p class="font-medium text-white">{{ selectedSharedMember.createdBy.name }} ({{ selectedSharedMember.createdByModel }})</p>
+            </div>
+          </div>
+          <div class="mt-4" *ngIf="selectedSharedMember.rejectedComments">
+            <p class="text-sm text-gray-400">Rejection Comments</p>
+            <p class="text-red-400">{{ selectedSharedMember.rejectedComments }}</p>
+          </div>
+        </div>
+
+        <!-- Associated Ticket and User Information -->
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">Associated Information</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Associated Ticket -->
+            <div>
+              <h5 class="text-sm font-medium text-gray-300 mb-2">Associated Ticket</h5>
+              <div *ngIf="getTicketInfo(selectedSharedMember).ticketcustomid !== 'N/A'" class="bg-gray-600/50 rounded-lg p-3">
+                <p class="text-sm font-medium text-white">{{ getTicketInfo(selectedSharedMember).ticketcustomid }}</p>
+                <p class="text-xs text-gray-400">Price: ₹{{ getTicketInfo(selectedSharedMember).ticketprice | number:'1.0-0' }}</p>
+                <p class="text-xs text-gray-400">Status: {{ getTicketInfo(selectedSharedMember).ticketstatus }}</p>
+              </div>
+              <div *ngIf="getTicketInfo(selectedSharedMember).ticketcustomid === 'N/A'" class="text-sm text-gray-500">
+                No ticket associated
+              </div>
+            </div>
+
+            <!-- Associated User -->
+            <div>
+              <h5 class="text-sm font-medium text-gray-300 mb-2">Associated User</h5>
+              <div *ngIf="getUserInfo(selectedSharedMember).name !== 'N/A'" class="bg-gray-600/50 rounded-lg p-3">
+                <p class="text-sm font-medium text-white">{{ getUserInfo(selectedSharedMember).name }}</p>
+                <p class="text-xs text-gray-400">{{ getUserInfo(selectedSharedMember).email }}</p>
+                <p class="text-xs text-gray-400" *ngIf="getUserInfo(selectedSharedMember).phone">{{ getUserInfo(selectedSharedMember).phone }}</p>
+              </div>
+              <div *ngIf="getUserInfo(selectedSharedMember).name === 'N/A'" class="text-sm text-gray-500">
+                No user associated
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KYC Documents -->
+      <div class="space-y-6">
+        <div class="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+          <h4 class="text-lg font-semibold text-white mb-4">KYC Documents</h4>
+          <div *ngIf="selectedSharedMember.kycDocuments.length === 0" class="text-center py-8">
+            <i class="fas fa-file-upload text-gray-500 text-4xl mb-4"></i>
+            <p class="text-gray-400">No documents uploaded</p>
+          </div>
+          <div *ngIf="selectedSharedMember.kycDocuments.length > 0" class="space-y-4">
+            <div *ngFor="let doc of selectedSharedMember.kycDocuments" class="flex items-center justify-between p-3 bg-gray-600/50 rounded-lg">
+              <div class="flex items-center space-x-3">
+                <i class="fas fa-file text-blue-400"></i>
+                <div>
+                  <p class="text-sm font-medium text-white">{{ getDocumentTypeDisplayName(doc.documentType) }}</p>
+                  <p class="text-xs text-gray-400">{{ formatSharedMemberDate(doc.uploadedAt) }}</p>
+                </div>
+              </div>
+              <a [href]="doc.documentUrl" target="_blank" class="text-blue-400 hover:text-blue-300">
+                <i class="fas fa-external-link-alt"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Modal -->
+<div *ngIf="showRejectDialog" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm overflow-y-auto h-full w-full z-[80]">
+  <div class="relative top-20 mx-auto p-6 w-full max-w-md shadow-2xl rounded-2xl bg-gray-800 border border-gray-700">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-semibold text-white">Reject Shared Member</h3>
+      <button (click)="closeRejectModal()" class="text-gray-400 hover:text-white transition-colors duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="mb-6">
+      <p class="text-gray-300 mb-4">Are you sure you want to reject <strong>{{ selectedSharedMember?.name }}</strong>?</p>
+      <label class="block text-sm font-medium text-gray-300 mb-2">Reason for rejection (optional)</label>
+      <textarea 
+        [(ngModel)]="rejectComments"
+        class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+               focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200" 
+        rows="3" 
+        placeholder="Enter reason for rejection">
+      </textarea>
+    </div>
+    <div class="flex items-center justify-end space-x-4">
+      <button 
+        (click)="closeRejectModal()"
+        class="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-600 transition-colors duration-200">
+        Cancel
+      </button>
+      <button 
+        (click)="rejectSharedMember()"
+        class="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors duration-200">
+        Reject Member
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Dialog -->
 <app-loading-dialog
   [visible]="showLoadingDialog"
   [title]="loadingMessage"

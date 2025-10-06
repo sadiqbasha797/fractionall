@@ -198,20 +198,42 @@
               </div>
             </div>
 
+            <!-- Bookings Stopped Message -->
+            <div *ngIf="isBookingStopped()" class="lg:col-span-2 bg-red-900/20 border border-red-500/30 rounded-lg p-6 text-center" data-animation="fade-up" data-delay="400">
+              <div class="flex items-center justify-center mb-4">
+                <svg class="w-12 h-12 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <h3 class="text-xl font-bold text-red-400 mb-2">Bookings Temporarily Stopped</h3>
+              <p class="text-gray-300 mb-4">We're currently not accepting new bookings for this car. Please check back later or contact us for more information.</p>
+              <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <button class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
+                  Contact Support
+                </button>
+                <button (click)="router.navigate(['/cars'])" class="px-4 py-2 border border-gray-600 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors">
+                  Browse Other Cars
+                </button>
+              </div>
+            </div>
+
             <!-- Book Now -->
-            <div class="bg-gray-800 p-3 rounded-lg shadow-2xl relative" 
+            <div *ngIf="!isBookingStopped()" class="bg-gray-800 p-3 rounded-lg shadow-2xl relative" 
                  [ngClass]="{
-                   'opacity-50 pointer-events-none': carData() && carData().tokensavailble > 0 && !hasBookNowToken()
+                   'opacity-50 pointer-events-none': carData() && (carData().tokensavailble > 0 || carData().bookNowTokenAvailable === 0) && !hasBookNowToken()
                  }"
                  data-animation="fade-up" data-delay="400">
               <!-- Gray Overlay when disabled -->
-              <div *ngIf="carData() && carData().tokensavailble > 0 && !hasBookNowToken()" 
+              <div *ngIf="carData() && (carData().tokensavailble > 0 || carData().bookNowTokenAvailable === 0) && !hasBookNowToken()" 
                    class="absolute inset-0 bg-gray-900/70 rounded-lg z-10 flex items-center justify-center">
                 <div class="text-center text-gray-400">
                   <svg class="w-8 h-8 mx-auto mb-2 opacity-50" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"></path>
                   </svg>
-                 
+                  <p class="text-sm font-medium" *ngIf="carData().tokensavailble > 0">Not Available</p>
+                  <p class="text-sm font-medium" *ngIf="carData().tokensavailble === 0 && carData().bookNowTokenAvailable === 0">Fully Booked</p>
+                  <p class="text-xs" *ngIf="carData().tokensavailble > 0">Waitlist must be filled first</p>
+                  <p class="text-xs" *ngIf="carData().tokensavailble === 0 && carData().bookNowTokenAvailable === 0">All 12 spots are taken</p>
                 </div>
               </div>
               <div class="flex items-center justify-between mb-3">
@@ -219,11 +241,13 @@
                 <div class="flex items-center gap-2">
                   <div *ngIf="carData()" class="text-xs px-2 py-1 rounded-full"
                        [ngClass]="{
-                         'bg-green-600/20 text-green-400 border border-green-500/50': carData().tokensavailble === 0,
-                         'bg-yellow-600/20 text-yellow-400 border border-yellow-500/50': carData().tokensavailble > 0
+                         'bg-green-600/20 text-green-400 border border-green-500/50': carData().tokensavailble === 0 && carData().bookNowTokenAvailable > 0,
+                         'bg-yellow-600/20 text-yellow-400 border border-yellow-500/50': carData().tokensavailble > 0,
+                         'bg-red-600/20 text-red-400 border border-red-500/50': carData().tokensavailble === 0 && carData().bookNowTokenAvailable === 0
                        }">
-                    <span *ngIf="carData().tokensavailble === 0">Available</span>
+                    <span *ngIf="carData().tokensavailble === 0 && carData().bookNowTokenAvailable > 0">Available</span>
                     <span *ngIf="carData().tokensavailble > 0">Not Available</span>
+                    <span *ngIf="carData().tokensavailble === 0 && carData().bookNowTokenAvailable === 0">Fully Booked</span>
                   </div>
                   <button 
                     (click)="openInfoModal('book-now')"
@@ -243,7 +267,7 @@
                     <span class="inline-block bg-green-600/50 text-text-primary px-2 py-0.5 rounded-full text-xs mt-1">Recommended</span>
                   </div>
                   <div class="text-center text-xs text-text-secondary">
-                    <p class="font-medium">{{ (12 - (carData().bookNowTokenAvailable || 12)) }}/12 have booked tokens</p>
+                    <p class="font-medium">{{ (12 - (carData().bookNowTokenAvailable ?? 12)) }}/12 have booked tokens</p>
                   </div>
                   <div class="space-y-1 text-xs text-text-secondary">
                     <p>One time setup fee</p>
@@ -268,7 +292,7 @@
               <button 
                 *ngIf="!hasBookNowToken()"
                 (click)="initiatePayment('book-now')" 
-                [disabled]="isPaymentLoading() || !razorpayKey() || checkingPurchaseStatus() || hasReachedBookNowLimit() || userLoading()"
+                [disabled]="isPaymentLoading() || !razorpayKey() || checkingPurchaseStatus() || hasReachedBookNowLimit() || userLoading() || (carData() && carData().bookNowTokenAvailable === 0)"
                 class="w-full h-8 rounded-md bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed font-bold text-sm text-white transition-colors">
                 <span *ngIf="checkingPurchaseStatus() || userLoading()">Checking...</span>
                 <span *ngIf="isPaymentLoading() && !checkingPurchaseStatus() && !userLoading()">Processing...</span>
@@ -285,10 +309,13 @@
               <div *ngIf="carData() && carData().tokensavailble > 0 && !hasBookNowToken()" class="mt-3 text-center">
                 <p class="text-xs text-gray-400 italic">Book Now will open when waitlist is filled</p>
               </div>
+              <div *ngIf="carData() && carData().tokensavailble === 0 && carData().bookNowTokenAvailable === 0 && !hasBookNowToken()" class="mt-3 text-center">
+                <p class="text-xs text-red-400 italic">All 12 Book Now spots are taken</p>
+              </div>
             </div>
 
             <!-- Join Waitlist -->
-            <div class="bg-gray-800 p-3 rounded-lg shadow-2xl relative" 
+            <div *ngIf="!isBookingStopped()" class="bg-gray-800 p-3 rounded-lg shadow-2xl relative" 
                  [ngClass]="{
                    'opacity-50 pointer-events-none': carData() && carData().tokensavailble === 0 && !hasWaitlistToken()
                  }"
@@ -322,7 +349,7 @@
                     <p class="text-sm text-text-secondary line-through">₹999</p>
                   </div>
                   <div class="text-center text-xs text-text-secondary">
-                    <p class="font-medium">{{ 20 - (carData().tokensavailble || 20) }}/20 have joined waitlist</p>
+                    <p class="font-medium">{{ (20 - (carData().tokensavailble ?? 20)) }}/20 have joined waitlist</p>
                     <p class="text-yellow-500 text-lg">☆</p>
                   </div>
                   <div class="space-y-1 text-xs text-text-secondary">

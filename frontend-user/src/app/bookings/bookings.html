@@ -12,6 +12,8 @@
                 type="date"
                 [(ngModel)]="bookingForm.fromDate"
                 [min]="todayDate"
+                [max]="maxAdvanceDate"
+                (ngModelChange)="onFormFieldChange()"
                 name="fromDate"/>
             </label>
             <label class="flex flex-col">
@@ -22,6 +24,8 @@
                 type="date"
                 [(ngModel)]="bookingForm.toDate"
                 [min]="todayDate"
+                [max]="maxAdvanceDate"
+                (ngModelChange)="onFormFieldChange()"
                 name="toDate"/>
             </label>
           </div>
@@ -30,6 +34,7 @@
             <select 
               class="form-select w-full rounded-lg border border-gray-600 bg-gray-700 text-white h-12 px-4 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               [(ngModel)]="bookingForm.selectedCar"
+              (ngModelChange)="onFormFieldChange()"
               name="selectedCar">
               <option value="">Choose a car</option>
               <option *ngFor="let car of userCars()" [value]="car.carid._id">
@@ -45,6 +50,44 @@
               [(ngModel)]="bookingForm.comments"
               name="comments"></textarea>
           </label>
+          <!-- Validation Errors -->
+          <div *ngIf="validationErrors().length > 0" class="bg-red-900/20 border border-red-600/30 rounded-lg p-4">
+            <div class="flex items-start gap-3">
+              <svg class="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+              </svg>
+              <div>
+                <h3 class="text-sm font-medium text-red-200">Booking Rules Violation</h3>
+                <ul class="text-sm text-red-300 mt-1 space-y-1">
+                  <li *ngFor="let error of validationErrors()">• {{error}}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Booking Rules Information -->
+          <div class="bg-blue-900/20 border border-blue-600/30 rounded-lg p-4">
+            <div class="flex items-start gap-3">
+              <svg class="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+              </svg>
+              <div>
+                <h3 class="text-sm font-medium text-blue-200">Booking Rules</h3>
+                <ul class="text-sm text-blue-300 mt-1 space-y-1">
+                  <li>• Minimum 1 day, Maximum 4 days booking duration</li>
+                  <li>• Cannot book same car before current booking completes</li>
+                  <li>• Maximum 5 weekend bookings per year per car 
+                    <span *ngIf="bookingForm.selectedCar" class="text-blue-200 font-medium">
+                      ({{weekendBookingsCount()}}/{{maxWeekendBookings}} used)
+                    </span>
+                  </li>
+                  <li>• Advance booking only up to 3 months ahead</li>
+                  <li>• Cancellation allowed only before 1 day of booking date</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           <button class="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2" type="submit" [disabled]="!isUserAuthenticated() || userCars().length === 0">
             <span>Book Now</span>
             <svg fill="currentColor" height="18" viewBox="0 0 256 256" width="18" xmlns="http://www.w3.org/2000/svg">
@@ -239,6 +282,7 @@
                 <th class="px-4 lg:px-6 py-3" scope="col">Car</th>
                 <th class="px-4 lg:px-6 py-3" scope="col">Booking Dates</th>
                 <th class="px-4 lg:px-6 py-3" scope="col">Status</th>
+                <th class="px-4 lg:px-6 py-3" scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -254,6 +298,24 @@
                       'bg-yellow-900 text-yellow-200': booking.status === 'Upcoming'
                     }">
                     {{booking.status}}
+                  </span>
+                </td>
+                <td class="px-4 lg:px-6 py-4">
+                  <button 
+                    *ngIf="booking.status === 'Upcoming' && canCancelBooking(booking)"
+                    (click)="cancelBooking(booking)"
+                    class="inline-flex items-center px-3 py-1.5 border border-red-600 text-red-400 text-xs font-medium rounded-md hover:bg-red-900/20 hover:border-red-500 transition-colors">
+                    Cancel
+                  </button>
+                  <span 
+                    *ngIf="booking.status === 'Upcoming' && !canCancelBooking(booking)"
+                    class="text-xs text-gray-500">
+                    Cannot cancel (within 1 day)
+                  </span>
+                  <span 
+                    *ngIf="booking.status === 'Completed'"
+                    class="text-xs text-gray-500">
+                    -
                   </span>
                 </td>
               </tr>

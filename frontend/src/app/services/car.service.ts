@@ -30,6 +30,7 @@ export interface Car {
   createdBy: string;
   createdByModel: string;
   status?: string;
+  stopBookings?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -77,4 +78,5 @@ export class CarService {
   deleteCar(id: string): Observable<CarResponse> {
     return this.http.delete<CarResponse>(`${this.baseUrl}/${id}`);
   }
+
 }

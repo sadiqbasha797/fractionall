@@ -286,3 +286,5 @@
   border: none;
   border-top: 1px solid #e5e7eb; /* gray-200 */
 }
+
+/* Mobile sidebar visibility - handled by Angular binding */

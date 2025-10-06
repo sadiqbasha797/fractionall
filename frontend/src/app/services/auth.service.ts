@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, timeout, catchError, throwError } from 'rxjs';
 import { ConfigService } from './config.service';
 
 // Define interfaces for our data models
@@ -73,6 +73,24 @@ export interface RegisterSuperAdminData {
   permissions: string[];
 }
 
+export interface ForgotPasswordData {
+  email: string;
+}
+
+export interface ResetPasswordData {
+  email: string;
+  code: string;
+  newPassword: string;
+}
+
+export interface PasswordResetResponse {
+  status: string;
+  body: {
+    emailSent?: boolean;
+  };
+  message: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -100,7 +118,13 @@ export class AuthService {
 
   // Admin login
   loginAdmin(credentials: LoginCredentials): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/login/admin`, credentials);
+    return this.http.post<AuthResponse>(`${this.baseUrl}/login/admin`, credentials)
+      .pipe(
+        timeout(10000), // 10 second timeout
+        catchError(error => {
+          return throwError(() => error);
+        })
+      );
   }
 
   // Super Admin registration
@@ -110,7 +134,13 @@ export class AuthService {
 
   // Super Admin login
   loginSuperAdmin(credentials: LoginCredentials): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/login/superadmin`, credentials);
+    return this.http.post<AuthResponse>(`${this.baseUrl}/login/superadmin`, credentials)
+      .pipe(
+        timeout(10000), // 10 second timeout
+        catchError(error => {
+          return throwError(() => error);
+        })
+      );
   }
 
   // Validate token
@@ -195,5 +225,15 @@ export class AuthService {
       return superAdminData ? JSON.parse(superAdminData) : null;
     }
     return null;
+  }
+
+  // Request password reset
+  requestPasswordReset(data: ForgotPasswordData): Observable<PasswordResetResponse> {
+    return this.http.post<PasswordResetResponse>(`${this.baseUrl}/forgot-password`, data);
+  }
+
+  // Reset password with code
+  resetPassword(data: ResetPasswordData): Observable<PasswordResetResponse> {
+    return this.http.post<PasswordResetResponse>(`${this.baseUrl}/reset-password`, data);
   }
 }

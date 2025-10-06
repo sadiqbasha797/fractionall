@@ -105,4 +105,11 @@ export class TokenService {
       headers: this.getAuthHeaders()
     });
   }
+
+  // Cancel a token
+  cancelToken(id: string, reason?: string): Observable<TokenResponse> {
+    return this.http.post<TokenResponse>(`${this.baseUrl}/${id}/cancel`, { reason }, {
+      headers: this.getAuthHeaders()
+    });
+  }
 }

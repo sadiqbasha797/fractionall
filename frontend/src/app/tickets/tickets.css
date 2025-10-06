@@ -162,7 +162,7 @@ thead tr {
   position: sticky;
   top: 0;
   z-index: 2;
-  background-color: #111827; /* gray-900 header */
+  background-color: #1f2937; /* bg-gray-800 - consistent with AMC */
   color: #e5e7eb; /* light text */
 }
 
@@ -246,8 +246,8 @@ thead tr {
   white-space: nowrap;
 }
 
-/* Focus outlines for keyboard users */
-button:focus, input:focus, select:focus {
+/* Table row hover effects */
+.hover\:bg-gray-8ut:focus, select:focus {
   outline: none;
   box-shadow: 0 0 0 4px rgba(59,130,246,0.12);
   border-color: rgba(59,130,246,0.4);
@@ -331,5 +331,233 @@ tbody tr:hover {
   
   .stats-card .text-2xl {
     font-size: 1.25rem;
+  }
+}
+
+/* Mobile responsive styles for modal forms */
+@media (max-width: 768px) {
+  /* Modal container adjustments */
+  .modal > div,
+  .shared-member-modal > div {
+    margin: 0.5rem;
+    max-width: none;
+    width: calc(100% - 1rem);
+    padding: 1rem;
+  }
+  
+  /* Modal header adjustments */
+  .modal h3,
+  .shared-member-modal h3 {
+    font-size: 1.25rem;
+    line-height: 1.5;
+  }
+  
+  /* Form grid adjustments - force single column on mobile */
+  .modal form,
+  .shared-member-modal form {
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+  }
+  
+  /* Form field adjustments */
+  .modal .space-y-2,
+  .shared-member-modal .space-y-2 {
+    margin-bottom: 0;
+  }
+  
+  /* Input and select field adjustments */
+  .modal input,
+  .modal select,
+  .modal textarea,
+  .shared-member-modal input,
+  .shared-member-modal select,
+  .shared-member-modal textarea {
+    padding: 0.75rem;
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  /* Button adjustments */
+  .modal .col-span-2,
+  .shared-member-modal .col-span-2 {
+    grid-column: 1;
+  }
+  
+  .modal .col-span-2.flex,
+  .shared-member-modal .col-span-2.flex {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  
+  .modal .col-span-2 button,
+  .shared-member-modal .col-span-2 button {
+    width: 100%;
+    padding: 0.75rem 1rem;
+  }
+  
+  /* View modal adjustments */
+  .modal .grid.grid-cols-1.lg\\:grid-cols-2,
+  .modal .grid.grid-cols-1.lg\\:grid-cols-2 {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  /* View modal content adjustments */
+  .modal .grid.grid-cols-2 {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  /* View modal button adjustments */
+  .modal .flex.justify-end.space-x-2 {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .modal .flex.justify-end.space-x-2 button {
+    width: 100%;
+  }
+  
+  /* Specific adjustments for view modals */
+  .modal .bg-gray-700\/50 {
+    padding: 1rem;
+  }
+  
+  .modal .text-lg {
+    font-size: 1rem;
+  }
+  
+  .modal .text-sm {
+    font-size: 0.75rem;
+  }
+  
+  .modal .font-medium {
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra small screens - further adjustments */
+  .modal > div,
+  .shared-member-modal > div {
+    margin: 0.25rem;
+    padding: 0.75rem;
+    width: calc(100% - 0.5rem);
+  }
+  
+  .modal h3,
+  .shared-member-modal h3 {
+    font-size: 1.125rem;
+  }
+  
+  .modal input,
+  .modal select,
+  .modal textarea,
+  .shared-member-modal input,
+  .shared-member-modal select,
+  .shared-member-modal textarea {
+    padding: 0.625rem;
+    font-size: 16px;
+  }
+  
+  .modal .col-span-2 button,
+  .shared-member-modal .col-span-2 button {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Extra small screen view modal adjustments */
+  .modal .bg-gray-700\/50 {
+    padding: 0.75rem;
+  }
+  
+  .modal .text-lg {
+    font-size: 0.875rem;
+  }
+  
+  .modal .text-sm {
+    font-size: 0.625rem;
+  }
+  
+  .modal .font-medium {
+    font-size: 0.75rem;
+  }
+}
+
+/* Additional mobile optimizations */
+@media (max-width: 768px) {
+  /* Ensure proper touch targets */
+  .modal button,
+  .shared-member-modal button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improve form field touch targets */
+  .modal input,
+  .modal select,
+  .modal textarea,
+  .shared-member-modal input,
+  .shared-member-modal select,
+  .shared-member-modal textarea {
+    min-height: 44px;
+  }
+  
+  /* Better spacing for mobile forms */
+  .modal form > div,
+  .shared-member-modal form > div {
+    margin-bottom: 1rem;
+  }
+  
+  /* Ensure labels are properly sized for mobile */
+  .modal label,
+  .shared-member-modal label {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  
+  /* Better modal positioning on mobile */
+  .modal,
+  .shared-member-modal {
+    padding: 0;
+  }
+  
+  .modal > div,
+  .shared-member-modal > div {
+    border-radius: 0.75rem;
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
+    overflow-y: auto;
+  }
+  
+  /* Ensure proper scrolling on mobile */
+  .modal,
+  .shared-member-modal {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Better focus states for mobile */
+  .modal input:focus,
+  .modal select:focus,
+  .modal textarea:focus,
+  .shared-member-modal input:focus,
+  .shared-member-modal select:focus,
+  .shared-member-modal textarea:focus {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+  }
+  
+  /* Prevent horizontal scroll on mobile */
+  .modal form,
+  .shared-member-modal form {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  /* Better button spacing on mobile */
+  .modal .col-span-2.flex button:first-child {
+    margin-bottom: 0.5rem;
   }
 }

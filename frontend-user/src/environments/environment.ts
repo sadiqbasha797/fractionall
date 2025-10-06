@@ -1,4 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5000/api'
+  //apiUrl: 'https://fractionbackend.projexino.com/api',
+  apiUrl: 'http://localhost:2000/api'
+
 };

@@ -1,17 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AmcService, AMC, AMCAmount, PaymentStatusUpdate } from '../services/amc.service';
 import { UserService, User } from '../services/user.service';
 import { CarService, Car } from '../services/car.service';
 import { TicketService, Ticket } from '../services/ticket.service';
-import { DialogComponent, DialogConfig } from '../shared/dialog/dialog.component';
 import { ExportService, ExportOptions } from '../services/export.service';
 
 @Component({
   selector: 'app-amc',
   standalone: true,
-  imports: [CommonModule, FormsModule, DialogComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './amc.html',
   styleUrl: './amc.css'
 })
@@ -19,6 +18,8 @@ export class Amc implements OnInit {
   amcs: AMC[] = [];
   users: User[] = [];
   cars: Car[] = [];
+  filteredCars: Car[] = []; // Cars filtered based on selected user's tickets
+  userTickets: Ticket[] = []; // Tickets for the selected user
   tickets: Ticket[] = [];
   filteredAmcs: AMC[] = [];
   
@@ -44,17 +45,7 @@ export class Amc implements OnInit {
   amcAmounts: AMCAmount[] = [];
   
   // Dialog
-  showDialog = false;
-  dialogConfig: DialogConfig = {
-    title: '',
-    message: '',
-    type: 'info',
-    confirmText: 'Confirm',
-    cancelText: 'Cancel',
-    showCancel: true,
-    showClose: true,
-    size: 'md'
-  };
+  private dialogElement: HTMLElement | null = null;
   
   // Loading states
   isSubmitting = false;
@@ -74,12 +65,146 @@ export class Amc implements OnInit {
     private userService: UserService,
     private carService: CarService,
     private ticketService: TicketService,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private renderer: Renderer2
   ) {}
 
   ngOnInit() {
     this.checkUserRole();
     this.loadData();
+  }
+
+  // Local dialog methods
+  showConfirmDialog(title: string, message: string, confirmCallback: () => void): void {
+    this.removeDialog();
+    const backdrop = this.renderer.createElement('div');
+    this.renderer.setStyle(backdrop, 'position', 'fixed');
+    this.renderer.setStyle(backdrop, 'top', '0');
+    this.renderer.setStyle(backdrop, 'left', '0');
+    this.renderer.setStyle(backdrop, 'width', '100vw');
+    this.renderer.setStyle(backdrop, 'height', '100vh');
+    this.renderer.setStyle(backdrop, 'background', 'rgba(0, 0, 0, 0.8)');
+    this.renderer.setStyle(backdrop, 'z-index', '999999');
+    this.renderer.setStyle(backdrop, 'display', 'flex');
+    this.renderer.setStyle(backdrop, 'align-items', 'center');
+    this.renderer.setStyle(backdrop, 'justify-content', 'center');
+    const dialog = this.renderer.createElement('div');
+    this.renderer.setStyle(dialog, 'background', '#374151');
+    this.renderer.setStyle(dialog, 'border-radius', '12px');
+    this.renderer.setStyle(dialog, 'max-width', '500px');
+    this.renderer.setStyle(dialog, 'width', '90%');
+    this.renderer.setStyle(dialog, 'padding', '24px');
+    const titleEl = this.renderer.createElement('h3');
+    this.renderer.setStyle(titleEl, 'color', 'white');
+    this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
+    this.renderer.setStyle(titleEl, 'font-size', '1.5rem');
+    const titleText = this.renderer.createText(title);
+    this.renderer.appendChild(titleEl, titleText);
+    const messageEl = this.renderer.createElement('div');
+    this.renderer.setProperty(messageEl, 'innerHTML', message);
+    this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
+    this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
+    const btnContainer = this.renderer.createElement('div');
+    this.renderer.setStyle(btnContainer, 'display', 'flex');
+    this.renderer.setStyle(btnContainer, 'justify-content', 'flex-end');
+    this.renderer.setStyle(btnContainer, 'gap', '12px');
+    const cancelBtn = this.renderer.createElement('button');
+    const cancelText = this.renderer.createText('Cancel');
+    this.renderer.appendChild(cancelBtn, cancelText);
+    this.renderer.setStyle(cancelBtn, 'background', '#6B7280');
+    this.renderer.setStyle(cancelBtn, 'color', 'white');
+    this.renderer.setStyle(cancelBtn, 'border', 'none');
+    this.renderer.setStyle(cancelBtn, 'padding', '10px 20px');
+    this.renderer.setStyle(cancelBtn, 'border-radius', '8px');
+    this.renderer.setStyle(cancelBtn, 'cursor', 'pointer');
+    this.renderer.listen(cancelBtn, 'click', () => this.removeDialog());
+    const confirmBtn = this.renderer.createElement('button');
+    const confirmText = this.renderer.createText('Confirm');
+    this.renderer.appendChild(confirmBtn, confirmText);
+    this.renderer.setStyle(confirmBtn, 'background', '#DC2626');
+    this.renderer.setStyle(confirmBtn, 'color', 'white');
+    this.renderer.setStyle(confirmBtn, 'border', 'none');
+    this.renderer.setStyle(confirmBtn, 'padding', '10px 20px');
+    this.renderer.setStyle(confirmBtn, 'border-radius', '8px');
+    this.renderer.setStyle(confirmBtn, 'cursor', 'pointer');
+    this.renderer.listen(confirmBtn, 'click', () => {
+      this.removeDialog();
+      confirmCallback();
+    });
+    this.renderer.appendChild(btnContainer, cancelBtn);
+    this.renderer.appendChild(btnContainer, confirmBtn);
+    this.renderer.appendChild(dialog, titleEl);
+    this.renderer.appendChild(dialog, messageEl);
+    this.renderer.appendChild(dialog, btnContainer);
+    this.renderer.appendChild(backdrop, dialog);
+    this.renderer.appendChild(document.body, backdrop);
+    this.dialogElement = backdrop;
+    this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
+    this.renderer.listen(backdrop, 'click', () => this.removeDialog());
+  }
+  removeDialog(): void {
+    if (this.dialogElement) {
+      this.renderer.removeChild(document.body, this.dialogElement);
+      this.dialogElement = null;
+    }
+  }
+  showSuccessDialog(message: string): void {
+    this.showMessageDialog('Success', message, '#10B981');
+  }
+  showErrorDialog(message: string): void {
+    this.showMessageDialog('Error', message, '#DC2626');
+  }
+  showMessageDialog(title: string, message: string, color: string): void {
+    this.removeDialog();
+    const backdrop = this.renderer.createElement('div');
+    this.renderer.setStyle(backdrop, 'position', 'fixed');
+    this.renderer.setStyle(backdrop, 'top', '0');
+    this.renderer.setStyle(backdrop, 'left', '0');
+    this.renderer.setStyle(backdrop, 'width', '100vw');
+    this.renderer.setStyle(backdrop, 'height', '100vh');
+    this.renderer.setStyle(backdrop, 'background', 'rgba(0, 0, 0, 0.8)');
+    this.renderer.setStyle(backdrop, 'z-index', '999999');
+    this.renderer.setStyle(backdrop, 'display', 'flex');
+    this.renderer.setStyle(backdrop, 'align-items', 'center');
+    this.renderer.setStyle(backdrop, 'justify-content', 'center');
+    const dialog = this.renderer.createElement('div');
+    this.renderer.setStyle(dialog, 'background', '#374151');
+    this.renderer.setStyle(dialog, 'border-radius', '12px');
+    this.renderer.setStyle(dialog, 'max-width', '400px');
+    this.renderer.setStyle(dialog, 'width', '90%');
+    this.renderer.setStyle(dialog, 'padding', '24px');
+    this.renderer.setStyle(dialog, 'text-align', 'center');
+    const titleEl = this.renderer.createElement('h3');
+    this.renderer.setStyle(titleEl, 'color', color);
+    this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
+    this.renderer.setStyle(titleEl, 'font-size', '1.5rem');
+    this.renderer.setStyle(titleEl, 'font-weight', '600');
+    const titleText = this.renderer.createText(title);
+    this.renderer.appendChild(titleEl, titleText);
+    const messageEl = this.renderer.createElement('div');
+    this.renderer.setProperty(messageEl, 'innerHTML', message);
+    this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
+    this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
+    const okBtn = this.renderer.createElement('button');
+    const okText = this.renderer.createText('OK');
+    this.renderer.appendChild(okBtn, okText);
+    this.renderer.setStyle(okBtn, 'background', color);
+    this.renderer.setStyle(okBtn, 'color', 'white');
+    this.renderer.setStyle(okBtn, 'border', 'none');
+    this.renderer.setStyle(okBtn, 'padding', '10px 30px');
+    this.renderer.setStyle(okBtn, 'border-radius', '8px');
+    this.renderer.setStyle(okBtn, 'cursor', 'pointer');
+    this.renderer.setStyle(okBtn, 'font-size', '14px');
+    this.renderer.setStyle(okBtn, 'font-weight', '600');
+    this.renderer.listen(okBtn, 'click', () => this.removeDialog());
+    this.renderer.appendChild(dialog, titleEl);
+    this.renderer.appendChild(dialog, messageEl);
+    this.renderer.appendChild(dialog, okBtn);
+    this.renderer.appendChild(backdrop, dialog);
+    this.renderer.appendChild(document.body, backdrop);
+    this.dialogElement = backdrop;
+    this.renderer.listen(backdrop, 'click', () => this.removeDialog());
+    this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
   }
 
   checkUserRole() {
@@ -167,6 +292,7 @@ export class Amc implements OnInit {
       
       if (carResponse?.status === 'success') {
         this.cars = carResponse.body.cars || [];
+        this.filteredCars = [...this.cars]; // Initialize filtered cars with all cars
       }
       
       if (ticketResponse?.status === 'success') {
@@ -343,44 +469,27 @@ export class Amc implements OnInit {
   }
 
   deleteAMC(amc: AMC) {
-    this.dialogConfig = {
-      title: 'Delete AMC',
-      message: `Are you sure you want to delete this AMC for ${this.getUserName(amc)}?`,
-      type: 'confirm',
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
-      showCancel: true,
-      showClose: true,
-      size: 'md'
-    };
-    this.showDialog = true;
-    
-    // Store the AMC to delete
-    this.editingAmc = amc;
-  }
-
-  confirmDelete() {
-    if (this.editingAmc?._id) {
-      this.isSubmitting = true;
-      this.amcService.deleteAMC(this.editingAmc._id).subscribe({
-        next: (response) => {
-          if (response.status === 'success') {
-            this.successMessage = 'AMC deleted successfully!';
-            this.loadData();
-          } else {
-            this.errorMessage = response.message || 'Failed to delete AMC';
+    this.showConfirmDialog('Delete AMC', `Are you sure you want to delete this AMC for ${this.getUserName(amc)}?`, () => {
+      if (amc._id) {
+        this.isSubmitting = true;
+        this.amcService.deleteAMC(amc._id).subscribe({
+          next: (response) => {
+            if (response.status === 'success') {
+              this.successMessage = 'AMC deleted successfully!';
+              this.loadData();
+            } else {
+              this.errorMessage = response.message || 'Failed to delete AMC';
+            }
+            this.isSubmitting = false;
+          },
+          error: (error) => {
+            console.error('Error deleting AMC:', error);
+            this.errorMessage = 'Failed to delete AMC. Please try again.';
+            this.isSubmitting = false;
           }
-          this.isSubmitting = false;
-          this.showDialog = false;
-        },
-        error: (error) => {
-          console.error('Error deleting AMC:', error);
-          this.errorMessage = 'Failed to delete AMC. Please try again.';
-          this.isSubmitting = false;
-          this.showDialog = false;
-        }
-      });
-    }
+        });
+      }
+    });
   }
 
   updatePaymentStatus(amc: AMC, yearIndex: number, paid: boolean) {
@@ -475,10 +584,10 @@ export class Amc implements OnInit {
 
   getPaymentStatusClass(status: string): string {
     switch (status) {
-      case 'paid': return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-approved';
-      case 'partial': return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-pending';
-      case 'unpaid': return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-rejected';
-      default: return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-inactive';
+      case 'paid': return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium status-badge-approved';
+      case 'partial': return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium status-badge-pending';
+      case 'unpaid': return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium status-badge-rejected';
+      default: return 'inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium status-badge-inactive';
     }
   }
 
@@ -494,21 +603,6 @@ export class Amc implements OnInit {
 
   getPendingAmount(amc: AMC): number {
     return this.getTotalAmount(amc) - this.getPaidAmount(amc);
-  }
-
-  // Dialog methods
-  onDialogConfirm() {
-    this.confirmDelete();
-  }
-
-  onDialogCancel() {
-    this.showDialog = false;
-    this.editingAmc = null;
-  }
-
-  onDialogClose() {
-    this.showDialog = false;
-    this.editingAmc = null;
   }
 
   // Utility methods
@@ -630,5 +724,68 @@ export class Amc implements OnInit {
 
   getMin(a: number, b: number): number {
     return Math.min(a, b);
+  }
+
+  // User ticket filtering methods
+  getUserTickets(userId: string) {
+    if (!userId) {
+      this.userTickets = [];
+      this.filteredCars = [...this.cars];
+      return;
+    }
+
+    this.ticketService.getTickets().subscribe({
+      next: (response) => {
+        if (response.status === 'success' && response.body.tickets) {
+          // Filter tickets for the selected user
+          this.userTickets = response.body.tickets.filter((ticket: Ticket) => {
+            const ticketUserId = typeof ticket.userid === 'string' ? ticket.userid : ticket.userid._id;
+            return ticketUserId === userId && ticket.ticketstatus === 'active';
+          });
+          
+          // Filter cars based on user's tickets
+          this.filterCarsByUserTickets();
+        } else {
+          this.userTickets = [];
+          this.filteredCars = [...this.cars];
+        }
+      },
+      error: (error) => {
+        console.error('Error loading user tickets:', error);
+        this.userTickets = [];
+        this.filteredCars = [...this.cars];
+      }
+    });
+  }
+
+  // Filter cars based on user's tickets
+  filterCarsByUserTickets() {
+    if (this.userTickets.length === 0) {
+      this.filteredCars = [];
+      return;
+    }
+
+    // Get car IDs from user's tickets
+    const userCarIds = this.userTickets.map(ticket => {
+      return typeof ticket.carid === 'string' ? ticket.carid : ticket.carid._id;
+    });
+
+    // Filter cars to only include those the user has tickets for
+    this.filteredCars = this.cars.filter(car => userCarIds.includes(car._id!));
+  }
+
+  // Handle user selection change
+  onUserSelectionChange() {
+    if (this.selectedUserId) {
+      this.getUserTickets(this.selectedUserId);
+      // Reset car and ticket selections when user changes
+      this.selectedCarId = '';
+      this.selectedTicketId = '';
+    } else {
+      this.userTickets = [];
+      this.filteredCars = [...this.cars];
+      this.selectedCarId = '';
+      this.selectedTicketId = '';
+    }
   }
 }

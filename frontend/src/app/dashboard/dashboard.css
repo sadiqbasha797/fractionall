@@ -5,6 +5,44 @@
   color: white;
 }
 
+/* Dashboard Selector */
+.dashboard-selector {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(55, 65, 81, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.dashboard-tab {
+  background: transparent;
+  color: rgb(156, 163, 175);
+  border: 1px solid transparent;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.dashboard-tab:hover {
+  background: rgba(75, 85, 99, 0.3);
+  color: white;
+  border-color: rgba(75, 85, 99, 0.5);
+}
+
+.dashboard-tab-active {
+  background: rgba(59, 130, 246, 0.2);
+  color: rgb(96, 165, 250);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.dashboard-tab-active:hover {
+  background: rgba(59, 130, 246, 0.3);
+  color: rgb(147, 197, 253);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
 /* Stats Cards - Minimalistic Design */
 .stat-card-minimal {
   background: rgba(31, 41, 55, 0.8);

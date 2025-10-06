@@ -643,6 +643,78 @@ const sendSuperAdminBookingNotification = async (userDetails, bookingDetails, ca
   }
 };
 
+// Send refund initiated notification
+const sendRefundInitiated = async (to, data) => {
+  try {
+    const template = readTemplate('refund-initiated');
+    const htmlContent = replacePlaceholders(template, data);
+    
+    return await sendEmail(
+      to,
+      'Refund Initiated - FractionCars',
+      htmlContent
+    );
+  } catch (error) {
+    logger(`Error sending refund initiated email: ${error.message}`);
+    throw error;
+  }
+};
+
+// Send refund processed notification
+const sendRefundProcessed = async (to, data) => {
+  try {
+    const template = readTemplate('refund-processed');
+    const htmlContent = replacePlaceholders(template, data);
+    
+    return await sendEmail(
+      to,
+      'Refund Processed - FractionCars',
+      htmlContent
+    );
+  } catch (error) {
+    logger(`Error sending refund processed email: ${error.message}`);
+    throw error;
+  }
+};
+
+// Send refund successful notification
+const sendRefundSuccessful = async (to, data) => {
+  try {
+    const template = readTemplate('refund-successful');
+    const htmlContent = replacePlaceholders(template, data);
+    
+    return await sendEmail(
+      to,
+      'Refund Successful - FractionCars',
+      htmlContent
+    );
+  } catch (error) {
+    logger(`Error sending refund successful email: ${error.message}`);
+    throw error;
+  }
+};
+
+// Generic refund notification sender
+const sendRefundNotification = async (to, data) => {
+  try {
+    const { status } = data;
+    
+    switch (status) {
+      case 'initiated':
+        return await sendRefundInitiated(to, data);
+      case 'processed':
+        return await sendRefundProcessed(to, data);
+      case 'successful':
+        return await sendRefundSuccessful(to, data);
+      default:
+        throw new Error(`Unknown refund status: ${status}`);
+    }
+  } catch (error) {
+    logger(`Error sending refund notification: ${error.message}`);
+    throw error;
+  }
+};
+
 // Test email function
 const sendTestEmail = async (to) => {
   try {
@@ -668,6 +740,112 @@ const sendTestEmail = async (to) => {
   }
 };
 
+// Shared Member submission notification for admins
+const sendSharedMemberSubmissionNotification = async (adminDetails, sharedMemberDetails, submittedByDetails) => {
+  try {
+    const template = readTemplate('shared-member-submission-notification');
+    
+    const templateData = {
+      adminName: adminDetails.name,
+      memberName: sharedMemberDetails.name,
+      memberEmail: sharedMemberDetails.email,
+      memberMobile: sharedMemberDetails.mobileNumber,
+      memberAadhar: sharedMemberDetails.aadharNumber,
+      memberPan: sharedMemberDetails.panNumber,
+      submittedBy: submittedByDetails.name || submittedByDetails.email,
+      submissionDate: new Date(sharedMemberDetails.created_at).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      documentCount: sharedMemberDetails.kycDocuments ? sharedMemberDetails.kycDocuments.length : 0,
+      reviewLink: `${process.env.ADMIN_FRONTEND_URL || 'http://localhost:4200'}/shared-members/${sharedMemberDetails._id}`
+    };
+    
+    const htmlContent = replacePlaceholders(template, templateData);
+    
+    return await sendEmail(
+      adminDetails.email,
+      '🔔 New Shared Member Submission - Action Required',
+      htmlContent
+    );
+  } catch (error) {
+    logger(`Error sending shared member submission notification: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+};
+
+// Shared Member approved notification for user
+const sendSharedMemberApprovedNotification = async (userDetails, sharedMemberDetails, approvedByDetails) => {
+  try {
+    const template = readTemplate('shared-member-approved-notification');
+    
+    const templateData = {
+      userName: userDetails.name,
+      memberName: sharedMemberDetails.name,
+      memberEmail: sharedMemberDetails.email,
+      memberMobile: sharedMemberDetails.mobileNumber,
+      approvedBy: approvedByDetails.name || 'Fraction Team',
+      approvalDate: new Date().toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      dashboardLink: `${process.env.FRONTEND_URL || 'http://localhost:4200'}/dashboard`
+    };
+    
+    const htmlContent = replacePlaceholders(template, templateData);
+    
+    return await sendEmail(
+      userDetails.email,
+      '✅ Shared Member Approved - Ready to Use!',
+      htmlContent
+    );
+  } catch (error) {
+    logger(`Error sending shared member approved notification: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+};
+
+// Shared Member rejected notification for user
+const sendSharedMemberRejectedNotification = async (userDetails, sharedMemberDetails, rejectedByDetails, rejectionComments) => {
+  try {
+    const template = readTemplate('shared-member-rejected-notification');
+    
+    const templateData = {
+      userName: userDetails.name,
+      memberName: sharedMemberDetails.name,
+      memberEmail: sharedMemberDetails.email,
+      memberMobile: sharedMemberDetails.mobileNumber,
+      rejectedBy: rejectedByDetails.name || 'Fraction Team',
+      rejectionDate: new Date().toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      rejectionComments: rejectionComments || 'Please review your submission and try again.',
+      dashboardLink: `${process.env.FRONTEND_URL || 'http://localhost:4200'}/dashboard`
+    };
+    
+    const htmlContent = replacePlaceholders(template, templateData);
+    
+    return await sendEmail(
+      userDetails.email,
+      '❌ Shared Member Rejected - Action Required',
+      htmlContent
+    );
+  } catch (error) {
+    logger(`Error sending shared member rejected notification: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   sendEmail,
   sendWelcomeEmail,
@@ -684,5 +862,12 @@ module.exports = {
   sendSuperAdminBookNowTokenPurchaseNotification,
   sendSuperAdminAMCPaymentNotification,
   sendSuperAdminBookingNotification,
-  sendTestEmail
+  sendRefundInitiated,
+  sendRefundProcessed,
+  sendRefundSuccessful,
+  sendRefundNotification,
+  sendTestEmail,
+  sendSharedMemberSubmissionNotification,
+  sendSharedMemberApprovedNotification,
+  sendSharedMemberRejectedNotification
 };

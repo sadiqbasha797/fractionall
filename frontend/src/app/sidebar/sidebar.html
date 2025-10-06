@@ -1,6 +1,10 @@
 <div class="h-full">
   <!-- Make sidebar fixed on all viewports so it stays in place while main content scrolls -->
-  <aside id="sidebar-aside" [class.hidden]="!isMobileMenuOpen" class="fixed w-64 h-full bg-gray-900 z-40 md:block transition-transform duration-300 ease-in-out sidebar-container flex flex-col">
+  <aside id="sidebar-aside" 
+         class="fixed w-64 h-full bg-gray-900 z-[70] transition-transform duration-300 ease-in-out sidebar-container flex flex-col md:block"
+         [style.transform]="!isMobileMenuOpen ? 'translateX(-100%)' : 'translateX(0)'"
+         [style.left]="'0'"
+         [style.top]="'0'">
       <div class="flex flex-col h-full">
           <div class="flex items-center justify-between p-2 border-b border-gray-800 flex-shrink-0">
             <div class="flex-1">
@@ -21,7 +25,7 @@
         </div>
         <nav class="mt-6 px-3 flex-1 sidebar-nav overflow-y-auto no-scrollbar">
           <!-- Dashboard -->
-          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="dashboard" [class.bg-gray-800]="isActive('dashboard')" [class.text-white]="isActive('dashboard')">
+          <a *ngIf="hasPermission('dashboard')" class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="dashboard" [class.bg-gray-800]="isActive('dashboard')" [class.text-white]="isActive('dashboard')">
             <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
               <path d="M3 3h18v18H3z"></path>
               <path d="M12 12h-1v-1h1v1z"></path>
@@ -30,36 +34,36 @@
           </a>
 
           <!-- Manage Cars -->
-          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="cars" [class.bg-gray-800]="isActive('cars')" [class.text-white]="isActive('cars')">
+          <a *ngIf="hasPermission('cars')" class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="cars" [class.bg-gray-800]="isActive('cars')" [class.text-white]="isActive('cars')">
             <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
               <path d="m21.6 11.5-1.4-7A2 2 0 0 0 18.37 3H5.63a2 2 0 0 0-1.83 1.5L2.4 11.5"></path>
               <path d="M4.5 11.5H19.5"></path>
               <path d="M4.77 16.5 6 21h12l1.23-4.5"></path>
             </svg>
-            <span class="text-base font-medium">Manage Cars</span>
+            <span class="text-base font-medium">Car Management</span>
           </a>
 
           <!-- AMC -->
-          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="amc" [class.bg-gray-800]="isActive('amc')" [class.text-white]="isActive('amc')">
+          <a *ngIf="hasPermission('amc')" class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="amc" [class.bg-gray-800]="isActive('amc')" [class.text-white]="isActive('amc')">
             <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
               <path d="M8 2v4"></path>
               <path d="M16 2v4"></path>
               <rect height="18" rx="2" width="18" x="3" y="4"></rect>
               <path d="M3 10h18"></path>
             </svg>
-            <span class="text-base font-medium">AMC</span>
+            <span class="text-base font-medium">AMC Management</span>
           </a>
 
-          <!-- Tickets -->
-          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="tickets" [class.bg-gray-800]="isActive('tickets')" [class.text-white]="isActive('tickets')">
+          <!-- Share Management -->
+          <a *ngIf="hasPermission('tickets')" class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="tickets" [class.bg-gray-800]="isActive('tickets')" [class.text-white]="isActive('tickets')">
             <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
-              <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path>
+              <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
             </svg>
-            <span class="text-base font-medium">Tickets</span>
+            <span class="text-base font-medium">Share Management</span>
           </a>
 
           <!-- Tokens (Waitlist & Book Now) -->
-          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="tokens" [class.bg-gray-800]="isActive('tokens')" [class.text-white]="isActive('tokens')">
+          <a *ngIf="hasPermission('tokens')" class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="tokens" [class.bg-gray-800]="isActive('tokens')" [class.text-white]="isActive('tokens')">
             <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
               <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path>
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
@@ -67,20 +71,51 @@
             <span class="text-base font-medium">Token Management</span>
           </a>
 
-          <!-- Bookings -->
-          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="bookings" [class.bg-gray-800]="isActive('bookings')" [class.text-white]="isActive('bookings')">
+          <!-- Manage Content -->
+          <a *ngIf="hasPermission('manage-content')" class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="manage-content" [class.bg-gray-800]="isActive('manage-content')" [class.text-white]="isActive('manage-content')">
             <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
-              <rect height="18" rx="2" width="18" x="3" y="4"></rect>
-              <path d="M8 14h.01"></path>
-              <path d="M12 14h.01"></path>
-              <path d="M16 14h.01"></path>
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14,2 14,8 20,8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <line x1="10" y1="9" x2="8" y2="9"></line>
             </svg>
-            <span class="text-base font-medium">Bookings</span>
+            <span class="text-base font-medium">Content Management</span>
           </a>
 
-          <!-- Contracts -->
-          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="contracts" [class.bg-gray-800]="isActive('contracts')" [class.text-white]="isActive('contracts')">
-            <svg class="w-7 h-7 mr-3 p-1 rounded border border-purple-500/50 bg-purple-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+          <!-- Users Management - Only for Super Admin -->
+          <a *ngIf="hasPermission('users')" class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="users" [class.bg-gray-800]="isActive('users')" [class.text-white]="isActive('users')">
+            <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span class="text-base font-medium">User Management</span>
+          </a>
+
+      
+
+              <!-- Revenue -->
+              <a *ngIf="hasPermission('revenue')" class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="revenue" [class.bg-gray-800]="isActive('revenue')" [class.text-white]="isActive('revenue')">
+                <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="text-base font-medium">Reports & Analytics</span>
+              </a>
+
+              <!-- Payments -->
+              <a *ngIf="hasPermission('payments')" class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="payments" [class.bg-gray-800]="isActive('payments')" [class.text-white]="isActive('payments')">
+                <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                  <path d="M12 9v6m0 0l-2-2m2 2l2-2"/>
+                </svg>
+                <span class="text-base font-medium">Payment Transactions</span>
+              </a>
+
+                     <!-- Contracts -->
+          <a *ngIf="hasPermission('contracts')" class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="contracts" [class.bg-gray-800]="isActive('contracts')" [class.text-white]="isActive('contracts')">
+            <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14,2 14,8 20,8"></polyline>
               <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -90,16 +125,21 @@
             <span class="text-base font-medium">LLP & Purchase</span>
           </a>
 
-          <!-- Revenue -->
-          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="revenue" [class.bg-gray-800]="isActive('revenue')" [class.text-white]="isActive('revenue')">
-            <svg class="w-7 h-7 mr-3 p-1 rounded border border-amber-500/50 bg-amber-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
-              <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          <!-- Bookings -->
+          <a *ngIf="hasPermission('bookings')" class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="bookings" [class.bg-gray-800]="isActive('bookings')" [class.text-white]="isActive('bookings')">
+            <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+              <rect height="18" rx="2" width="18" x="3" y="4"></rect>
+              <path d="M8 14h.01"></path>
+              <path d="M12 14h.01"></path>
+              <path d="M16 14h.01"></path>
             </svg>
-            <span class="text-base font-medium">Revenue</span>
+            <span class="text-base font-medium">Bookings</span>
           </a>
 
+      
+
           <!-- Contact Forms -->
-          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="contact-forms" [class.bg-gray-800]="isActive('contact-forms')" [class.text-white]="isActive('contact-forms')">
+          <a *ngIf="hasPermission('contact-forms')" class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="contact-forms" [class.bg-gray-800]="isActive('contact-forms')" [class.text-white]="isActive('contact-forms')">
             <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
               <polyline points="22,6 12,13 2,6"></polyline>
@@ -107,30 +147,15 @@
             <span class="text-base font-medium">Contact Forms</span>
           </a>
 
-       
-
-          <!-- Manage Content -->
-          <a class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="manage-content" [class.bg-gray-800]="isActive('manage-content')" [class.text-white]="isActive('manage-content')">
-            <svg class="w-7 h-7 mr-3 p-1 rounded border border-green-500/50 bg-green-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14,2 14,8 20,8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <line x1="10" y1="9" x2="8" y2="9"></line>
+           <!-- Settings - Only for Super Admin -->
+           <a *ngIf="isSuperAdmin" class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="settings" [class.bg-gray-800]="isActive('settings')" [class.text-white]="isActive('settings')">
+            <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
-            <span class="text-base font-medium">Manage Content</span>
+            <span class="text-base font-medium">Settings</span>
           </a>
 
-          <!-- Users Management - Only for Super Admin -->
-          <a *ngIf="isSuperAdmin" class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="users" [class.bg-gray-800]="isActive('users')" [class.text-white]="isActive('users')">
-            <svg class="w-7 h-7 mr-3 p-1 rounded border border-purple-500/50 bg-purple-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
-            <span class="text-base font-medium">User & KYC</span>
-          </a>
         </nav>
       </div>
     </aside>

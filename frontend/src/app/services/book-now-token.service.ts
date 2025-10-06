@@ -63,7 +63,7 @@ export interface BookNowToken {
   amountpaid: number;
   date?: string;
   expirydate: string;
-  status: 'active' | 'expired' | 'dropped';
+  status: 'active' | 'expired' | 'dropped' | 'refund_requested' | 'refund_initiated' | 'refund_processed';
   createdAt?: string;
   updatedAt?: string;
 }
@@ -134,6 +134,20 @@ export class BookNowTokenService {
   // Delete a book now token by ID
   deleteBookNowToken(id: string): Observable<BookNowTokenResponse> {
     return this.http.delete<BookNowTokenResponse>(`${this.baseUrl}/${id}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  // Approve book now token refund
+  approveBookNowTokenRefund(id: string): Observable<BookNowTokenResponse> {
+    return this.http.post<BookNowTokenResponse>(`${this.baseUrl}/${id}/approve-refund`, {}, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  // Reject book now token refund
+  rejectBookNowTokenRefund(id: string, reason: string): Observable<BookNowTokenResponse> {
+    return this.http.post<BookNowTokenResponse>(`${this.baseUrl}/${id}/reject-refund`, { reason }, {
       headers: this.getAuthHeaders()
     });
   }

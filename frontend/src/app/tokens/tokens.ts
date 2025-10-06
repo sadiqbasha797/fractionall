@@ -1,19 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, Renderer2 } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TokenService, Token, User, Car } from '../services/token.service';
 import { BookNowTokenService, BookNowToken } from '../services/book-now-token.service';
 import { UserService } from '../services/user.service';
 import { CarService, Car as CarType } from '../services/car.service';
-import { DialogService } from '../shared/dialog/dialog.service';
-import { DialogComponent } from '../shared/dialog/dialog.component';
 import { LoadingDialogComponent } from '../shared/loading-dialog/loading-dialog.component';
 import { ExportService, ExportOptions } from '../services/export.service';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-tokens',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe, DialogComponent, LoadingDialogComponent],
+  imports: [CommonModule, FormsModule, DecimalPipe, LoadingDialogComponent],
   templateUrl: './tokens.html',
   styleUrl: './tokens.css'
 })
@@ -73,34 +72,188 @@ export class Tokens implements OnInit {
   // Dialog states
   showLoadingDialog: boolean = false;
   loadingMessage: string = '';
+  private dialogElement: HTMLElement | null = null;
 
   // Pagination properties
   currentPage: number = 1;
   itemsPerPage: number = 10;
   totalPages: number = 1;
 
+  // Permission state
+  hasTokensPermission: boolean = true;
+
   // Make Math available in template
   Math = Math;
 
-  constructor(
-    private tokenService: TokenService,
-    private bookNowTokenService: BookNowTokenService,
-    private userService: UserService,
-    private carService: CarService,
-    public dialogService: DialogService,
-    private exportService: ExportService
-  ) { }
+  // Inject services
+  private tokenService = inject(TokenService);
+  private bookNowTokenService = inject(BookNowTokenService);
+  private userService = inject(UserService);
+  private carService = inject(CarService);
+  private exportService = inject(ExportService);
+  private authService = inject(AuthService);
+  private renderer = inject(Renderer2);
 
   ngOnInit(): void {
+    this.checkPermissions();
     this.loadAllData();
     this.checkFontAwesomeLoaded();
   }
 
+  // Local dialog methods
+  showConfirmDialog(title: string, message: string, confirmCallback: () => void): void {
+    this.removeDialog();
+    const backdrop = this.renderer.createElement('div');
+    this.renderer.setStyle(backdrop, 'position', 'fixed');
+    this.renderer.setStyle(backdrop, 'top', '0');
+    this.renderer.setStyle(backdrop, 'left', '0');
+    this.renderer.setStyle(backdrop, 'width', '100vw');
+    this.renderer.setStyle(backdrop, 'height', '100vh');
+    this.renderer.setStyle(backdrop, 'background', 'rgba(0, 0, 0, 0.8)');
+    this.renderer.setStyle(backdrop, 'z-index', '999999');
+    this.renderer.setStyle(backdrop, 'display', 'flex');
+    this.renderer.setStyle(backdrop, 'align-items', 'center');
+    this.renderer.setStyle(backdrop, 'justify-content', 'center');
+    const dialog = this.renderer.createElement('div');
+    this.renderer.setStyle(dialog, 'background', '#374151');
+    this.renderer.setStyle(dialog, 'border-radius', '12px');
+    this.renderer.setStyle(dialog, 'max-width', '500px');
+    this.renderer.setStyle(dialog, 'width', '90%');
+    this.renderer.setStyle(dialog, 'padding', '24px');
+    const titleEl = this.renderer.createElement('h3');
+    this.renderer.setStyle(titleEl, 'color', 'white');
+    this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
+    this.renderer.setStyle(titleEl, 'font-size', '1.5rem');
+    const titleText = this.renderer.createText(title);
+    this.renderer.appendChild(titleEl, titleText);
+    const messageEl = this.renderer.createElement('div');
+    this.renderer.setProperty(messageEl, 'innerHTML', message);
+    this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
+    this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
+    const btnContainer = this.renderer.createElement('div');
+    this.renderer.setStyle(btnContainer, 'display', 'flex');
+    this.renderer.setStyle(btnContainer, 'justify-content', 'flex-end');
+    this.renderer.setStyle(btnContainer, 'gap', '12px');
+    const cancelBtn = this.renderer.createElement('button');
+    const cancelText = this.renderer.createText('Cancel');
+    this.renderer.appendChild(cancelBtn, cancelText);
+    this.renderer.setStyle(cancelBtn, 'background', '#6B7280');
+    this.renderer.setStyle(cancelBtn, 'color', 'white');
+    this.renderer.setStyle(cancelBtn, 'border', 'none');
+    this.renderer.setStyle(cancelBtn, 'padding', '10px 20px');
+    this.renderer.setStyle(cancelBtn, 'border-radius', '8px');
+    this.renderer.setStyle(cancelBtn, 'cursor', 'pointer');
+    this.renderer.listen(cancelBtn, 'click', () => this.removeDialog());
+    const confirmBtn = this.renderer.createElement('button');
+    const confirmText = this.renderer.createText('Confirm');
+    this.renderer.appendChild(confirmBtn, confirmText);
+    this.renderer.setStyle(confirmBtn, 'background', '#DC2626');
+    this.renderer.setStyle(confirmBtn, 'color', 'white');
+    this.renderer.setStyle(confirmBtn, 'border', 'none');
+    this.renderer.setStyle(confirmBtn, 'padding', '10px 20px');
+    this.renderer.setStyle(confirmBtn, 'border-radius', '8px');
+    this.renderer.setStyle(confirmBtn, 'cursor', 'pointer');
+    this.renderer.listen(confirmBtn, 'click', () => {
+      this.removeDialog();
+      confirmCallback();
+    });
+    this.renderer.appendChild(btnContainer, cancelBtn);
+    this.renderer.appendChild(btnContainer, confirmBtn);
+    this.renderer.appendChild(dialog, titleEl);
+    this.renderer.appendChild(dialog, messageEl);
+    this.renderer.appendChild(dialog, btnContainer);
+    this.renderer.appendChild(backdrop, dialog);
+    this.renderer.appendChild(document.body, backdrop);
+    this.dialogElement = backdrop;
+    this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
+    this.renderer.listen(backdrop, 'click', () => this.removeDialog());
+  }
+  removeDialog(): void {
+    if (this.dialogElement) {
+      this.renderer.removeChild(document.body, this.dialogElement);
+      this.dialogElement = null;
+    }
+  }
+  showSuccessDialog(message: string): void {
+    this.showMessageDialog('Success', message, '#10B981');
+  }
+  showErrorDialog(message: string): void {
+    this.showMessageDialog('Error', message, '#DC2626');
+  }
+  showMessageDialog(title: string, message: string, color: string): void {
+    this.removeDialog();
+    const backdrop = this.renderer.createElement('div');
+    this.renderer.setStyle(backdrop, 'position', 'fixed');
+    this.renderer.setStyle(backdrop, 'top', '0');
+    this.renderer.setStyle(backdrop, 'left', '0');
+    this.renderer.setStyle(backdrop, 'width', '100vw');
+    this.renderer.setStyle(backdrop, 'height', '100vh');
+    this.renderer.setStyle(backdrop, 'background', 'rgba(0, 0, 0, 0.8)');
+    this.renderer.setStyle(backdrop, 'z-index', '999999');
+    this.renderer.setStyle(backdrop, 'display', 'flex');
+    this.renderer.setStyle(backdrop, 'align-items', 'center');
+    this.renderer.setStyle(backdrop, 'justify-content', 'center');
+    const dialog = this.renderer.createElement('div');
+    this.renderer.setStyle(dialog, 'background', '#374151');
+    this.renderer.setStyle(dialog, 'border-radius', '12px');
+    this.renderer.setStyle(dialog, 'max-width', '400px');
+    this.renderer.setStyle(dialog, 'width', '90%');
+    this.renderer.setStyle(dialog, 'padding', '24px');
+    this.renderer.setStyle(dialog, 'text-align', 'center');
+    const titleEl = this.renderer.createElement('h3');
+    this.renderer.setStyle(titleEl, 'color', color);
+    this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
+    this.renderer.setStyle(titleEl, 'font-size', '1.5rem');
+    this.renderer.setStyle(titleEl, 'font-weight', '600');
+    const titleText = this.renderer.createText(title);
+    this.renderer.appendChild(titleEl, titleText);
+    const messageEl = this.renderer.createElement('div');
+    this.renderer.setProperty(messageEl, 'innerHTML', message);
+    this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
+    this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
+    const okBtn = this.renderer.createElement('button');
+    const okText = this.renderer.createText('OK');
+    this.renderer.appendChild(okBtn, okText);
+    this.renderer.setStyle(okBtn, 'background', color);
+    this.renderer.setStyle(okBtn, 'color', 'white');
+    this.renderer.setStyle(okBtn, 'border', 'none');
+    this.renderer.setStyle(okBtn, 'padding', '10px 30px');
+    this.renderer.setStyle(okBtn, 'border-radius', '8px');
+    this.renderer.setStyle(okBtn, 'cursor', 'pointer');
+    this.renderer.setStyle(okBtn, 'font-size', '14px');
+    this.renderer.setStyle(okBtn, 'font-weight', '600');
+    this.renderer.listen(okBtn, 'click', () => this.removeDialog());
+    this.renderer.appendChild(dialog, titleEl);
+    this.renderer.appendChild(dialog, messageEl);
+    this.renderer.appendChild(dialog, okBtn);
+    this.renderer.appendChild(backdrop, dialog);
+    this.renderer.appendChild(document.body, backdrop);
+    this.dialogElement = backdrop;
+    this.renderer.listen(backdrop, 'click', () => this.removeDialog());
+    this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
+  }
+
+  checkPermissions(): void {
+    // Check if admin has tokens permission
+    if (this.authService.isAdmin()) {
+      const admin = this.authService.getCurrentAdmin();
+      if (admin && admin.permissions) {
+        this.hasTokensPermission = admin.permissions.includes('tokens');
+      }
+    } else if (this.authService.isSuperAdmin()) {
+      // Superadmin has all permissions
+      this.hasTokensPermission = true;
+    }
+  }
+
   loadAllData(): void {
-    this.getTokens();
-    this.getBookNowTokens();
-    this.getUsers();
-    this.getCars();
+    // Only load data if user has tokens permission
+    if (this.hasTokensPermission) {
+      this.getTokens();
+      this.getBookNowTokens();
+      this.getUsers();
+      this.getCars();
+    }
   }
 
   checkFontAwesomeLoaded(): void {
@@ -142,10 +295,22 @@ export class Tokens implements OnInit {
         if (response.status === 'success') {
           this.tokens = response.body.tokens || [];
           this.filteredTokens = [...this.tokens];
+          // Initialize pagination after loading tokens
+          this.applyFilters();
         } else {
+          console.warn('Failed to fetch tokens:', response.message);
+          this.tokens = [];
+          this.filteredTokens = [];
         }
       },
       error: (error) => {
+        console.error('Error fetching tokens:', error);
+        this.tokens = [];
+        this.filteredTokens = [];
+        // Don't show error dialog for permission issues, just log and continue
+        if (error.status !== 403) {
+          this.showErrorDialog('Failed to load tokens. Please try again.');
+        }
       }
     });
   }
@@ -155,8 +320,17 @@ export class Tokens implements OnInit {
       next: (response) => {
         this.bookNowTokens = response.body.bookNowTokens || [];
         this.filteredBookNowTokens = [...this.bookNowTokens];
+        // Initialize pagination after loading book now tokens
+        this.applyFilters();
       },
       error: (error) => {
+        console.error('Error fetching book now tokens:', error);
+        this.bookNowTokens = [];
+        this.filteredBookNowTokens = [];
+        // Don't show error dialog for permission issues, just log and continue
+        if (error.status !== 403) {
+          this.showErrorDialog('Failed to load book now tokens. Please try again.');
+        }
       }
     });
   }
@@ -167,46 +341,66 @@ export class Tokens implements OnInit {
         if (response.status === 'success') {
           this.users = response.body.users;
         } else {
+          console.warn('Failed to fetch users:', response.message);
+          this.users = [];
         }
       },
       error: (error) => {
+        console.error('Error fetching users:', error);
+        this.users = [];
+        // Don't show error dialog for permission issues, just log and continue
+        if (error.status !== 403) {
+          this.showErrorDialog('Failed to load users. Please try again.');
+        }
       }
     });
   }
 
   getCars(): void {
-    this.carService.getCars().subscribe((response) => {
-      if (response.status === 'success') {
-        this.cars = response.body.cars.map((car: any) => ({
-          _id: car._id,
-          carname: car.carname,
-          brandname: car.brandname,
-          color: car.color,
-          milege: car.milege,
-          seating: car.seating,
-          features: car.features || [],
-          price: car.price,
-          fractionprice: car.fractionprice,
-          tokenprice: car.tokenprice,
-          expectedpurchasedate: car.expectedpurchasedate,
-          status: car.status,
-          totaltickets: car.totaltickets,
-          bookNowTokenAvailable: car.bookNowTokenAvailable,
-          bookNowTokenPrice: car.bookNowTokenPrice,
-          tokensavailble: car.tokensavailble,
-          images: car.images || [],
-          createdBy: car.createdBy,
-          createdByModel: car.createdByModel,
-          createdAt: car.createdAt,
-          __v: car.__v,
-          ticketsavilble: car.ticketsavilble,
-          location: car.location,
-          pincode: car.pincode,
-          amcperticket: car.amcperticket,
-          contractYears: car.contractYears,
-          description: car.description || ''
-        }));
-      } else {
+    this.carService.getCars().subscribe({
+      next: (response) => {
+        if (response.status === 'success') {
+          this.cars = response.body.cars.map((car: any) => ({
+            _id: car._id,
+            carname: car.carname,
+            brandname: car.brandname,
+            color: car.color,
+            milege: car.milege,
+            seating: car.seating,
+            features: car.features || [],
+            price: car.price,
+            fractionprice: car.fractionprice,
+            tokenprice: car.tokenprice,
+            expectedpurchasedate: car.expectedpurchasedate,
+            status: car.status,
+            totaltickets: car.totaltickets,
+            bookNowTokenAvailable: car.bookNowTokenAvailable,
+            bookNowTokenPrice: car.bookNowTokenPrice,
+            tokensavailble: car.tokensavailble,
+            images: car.images || [],
+            createdBy: car.createdBy,
+            createdByModel: car.createdByModel,
+            createdAt: car.createdAt,
+            __v: car.__v,
+            ticketsavilble: car.ticketsavilble,
+            location: car.location,
+            pincode: car.pincode,
+            amcperticket: car.amcperticket,
+            contractYears: car.contractYears,
+            description: car.description || ''
+          }));
+        } else {
+          console.warn('Failed to fetch cars:', response.message);
+          this.cars = [];
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching cars:', error);
+        this.cars = [];
+        // Don't show error dialog for permission issues, just log and continue
+        if (error.status !== 403) {
+          this.showErrorDialog('Failed to load cars. Please try again.');
+        }
       }
     });
   }
@@ -301,38 +495,64 @@ export class Tokens implements OnInit {
 
   // Helper methods for waitlist tokens
   getUser(token: Token): User {
-    if (typeof token.userid === 'string') {
-      const user = this.users.find(u => u._id === token.userid);
-      return user || this.getDefaultUser();
-    }
-    return token.userid;
-  }
-
-  getCar(token: Token): Car {
-    if (typeof token.carid === 'string') {
-      const car = this.cars.find(c => c._id === token.carid);
-      return car || this.getDefaultCar();
-    }
-    return token.carid;
-  }
-
-  // Helper methods for book now tokens
-  getBookNowUser(token: BookNowToken): User {
+    // If userid is already populated (object), return it directly
     if (typeof token.userid === 'object' && token.userid !== null) {
       return token.userid as User;
     }
     
-    const user = this.users.find(u => u._id === token.userid);
-    return user || this.getDefaultUser();
+    // If userid is a string, try to find it in the users array
+    if (typeof token.userid === 'string') {
+      const user = this.users.find(u => u._id === token.userid);
+      return user || this.getDefaultUser();
+    }
+    
+    return this.getDefaultUser();
+  }
+
+  getCar(token: Token): Car {
+    // If carid is already populated (object), return it directly
+    if (typeof token.carid === 'object' && token.carid !== null) {
+      return token.carid as Car;
+    }
+    
+    // If carid is a string, try to find it in the cars array
+    if (typeof token.carid === 'string') {
+      const car = this.cars.find(c => c._id === token.carid);
+      return car || this.getDefaultCar();
+    }
+    
+    return this.getDefaultCar();
+  }
+
+  // Helper methods for book now tokens
+  getBookNowUser(token: BookNowToken): User {
+    // If userid is already populated (object), return it directly
+    if (typeof token.userid === 'object' && token.userid !== null) {
+      return token.userid as User;
+    }
+    
+    // If userid is a string, try to find it in the users array
+    if (typeof token.userid === 'string') {
+      const user = this.users.find(u => u._id === token.userid);
+      return user || this.getDefaultUser();
+    }
+    
+    return this.getDefaultUser();
   }
 
   getBookNowCar(token: BookNowToken): CarType {
+    // If carid is already populated (object), return it directly
     if (typeof token.carid === 'object' && token.carid !== null) {
       return token.carid as CarType;
     }
     
-    const car = this.cars.find(c => c._id === token.carid);
-    return car || this.getDefaultCar();
+    // If carid is a string, try to find it in the cars array
+    if (typeof token.carid === 'string') {
+      const car = this.cars.find(c => c._id === token.carid);
+      return car || this.getDefaultCar();
+    }
+    
+    return this.getDefaultCar();
   }
 
   private getDefaultUser(): User {
@@ -392,6 +612,21 @@ export class Tokens implements OnInit {
       month: 'short',
       day: 'numeric'
     });
+  }
+
+  openDatePicker(fieldId: string) {
+    // Programmatically trigger the date picker
+    const dateInput = document.getElementById(fieldId) as HTMLInputElement;
+    if (dateInput) {
+      dateInput.focus();
+      // Try modern showPicker() method first
+      if (dateInput.showPicker) {
+        dateInput.showPicker();
+      } else {
+        // Fallback: trigger click event to open picker
+        dateInput.click();
+      }
+    }
   }
 
   // Pagination methods
@@ -571,15 +806,15 @@ export class Tokens implements OnInit {
         if (response.status === 'success') {
           this.getTokens();
           this.closeModal();
-          this.dialogService.showSuccess('Success', 'Token created successfully!');
+          this.showSuccessDialog('Token created successfully!');
           this.resetTokenForm();
         } else {
-          this.dialogService.showError('Error', `Failed to create token: ${response.message}`);
+          this.showErrorDialog(`Failed to create token: ${response.message}`);
         }
       },
       error: (error) => {
         this.showLoadingDialog = false;
-        this.dialogService.showError('Error', `Error creating token: ${error.message || 'Unknown error'}`);
+        this.showErrorDialog(`Error creating token: ${error.message || 'Unknown error'}`);
       }
     });
   }
@@ -596,45 +831,41 @@ export class Tokens implements OnInit {
         if (response.status === 'success') {
           this.getTokens();
           this.closeModal();
-          this.dialogService.showSuccess('Success', 'Token updated successfully!');
+          this.showSuccessDialog('Token updated successfully!');
         } else {
-          this.dialogService.showError('Error', `Failed to update token: ${response.message}`);
+          this.showErrorDialog(`Failed to update token: ${response.message}`);
         }
       },
       error: (error) => {
         this.showLoadingDialog = false;
-        this.dialogService.showError('Error', `Error updating token: ${error.message || 'Unknown error'}`);
+        this.showErrorDialog(`Error updating token: ${error.message || 'Unknown error'}`);
       }
     });
   }
 
-  async deleteToken(token: Token): Promise<void> {
+  deleteToken(token: Token): void {
     if (!token._id) return;
 
-    try {
-      const confirmed = await this.dialogService.confirmDelete(`Token ${token.customtokenid}`);
-      if (confirmed) {
-        this.showLoadingDialog = true;
-        this.loadingMessage = 'Deleting token...';
-        
-        this.tokenService.deleteToken(token._id).subscribe({
-          next: (response) => {
-            this.showLoadingDialog = false;
-            if (response.status === 'success') {
-              this.getTokens();
-              this.dialogService.showSuccess('Success', 'Token deleted successfully!');
-            } else {
-              this.dialogService.showError('Error', `Failed to delete token: ${response.message}`);
-            }
-          },
-          error: (error) => {
-            this.showLoadingDialog = false;
-            this.dialogService.showError('Error', `Error deleting token: ${error.message || 'Unknown error'}`);
+    this.showConfirmDialog('Confirm Delete', `Are you sure you want to delete Token ${token.customtokenid}?`, () => {
+      this.showLoadingDialog = true;
+      this.loadingMessage = 'Deleting token...';
+      
+      this.tokenService.deleteToken(token._id!).subscribe({
+        next: (response) => {
+          this.showLoadingDialog = false;
+          if (response.status === 'success') {
+            this.getTokens();
+            this.showSuccessDialog('Token deleted successfully!');
+          } else {
+            this.showErrorDialog(`Failed to delete token: ${response.message}`);
           }
-        });
-      }
-    } catch (error) {
-    }
+        },
+        error: (error) => {
+          this.showLoadingDialog = false;
+          this.showErrorDialog(`Error deleting token: ${error.message || 'Unknown error'}`);
+        }
+      });
+    });
   }
 
   // Book now token CRUD operations
@@ -648,11 +879,11 @@ export class Tokens implements OnInit {
         this.getBookNowTokens();
         this.closeModal();
         this.resetBookNowTokenForm();
-        this.dialogService.showSuccess('Success', 'Book now token created successfully!');
+        this.showSuccessDialog('Book now token created successfully!');
       },
       error: (error) => {
         this.showLoadingDialog = false;
-        this.dialogService.showError('Error', `Error creating book now token: ${error.message || 'Unknown error'}`);
+        this.showErrorDialog(`Error creating book now token: ${error.message || 'Unknown error'}`);
       }
     });
   }
@@ -669,38 +900,34 @@ export class Tokens implements OnInit {
         this.getBookNowTokens();
         this.closeModal();
         this.resetBookNowTokenForm();
-        this.dialogService.showSuccess('Success', 'Book now token updated successfully!');
+        this.showSuccessDialog('Book now token updated successfully!');
       },
       error: (error) => {
         this.showLoadingDialog = false;
-        this.dialogService.showError('Error', `Error updating book now token: ${error.message || 'Unknown error'}`);
+        this.showErrorDialog(`Error updating book now token: ${error.message || 'Unknown error'}`);
       }
     });
   }
 
-  async deleteBookNowToken(token: BookNowToken): Promise<void> {
+  deleteBookNowToken(token: BookNowToken): void {
     if (!token._id) return;
 
-    try {
-      const confirmed = await this.dialogService.confirmDelete(`Book Now Token ${token.customtokenid}`);
-      if (confirmed) {
-        this.showLoadingDialog = true;
-        this.loadingMessage = 'Deleting book now token...';
-        
-        this.bookNowTokenService.deleteBookNowToken(token._id).subscribe({
-          next: (response) => {
-            this.showLoadingDialog = false;
-            this.getBookNowTokens();
-            this.dialogService.showSuccess('Success', 'Book now token deleted successfully!');
-          },
-          error: (error) => {
-            this.showLoadingDialog = false;
-            this.dialogService.showError('Error', `Error deleting book now token: ${error.message || 'Unknown error'}`);
-          }
-        });
-      }
-    } catch (error) {
-    }
+    this.showConfirmDialog('Confirm Delete', `Are you sure you want to delete Book Now Token ${token.customtokenid}?`, () => {
+      this.showLoadingDialog = true;
+      this.loadingMessage = 'Deleting book now token...';
+      
+      this.bookNowTokenService.deleteBookNowToken(token._id!).subscribe({
+        next: (response) => {
+          this.showLoadingDialog = false;
+          this.getBookNowTokens();
+          this.showSuccessDialog('Book now token deleted successfully!');
+        },
+        error: (error) => {
+          this.showLoadingDialog = false;
+          this.showErrorDialog(`Error deleting book now token: ${error.message || 'Unknown error'}`);
+        }
+      });
+    });
   }
 
   private resetTokenForm(): void {
@@ -855,6 +1082,88 @@ export class Tokens implements OnInit {
       };
 
       this.exportService.exportToExcel(options);
+    }
+  }
+
+  // Approve token refund
+  approveTokenRefund(token: any) {
+    if (confirm('Are you sure you want to approve the refund for this token?')) {
+      this.tokenService.approveTokenRefund(token._id).subscribe({
+        next: (response) => {
+          if (response.status === 'success') {
+            alert('Token refund approved successfully');
+            this.getTokens();
+          } else {
+            alert('Failed to approve refund: ' + response.message);
+          }
+        },
+        error: (error) => {
+          console.error('Error approving token refund:', error);
+          alert('Failed to approve refund. Please try again.');
+        }
+      });
+    }
+  }
+
+  // Reject token refund
+  rejectTokenRefund(token: any) {
+    const reason = prompt('Please provide a reason for rejection:');
+    if (reason !== null && reason.trim() !== '') {
+      this.tokenService.rejectTokenRefund(token._id, reason).subscribe({
+        next: (response) => {
+          if (response.status === 'success') {
+            alert('Token refund rejected successfully');
+            this.getTokens();
+          } else {
+            alert('Failed to reject refund: ' + response.message);
+          }
+        },
+        error: (error) => {
+          console.error('Error rejecting token refund:', error);
+          alert('Failed to reject refund. Please try again.');
+        }
+      });
+    }
+  }
+
+  // Approve book now token refund
+  approveBookNowTokenRefund(token: any) {
+    if (confirm('Are you sure you want to approve the refund for this book now token?')) {
+      this.bookNowTokenService.approveBookNowTokenRefund(token._id).subscribe({
+        next: (response) => {
+          if (response.status === 'success') {
+            alert('Book now token refund approved successfully');
+            this.getBookNowTokens();
+          } else {
+            alert('Failed to approve refund: ' + response.message);
+          }
+        },
+        error: (error) => {
+          console.error('Error approving book now token refund:', error);
+          alert('Failed to approve refund. Please try again.');
+        }
+      });
+    }
+  }
+
+  // Reject book now token refund
+  rejectBookNowTokenRefund(token: any) {
+    const reason = prompt('Please provide a reason for rejection:');
+    if (reason !== null && reason.trim() !== '') {
+      this.bookNowTokenService.rejectBookNowTokenRefund(token._id, reason).subscribe({
+        next: (response) => {
+          if (response.status === 'success') {
+            alert('Book now token refund rejected successfully');
+            this.getBookNowTokens();
+          } else {
+            alert('Failed to reject refund: ' + response.message);
+          }
+        },
+        error: (error) => {
+          console.error('Error rejecting book now token refund:', error);
+          alert('Failed to reject refund. Please try again.');
+        }
+      });
     }
   }
 }

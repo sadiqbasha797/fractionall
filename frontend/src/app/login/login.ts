@@ -31,7 +31,7 @@ export class Login {
           if (response.body.admin) {
             localStorage.setItem('admin', JSON.stringify(response.body.admin));
           }
-          this.router.navigate(['/cars']);
+          this.router.navigate(['/dashboard']);
         } else {
           // If admin login fails, try superadmin login
           this.trySuperAdminLogin();
@@ -53,7 +53,7 @@ export class Login {
           if (response.body.superAdmin) {
             localStorage.setItem('superadmin', JSON.stringify(response.body.superAdmin));
           }
-          this.router.navigate(['/cars']);
+          this.router.navigate(['/dashboard']);
         } else {
           this.errorMessage = response.message;
         }

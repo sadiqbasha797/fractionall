@@ -1,9 +1,10 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, Renderer2, ViewChild, HostListener, Inject, PLATFORM_ID, OnInit, signal, effect } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { HomePublicService, HeroContent } from '../services/home-public.service';
-import { FaqPublicService, FAQ } from '../services/faq-public.service';
+import { HomePublicService, HeroContent, SimpleStep, FeaturedCar, Brand, SimpleStepsVideo } from '../services/home-public.service';
+import { FaqPublicService, FAQ, FAQCategory } from '../services/faq-public.service';
 import { CarPublicService } from '../services/car-public.service';
 import { AnimationService } from '../services/animation.service';
 
@@ -23,13 +24,21 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Dynamic content - converted to signals
   heroContent = signal<HeroContent | null>(null);
   faqs = signal<FAQ[]>([]);
+  faqCategories = signal<FAQCategory[]>([]);
   faqsByCategory = signal<{ [key: string]: FAQ[] }>({});
-  activeFaqCategory = signal<string>('Understanding');
+  activeFaqCategory = signal<string>('');
   loading = signal<boolean>(true);
   carsLoading = signal<boolean>(true);
+  simpleSteps = signal<SimpleStep[]>([]);
+  simpleStepsLoading = signal<boolean>(true);
+  simpleStepsVideos = signal<SimpleStepsVideo[]>([]);
+  simpleStepsVideosLoading = signal<boolean>(true);
+  brands = signal<Brand[]>([]);
+  brandsLoading = signal<boolean>(true);
 
   // Dynamic carousel state - converted to signals
   cars = signal<any[]>([]);
+  featuredCars = signal<FeaturedCar[]>([]);
   currentIndex = signal<number>(0);
   visibleCount = signal<number>(3);
   
@@ -54,7 +63,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     private faqService: FaqPublicService,
     private carService: CarPublicService,
     private animationService: AnimationService,
-    private router: Router
+    private router: Router,
+    private sanitizer: DomSanitizer
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     
@@ -69,10 +79,41 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  // Method to sanitize URLs for iframe src
+  sanitizeUrl(url: string): SafeResourceUrl {
+    if (!url) return this.sanitizer.bypassSecurityTrustResourceUrl('');
+    
+    let processedUrl = url;
+    
+    // Handle YouTube URLs to ensure proper controls and no autoplay
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      // Extract video ID and create a proper embed URL
+      let videoId = '';
+      
+      if (url.includes('youtube.com/watch?v=')) {
+        videoId = url.split('v=')[1]?.split('&')[0];
+      } else if (url.includes('youtu.be/')) {
+        videoId = url.split('youtu.be/')[1]?.split('?')[0];
+      } else if (url.includes('youtube.com/embed/')) {
+        videoId = url.split('/embed/')[1]?.split('?')[0];
+      }
+      
+      if (videoId) {
+        // Create proper YouTube embed URL with controls and no autoplay
+        processedUrl = `https://www.youtube.com/embed/${videoId}?controls=1&autoplay=0&rel=0&modestbranding=1&playsinline=1`;
+      }
+    }
+    
+    return this.sanitizer.bypassSecurityTrustResourceUrl(processedUrl);
+  }
+
   ngOnInit(): void {
     this.loadHeroContent();
     this.loadFAQs();
-    this.loadCars();
+    this.loadSimpleSteps();
+    this.loadSimpleStepsVideos();
+    this.loadFeaturedCars();
+    this.loadBrands();
   }
 
   loadHeroContent(): void {
@@ -111,42 +152,255 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   loadFAQs(): void {
-    this.faqService.getPublicFaqs().subscribe({
+    // Load FAQs and categories in parallel
+    Promise.all([
+      this.faqService.getPublicFaqs().toPromise(),
+      this.faqService.getActiveFaqCategories().toPromise()
+    ]).then(([faqResponse, categoryResponse]) => {
+      // Handle FAQs
+      if (faqResponse?.status === 'success') {
+        this.faqs.set(faqResponse.body.faqs);
+        this.groupFAQsByCategory();
+      }
+
+      // Handle Categories
+      if (categoryResponse?.status === 'success') {
+        this.faqCategories.set(categoryResponse.body.categories);
+        
+        // Set the first active category as default if no active category is set
+        if (!this.activeFaqCategory()) {
+          const firstActiveCategory = categoryResponse.body.categories.find(cat => cat.isActive);
+          if (firstActiveCategory) {
+            this.activeFaqCategory.set(firstActiveCategory.name);
+          }
+        }
+      }
+
+      this.loading.set(false);
+    }).catch(error => {
+      console.error('Error loading FAQs and categories:', error);
+      this.loading.set(false);
+    });
+  }
+
+  loadSimpleSteps(): void {
+    this.simpleStepsLoading.set(true);
+    this.homeService.getPublicSimpleSteps().subscribe({
       next: (response) => {
         if (response.status === 'success') {
-          this.faqs.set(response.body.faqs);
-          this.groupFAQsByCategory();
-          this.loading.set(false);
+          this.simpleSteps.set(response.body.simpleSteps);
+        } else {
+          // Set default steps if no data from API
+          this.simpleSteps.set([
+            {
+              _id: 'default-1',
+              stepTitle: 'Find Your Dream Car',
+              stepName: 'Browse our curated fleet of luxury sedans, sports cars, SUVs, and exotic supercars. Each listing comes with complete car specifications, transparent pricing, token plans, and availability calendars, ensuring clarity before you book your car.',
+              createdBy: null,
+              createdAt: new Date().toISOString()
+            },
+            {
+              _id: 'default-2', 
+              stepTitle: 'Purchase Your Share',
+              stepName: 'Buy your share through secure payment options. Each car is divided into 12 equal shares, making luxury car ownership accessible and affordable.',
+              createdBy: null,
+              createdAt: new Date().toISOString()
+            },
+            {
+              _id: 'default-3',
+              stepTitle: 'Book & Drive',
+              stepName: 'Schedule your driving days through our easy-to-use app. Enjoy hassle-free pickup, maintenance-free driving, and premium car experience.',
+              createdBy: null,
+              createdAt: new Date().toISOString()
+            }
+          ]);
         }
+        this.simpleStepsLoading.set(false);
       },
       error: (error) => {
-        console.error('Error loading FAQs:', error);
-        this.loading.set(false);
+        console.error('Error loading simple steps:', error);
+        // Set default steps on error
+        this.simpleSteps.set([
+          {
+            _id: 'default-1',
+            stepTitle: 'Find Your Dream Car',
+            stepName: 'Browse our curated fleet of luxury sedans, sports cars, SUVs, and exotic supercars. Each listing comes with complete car specifications, transparent pricing, token plans, and availability calendars, ensuring clarity before you book your car.',
+            createdBy: null,
+            createdAt: new Date().toISOString()
+          },
+          {
+            _id: 'default-2',
+            stepTitle: 'Purchase Your Share', 
+            stepName: 'Buy your share through secure payment options. Each car is divided into 12 equal shares, making luxury car ownership accessible and affordable.',
+            createdBy: null,
+            createdAt: new Date().toISOString()
+          },
+          {
+            _id: 'default-3',
+            stepTitle: 'Book & Drive',
+            stepName: 'Schedule your driving days through our easy-to-use app. Enjoy hassle-free pickup, maintenance-free driving, and premium car experience.',
+            createdBy: null,
+            createdAt: new Date().toISOString()
+          }
+        ]);
+        this.simpleStepsLoading.set(false);
       }
     });
   }
 
-  loadCars(): void {
-    this.carService.getPublicCars().subscribe({
+  loadSimpleStepsVideos(): void {
+    this.simpleStepsVideosLoading.set(true);
+    this.homeService.getPublicSimpleStepsVideos().subscribe({
       next: (response) => {
         if (response.status === 'success') {
-          this.cars.set(response.body.cars
-            .slice(0, 9) // Limit to 9 cars maximum
-            .map((car: any) => ({
-              id: car._id,
-              image: car.images && car.images.length > 0 ? car.images[0] : '/car-1.jpg',
-              tokenPrice: car.tokenprice ? car.tokenprice.toLocaleString() : '0',
-              name: car.carname || 'Unknown',
-              brand: car.brandname || 'Unknown',
-              fuel: this.getFuelType(car.milege),
-              seats: car.seating || 5,
-              color: car.color || 'Unknown',
-              ticketsAvailable: car.ticketsavilble || 0,
-              totalTickets: car.totaltickets || 0,
-              location: car.location || 'Unknown',
-              description: car.description || ''
-            })));
+          this.simpleStepsVideos.set(response.body.simpleStepsVideos);
+        }
+        this.simpleStepsVideosLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading simple steps videos:', error);
+        this.simpleStepsVideosLoading.set(false);
+      }
+    });
+  }
+
+  loadBrands(): void {
+    this.brandsLoading.set(true);
+    this.homeService.getPublicBrands().subscribe({
+      next: (response) => {
+        if (response.status === 'success') {
+          this.brands.set(response.body.brands);
+        } else {
+          // Set default brands if no data from API
+          this.brands.set([
+            {
+              _id: 'default-1',
+              brandName: 'Mercedes-Benz',
+              brandLogo: 'https://www.carlogos.org/car-logos/mercedes-benz-logo.png',
+              subText: 'Luxury Cars',
+              createdAt: new Date().toISOString()
+            },
+            {
+              _id: 'default-2',
+              brandName: 'BMW',
+              brandLogo: 'https://www.carlogos.org/car-logos/bmw-logo.png',
+              subText: 'Performance Luxury',
+              createdAt: new Date().toISOString()
+            },
+            {
+              _id: 'default-3',
+              brandName: 'Audi',
+              brandLogo: 'https://www.carlogos.org/car-logos/audi-logo.png',
+              subText: 'Premium Cars',
+              createdAt: new Date().toISOString()
+            },
+            {
+              _id: 'default-4',
+              brandName: 'Tesla',
+              brandLogo: 'https://www.carlogos.org/car-logos/tesla-logo.png',
+              subText: 'Electric Vehicles',
+              createdAt: new Date().toISOString()
+            },
+            {
+              _id: 'default-5',
+              brandName: 'Porsche',
+              brandLogo: 'https://www.carlogos.org/car-logos/porsche-logo.png',
+              subText: 'Sports Cars',
+              createdAt: new Date().toISOString()
+            },
+            {
+              _id: 'default-6',
+              brandName: 'Lexus',
+              brandLogo: 'https://www.carlogos.org/car-logos/lexus-logo.png',
+              subText: 'Premium Luxury',
+              createdAt: new Date().toISOString()
+            }
+          ]);
+        }
+        this.brandsLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading brands:', error);
+        // Set default brands on error
+        this.brands.set([
+          {
+            _id: 'default-1',
+            brandName: 'Mercedes-Benz',
+            brandLogo: 'https://www.carlogos.org/car-logos/mercedes-benz-logo.png',
+            subText: 'Luxury Cars',
+            createdAt: new Date().toISOString()
+          },
+          {
+            _id: 'default-2',
+            brandName: 'BMW',
+            brandLogo: 'https://www.carlogos.org/car-logos/bmw-logo.png',
+            subText: 'Performance Luxury',
+            createdAt: new Date().toISOString()
+          },
+          {
+            _id: 'default-3',
+            brandName: 'Audi',
+            brandLogo: 'https://www.carlogos.org/car-logos/audi-logo.png',
+            subText: 'Premium Cars',
+            createdAt: new Date().toISOString()
+          },
+          {
+            _id: 'default-4',
+            brandName: 'Tesla',
+            brandLogo: 'https://www.carlogos.org/car-logos/tesla-logo.png',
+            subText: 'Electric Vehicles',
+            createdAt: new Date().toISOString()
+          },
+          {
+            _id: 'default-5',
+            brandName: 'Porsche',
+            brandLogo: 'https://www.carlogos.org/car-logos/porsche-logo.png',
+            subText: 'Sports Cars',
+            createdAt: new Date().toISOString()
+          },
+          {
+            _id: 'default-6',
+            brandName: 'Lexus',
+            brandLogo: 'https://www.carlogos.org/car-logos/lexus-logo.png',
+            subText: 'Premium Luxury',
+            createdAt: new Date().toISOString()
+          }
+        ]);
+        this.brandsLoading.set(false);
+      }
+    });
+  }
+
+  loadFeaturedCars(): void {
+    this.homeService.getPublicFeaturedCars().subscribe({
+      next: (response) => {
+        if (response.status === 'success') {
+          // Transform featured cars data to match the carousel format
+          const transformedCars = response.body.featuredCars.map((featuredCar: FeaturedCar) => ({
+            id: featuredCar.carId._id,
+            image: featuredCar.carId.images && featuredCar.carId.images.length > 0 ? featuredCar.carId.images[0] : '/car-1.jpg',
+            tokenPrice: featuredCar.carId.tokenprice ? featuredCar.carId.tokenprice.toLocaleString() : '0',
+            name: featuredCar.carId.carname || 'Unknown',
+            brand: featuredCar.carId.brandname || 'Unknown',
+            fuel: this.getFuelType(featuredCar.carId.milege || ''),
+            seats: featuredCar.carId.seats || 5,
+            color: featuredCar.carId.color || 'Unknown',
+            ticketsAvailable: featuredCar.carId.ticketsavilble || 0,
+            totalTickets: featuredCar.carId.totaltickets || 0,
+            location: featuredCar.carId.location || 'Unknown',
+            description: featuredCar.carId.description || '',
+            tokensAvailable: featuredCar.carId.tokensavailble || 0,
+            bookNowTokenAvailable: featuredCar.carId.bookNowTokenAvailable || 0,
+            bookNowTokenPrice: featuredCar.carId.bookNowTokenPrice || 0,
+            price: featuredCar.carId.price || 0,
+            fractionPrice: featuredCar.carId.fractionprice || 0,
+            isFeatured: true
+          }));
+          
+          this.cars.set(transformedCars);
+          this.featuredCars.set(response.body.featuredCars);
           this.carsLoading.set(false);
+          
           // Restart auto-scroll after cars are loaded
           setTimeout(() => {
             this.startAutoScroll();
@@ -154,21 +408,55 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       },
       error: (error) => {
-        console.error('Error loading cars:', error);
+        console.error('Error loading featured cars:', error);
         this.carsLoading.set(false);
-        // Fallback to static data if API fails (also limited to 9)
-        this.cars.set([
-          { image: '/car-1.jpg', tokenPrice: '3,735', name: 'Model S', brand: 'Tesla', fuel: 'Electric', seats: 5, color: 'White', ticketsAvailable: 5, totalTickets: 20 },
-          { image: '/car-2.jpg', tokenPrice: '2,905', name: 'M4', brand: 'BMW', fuel: 'Petrol', seats: 4, color: 'Black', ticketsAvailable: 3, totalTickets: 20 },
-          { image: '/car-3.jpg', tokenPrice: '4,565', name: 'C-Class', brand: 'Mercedes-Benz', fuel: 'Diesel', seats: 5, color: 'Silver', ticketsAvailable: 7, totalTickets: 20 },
-          { image: '/car-4.jpg', tokenPrice: '3,200', name: 'Q7', brand: 'Audi', fuel: 'Diesel', seats: 5, color: 'Blue', ticketsAvailable: 4, totalTickets: 20 },
-          { image: '/car-5.jpg', tokenPrice: '6,100', name: '911', brand: 'Porsche', fuel: 'Petrol', seats: 2, color: 'Red', ticketsAvailable: 2, totalTickets: 20 }
-        ].slice(0, 9)); // Ensure fallback is also limited to 9
         
-        // Start auto-scroll for fallback data too
-        setTimeout(() => {
-          this.startAutoScroll();
-        }, 500);
+        // Fallback to regular cars if featured cars API fails
+        this.carService.getPublicCars().subscribe({
+          next: (response) => {
+            if (response.status === 'success') {
+              this.cars.set(response.body.cars
+                .slice(0, 9)
+                .map((car: any) => ({
+                  id: car._id,
+                  image: car.images && car.images.length > 0 ? car.images[0] : '/car-1.jpg',
+                  tokenPrice: car.tokenprice ? car.tokenprice.toLocaleString() : '0',
+                  name: car.carname || 'Unknown',
+                  brand: car.brandname || 'Unknown',
+                  fuel: this.getFuelType(car.milege || ''),
+                  seats: car.seating || 5,
+                  color: car.color || 'Unknown',
+                  ticketsAvailable: car.ticketsavilble || 0,
+                  totalTickets: car.totaltickets || 0,
+                  location: car.location || 'Unknown',
+                  description: car.description || '',
+                  tokensAvailable: car.tokensavailble || 0,
+                  bookNowTokenAvailable: car.bookNowTokenAvailable || 0,
+                  bookNowTokenPrice: car.bookNowTokenPrice || 0,
+                  price: car.price || 0,
+                  fractionPrice: car.fractionprice || 0,
+                  isFeatured: false
+                })));
+              
+              setTimeout(() => {
+                this.startAutoScroll();
+              }, 500);
+            }
+          },
+          error: (fallbackError) => {
+            console.error('Error loading fallback cars:', fallbackError);
+            // Final fallback to static data
+            this.cars.set([
+              { image: '/car-1.jpg', tokenPrice: '3,735', name: 'Model S', brand: 'Tesla', fuel: 'Electric', seats: 5, color: 'White', ticketsAvailable: 5, totalTickets: 20, isFeatured: false },
+              { image: '/car-2.jpg', tokenPrice: '2,905', name: 'M4', brand: 'BMW', fuel: 'Petrol', seats: 4, color: 'Black', ticketsAvailable: 3, totalTickets: 20, isFeatured: false },
+              { image: '/car-3.jpg', tokenPrice: '4,565', name: 'C-Class', brand: 'Mercedes-Benz', fuel: 'Diesel', seats: 5, color: 'Silver', ticketsAvailable: 7, totalTickets: 20, isFeatured: false }
+            ]);
+            
+            setTimeout(() => {
+              this.startAutoScroll();
+            }, 500);
+          }
+        });
       }
     });
   }
@@ -205,42 +493,14 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Make Object.keys available in template
   Object = Object;
 
-  // Get category icon based on category name
+  // Get category icon - now returns the same icon for all categories
   getCategoryIcon(category: string): string {
-    const iconMap: { [key: string]: string } = {
-      'Understanding': 'info',
-      'Pricing': 'dollar',
-      'Delivery': 'calendar',
-      'Usage Policy': 'check'
-    };
-    return iconMap[category] || 'info';
+    return 'info'; // Always return info icon for all categories
   }
 
-  // Get FAQ icon based on question content
+  // Get FAQ icon - now always returns question mark for consistency
   getFaqIcon(question: string): string {
-    const lowerQuestion = question.toLowerCase();
-    
-    if (lowerQuestion.includes('what is') || lowerQuestion.includes('what\'s') || lowerQuestion.includes('what is fractional')) {
-      return 'question';
-    } else if (lowerQuestion.includes('how does') || lowerQuestion.includes('how to') || lowerQuestion.includes('how it works')) {
-      return 'lightbulb';
-    } else if (lowerQuestion.includes('who') || lowerQuestion.includes('ownership') || lowerQuestion.includes('own')) {
-      return 'users';
-    } else if (lowerQuestion.includes('car') || lowerQuestion.includes('vehicle') || lowerQuestion.includes('drive')) {
-      return 'car';
-    } else if (lowerQuestion.includes('cost') || lowerQuestion.includes('price') || lowerQuestion.includes('payment') || lowerQuestion.includes('money')) {
-      return 'money';
-    } else if (lowerQuestion.includes('delivery') || lowerQuestion.includes('pickup') || lowerQuestion.includes('location') || lowerQuestion.includes('when')) {
-      return 'calendar';
-    } else if (lowerQuestion.includes('security') || lowerQuestion.includes('safe') || lowerQuestion.includes('insurance') || lowerQuestion.includes('secure')) {
-      return 'shield';
-    } else if (lowerQuestion.includes('time') || lowerQuestion.includes('duration') || lowerQuestion.includes('long')) {
-      return 'clock';
-    } else if (lowerQuestion.includes('policy') || lowerQuestion.includes('rules') || lowerQuestion.includes('usage') || lowerQuestion.includes('terms')) {
-      return 'check';
-    }
-    
-    return 'question'; // default icon
+    return 'question'; // Always return question mark icon for all FAQs
   }
 
   // Get FAQ subtitle based on question content
@@ -267,6 +527,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     
     return 'Get answers to your questions';
   }
+
 
   ngAfterViewInit(): void {
     // Only run browser-specific DOM & window logic in the browser.

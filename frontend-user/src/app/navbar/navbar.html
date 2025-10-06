@@ -2,7 +2,7 @@
           <div class="w-[98%] max-w-[1800px] mx-auto">
             <div class="flex items-center justify-between h-20">
               <div class="flex items-center gap-4 ml-4">
-                <a routerLink="/home"><img src="/car.png" alt="car logo" class="h-14 sm:h-20 hover:scale-105 transition-transform duration-300" /></a>
+                <a routerLink="/home"><img src="/car.png" alt="car logo" class="h-12 sm:h-16 hover:scale-105 transition-transform duration-300" /></a>
               </div>
               <nav class="hidden lg:flex items-center gap-8">
                 <a class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2" routerLink="/home" routerLinkActive="nav-link-active" [routerLinkActiveOptions]="{exact: true}">
@@ -16,12 +16,17 @@
                 </a>
 
                 <a class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2" routerLink="/about" routerLinkActive="nav-link-active">
-                  About
+                  How it works
+                  <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary-color transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                </a>
+
+                <a class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2" (click)="scrollToFAQ()" style="cursor: pointer;">
+                  FAQs
                   <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary-color transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
                 </a>
 
                 <a class="relative text-sm font-medium text-text-secondary hover:text-white transition-colors group py-2" routerLink="/contact-us" routerLinkActive="nav-link-active">
-                  Contact
+                  Contact us
                   <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary-color transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
                 </a>
 
@@ -42,7 +47,7 @@
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
-                  Become an Investor
+                  Become an Investor/Partner
                 </button>
 
                 <!-- Notification Bell - Only for logged in users -->
@@ -143,7 +148,7 @@
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
-                  Investor
+                  Become an Investor/Partner
                 </button>
 
                 <!-- Notification Bell for Mobile - Only for logged in users -->

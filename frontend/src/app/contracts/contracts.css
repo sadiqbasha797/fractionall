@@ -1,63 +1,218 @@
 /* Contract-specific styles extending the base design */
 
 /* Search input styling */
-.search-input-container {
-  position: relative;
+.search-input {
+  background: rgba(31, 41, 55, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  transition: all 0.3s ease;
 }
 
-.search-icon {
-  color: #6b7280;
-  font-size: 0.875rem;
+.search-input:focus {
+  background: rgba(31, 41, 55, 0.7);
+  border-color: rgba(147, 51, 234, 0.5);
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
 }
 
-.search-icon-svg {
-  color: #6b7280;
-  width: 1rem;
-  height: 1rem;
-}
-
-.search-input-container.fa-loaded .search-icon-svg {
-  display: none;
-}
-
-.search-input-container:not(.fa-loaded) .search-icon {
-  display: none;
-}
-
-.search-input-container:not(.fa-loaded) .search-icon-svg {
-  display: block;
-}
 
 /* Status badge styling */
-.status-badge[data-status=\"active\"] {
-  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-approved;
+.status-badge[data-status="active"] {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #dcfce7 !important;
+  /* green-100 */
+  color: #166534 !important;
+  /* green-800 */
 }
 
-.status-badge[data-status=\"pending\"] {
-  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-pending;
+.status-badge[data-status="pending"] {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #fef3c7;
+  /* yellow-100 */
+  color: #92400e;
+  /* yellow-800 */
 }
 
-.status-badge[data-status=\"cancelled\"] {
-  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge-rejected;
+.status-badge[data-status="cancelled"] {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #fee2e2;
+  /* red-100 */
+  color: #991b1b;
+  /* red-800 */
 }
 
 /* Dark theme status badges */
-.dark .status-badge[data-status=\"active\"] {
-  @apply bg-green-900/50 text-green-300 border border-green-700;
+.dark .status-badge[data-status="active"] {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #86efac;
+  border: 1px solid #166534;
 }
 
-.dark .status-badge[data-status=\"pending\"] {
-  @apply bg-yellow-900/50 text-yellow-300 border border-yellow-700;
+.dark .status-badge[data-status="pending"] {
+  background-color: rgba(251, 191, 36, 0.1);
+  color: #fde047;
+  border: 1px solid #a16207;
 }
 
-.dark .status-badge[data-status=\"cancelled\"] {
-  @apply bg-red-900/50 text-red-300 border border-red-700;
+.dark .status-badge[data-status="cancelled"] {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  border: 1px solid #991b1b;
 }
 
 /* Scrollbar styling */
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Table container styling */
+.table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #1f2937;
+  scroll-behavior: smooth;
+  position: relative;
+  border-radius: 0.75rem;
+}
+
+.table-container::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #1f2937;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+.table-container::-webkit-scrollbar-corner {
+  background: #1f2937;
+}
+
+/* Ensure table has minimum width for proper horizontal scrolling */
+.table-container table {
+  min-width: 1200px;
+  width: 100%;
+}
+
+/* Table header sticky with consistent background - high specificity */
+.table-container thead tr.bg-gray-800,
+thead tr.bg-gray-800,
+thead tr {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background-color: #1f2937 !important;
+  /* bg-gray-800 - consistent with AMC */
+  color: #e5e7eb !important;
+  /* light text */
+}
+
+/* Sticky table headers */
+.table-container thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #1f2937;
+  /* bg-gray-800 */
+  white-space: nowrap;
+  min-width: fit-content;
+}
+
+/* Touch device scrolling */
+@media (hover: none) and (pointer: coarse) {
+  .table-container {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* Table row hover effects */
+.hover\:bg-gray-800:hover {
+  background-color: #1f2937;
+}
+
+/* Table cell styling for better horizontal scrolling */
+.table-container td,
+.table-container th {
+  white-space: nowrap;
+  min-width: fit-content;
+  padding: 1rem 1.5rem;
+}
+
+/* Specific column widths for better layout */
+.table-container th:nth-child(1),
+/* LLP & Purchase ID */
+.table-container td:nth-child(1) {
+  min-width: 180px;
+}
+
+.table-container th:nth-child(2),
+/* User */
+.table-container td:nth-child(2) {
+  min-width: 200px;
+}
+
+.table-container th:nth-child(3),
+/* Car */
+.table-container td:nth-child(3) {
+  min-width: 200px;
+}
+
+.table-container th:nth-child(4),
+/* Ticket */
+.table-container td:nth-child(4) {
+  min-width: 150px;
+}
+
+.table-container th:nth-child(5),
+/* Documents */
+.table-container td:nth-child(5) {
+  min-width: 120px;
+}
+
+.table-container th:nth-child(6),
+/* Created By */
+.table-container td:nth-child(6) {
+  min-width: 130px;
+}
+
+.table-container th:nth-child(7),
+/* Created Date */
+.table-container td:nth-child(7) {
+  min-width: 150px;
+}
+
+.table-container th:nth-child(8),
+/* Actions */
+.table-container td:nth-child(8) {
+  min-width: 160px;
+  text-align: center;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -136,6 +291,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -157,13 +313,240 @@
 
 /* Responsive table adjustments */
 @media (max-width: 768px) {
-  .table-responsive {
+  .table-container {
     font-size: 0.875rem;
   }
-  
-  .table-responsive th,
-  .table-responsive td {
-    padding: 0.5rem;
+
+  .table-container th,
+  .table-container td {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  /* Adjust minimum widths for mobile */
+  .table-container th:nth-child(1),
+  .table-container td:nth-child(1) {
+    min-width: 140px;
+  }
+
+  .table-container th:nth-child(2),
+  .table-container td:nth-child(2) {
+    min-width: 160px;
+  }
+
+  .table-container th:nth-child(3),
+  .table-container td:nth-child(3) {
+    min-width: 160px;
+  }
+
+  .table-container th:nth-child(4),
+  .table-container td:nth-child(4) {
+    min-width: 120px;
+  }
+
+  .table-container th:nth-child(5),
+  .table-container td:nth-child(5) {
+    min-width: 100px;
+  }
+
+  .table-container th:nth-child(6),
+  .table-container td:nth-child(6) {
+    min-width: 110px;
+  }
+
+  .table-container th:nth-child(7),
+  .table-container td:nth-child(7) {
+    min-width: 130px;
+  }
+
+  .table-container th:nth-child(8),
+  .table-container td:nth-child(8) {
+    min-width: 140px;
+  }
+}
+
+/* Mobile responsive styles for action buttons */
+.flex.items-end.gap-2.sm\\:ml-auto {
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  margin-left: 0;
+}
+
+.flex.items-end.gap-2.sm\\:ml-auto button {
+  width: 100%;
+  justify-content: center;
+  min-height: 44px;
+}
+
+/* Mobile responsive styles for search and filters */
+.flex.flex-col.sm\\:flex-row.gap-4 {
+  gap: 1rem;
+}
+
+.flex.flex-col.sm\\:flex-row.gap-4>div {
+  width: 100%;
+}
+
+/* Mobile responsive styles for Create LLP button */
+.flex.items-end.gap-2.sm\\:ml-auto button:last-child {
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+  font-weight: 600;
+  padding: 0.875rem 1.5rem;
+}
+
+.flex.items-end.gap-2.sm\\:ml-auto button:last-child:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+
+  /* Extra small screens - further button adjustments */
+  .flex.items-end.gap-2.sm\\:ml-auto button {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  /* Better spacing for mobile forms */
+  .px-4.sm\\:px-6.py-4.sm\\:py-6 {
+    padding: 1rem;
+  }
+
+  /* Mobile modal adjustments */
+  .modal>div {
+    margin: 0.5rem;
+    max-width: none;
+    width: calc(100% - 1rem);
+    padding: 1rem;
+  }
+
+  .modal h3 {
+    font-size: 1.25rem;
+  }
+
+  /* Mobile form adjustments */
+  .modal form {
+    gap: 1rem;
+  }
+
+  .modal input,
+  .modal select,
+  .modal textarea {
+    padding: 0.75rem;
+    font-size: 16px;
+    /* Prevent zoom on iOS */
+    min-height: 44px;
+  }
+
+  .modal .col-span-2 {
+    grid-column: 1;
+  }
+
+  .modal .col-span-2.flex {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .modal .col-span-2.flex button {
+    width: 100%;
+    padding: 0.75rem 1rem;
+  }
+
+  /* Force single column layout for contracts modal forms on mobile */
+  .modal form.space-y-6>div {
+    width: 100%;
+  }
+
+  /* Mobile view modal adjustments */
+  .modal .grid.grid-cols-1.lg\\:grid-cols-2 {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .modal .grid.grid-cols-2 {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .modal .flex.justify-end.space-x-3 {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .modal .flex.justify-end.space-x-3 button {
+    width: 100%;
+  }
+
+  /* Contract form specific mobile adjustments */
+  .modal .space-y-6>div {
+    margin-bottom: 1rem;
+  }
+
+  .modal .space-y-2 {
+    margin-bottom: 0;
+  }
+
+  /* Create LLP button text wrapping for very small screens */
+  .flex.items-end.gap-2.sm\\:ml-auto button:last-child span {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+  }
+}
+
+/* Additional mobile optimizations for contracts page */
+@media (max-width: 768px) {
+
+  /* Ensure proper touch targets */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better modal positioning on mobile */
+  .modal {
+    padding: 0;
+  }
+
+  .modal>div {
+    border-radius: 0.75rem;
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
+    overflow-y: auto;
+  }
+
+  /* Ensure proper scrolling on mobile */
+  .modal {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Better focus states for mobile */
+  .modal input:focus,
+  .modal select:focus,
+  .modal textarea:focus {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+  }
+
+  /* Prevent horizontal scroll on mobile */
+  .modal form {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Better spacing for mobile forms */
+  .modal form>div {
+    margin-bottom: 1rem;
+  }
+
+  /* Ensure labels are properly sized for mobile */
+  .modal label {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    display: block;
   }
 }
 
@@ -249,6 +632,7 @@ textarea:focus {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -264,11 +648,11 @@ textarea:focus {
   h1 {
     font-size: 1.5rem;
   }
-  
+
   h2 {
     font-size: 1.25rem;
   }
-  
+
   h3 {
     font-size: 1.125rem;
   }
@@ -279,7 +663,7 @@ textarea:focus {
   .no-print {
     display: none !important;
   }
-  
+
   .print-break {
     page-break-after: always;
   }

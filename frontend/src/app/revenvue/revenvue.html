@@ -1,6 +1,6 @@
 <div class="revenue-container">
   <div class="page-header">
-    <h1 class="page-title">Revenue Dashboard</h1>
+    <h1 class="page-title">Reports & Analytics</h1>
     <div class="page-actions">
       <button class="refresh-btn" (click)="refreshData()">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,9 +226,14 @@
           Previous
         </button>
         
-        <span class="pagination-info">
-          Page {{ currentPage }} of {{ totalPages }}
-        </span>
+        <!-- Page Numbers -->
+        <div class="flex items-center space-x-1">
+          <button *ngFor="let page of getPageNumbers()" 
+                  (click)="goToPage(page)" 
+                  [class]="'px-3 py-2 rounded-lg text-sm font-medium transition ' + (page === currentPage ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 border border-gray-700')">
+            {{ page }}
+          </button>
+        </div>
         
         <button 
           class="pagination-btn" 
