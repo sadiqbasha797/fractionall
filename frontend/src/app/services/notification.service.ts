@@ -35,6 +35,10 @@ export interface NotificationResponse {
     };
     unreadCount?: number;
     modifiedCount?: number;
+    notificationsSent?: number;
+    userIds?: string[];
+    type?: string;
+    priority?: string;
     stats?: {
       totalNotifications: number;
       unreadNotifications: number;
@@ -48,6 +52,16 @@ export interface CreateNotificationData {
   recipientType: 'specific' | 'all_users' | 'all_admins' | 'all_superadmins' | 'role_based';
   recipientId?: string;
   recipientRole?: 'user' | 'admin' | 'superadmin';
+  title: string;
+  message: string;
+  type: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  metadata?: any;
+  expiresAt?: string;
+}
+
+export interface BulkNotificationData {
+  userIds: string[];
   title: string;
   message: string;
   type: string;
@@ -164,6 +178,13 @@ export class NotificationService {
     });
   }
 
+  // Send bulk notifications to specific users (Admin/SuperAdmin only)
+  sendBulkNotifications(bulkData: BulkNotificationData): Observable<NotificationResponse> {
+    return this.http.post<NotificationResponse>(`${this.baseUrl}/admin/bulk`, bulkData, { 
+      headers: this.getAuthHeaders() 
+    });
+  }
+
   // Update notification (Admin/SuperAdmin only)
   updateNotification(notificationId: string, updateData: UpdateNotificationData): Observable<NotificationResponse> {
     return this.http.put<NotificationResponse>(`${this.baseUrl}/admin/${notificationId}`, updateData, { 
@@ -214,7 +235,25 @@ export class NotificationService {
       'user_kyc_rejected',
       'manual_announcement',
       'system_maintenance',
-      'security_alert'
+      'security_alert',
+      'retargeting_notification',
+      'token_refund_requested',
+      'booknow_token_refund_requested',
+      'token_refund_approved',
+      'booknow_token_refund_approved',
+      'token_refund_rejected',
+      'booknow_token_refund_rejected',
+      'token_refund_initiated',
+      'booknow_token_refund_initiated',
+      'token_refund_processed',
+      'booknow_token_refund_processed',
+      'custom_announcement',
+      'promotional_offer',
+      'service_update',
+      'maintenance_notice',
+      'policy_change',
+      'feature_announcement',
+      'general_notification'
     ];
   }
 

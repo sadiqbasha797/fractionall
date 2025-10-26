@@ -1,0 +1,49 @@
+/* Our Story specific styles */
+.prose {
+  max-width: none;
+}
+
+.prose p {
+  margin-bottom: 1rem;
+}
+
+.prose blockquote {
+  margin: 1.5rem 0;
+  padding-left: 1.5rem;
+  border-left: 4px solid #3b82f6;
+  font-style: italic;
+  color: #ffffff;
+}
+
+/* Animation delays for staggered effect */
+[data-animation="fade-up"][data-delay="100"] {
+  animation-delay: 0.1s;
+}
+
+[data-animation="fade-up"][data-delay="200"] {
+  animation-delay: 0.2s;
+}
+
+[data-animation="fade-up"][data-delay="300"] {
+  animation-delay: 0.3s;
+}
+
+[data-animation="fade-up"][data-delay="400"] {
+  animation-delay: 0.4s;
+}
+
+[data-animation="fade-up"][data-delay="500"] {
+  animation-delay: 0.5s;
+}
+
+[data-animation="fade-up"][data-delay="600"] {
+  animation-delay: 0.6s;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .prose blockquote {
+    padding-left: 1rem;
+    font-size: 1.125rem;
+  }
+}

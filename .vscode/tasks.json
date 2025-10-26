@@ -14,6 +14,15 @@
 			"problemMatcher": [],
 			"label": "java (build): Build Workspace",
 			"detail": "$(tools) Build all the Java projects in workspace."
+		},
+		{
+			"type": "npm",
+			"script": "build",
+			"path": "frontend-mobile",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: build - frontend-mobile",
+			"detail": "ng build"
 		}
 	]
 }

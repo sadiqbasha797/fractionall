@@ -42,12 +42,11 @@
                 
                 <!-- Fallback image if no images available -->
                 <div *ngIf="!carData().images || carData().images.length === 0" class="min-w-full h-full">
-                  <div class="bg-cover bg-center w-full h-full bg-gray-600 flex items-center justify-center">
+                  <div class="bg-cover bg-center w-full h-full flex items-center justify-center"
+                    style="background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 30%), url('/car.png')">
                     <div class="text-white text-center">
-                      <svg class="w-24 h-24 mx-auto mb-4 opacity-50" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17l-3-4 2.5-3.21L11 13.6l2.5-3.2L17 15H9z"/>
-                      </svg>
-                      <p class="text-lg">No images available</p>
+                      <p class="text-lg font-semibold">{{ carData().carname || 'Car Details' }}</p>
+                      <p class="text-sm opacity-75">Default car image</p>
                     </div>
                   </div>
                 </div>
@@ -85,7 +84,7 @@
             <h1 class="text-4xl font-bold mb-4 text-text-primary">{{ carData().carname || 'Car Details' }}</h1>
             <div class="flex flex-wrap gap-4 mb-4">
               <span *ngIf="carData().brandname" class="bg-blue-600/20 text-blue-400 px-3 py-1 rounded-full text-sm">{{ carData().brandname }}</span>
-              <span *ngIf="carData().color" class="bg-gray-600/20 text-gray-400 px-3 py-1 rounded-full text-sm">{{ carData().color }}</span>
+              <!-- <span *ngIf="carData().color" class="bg-gray-600/20 text-gray-400 px-3 py-1 rounded-full text-sm">{{ carData().color }}</span> -->
               <span *ngIf="carData().seating" class="bg-green-600/20 text-green-400 px-3 py-1 rounded-full text-sm">{{ carData().seating }} Seater</span>
               <span *ngIf="carData().milege" class="bg-yellow-600/20 text-yellow-400 px-3 py-1 rounded-full text-sm">{{ carData().milege }} km/l</span>
               <span class="bg-orange-600/20 text-orange-400 px-3 py-1 rounded-full text-sm">

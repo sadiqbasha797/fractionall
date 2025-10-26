@@ -1,0 +1,167 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "frontend-user": {
+      "projectType": "application",
+      "schematics": {},
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "src/main.ts",
+            "tsConfig": "tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "./css",
+                "output": "css"
+              },
+              {
+                "glob": "**/*",
+                "input": "./js",
+                "output": "js"
+              },
+              {
+                "glob": "car.png",
+                "input": "./carbook-master",
+                "output": "/"
+              },
+              {
+                "glob": "redcar.gif",
+                "input": "./carbook-master",
+                "output": "/"
+              },
+              {
+                "glob": "herocar.jpg",
+                "input": "./carbook-master",
+                "output": "/"
+              },
+              {
+                "glob": "**/*",
+                "input": "./carbook-master/images",
+                "output": "images"
+              }
+            ],
+            "styles": [
+              "src/styles.css",
+              "./css/owl.carousel.min.css",
+              "./css/owl.theme.default.min.css"
+            ],
+            "scripts": [
+              "./js/jquery.min.js",
+              "./js/owl.carousel.min.js",
+              "./js/mobile-menu.js"
+            ],
+            "server": "src/main.server.ts",
+            "outputMode": "server",
+            "ssr": {
+              "entry": "src/server.ts"
+            }
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "6MB",
+                  "maximumError": "10MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "35kB",
+                  "maximumError": "55kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "frontend-user:build:production"
+            },
+            "development": {
+              "buildTarget": "frontend-user:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "extract-i18n": {
+          "builder": "@angular/build:extract-i18n"
+        },
+        "test": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "tsConfig": "tsconfig.spec.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "./css",
+                "output": "css"
+              },
+              {
+                "glob": "**/*",
+                "input": "./js",
+                "output": "js"
+              },
+              {
+                "glob": "car.png",
+                "input": "./carbook-master",
+                "output": "/"
+              },
+              {
+                "glob": "redcar.gif",
+                "input": "./carbook-master",
+                "output": "/"
+              },
+              {
+                "glob": "herocar.jpg",
+                "input": "./carbook-master",
+                "output": "/"
+              },
+              {
+                "glob": "**/*",
+                "input": "./carbook-master/images",
+                "output": "images"
+              }
+            ],
+            "styles": [
+              "src/styles.css",
+              "./css/owl.carousel.min.css",
+              "./css/owl.theme.default.min.css"
+            ],
+            "scripts": [
+              "./js/jquery.min.js",
+              "./js/owl.carousel.min.js",
+              "./js/mobile-menu.js"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "cli": {
+    "analytics": "08ca90a3-1a9f-4ef8-8f9f-ecd9c64ae6e8"
+  }
+}

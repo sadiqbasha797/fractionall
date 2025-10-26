@@ -1,0 +1,115 @@
+<div class="notification-bell-container" *ngIf="authService.isLoggedIn()">
+  <!-- Notification Bell Button -->
+  <button 
+    class="notification-bell-btn" 
+    (click)="toggleDropdown()"
+    [class.has-unread]="unreadCount > 0"
+    [class.loading]="loading">
+    
+    <!-- Simple SVG Bell Icon -->
+    <svg class="bell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+    </svg>
+    
+    <!-- Unread Badge -->
+    <span class="unread-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+    
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" *ngIf="loading"></div>
+  </button>
+
+  <!-- Dropdown Menu -->
+  <div 
+    class="notification-dropdown" 
+    [class.show]="showDropdown"
+    (click)="$event.stopPropagation()">
+    
+    <!-- Dropdown Header -->
+    <div class="dropdown-header">
+      <h3>
+        <i class="fas fa-bell"></i>
+        Notifications
+        <span class="unread-count" *ngIf="unreadCount > 0">{{ unreadCount }} unread</span>
+      </h3>
+      <div class="header-actions">
+        <button 
+          class="mark-all-read-btn" 
+          (click)="markAllAsRead()"
+          [disabled]="unreadCount === 0"
+          title="Mark all as read">
+          <i class="fas fa-check-double"></i>
+        </button>
+        <a 
+          routerLink="/notifications" 
+          class="view-all-btn"
+          (click)="closeDropdown()"
+          title="View all notifications">
+          <i class="fas fa-external-link-alt"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="dropdown-loading" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Loading notifications...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div class="dropdown-empty" *ngIf="!loading && notifications.length === 0">
+      <div class="empty-icon">
+        <i class="fas fa-bell-slash"></i>
+      </div>
+      <p>No notifications</p>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="notifications-list" *ngIf="!loading && notifications.length > 0">
+      <div 
+        class="notification-item" 
+        *ngFor="let notification of notifications; trackBy: trackByNotificationId"
+        [class.unread]="!notification.isRead"
+        [class.recent]="isRecentNotification(notification.createdAt)"
+        [class]="getPriorityClass(notification.priority)"
+        (click)="markAsRead(notification)">
+        
+        <!-- Notification Icon -->
+        <div class="notification-icon">
+          <span class="icon">{{ getNotificationIcon(notification.type) }}</span>
+          <div class="unread-indicator" *ngIf="!notification.isRead"></div>
+        </div>
+
+        <!-- Notification Content -->
+        <div class="notification-content">
+          <div class="notification-title">{{ notification.title }}</div>
+          <div class="notification-message">{{ notification.message }}</div>
+          <div class="notification-meta">
+            <span class="notification-time">{{ formatNotificationTime(notification.createdAt) }}</span>
+            <span class="notification-priority" [class]="getPriorityClass(notification.priority)">
+              {{ notification.priority }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dropdown Footer -->
+    <div class="dropdown-footer" *ngIf="!loading && notifications.length > 0">
+      <a 
+        routerLink="/notifications" 
+        class="view-all-link"
+        (click)="closeDropdown()">
+        <i class="fas fa-arrow-right"></i>
+        View All Notifications
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop -->
+<div 
+  class="notification-backdrop" 
+  *ngIf="showDropdown"
+  (click)="closeDropdown()">
+</div>

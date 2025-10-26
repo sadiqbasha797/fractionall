@@ -37,69 +37,34 @@
       </div>
     </div>
 
-    <!-- Search and Filters Section -->
+    <!-- Action Buttons Section -->
     <div class="px-4 sm:px-6 py-4 sm:py-6">
-      <div class="flex flex-col gap-4">
-        <!-- Search Bar -->
-        <div class="w-full">
-          <label class="block text-sm font-medium text-gray-300 mb-2">Search AMCs</label>
-          <div class="relative search-input-container">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i class="fas fa-search search-icon"></i>
-            </div>
-            <input type="search" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
-              placeholder="Search by user name, car name, ticket ID..."
-              class="w-full pl-10 pr-4 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm" />
-          </div>
-        </div>
+      <div class="flex items-center justify-end gap-2">
+        <button (click)="clearFilters()"
+          class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10">
+          <i class="fas fa-times text-sm"></i>
+          <span>Clear</span>
+        </button>
 
-        <!-- Filters and Actions Row -->
-        <div class="flex flex-col sm:flex-row gap-4">
-          <!-- Filters Group -->
-          <div class="flex flex-col sm:flex-row gap-4 flex-1">
-            <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-300 mb-2">Payment Status</label>
-              <select [(ngModel)]="statusFilter" (ngModelChange)="onStatusFilterChange()"
-                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm">
-                <option value="all">All Status</option>
-                <option value="paid">Paid</option>
-                <option value="partial">Partial</option>
-                <option value="unpaid">Unpaid</option>
-              </select>
-            </div>
+        <button *ngIf="isAdmin || isSuperAdmin" (click)="showCreateAMCForm()"
+          class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 h-10">
+          <i class="fas fa-plus text-sm"></i>
+          <span>Add AMC</span>
+        </button>
 
-            <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-300 mb-2">Year</label>
-              <select [(ngModel)]="yearFilter" (ngModelChange)="onYearFilterChange()"
-                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm">
-                <option value="all">All Years</option>
-                <option *ngFor="let year of getUniqueYears()" [value]="year">{{ year }}</option>
-              </select>
-            </div>
-          </div>
+        <button (click)="loadData()" [disabled]="isLoading"
+          class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Refresh AMC data" aria-label="Refresh AMC data">
+          <i [class]="'fas text-sm ' + (isLoading ? 'fa-spinner fa-spin' : 'fa-sync-alt')"></i>
+          <span>{{ isLoading ? 'Refreshing...' : 'Refresh' }}</span>
+        </button>
 
-          <!-- Action Buttons -->
-          <div class="flex items-end gap-2 sm:ml-auto">
-            <button (click)="clearFilters()"
-              class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10">
-              <i class="fas fa-times text-sm"></i>
-              <span>Clear</span>
-            </button>
-
-            <button *ngIf="isAdmin || isSuperAdmin" (click)="showCreateAMCForm()"
-              class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 h-10">
-              <i class="fas fa-plus text-sm"></i>
-              <span>Add AMC</span>
-            </button>
-
-            <button *ngIf="isAdmin || isSuperAdmin" (click)="exportData()"
-              class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
-              title="Export data" aria-label="Export data">
-              <i class="fas fa-download text-sm"></i>
-              <span>Export</span>
-            </button>
-          </div>
-        </div>
+        <button *ngIf="isAdmin || isSuperAdmin" (click)="exportData()"
+          class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
+          title="Export data" aria-label="Export data">
+          <i class="fas fa-download text-sm"></i>
+          <span>Export</span>
+        </button>
       </div>
     </div>
   </header>
@@ -119,19 +84,97 @@
       </div>
 
       <div class="h-full rounded-xl border border-gray-700 bg-gray-900 shadow-sm min-w-0">
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <span class="ml-2 text-gray-400">Loading AMCs...</span>
+        </div>
 
-        <!-- scrollable table container -->
-        <div class="table-container" style="max-height: 72vh;">
+        <!-- Table Container -->
+        <div *ngIf="!isLoading" class="table-container" [style.max-height]="showFilters ? '64vh' : '68vh'">
           <table class="min-w-full divide-y divide-gray-700" role="table" aria-label="AMC table">
             <thead>
+              <!-- Column Headers -->
               <tr class="bg-gray-800">
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">User Info</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">
+                  <div class="flex items-center gap-2">
+                    <button (click)="toggleFilters()" [class]="'filter-toggle-btn ' + (showFilters ? 'active' : '')"
+                      title="{{ showFilters ? 'Hide filters' : 'Show filters' }}">
+                      <i [class]="'fas text-xs ' + (showFilters ? 'fa-eye-slash' : 'fa-filter')"></i>
+                    </button>
+                    <span>User Info</span>
+                  </div>
+                </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Car Info</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Ticket Info</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">AMC Details</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Financial</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
                 <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase">Actions</th>
+              </tr>
+              <!-- Filter Row -->
+              <tr *ngIf="showFilters" class="border-b border-gray-600 filter-row">
+                <th class="px-6 py-2">
+                  <!-- Search Filter -->
+                  <div class="relative">
+                    <input type="search" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
+                      placeholder="Search users..." class="table-filter-input pr-8" />
+                    <i
+                      class="fas fa-search absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs"></i>
+                  </div>
+                </th>
+                <th class="px-6 py-2">
+                  <!-- Car Filter -->
+                  <select [(ngModel)]="carFilter" (ngModelChange)="onCarFilterChange()" class="table-filter-select">
+                    <option value="all">All Cars</option>
+                    <option *ngFor="let car of uniqueCars" [value]="car">{{ car }}</option>
+                  </select>
+                </th>
+                <th class="px-6 py-2">
+                  <!-- Ticket Price Range Filter -->
+                  <select [(ngModel)]="ticketPriceFilter" (ngModelChange)="onTicketPriceFilterChange()"
+                    class="table-filter-select">
+                    <option value="all">All Prices</option>
+                    <option value="0-50000">₹0 - ₹50K</option>
+                    <option value="50000-100000">₹50K - ₹1L</option>
+                    <option value="100000-200000">₹1L - ₹2L</option>
+                    <option value="200000+">₹2L+</option>
+                  </select>
+                </th>
+                <th class="px-6 py-2">
+                  <!-- Year Filter -->
+                  <select [(ngModel)]="yearFilter" (ngModelChange)="onYearFilterChange()" class="table-filter-select">
+                    <option value="all">All Years</option>
+                    <option *ngFor="let year of getUniqueYears()" [value]="year">{{ year }}</option>
+                  </select>
+                </th>
+                <th class="px-6 py-2">
+                  <!-- Amount Range Filter -->
+                  <select [(ngModel)]="amountFilter" (ngModelChange)="onAmountFilterChange()"
+                    class="table-filter-select">
+                    <option value="all">All Amounts</option>
+                    <option value="0-10000">₹0 - ₹10K</option>
+                    <option value="10000-25000">₹10K - ₹25K</option>
+                    <option value="25000-50000">₹25K - ₹50K</option>
+                    <option value="50000+">₹50K+</option>
+                  </select>
+                </th>
+                <th class="px-6 py-2">
+                  <!-- Payment Status Filter -->
+                  <select [(ngModel)]="statusFilter" (ngModelChange)="onStatusFilterChange()"
+                    class="table-filter-select">
+                    <option value="all">All Status</option>
+                    <option value="paid">Paid</option>
+                    <option value="partial">Partial</option>
+                    <option value="unpaid">Unpaid</option>
+                  </select>
+                </th>
+                <th class="px-6 py-2 text-center">
+                  <!-- Clear Filters Button -->
+                  <button (click)="clearFilters()" class="table-clear-btn" title="Clear all filters">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-700 bg-gray-900">
@@ -145,7 +188,10 @@
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <div class="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border border-gray-700">
-                      <div class="h-10 w-10 bg-gray-600 flex items-center justify-center">
+                      <img *ngIf="getUserProfileImage(amc)" [src]="getUserProfileImage(amc)" [alt]="getUserName(amc)"
+                        class="h-10 w-10 object-cover" />
+                      <div *ngIf="!getUserProfileImage(amc)"
+                        class="h-10 w-10 bg-gray-600 flex items-center justify-center">
                         <i class="fas fa-user text-gray-300"></i>
                       </div>
                     </div>
@@ -160,7 +206,9 @@
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <div class="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg border border-gray-700">
-                      <div class="h-10 w-10 bg-gray-600 flex items-center justify-center">
+                      <img *ngIf="getCarImage(amc)" [src]="getCarImage(amc)" [alt]="getCarName(amc)"
+                        class="h-10 w-10 object-cover" />
+                      <div *ngIf="!getCarImage(amc)" class="h-10 w-10 bg-gray-600 flex items-center justify-center">
                         <i class="fas fa-car text-gray-300"></i>
                       </div>
                     </div>
@@ -249,7 +297,8 @@
         </div>
 
         <!-- Pagination -->
-        <div class="flex items-center justify-between border-t border-gray-700 bg-gray-900 px-6 py-4">
+        <div *ngIf="!isLoading && filteredAmcs.length > 0"
+          class="flex items-center justify-between border-t border-gray-700 bg-gray-900 px-6 py-4">
           <div class="flex items-center space-x-2 text-sm text-gray-300">
             <span>Showing</span>
             <span class="font-medium text-gray-100">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
@@ -321,33 +370,7 @@
           </div>
         </div>
 
-        <!-- Car Selection -->
-        <div class="space-y-2 col-span-2">
-          <label class="block text-gray-300 text-sm font-medium" for="carid">
-            Select Car
-          </label>
-          <select
-            class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white
-                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-            id="carid" [(ngModel)]="selectedCarId" name="selectedCarId" required>
-            <option value="">Select a car</option>
-            <option *ngFor="let car of filteredCars" [value]="car._id">{{ car.carname }} - {{ car.brandname }}</option>
-          </select>
-          <div *ngIf="filteredCars.length === 0 && selectedUserId" class="text-sm text-yellow-400 mt-1">
-            No cars available for this user. This user hasn't purchased any tickets yet.
-          </div>
-          <div *ngIf="filteredCars.length === 0 && !selectedUserId" class="text-sm text-yellow-400 mt-1">
-            Please select a user first to see available cars.
-          </div>
-          <div *ngIf="cars.length === 0" class="text-sm text-yellow-400 mt-1">
-            No cars available. Please add some cars first.
-          </div>
-          <div *ngIf="filteredCars.length > 0" class="text-sm text-green-400 mt-1">
-            Showing {{ filteredCars.length }} car(s) that this user has tickets for.
-          </div>
-        </div>
-
-        <!-- Ticket Selection -->
+        <!-- Ticket Selection (with Car Name) -->
         <div class="space-y-2 col-span-2">
           <label class="block text-gray-300 text-sm font-medium" for="ticketid">
             Select Ticket
@@ -357,11 +380,19 @@
                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
             id="ticketid" [(ngModel)]="selectedTicketId" name="selectedTicketId" required>
             <option value="">Select a ticket</option>
-            <option *ngFor="let ticket of tickets" [value]="ticket._id">{{ ticket.ticketcustomid }} - {{
-              formatCurrency(ticket.ticketprice) }}</option>
+            <option *ngFor="let ticket of userTickets" [value]="ticket._id">
+              {{ ticket.ticketcustomid }} - {{ getCarNameFromTicket(ticket) }} ({{ formatCurrency(ticket.ticketprice)
+              }})
+            </option>
           </select>
-          <div *ngIf="tickets.length === 0" class="text-sm text-yellow-400 mt-1">
-            No tickets available. Please add some tickets first.
+          <div *ngIf="userTickets.length === 0 && selectedUserId" class="text-sm text-yellow-400 mt-1">
+            No tickets available for this user. This user hasn't purchased any tickets yet.
+          </div>
+          <div *ngIf="userTickets.length === 0 && !selectedUserId" class="text-sm text-yellow-400 mt-1">
+            Please select a user first to see available tickets.
+          </div>
+          <div *ngIf="userTickets.length > 0" class="text-sm text-green-400 mt-1">
+            Showing {{ userTickets.length }} ticket(s) for this user.
           </div>
         </div>
 

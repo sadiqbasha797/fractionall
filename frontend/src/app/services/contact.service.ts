@@ -151,6 +151,14 @@ export class ContactService {
     return this.http.delete<{ status: string; body: {}; message: string }>(`${this.apiUrl}/contact/admin/${id}`);
   }
 
+  // Send reply to contact form (admin only)
+  sendReply(id: string, replyData: {
+    subject: string;
+    message: string;
+  }): Observable<{ status: string; body: { contactForm: ContactForm }; message: string }> {
+    return this.http.post<{ status: string; body: { contactForm: ContactForm }; message: string }>(`${this.apiUrl}/contact/admin/${id}/reply`, replyData);
+  }
+
   // Get contact form statistics (admin only)
   getContactFormStats(): Observable<ContactFormStats> {
     return this.http.get<ContactFormStats>(`${this.apiUrl}/contact/admin/stats`);

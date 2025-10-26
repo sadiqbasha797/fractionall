@@ -4,8 +4,8 @@
       <div class="@[480px]:p-4">
         <main class="flex-1">
           <!-- Hero Section with Dynamic Background -->
-          <section class="about-hero relative min-h-[600px] flex items-center justify-center overflow-hidden rounded-2xl mb-16" data-animation="fade-up">
-            <div class="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] opacity-90"></div>
+          <section class="about-hero relative min-h-[600px] flex items-center justify-center overflow-hidden rounded-2xl mb-8 md:mb-16" data-animation="fade-up">
+            <div class="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] opacity-50"></div>
             <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" 
                  [style.background-image]="backgroundImageStyle"></div>
             <div class="relative z-10 text-center px-4 max-w-4xl mx-auto">
@@ -32,101 +32,61 @@
                 <p class="text-xl md:text-2xl text-[#90adcb] mb-8 max-w-3xl mx-auto leading-relaxed" data-animation="fade-up" data-delay="100">
                   {{ aboutContent?.aboutherosubtext || 'India\'s first fractional car ownership platform, making luxury cars accessible without financial burden' }}
                 </p>
-                <button (click)="scrollToSection('story-section')" class="btn-outline-white px-8 py-4 text-lg font-bold rounded-xl transform hover:scale-105 transition-all duration-300" data-animation="fade-up" data-delay="200">
-                  Explore Our Story
+                <button (click)="navigateToCars()" class="btn-outline-white px-8 py-4 text-lg font-bold rounded-xl transform hover:scale-105 transition-all duration-300" data-animation="fade-up" data-delay="200">
+                  Browse Cars
                 </button>
               </div>
             </div>
           </section>
 
-          <!-- Mission, Vision, Values Section -->
-          <section class="py-16 md:py-24" data-animation="fade-up">
+          <!-- Simple Steps Section -->
+          <section class="py-8 md:py-18" data-animation="fade-up">
             <div class="container mx-auto px-4">
-              <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-5xl font-black text-white mb-4" data-animation="fade-up">Why Fraction Car?</h2>
-                <p class="text-lg text-[#90adcb] max-w-2xl mx-auto" data-animation="fade-up" data-delay="100">
-                  We're revolutionizing how India thinks about car ownership
-                </p>
-              </div>
-              
-              <div class="grid gap-8 md:grid-cols-3 lg:gap-12">
-                <!-- Mission Card -->
-                <div class="about-feature-card group" data-animation="fade-up" data-delay="100">
-                  <div class="feature-icon">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
-                    </svg>
-                  </div>
-                  <h3 class="text-2xl font-bold text-white mb-4">Our Mission</h3>
-                  <p class="text-[#90adcb] leading-relaxed">
-                    To make luxury car ownership accessible and affordable for everyone, removing traditional financial barriers and making dreams a reality.
-                  </p>
+              <div class="flex flex-col gap-6 items-center text-center mb-8 md:gap-10 md:mb-12">
+                <div class="flex flex-col gap-4 max-w-4xl">
+                  <h1 data-animation="fade-up"
+                    class="text-white tracking-light text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em]">
+                    Simple Steps to Get You on the Road
+                  </h1>
+                  <p data-animation="fade-up" data-delay="100"
+                    class="text-white text-sm sm:text-base lg:text-lg font-normal leading-normal">Your journey to luxury car co-ownership
+                    starts here.</p>
                 </div>
-
-                <!-- Vision Card -->
-                <div class="about-feature-card group" data-animation="fade-up" data-delay="200">
-                  <div class="feature-icon">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                    </svg>
-                  </div>
-                  <h3 class="text-2xl font-bold text-white mb-4">Our Vision</h3>
-                  <p class="text-[#90adcb] leading-relaxed">
-                    To build a vibrant community of car lovers and establish fractional ownership as the preferred choice for discerning drivers across India.
-                  </p>
-                </div>
-
-                <!-- Innovation Card -->
-                <div class="about-feature-card group" data-animation="fade-up" data-delay="300">
-                  <div class="feature-icon">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                    </svg>
-                  </div>
-                  <h3 class="text-2xl font-bold text-white mb-4">Innovation</h3>
-                  <p class="text-[#90adcb] leading-relaxed">
-                    Our unique fractional ownership model combined with comprehensive management services offers a hassle-free, cost-effective way to enjoy premium vehicles.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Story Section with Enhanced Design -->
-          <section id="story-section" class="py-16 md:py-24" data-animation="fade-up">
-            <div class="container mx-auto px-4">
-              <div class="about-story-card relative overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-[#1e293b] to-[#0f172a] opacity-95"></div>
-                <div class="relative z-10 p-8 md:p-12 lg:p-16">
-                  <div class="text-center mb-8">
-                    <h3 class="text-4xl md:text-5xl font-black text-white mb-6">The Fraction Car Story</h3>
-                    <div class="w-24 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 mx-auto rounded-full"></div>
-                  </div>
-                  
-                  <div class="max-w-4xl mx-auto">
-                    <p class="text-lg md:text-xl text-[#90adcb] leading-relaxed mb-8">
-                      At Fraction Car, we're on a mission to redefine car ownership in India. We believe that owning a luxury car should be accessible to more people, without the traditional financial burdens.
-                    </p>
-                    
-                    <div class="grid md:grid-cols-2 gap-8 mb-8">
-                      <div class="space-y-4">
-                        <h4 class="text-xl font-bold text-white">The Problem</h4>
-                        <p class="text-[#90adcb]">
-                          Traditional car ownership requires massive upfront investment, EMIs, and ongoing maintenance costs that make luxury cars unattainable for most people.
-                        </p>
+                
+                <!-- Centered Timeline Container -->
+                <div class="flex justify-center w-full">
+                  <div class="w-full max-w-2xl mx-auto">
+                    <div #timelineRef class="relative flex flex-col gap-4 pl-10">
+                      <!-- Timeline line -->
+                      <div class="absolute top-0 w-0.5 bg-white bg-opacity-10 rounded-full" 
+                           [style.height]="'var(--timeline-height, 100%)'"
+                           style="left: 15px;"></div>
+                      <!-- Loading State -->
+                      <div *ngIf="simpleStepsLoading()" class="space-y-6">
+                        <div class="relative flex gap-4 items-start" *ngFor="let item of [1,2]">
+                          <div class="relative z-10 w-8 h-8 bg-gray-600 rounded-full flex-shrink-0 animate-pulse" style="margin-left: -2.5rem;"></div>
+                          <div class="bg-gray-800 border border-gray-700 p-4 rounded-lg flex-1 min-w-0">
+                            <div class="h-4 bg-gray-600 rounded w-3/4 mb-2 animate-pulse"></div>
+                            <div class="h-3 bg-gray-700 rounded w-full mb-1 animate-pulse"></div>
+                            <div class="h-3 bg-gray-700 rounded w-5/6 animate-pulse"></div>
+                          </div>
+                        </div>
                       </div>
-                      <div class="space-y-4">
-                        <h4 class="text-xl font-bold text-white">Our Solution</h4>
-                        <p class="text-[#90adcb]">
-                          Fractional ownership allows you to share the cost and joy of premium vehicles with like-minded enthusiasts, making luxury accessible.
-                        </p>
-                      </div>
+
+                      <!-- All Simple Steps - Always Show All -->
+                      <ng-container *ngIf="!simpleStepsLoading()">
+                        <div *ngFor="let step of simpleSteps(); let i = index" [attr.data-animation]="'fade-right'"
+                          [attr.data-delay]="(i + 1) * 100" class="relative flex gap-4 items-start">
+                          <div class="relative z-10 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0" style="margin-left: -2.5rem;">
+                            {{ i + 1 }}
+                          </div>
+                          <div class="bg-[#182634] border border-[#314d68] p-4 rounded-lg flex-1 min-w-0">
+                            <h3 class="text-white text-base font-bold">{{ step.stepTitle }}</h3>
+                            <p class="text-[#90adcb] text-sm mt-1">{{ step.stepName }}</p>
+                          </div>
+                        </div>
+                      </ng-container>
                     </div>
-                    
-                    <p class="text-lg text-[#90adcb] leading-relaxed">
-                      We handle all management aspects from maintenance to insurance, ensuring a hassle-free experience. Our vision is to create a community of car enthusiasts who can enjoy the thrill of driving luxury vehicles without the usual ownership challenges.
-                    </p>
                   </div>
                 </div>
               </div>
@@ -134,10 +94,10 @@
           </section>
 
           <!-- Call to Action Section -->
-          <section class="py-16 md:py-24 text-center" data-animation="fade-up">
+          <section class="py-8 md:py-18 text-center" data-animation="fade-up">
             <div class="container mx-auto px-4">
-              <h2 class="text-4xl md:text-5xl font-black text-white mb-6">Ready to Start Your Journey?</h2>
-              <p class="text-xl text-[#90adcb] mb-8 max-w-2xl mx-auto">
+              <h2 class="text-4xl md:text-5xl font-black text-white mb-3 md:mb-5">Ready to Start Your Journey?</h2>
+              <p class="text-xl text-[#90adcb] mb-5 md:mb-7 max-w-2xl mx-auto">
                 Join thousands of car enthusiasts who have already discovered the future of car ownership
               </p>
               <div class="flex flex-col sm:flex-row gap-4 justify-center">

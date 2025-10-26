@@ -1,0 +1,68 @@
+/* Navbar mobile menu helpers */
+#mobile-menu { z-index: 60; }
+#mobile-menu .backdrop { transition: opacity 300ms ease; }
+#mobile-menu .panel { transition: transform 400ms ease, opacity 300ms ease; }
+
+/* Active navigation link styling */
+.nav-link-active {
+  color: white;
+  border: 2px solid white;
+  border-radius: 6px;
+  padding: 8px 12px;
+  background-color: rgba(59, 130, 246, 0.8); /* Blue background with transparency */
+  position: relative;
+}
+
+.nav-link-active::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: white;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+/* Hide hover effect when active */
+.nav-link-active .group-hover\:scale-x-100 {
+  display: none;
+}
+
+/* Scroll-based active state styling */
+.nav-link-active.scroll-active {
+  color: white;
+  background-color: rgba(59, 130, 246, 0.9);
+  border-color: #3b82f6;
+}
+
+.nav-link-active.scroll-active::before {
+  transform: scaleX(1);
+}
+
+.nav-link-active-mobile {
+  color: white;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(37, 99, 235, 0.9));
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transform: translateX(4px);
+  border: 1px solid rgba(59, 130, 246, 0.5);
+}
+
+/* Bottom navbar active state styling */
+/* Bottom navbar active state: filled blue background + icon color */
+.bottom-nav a.active-nav {
+  background: rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+}
+.bottom-nav a.active-nav svg {
+  color: #3b82f6 !important;
+  fill: #3b82f6 !important;
+}
+
+/* Bottom navbar hover effects */
+nav a:hover {
+  transform: translateY(-2px);
+}

@@ -1,0 +1,319 @@
+<div class="notifications-container min-h-screen pb-20" style="background-color: #f5f5f5;">
+  <!-- Header -->
+  <div class="notifications-header">
+    <div class="header-content">
+      <div class="header-left">
+        <div class="title-section">
+          <div class="notification-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+            </svg>
+          </div>
+          <div class="title-text">
+            <h2>Notifications</h2>
+            <div class="stats-inline" *ngIf="totalNotifications() > 0">
+              <span class="stat-item">
+                <span class="stat-number">{{ totalNotifications() }}</span>
+                <span class="stat-label">total</span>
+              </span>
+              <span class="stat-item" *ngIf="unreadCount() > 0">
+                <span class="stat-number unread">{{ unreadCount() }}</span>
+                <span class="stat-label">unread</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button 
+          class="action-btn filter-btn" 
+          (click)="toggleUnreadOnly()"
+          [class.active]="showUnreadOnly()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
+          </svg>
+          <span>{{ showUnreadOnly() ? 'Show All' : 'Unread Only' }}</span>
+        </button>
+        <button 
+          class="action-btn primary-btn" 
+          (click)="markAllAsRead()"
+          [disabled]="unreadCount() === 0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          </svg>
+          <span>Mark All Read</span>
+        </button>
+        <button 
+          class="action-btn secondary-btn" 
+          (click)="refreshNotifications()"
+          [disabled]="loading()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24" [class.spin]="loading()">
+            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+          </svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading()">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <h3>Loading notifications...</h3>
+      <p>Please wait while we fetch your latest updates</p>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading() && notifications().length === 0">
+    <div class="empty-content">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+          <path d="M4 4l16 16-1.41 1.41L2.59 5.41 4 4z" opacity="0.3"/>
+        </svg>
+      </div>
+      <h3>No Notifications</h3>
+      <p *ngIf="showUnreadOnly()">You have no unread notifications at the moment.</p>
+      <p *ngIf="!showUnreadOnly()">You don't have any notifications yet. We'll notify you when there's something important.</p>
+      <button class="refresh-btn" (click)="refreshNotifications()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+        </svg>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Notifications List -->
+  <div class="notifications-list" *ngIf="!loading() && notifications().length > 0">
+    <div 
+      class="notification-card" 
+      *ngFor="let notification of notifications(); trackBy: trackByNotificationId"
+      [class.unread]="!notification.isRead"
+      [class.recent]="isRecentNotification(notification.createdAt)"
+      [class]="getPriorityClass(notification.priority)"
+      (click)="viewNotification(notification)">
+      
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="notification-avatar">
+          <div class="avatar-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+              <path [attr.d]="getNotificationIconPath(notification.type)"/>
+            </svg>
+          </div>
+          <div class="unread-dot" *ngIf="!notification.isRead"></div>
+        </div>
+        
+        <div class="header-content">
+          <div class="notification-title">{{ notification.title }}</div>
+          <div class="notification-time">{{ formatNotificationTime(notification.createdAt) }}</div>
+        </div>
+        
+        <div class="card-actions">
+          <button 
+            class="action-btn delete-btn"
+            (click)="deleteNotification(notification._id); $event.stopPropagation()"
+            title="Delete notification">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Card Body -->
+      <div class="card-body">
+        <p class="notification-message">{{ notification.message }}</p>
+      </div>
+
+      <!-- Card Footer -->
+      <div class="card-footer">
+        <div class="notification-badges">
+          <span class="type-badge">{{ getTypeDisplayName(notification.type) }}</span>
+          <span class="priority-badge" [class]="getPriorityClass(notification.priority)">
+            {{ notification.priority }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container" *ngIf="!loading() && totalPages() > 1">
+    <nav class="pagination">
+      <button 
+        class="pagination-btn prev-btn" 
+        [disabled]="currentPage() === 1"
+        (click)="goToPage(currentPage() - 1)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+        </svg>
+        <span>Previous</span>
+      </button>
+      
+      <div class="page-numbers">
+        <button 
+          class="page-number" 
+          *ngFor="let page of getPageNumbers()"
+          [class.active]="page === currentPage()"
+          (click)="goToPage(page)">
+          {{ page }}
+        </button>
+      </div>
+      
+      <button 
+        class="pagination-btn next-btn" 
+        [disabled]="currentPage() === totalPages()"
+        (click)="goToPage(currentPage() + 1)">
+        <span>Next</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/>
+        </svg>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Notification Detail Modal -->
+  <div class="modal-overlay" *ngIf="selectedNotification()" (click)="closeNotificationDetail()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-section">
+          <div class="modal-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <path [attr.d]="getNotificationIconPath(selectedNotification()!.type)"/>
+            </svg>
+          </div>
+          <div class="modal-title-text">
+            <h3>{{ selectedNotification()!.title }}</h3>
+            <p class="modal-subtitle">{{ getTypeDisplayName(selectedNotification()!.type) }}</p>
+          </div>
+        </div>
+        <button class="close-btn" (click)="closeNotificationDetail()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="notification-detail-meta">
+          <div class="meta-grid">
+            <div class="meta-card">
+              <div class="meta-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6h-5.6z"/>
+                </svg>
+              </div>
+              <div class="meta-content">
+                <span class="meta-label">Priority</span>
+                <span class="meta-value" [class]="getPriorityClass(selectedNotification()!.priority)">
+                  {{ selectedNotification()!.priority }}
+                </span>
+              </div>
+            </div>
+            <div class="meta-card">
+              <div class="meta-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
+                  <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                </svg>
+              </div>
+              <div class="meta-content">
+                <span class="meta-label">Created</span>
+                <span class="meta-value">{{ formatNotificationTime(selectedNotification()!.createdAt) }}</span>
+              </div>
+            </div>
+            <div class="meta-card" *ngIf="selectedNotification()!.readAt">
+              <div class="meta-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+              </div>
+              <div class="meta-content">
+                <span class="meta-label">Read</span>
+                <span class="meta-value">{{ formatNotificationTime(selectedNotification()!.readAt!) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="notification-detail-message">
+          <h4>Message</h4>
+          <div class="message-content">
+            <p>{{ selectedNotification()!.message }}</p>
+          </div>
+        </div>
+        
+        <div class="notification-detail-metadata" *ngIf="selectedNotification()!.metadata && Object.keys(selectedNotification()!.metadata).length > 0">
+          <h4>Additional Information</h4>
+          <div class="metadata-content">
+            <div class="metadata-item" *ngFor="let key of getMetadataKeys(selectedNotification()!.metadata)">
+              <span class="metadata-key">{{ key }}</span>
+              <span class="metadata-value">{{ selectedNotification()!.metadata[key] }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="action-btn secondary-btn" (click)="closeNotificationDetail()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+          <span>Close</span>
+        </button>
+        <button 
+          class="action-btn danger-btn" 
+          (click)="deleteNotification(selectedNotification()!._id); closeNotificationDetail()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+          </svg>
+          <span>Delete</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" *ngIf="showDeleteConfirm()" (click)="cancelDelete()">
+    <div class="modal-content delete-confirm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-section">
+          <div class="modal-icon warning-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+            </svg>
+          </div>
+          <div class="modal-title-text">
+            <h3>Delete Notification</h3>
+            <p class="modal-subtitle">This action cannot be undone</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-body">
+        <div class="warning-content">
+          <p>Are you sure you want to delete this notification? This action cannot be undone.</p>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="action-btn secondary-btn" (click)="cancelDelete()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+          <span>Cancel</span>
+        </button>
+        <button class="action-btn danger-btn" (click)="confirmDelete()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+          </svg>
+          <span>Delete</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

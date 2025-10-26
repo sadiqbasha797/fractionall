@@ -1,8 +1,8 @@
 /* Sidebar container - main aside element */
 .sidebar-container {
   overflow: hidden; /* Let the nav handle scrolling */
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* Internet Explorer 10+ */
+  scrollbar-width: thin; /* Firefox - show scrollbar */
+  scrollbar-color: #6b7280 #374151; /* gray-500 on gray-700 */
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
   display: flex;
@@ -10,40 +10,43 @@
   height: 100vh; /* Ensure full viewport height */
 }
 
-/* Hide scrollbar for sidebar container */
+/* Show scrollbar for sidebar container */
 .sidebar-container::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent !important;
+  width: 8px;
+  height: 8px;
+  background: #374151; /* gray-700 */
 }
 
 .sidebar-container::-webkit-scrollbar-track {
-  display: none !important;
-  background: transparent !important;
+  background: #374151; /* gray-700 */
+  border-radius: 4px;
 }
 
 .sidebar-container::-webkit-scrollbar-thumb {
-  display: none !important;
-  background: transparent !important;
+  background: #6b7280; /* gray-500 */
+  border-radius: 4px;
+  border: 2px solid #374151; /* gray-700 */
+}
+
+.sidebar-container::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af; /* gray-400 */
 }
 
 .sidebar-container::-webkit-scrollbar-corner {
-  display: none !important;
-  background: transparent !important;
+  background: #374151; /* gray-700 */
 }
 
-/* Additional webkit scrollbar hiding for sidebar container */
+/* Additional webkit scrollbar styling for sidebar container */
 .sidebar-container::-webkit-scrollbar-button {
-  display: none !important;
+  display: block;
 }
 
 .sidebar-container::-webkit-scrollbar-track-piece {
-  display: none !important;
+  background: #374151; /* gray-700 */
 }
 
 .sidebar-container::-webkit-scrollbar-resizer {
-  display: none !important;
+  display: block;
 }
 
 /* Sidebar navigation area - this handles the scrolling */
@@ -51,8 +54,8 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* Internet Explorer 10+ */
+  scrollbar-width: thin; /* Firefox - show scrollbar */
+  scrollbar-color: #6b7280 #374151; /* gray-500 on gray-700 */
   min-height: 0; /* Allow flex item to shrink */
   /* Ensure proper height for scrolling */
   max-height: calc(100vh - 120px); /* Account for header height */
@@ -61,27 +64,34 @@
   -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
   /* Ensure content can be scrolled */
   overscroll-behavior: contain;
-  /* Force hide scrollbar with multiple methods */
+  /* Show scrollbar */
   scrollbar-gutter: stable;
 }
 
-/* Hide scrollbar for navigation area */
+/* Show scrollbar for navigation area */
 .sidebar-nav::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
+  width: 8px;
+  height: 8px;
+  background: #374151; /* gray-700 */
 }
 
 .sidebar-nav::-webkit-scrollbar-track {
-  display: none;
+  background: #374151; /* gray-700 */
+  border-radius: 4px;
 }
 
 .sidebar-nav::-webkit-scrollbar-thumb {
-  display: none;
+  background: #6b7280; /* gray-500 */
+  border-radius: 4px;
+  border: 2px solid #374151; /* gray-700 */
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af; /* gray-400 */
 }
 
 .sidebar-nav::-webkit-scrollbar-corner {
-  display: none;
+  background: #374151; /* gray-700 */
 }
 
 /* Touch device optimizations */
@@ -97,128 +107,137 @@
   }
 }
 
-/* Additional scrollbar hiding for all browsers */
+/* Additional scrollbar styling for all browsers */
 .sidebar-nav {
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* Internet Explorer 10+ */
-  /* Additional hiding methods */
+  scrollbar-width: thin; /* Firefox - show scrollbar */
+  scrollbar-color: #6b7280 #374151; /* gray-500 on gray-700 */
+  /* Show scrollbar */
   scrollbar-gutter: stable;
 }
 
 .sidebar-nav::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent !important;
+  width: 8px;
+  height: 8px;
+  background: #374151; /* gray-700 */
 }
 
 .sidebar-nav::-webkit-scrollbar-track {
-  display: none !important;
-  background: transparent !important;
+  background: #374151; /* gray-700 */
+  border-radius: 4px;
 }
 
 .sidebar-nav::-webkit-scrollbar-thumb {
-  display: none !important;
-  background: transparent !important;
+  background: #6b7280; /* gray-500 */
+  border-radius: 4px;
+  border: 2px solid #374151; /* gray-700 */
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af; /* gray-400 */
 }
 
 .sidebar-nav::-webkit-scrollbar-corner {
-  display: none !important;
-  background: transparent !important;
+  background: #374151; /* gray-700 */
 }
 
-/* Force hide scrollbar for all webkit browsers */
+/* Show scrollbar for all webkit browsers */
 .sidebar-nav::-webkit-scrollbar-button {
-  display: none !important;
+  display: block;
 }
 
 .sidebar-nav::-webkit-scrollbar-track-piece {
-  display: none !important;
+  background: #374151; /* gray-700 */
 }
 
 .sidebar-nav::-webkit-scrollbar-resizer {
-  display: none !important;
+  display: block;
 }
 
-/* Ultra-aggressive scrollbar hiding for sidebar */
+/* Show scrollbar for sidebar */
 #sidebar-aside {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
+  scrollbar-width: thin;
+  scrollbar-color: #6b7280 #374151; /* gray-500 on gray-700 */
 }
 
 #sidebar-aside::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent !important;
+  width: 8px;
+  height: 8px;
+  background: #374151; /* gray-700 */
 }
 
 #sidebar-aside::-webkit-scrollbar-track {
-  display: none !important;
-  background: transparent !important;
+  background: #374151; /* gray-700 */
+  border-radius: 4px;
 }
 
 #sidebar-aside::-webkit-scrollbar-thumb {
-  display: none !important;
-  background: transparent !important;
+  background: #6b7280; /* gray-500 */
+  border-radius: 4px;
+  border: 2px solid #374151; /* gray-700 */
+}
+
+#sidebar-aside::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af; /* gray-400 */
 }
 
 #sidebar-aside::-webkit-scrollbar-corner {
-  display: none !important;
-  background: transparent !important;
+  background: #374151; /* gray-700 */
 }
 
 #sidebar-aside::-webkit-scrollbar-button {
-  display: none !important;
+  display: block;
 }
 
 #sidebar-aside::-webkit-scrollbar-track-piece {
-  display: none !important;
+  background: #374151; /* gray-700 */
 }
 
 #sidebar-aside::-webkit-scrollbar-resizer {
-  display: none !important;
+  display: block;
 }
 
 /* Additional specific targeting for sidebar navigation */
 .sidebar-nav.no-scrollbar {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-  scrollbar-gutter: stable !important;
+  scrollbar-width: thin;
+  scrollbar-color: #6b7280 #374151; /* gray-500 on gray-700 */
+  scrollbar-gutter: stable;
 }
 
 .sidebar-nav.no-scrollbar::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent !important;
+  width: 8px;
+  height: 8px;
+  background: #374151; /* gray-700 */
 }
 
 .sidebar-nav.no-scrollbar::-webkit-scrollbar-track {
-  display: none !important;
-  background: transparent !important;
+  background: #374151; /* gray-700 */
+  border-radius: 4px;
 }
 
 .sidebar-nav.no-scrollbar::-webkit-scrollbar-thumb {
-  display: none !important;
-  background: transparent !important;
+  background: #6b7280; /* gray-500 */
+  border-radius: 4px;
+  border: 2px solid #374151; /* gray-700 */
+}
+
+.sidebar-nav.no-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af; /* gray-400 */
 }
 
 .sidebar-nav.no-scrollbar::-webkit-scrollbar-corner {
-  display: none !important;
-  background: transparent !important;
+  background: #374151; /* gray-700 */
 }
 
 .sidebar-nav.no-scrollbar::-webkit-scrollbar-button {
-  display: none !important;
+  display: block;
 }
 
 .sidebar-nav.no-scrollbar::-webkit-scrollbar-track-piece {
-  display: none !important;
+  background: #374151; /* gray-700 */
 }
 
 .sidebar-nav.no-scrollbar::-webkit-scrollbar-resizer {
-  display: none !important;
+  display: block;
 }
 
 /* Enhanced sidebar styling for better readability */

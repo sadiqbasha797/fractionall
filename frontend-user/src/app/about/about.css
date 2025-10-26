@@ -12,7 +12,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.4) 0%, rgba(30, 41, 59, 0.3) 100%);
   z-index: 1;
 }
 
@@ -99,7 +99,7 @@
 /* Button Styles */
 .btn-outline-white {
   background: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  border: none !important;
   color: #ffffff !important;
   box-shadow: none !important;
   transition: all 0.3s ease;
@@ -111,7 +111,6 @@
 }
 
 .btn-outline-white:hover {
-  border-color: rgba(59, 130, 246, 0.95) !important;
   box-shadow: 0 6px 18px rgba(59, 130, 246, 0.18), 0 0 10px rgba(59, 130, 246, 0.25);
   transform: translateY(-1px) scale(1.01);
 }

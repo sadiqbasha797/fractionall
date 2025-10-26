@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy, AfterViewInit, Inject, PLATFORM_ID, signal, computed, effect, ElementRef, Renderer2 } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, Inject, PLATFORM_ID, signal, computed, effect, ElementRef, Renderer2, DestroyRef, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -20,6 +20,8 @@ import { UserService } from '../services/user.service';
   animations: AnimationService.getAnimations()
 })
 export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
+  private destroyRef = inject(DestroyRef);
+  
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private route: ActivatedRoute,
@@ -35,7 +37,8 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
     private animationService: AnimationService
   ) {
     // Effect to reinitialize animations when car data changes
-    effect(() => {
+    // Use DestroyRef to properly manage effect lifecycle
+    const effectRef = effect(() => {
       const carData = this.carData();
       const isLoading = this.loading();
       
@@ -45,6 +48,11 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
           this.initAngularAnimations();
         }, 200);
       }
+    });
+    
+    // Register effect cleanup with component destruction
+    this.destroyRef.onDestroy(() => {
+      effectRef.destroy();
     });
   }
 
@@ -107,8 +115,7 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   protected checkingPurchaseStatus = signal<boolean>(true);
   protected totalBookNowTokens = signal<number>(0);
   protected totalWaitlistTokens = signal<number>(0);
-  protected maxBookNowTokens = 3;
-  protected maxWaitlistTokens = 3;
+  protected maxTotalTokens = 6; // Total tokens allowed (any combination of waitlist + book now)
 
   // Token data properties (similar to profile)
   protected tokens = signal<any[]>([]);
@@ -407,19 +414,25 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
     if (carouselContainer) {
       carouselContainer.style.transition = 'transform 0.5s ease-in-out';
       
-      // Auto-advance carousel every 5 seconds
+      // Auto-advance carousel every 3 seconds
       this.carouselInterval = setInterval(() => {
         this.moveCarousel(1);
-      }, 5000);
+      }, 3000);
+
+      // Keep position correct on resize
+      window.addEventListener('resize', () => this.updateCarousel());
     }
   }
 
   updateCarousel() {
     const carouselContainer = document.querySelector('.carousel-container') as HTMLElement;
     const indicators = document.querySelectorAll('.bottom-4 button') as NodeListOf<HTMLElement>;
-    
+
     if (carouselContainer) {
-      carouselContainer.style.transform = `translateX(-${this.currentSlide() * 100}%)`;
+      const wrapper = carouselContainer.parentElement as HTMLElement;
+      const slideWidth = wrapper ? wrapper.clientWidth : 0;
+      const offsetPx = this.currentSlide() * slideWidth;
+      carouselContainer.style.transform = `translateX(-${offsetPx}px)`;
     }
     
     // Update indicators
@@ -548,11 +561,21 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   // Helper methods for template
   getFormattedPrice(price: string | undefined): string {
     if (!price) return 'N/A';
-    // If price doesn't include currency symbol, add ₹
+    
+    // Convert to string and remove any existing commas and currency symbols
+    const priceStr = price.toString().replace(/[₹,\s]/g, '');
+    const priceNum = parseFloat(priceStr);
+    
+    if (isNaN(priceNum)) return 'N/A';
+    
+    // Format with commas using Indian number system
+    const formattedPrice = priceNum.toLocaleString('en-IN');
+    
+    // If original price didn't include currency symbol, add ₹
     if (!price.includes('₹') && !price.includes('Rs')) {
-      return `₹${price}`;
+      return `₹${formattedPrice}`;
     }
-    return price;
+    return formattedPrice;
   }
 
   getFractionPrice(): string {
@@ -565,7 +588,7 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
     if (carData?.price && carData?.totaltickets) {
       const priceNum = parseFloat(carData.price.replace(/[₹,\s]/g, ''));
       const fractionPrice = priceNum / carData.totaltickets;
-      return `₹${fractionPrice.toFixed(2)}`;
+      return `₹${fractionPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
     
     return 'N/A';
@@ -727,6 +750,11 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   }
 
   checkAuthReturn() {
+    // Avoid SSR/hydration issues
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
     // Check if user just returned from authentication
     const urlParams = new URLSearchParams(window.location.search);
     const authReturn = urlParams.get('auth_return');
@@ -755,6 +783,9 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   }
 
   cleanUrlParams() {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
     // Remove auth_return and pending_payment parameters from URL
     const url = new URL(window.location.href);
     url.searchParams.delete('auth_return');
@@ -914,14 +945,10 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    // Check total token limits
-    if (type === 'book-now' && this.totalBookNowTokens() >= this.maxBookNowTokens) {
-      this.paymentError.set(`You have reached the maximum limit of ${this.maxBookNowTokens} Book Now tokens.`);
-      return;
-    }
-
-    if (type === 'waitlist' && this.totalWaitlistTokens() >= this.maxWaitlistTokens) {
-      this.paymentError.set(`You have reached the maximum limit of ${this.maxWaitlistTokens} waitlist tokens.`);
+    // Check total token limits (6 total tokens allowed)
+    const totalTokens = this.totalBookNowTokens() + this.totalWaitlistTokens();
+    if (totalTokens >= this.maxTotalTokens) {
+      this.paymentError.set(`You have reached the maximum limit of ${this.maxTotalTokens} tokens total.`);
       return;
     }
 
@@ -978,9 +1005,9 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
         this.verifyPayment(response);
       },
       prefill: {
-        name: 'User',
-        email: 'user@example.com',
-        contact: '9999999999'
+        name: this.authService.getUserData()?.name || 'User',
+        email: this.authService.getUserData()?.email || 'user@example.com',
+        contact: this.authService.getUserData()?.phone || '9999999999'
       },
       theme: {
         color: '#3399cc'
@@ -1142,7 +1169,8 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
     // Book Now is blocked if there are still waitlist tokens available
     // tokensavailble === 0 means all waitlist tokens are sold out
     const waitlistTokensSoldOut = carData.tokensavailble === 0;
-    const userReachedLimit = this.totalBookNowTokens() >= this.maxBookNowTokens;
+    const totalTokens = this.totalBookNowTokens() + this.totalWaitlistTokens();
+    const userReachedLimit = totalTokens >= this.maxTotalTokens;
     
     return !waitlistTokensSoldOut || userReachedLimit;
   }
@@ -1154,7 +1182,8 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
     
     // Waitlist is full when tokensavailble === 0 (all waitlist tokens sold out)
     const waitlistFull = carData.tokensavailble === 0;
-    const userReachedLimit = this.totalWaitlistTokens() >= this.maxWaitlistTokens;
+    const totalTokens = this.totalBookNowTokens() + this.totalWaitlistTokens();
+    const userReachedLimit = totalTokens >= this.maxTotalTokens;
     
     return waitlistFull || userReachedLimit;
   }
@@ -1167,7 +1196,7 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
       return 'Book Now is not available yet. Please join the waitlist first.';
     }
     
-    return `You have reached the maximum limit of ${this.maxBookNowTokens} Book Now tokens.`;
+    return `You have reached the maximum limit of ${this.maxTotalTokens} tokens total.`;
   }
 
   getWaitlistLimitMessage(): string {
@@ -1178,7 +1207,7 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
       return 'Waitlist is full. Book Now is now available!';
     }
     
-    return `You have reached the maximum limit of ${this.maxWaitlistTokens} waitlist tokens.`;
+    return `You have reached the maximum limit of ${this.maxTotalTokens} tokens total.`;
   }
 
   updateCarBookNowTokenCount() {

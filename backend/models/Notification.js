@@ -35,6 +35,7 @@ const NotificationSchema = new mongoose.Schema({
       'booking_done',
       'kyc_approved',
       'kyc_rejected',
+      'kyc_reminder',
       'user_joined_waitlist',
       'user_purchased_token',
       'user_purchased_booknow_token',
@@ -56,7 +57,14 @@ const NotificationSchema = new mongoose.Schema({
       'token_refund_initiated',
       'booknow_token_refund_initiated',
       'token_refund_processed',
-      'booknow_token_refund_processed'
+      'booknow_token_refund_processed',
+      'custom_announcement',
+      'promotional_offer',
+      'service_update',
+      'maintenance_notice',
+      'policy_change',
+      'feature_announcement',
+      'general_notification'
     ]
   },
   

@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, OnInit, Renderer2, ElementRef, signal, computed, effect, Inject, PLATFORM_ID, HostListener } from '@angular/core';
+import { Component, AfterViewInit, OnInit, Renderer2, ElementRef, signal, computed, effect, Inject, PLATFORM_ID, HostListener, DestroyRef, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -16,6 +16,8 @@ import { LocationSuggestionsService, LocationSuggestion } from '../services/loca
   animations: AnimationService.getAnimations()
 })
 export class Cars implements OnInit, AfterViewInit {
+  private destroyRef = inject(DestroyRef);
+  
   // Convert to signals for proper reactivity with zoneless change detection
   protected allCars = signal<any[]>([]);
   protected currentPage = signal<number>(1);
@@ -33,6 +35,16 @@ export class Cars implements OnInit, AfterViewInit {
   protected isLocationDropdownOpen = signal<boolean>(false);
   protected locationSuggestions = signal<LocationSuggestion[]>([]);
   protected isLocationLoading = signal<boolean>(false);
+  
+  // Location selection popup
+  protected showLocationPopup = signal<boolean>(false);
+  protected popupLocationQuery = signal<string>('');
+  protected popupLocationSuggestions = signal<any[]>([]);
+  protected isPopupLocationLoading = signal<boolean>(false);
+  
+  // Dropdown blur state
+  protected isFilterDropdownOpen = signal<boolean>(false);
+  protected isSortDropdownOpen = signal<boolean>(false);
   
   // Computed filtered cities based on search query
   protected filteredCities = computed(() => {
@@ -146,6 +158,47 @@ export class Cars implements OnInit, AfterViewInit {
     return suggestions.slice(0, 10);
   });
 
+  // Computed suggestions for popup modal
+  protected popupLocationSuggestionsComputed = computed(() => {
+    const query = this.popupLocationQuery().toLowerCase().trim();
+    if (!query) {
+      return this.indianCities.map(city => ({ 
+        name: city, 
+        display_name: city, 
+        state: '', 
+        country: 'India', 
+        lat: '', 
+        lon: '', 
+        type: 'city' 
+      }));
+    }
+    
+    const filteredCities = this.indianCities.filter(city => 
+      city.toLowerCase().includes(query)
+    ).sort((a, b) => {
+      const aLower = a.toLowerCase();
+      const bLower = b.toLowerCase();
+      const queryLower = query.toLowerCase();
+      
+      if (aLower === queryLower) return -1;
+      if (bLower === queryLower) return 1;
+      if (aLower.startsWith(queryLower) && !bLower.startsWith(queryLower)) return -1;
+      if (bLower.startsWith(queryLower) && !aLower.startsWith(queryLower)) return 1;
+      
+      return a.localeCompare(b);
+    });
+
+    return filteredCities.map(city => ({ 
+      name: city, 
+      display_name: city, 
+      state: '', 
+      country: 'India', 
+      lat: '', 
+      lon: '', 
+      type: 'city' 
+    }));
+  });
+
   /**
    * Sort suggestions by relevance to the search query
    */
@@ -227,6 +280,11 @@ export class Cars implements OnInit, AfterViewInit {
   protected filteredCars = computed(() => {
     let cars = this.allCars();
     
+    // If no location is selected, return empty array to hide all cars
+    if (!this.isLocationSearchActive() || !this.locationSearchQuery()) {
+      return [];
+    }
+    
     // Apply brand filter first
     if (this.isBrandFilterActive() && this.brandFilter()) {
       cars = this.applyBrandFilter(cars, this.brandFilter());
@@ -272,7 +330,8 @@ export class Cars implements OnInit, AfterViewInit {
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     // Effect to reinitialize animations when cars data changes
-    effect(() => {
+    // Use DestroyRef to properly manage effect lifecycle
+    const effectRef = effect(() => {
       const carsData = this.cars();
       const isLoading = this.isLoading();
       
@@ -282,6 +341,27 @@ export class Cars implements OnInit, AfterViewInit {
           this.initAngularAnimations();
         }, 200);
       }
+    });
+
+    // Effect to initialize dropdowns when location popup is closed
+    const dropdownEffectRef = effect(() => {
+      const showPopup = this.showLocationPopup();
+      
+      if (!showPopup && this.isBrowser()) {
+        // Initialize dropdowns when popup is closed and DOM is ready
+        setTimeout(() => {
+          this.initializeDropdowns();
+        }, 100);
+        setTimeout(() => {
+          this.initializeDropdowns();
+        }, 500);
+      }
+    });
+    
+    // Register effect cleanup with component destruction
+    this.destroyRef.onDestroy(() => {
+      effectRef.destroy();
+      dropdownEffectRef.destroy();
     });
 
     // Subscribe to location suggestions
@@ -342,11 +422,25 @@ export class Cars implements OnInit, AfterViewInit {
         const activeCars = carsData.filter((car: any) => !car.stopBookings);
         this.allCars.set(activeCars);
         this.isLoading.set(false);
+        
+        // Show location popup if no location is selected after data loads
+        setTimeout(() => {
+          if (!this.isLocationSearchActive() || !this.locationSearchQuery()) {
+            this.showLocationPopup.set(true);
+          }
+        }, 100);
       },
       error: (error) => {
         console.error('Error loading cars:', error);
         this.allCars.set([]);
         this.isLoading.set(false);
+        
+        // Show location popup even if there's an error loading cars
+        setTimeout(() => {
+          if (!this.isLocationSearchActive() || !this.locationSearchQuery()) {
+            this.showLocationPopup.set(true);
+          }
+        }, 100);
       }
     });
   }
@@ -430,27 +524,47 @@ export class Cars implements OnInit, AfterViewInit {
   }
 
   private initializePaginationLoader(): void {
+    // Initialize desktop pagination loader
     const pagination = document.getElementById('pagination');
     const loader = document.getElementById('pagination-loader');
-    if (!pagination || !loader) return;
+    if (pagination && loader) {
+      pagination.addEventListener('click', function(e) {
+        const target = (e.target as HTMLElement).closest('button');
+        if (!target) return;
 
-    pagination.addEventListener('click', function(e) {
-      const target = (e.target as HTMLElement).closest('button');
-      if (!target) return;
+        // Don't prevent default for button clicks, just show loader
+        loader.classList.add('visible');
+        loader.setAttribute('aria-hidden', 'false');
 
-      // Don't prevent default for button clicks, just show loader
-      loader.classList.add('visible');
-      loader.setAttribute('aria-hidden', 'false');
+        setTimeout(() => {
+          loader.classList.remove('visible');
+          loader.setAttribute('aria-hidden', 'true');
+        }, 800);
+      });
+    }
 
-      setTimeout(() => {
-        loader.classList.remove('visible');
-        loader.setAttribute('aria-hidden', 'true');
-      }, 800);
-    });
+    // Initialize mobile pagination loader
+    const mobilePagination = document.querySelector('.mobile-pagination');
+    const mobileLoader = document.getElementById('pagination-loader-mobile');
+    if (mobilePagination && mobileLoader) {
+      mobilePagination.addEventListener('click', function(e) {
+        const target = (e.target as HTMLElement).closest('button');
+        if (!target) return;
+
+        // Don't prevent default for button clicks, just show loader
+        mobileLoader.classList.add('visible');
+        mobileLoader.setAttribute('aria-hidden', 'false');
+
+        setTimeout(() => {
+          mobileLoader.classList.remove('visible');
+          mobileLoader.setAttribute('aria-hidden', 'true');
+        }, 800);
+      });
+    }
   }
 
   private initializeDropdowns(): void {
-    if (!this.isBrowser() || this.dropdownsInitialized) return;
+    if (!this.isBrowser()) return;
     
     const dropdowns = [
       { button: 'sort-dropdown', menu: 'sort-menu' },
@@ -463,10 +577,17 @@ export class Cars implements OnInit, AfterViewInit {
       const menuEl = this.elementRef.nativeElement.querySelector(`#${menu}`);
       
       if (!btn || !menuEl) {
+        console.log(`Dropdown elements not found: ${button}, ${menu}`);
         return;
       }
       
       foundElements++;
+      
+      // Remove any existing listeners to prevent duplicates
+      if (btn.hasAttribute('data-listener-added')) {
+        return;
+      }
+      btn.setAttribute('data-listener-added', 'true');
       
       // Button click handler
       this.renderer.listen(btn, 'click', (e) => {
@@ -481,11 +602,22 @@ export class Cars implements OnInit, AfterViewInit {
           }
         });
         
-        // Toggle current dropdown
+        // Toggle current dropdown and blur state
         if (menuEl.classList.contains('hidden')) {
           this.renderer.removeClass(menuEl, 'hidden');
+          // Set blur state based on which dropdown is opened
+          if (menu === 'filter-menu') {
+            this.isFilterDropdownOpen.set(true);
+            this.isSortDropdownOpen.set(false);
+          } else if (menu === 'sort-menu') {
+            this.isSortDropdownOpen.set(true);
+            this.isFilterDropdownOpen.set(false);
+          }
         } else {
           this.renderer.addClass(menuEl, 'hidden');
+          // Close blur state for both dropdowns
+          this.isFilterDropdownOpen.set(false);
+          this.isSortDropdownOpen.set(false);
         }
       });
 
@@ -498,11 +630,13 @@ export class Cars implements OnInit, AfterViewInit {
           
           const linkText = link.textContent?.trim() || '';
           
-          // Close all dropdowns
+          // Close all dropdowns and blur state
           dropdowns.forEach(({ menu: m }) => {
             const el = this.elementRef.nativeElement.querySelector(`#${m}`);
             if (el) this.renderer.addClass(el, 'hidden');
           });
+          this.isFilterDropdownOpen.set(false);
+          this.isSortDropdownOpen.set(false);
           
           // Update button label
           const label = btn.querySelector('p');
@@ -519,7 +653,8 @@ export class Cars implements OnInit, AfterViewInit {
       });
     });
     
-    if (foundElements === 2) {
+    console.log(`Found ${foundElements} dropdown elements`);
+    if (foundElements > 0) {
       this.dropdownsInitialized = true;
     }
   }
@@ -654,7 +789,7 @@ export class Cars implements OnInit, AfterViewInit {
     return filteredCars;
   }
 
-  // Location search filter (by location or pincode)
+  // Location search filter (by location only)
   applyLocationSearchFilter(cars: any[], searchQuery: string, searchType: string): any[] {
     if (!searchQuery || !searchQuery.trim()) {
       return cars;
@@ -662,14 +797,9 @@ export class Cars implements OnInit, AfterViewInit {
     
     const query = searchQuery.toLowerCase().trim();
     const filteredCars = cars.filter(car => {
-      if (searchType === 'pincode') {
-        // Search by pincode - exact match
-        return car.pincode && car.pincode.toString() === query;
-      } else {
-        // Search by location - partial match
-        const location = (car.location || '').toLowerCase();
-        return location.includes(query);
-      }
+      // Search by location - partial match
+      const location = (car.location || '').toLowerCase();
+      return location.includes(query);
     });
     
     return filteredCars;
@@ -746,14 +876,14 @@ export class Cars implements OnInit, AfterViewInit {
           return soldB - soldA; // Most sold first
         });
         break;
-      case 'Ticket Price (Low-High)':
+      case 'Share Price (Low-High)':
         result = sortedCars.sort((a, b) => {
           const priceA = parseFloat(a.fractionprice || a.tokenprice || '0');
           const priceB = parseFloat(b.fractionprice || b.tokenprice || '0');
           return priceA - priceB; // Low to high
         });
         break;
-      case 'Ticket Price (High-Low)':
+      case 'Share Price (High-Low)':
         result = sortedCars.sort((a, b) => {
           const priceA = parseFloat(a.fractionprice || a.tokenprice || '0');
           const priceB = parseFloat(b.fractionprice || b.tokenprice || '0');
@@ -820,18 +950,50 @@ export class Cars implements OnInit, AfterViewInit {
     return colorMap[colorName.toLowerCase()] || '#6b7280';
   }
 
+  // Format price with commas
+  formatPrice(price: string | number | undefined): string {
+    if (!price) return 'N/A';
+    
+    // Convert to string and remove any existing commas and currency symbols
+    const priceStr = price.toString().replace(/[₹,\s]/g, '');
+    const priceNum = parseFloat(priceStr);
+    
+    if (isNaN(priceNum)) return 'N/A';
+    
+    // Format with commas using Indian number system
+    return priceNum.toLocaleString('en-IN');
+  }
+
   // Pagination methods - now handled by computed signals
   // updatePagination is no longer needed as pagination is handled by computed signals
 
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages()) {
       this.currentPage.set(page);
-      // Scroll to top of car grid
+      // Scroll to slightly above "Available Cars" text
       if (this.isBrowser()) {
-        const carGrid = document.getElementById('car-grid');
-        if (carGrid) {
-          carGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        setTimeout(() => {
+          const availableCarsElement = document.getElementById('available-cars-heading');
+          if (availableCarsElement) {
+            // Scroll to element with offset to position it higher
+            const elementPosition = availableCarsElement.offsetTop;
+            const offsetPosition = elementPosition - 100; // 100px above the element
+            
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: 'smooth'
+            });
+          } else {
+            // Fallback: scroll to car grid
+            const carGrid = document.getElementById('car-grid');
+            if (carGrid) {
+              carGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+              // Final fallback: scroll to top of page
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }
+        }, 100);
       }
     }
   }
@@ -887,6 +1049,37 @@ export class Cars implements OnInit, AfterViewInit {
     return pages;
   }
 
+  getMobilePageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 3; // Show fewer pages on mobile
+    const totalPages = this.totalPages();
+    const currentPage = this.currentPage();
+    
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if total pages is less than or equal to max visible pages
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show pages around current page
+      let start = Math.max(1, currentPage - 1);
+      let end = Math.min(totalPages, currentPage + 1);
+      
+      // Adjust if we're at the beginning or end
+      if (currentPage <= 2) {
+        end = maxVisiblePages;
+      } else if (currentPage >= totalPages - 1) {
+        start = totalPages - maxVisiblePages + 1;
+      }
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+    
+    return pages;
+  }
+
   // Main search functionality methods
   onSearchSubmit(): void {
     if (this.searchQuery().trim()) {
@@ -928,7 +1121,7 @@ export class Cars implements OnInit, AfterViewInit {
   onLocationSearchSubmit(): void {
     if (this.locationSearchQuery().trim()) {
       this.isLocationSearchActive.set(true);
-      this.locationSearchType.set(this.isPincode(this.locationSearchQuery().trim()) ? 'pincode' : 'location');
+      this.locationSearchType.set('location');
       this.currentPage.set(1); // Reset to first page when searching
       
       // Close dropdown after search
@@ -983,7 +1176,7 @@ export class Cars implements OnInit, AfterViewInit {
     
     if (typeof city === 'string') {
       cityName = city;
-      searchType = this.locationSuggestionsService.isPincode(city) ? 'pincode' : 'location';
+      searchType = 'location';
     } else {
       cityName = this.locationSuggestionsService.getFormattedLocation(city);
       searchType = 'location';
@@ -1021,6 +1214,56 @@ export class Cars implements OnInit, AfterViewInit {
       this.locationSuggestions.set([]);
       this.isLocationLoading.set(false);
     }
+  }
+
+  // Popup location selection methods
+  onPopupLocationInputChange(value: string): void {
+    this.popupLocationQuery.set(value);
+  }
+
+  selectPopupLocation(city: any): void {
+    const cityName = city.name;
+    const searchType = 'location';
+    
+    this.locationSearchQuery.set(cityName);
+    this.locationSearchType.set(searchType);
+    this.isLocationSearchActive.set(true);
+    this.showLocationPopup.set(false);
+    this.popupLocationQuery.set('');
+    this.currentPage.set(1);
+    
+    // Update URL with location search
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        locationSearch: cityName,
+        locationType: searchType
+      },
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  onPopupLocationSubmit(): void {
+    if (this.popupLocationQuery().trim()) {
+      // Find matching city
+      const matchingCity = this.popupLocationSuggestionsComputed().find(city => 
+        city.name.toLowerCase() === this.popupLocationQuery().toLowerCase()
+      );
+      if (matchingCity) {
+        this.selectPopupLocation(matchingCity);
+      }
+    }
+  }
+
+  onPopupLocationKeyPress(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      this.onPopupLocationSubmit();
+    }
+  }
+
+  closeLocationPopup(): void {
+    // Don't allow closing without selecting a location
+    // This ensures users must select a location to proceed
   }
 
   clearBrandFilter(): void {
@@ -1065,8 +1308,7 @@ export class Cars implements OnInit, AfterViewInit {
       return '';
     }
     
-    const typeText = this.searchType() === 'pincode' ? 'Pincode' : 'Location';
-    return `Searching by ${typeText}: "${this.searchQuery()}"`;
+    return `Searching by Location: "${this.searchQuery()}"`;
   }
 
   // Navigation method for car details
@@ -1119,6 +1361,21 @@ export class Cars implements OnInit, AfterViewInit {
   navigateToCarDetailsWithTracking(carId: string): void {
     this.trackCarView(carId);
     this.navigateToCarDetails(carId);
+  }
+
+  // Mobile detection
+  isMobile(): boolean {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768; // md breakpoint
+    }
+    return false;
+  }
+
+
+  // Show pricing information tooltip
+  showPricingInfo(event: Event): void {
+    event.stopPropagation();
+    // The tooltip is handled by CSS hover states, this method can be used for additional functionality if needed
   }
 
   private initAngularAnimations(): void {

@@ -1,0 +1,2079 @@
+import { Component, OnInit, Inject, PLATFORM_ID, ChangeDetectorRef, signal, computed, effect } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { UserService } from '../services/user.service';
+import { AuthService } from '../services/auth.service';
+import { KycService } from '../services/kyc.service';
+import { TicketService, Ticket } from '../services/ticket.service';
+import { TokenService, Token } from '../services/token.service';
+import { BookingService, Booking } from '../services/booking.service';
+import { BookNowTokenService, BookNowToken } from '../services/book-now-token.service';
+import { AMCService, AMC } from '../services/amc.service';
+import { PaymentService, PaymentOrder, PaymentVerification } from '../services/payment.service';
+import { ContractService, ContractDocument } from '../services/contract.service';
+import { SharedMemberService, SharedMember, CreateSharedMemberRequest } from '../services/shared-member.service';
+
+@Component({
+  selector: 'app-profile',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './profile.html',
+  styleUrl: './profile.css'
+})
+export class Profile implements OnInit {
+  // Convert to signals for proper reactivity with zoneless change detection
+  protected user = signal<any>({
+    name: '',
+    email: '',
+    phone: '',
+    dateofbirth: '',
+    location: '',
+    address: '',
+    pincode: '',
+    profileimage: '',
+    verified: false,
+    kycStatus: 'pending',
+    rejected_comments: [],
+    governmentid: {
+      aadharid: '',
+      panid: '',
+      licenseid: '',
+      income: ''
+    },
+    createdAt: ''
+  });
+
+  // Real tickets data from API
+  protected tickets = signal<Ticket[]>([]);
+
+  // Real tokens data from API
+  protected tokens = signal<Token[]>([]);
+  protected tokensLoading = signal<boolean>(false);
+  protected tokensError = signal<string>('');
+
+  // Real booknow tokens data from API
+  protected bookNowTokens = signal<BookNowToken[]>([]);
+  protected bookNowTokensLoading = signal<boolean>(false);
+  protected bookNowTokensError = signal<string>('');
+
+  // Real AMC data from API
+  protected amcs = signal<AMC[]>([]);
+  protected amcsLoading = signal<boolean>(false);
+  protected amcsError = signal<string>('');
+  protected expandedAMC = signal<string | null>(null);
+
+  // Real contract documents data from API
+  protected contractDocuments = signal<ContractDocument[]>([]);
+  protected contractDocumentsLoading = signal<boolean>(false);
+  protected contractDocumentsError = signal<string>('');
+
+  // Real shared members data from API
+  protected sharedMembers = signal<SharedMember[]>([]);
+  protected sharedMembersLoading = signal<boolean>(false);
+  protected sharedMembersError = signal<string>('');
+  protected selectedTicketForSharing = signal<string | null>(null);
+  protected showSharedMemberModal = signal<boolean>(false);
+  protected sharedMemberForm = signal<CreateSharedMemberRequest>({
+    name: '',
+    email: '',
+    mobileNumber: '',
+    aadharNumber: '',
+    panNumber: '',
+    ticketid: '',
+    userid: ''
+  });
+  protected sharedMemberSubmitting = signal<boolean>(false);
+  protected sharedMemberSuccessMessage = signal<string>('');
+  protected sharedMemberErrorMessage = signal<string>('');
+  protected sharedMemberFiles = signal<File[]>([]);
+
+  // Real bookings data from API
+  protected bookings = signal<Booking[]>([]);
+  protected bookingsLoading = signal<boolean>(false);
+  protected bookingsError = signal<string>('');
+  protected currentMonth = signal<Date>(new Date());
+  protected calendarDays = signal<any[]>([]);
+
+  // New profile section navigation
+  protected activeSection = signal<string>('profile');
+  protected isEditingProfile = signal<boolean>(false);
+  protected profileSections = [
+    {
+      id: 'profile',
+      label: 'Profile Info',
+      icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>',
+      count: 0
+    },
+    {
+      id: 'kyc',
+      label: 'KYC',
+      icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>',
+      count: 0
+    },
+    {
+      id: 'shares',
+      label: 'Shares',
+      icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>',
+      count: 0
+    },
+    {
+      id: 'waitlist',
+      label: 'Waitlist',
+      icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>',
+      count: 0
+    },
+    {
+      id: 'booknow',
+      label: 'Book Now',
+      icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>',
+      count: 0
+    },
+    {
+      id: 'amc',
+      label: 'AMC\'s',
+      icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>',
+      count: 0
+    },
+    {
+      id: 'bookings',
+      label: 'Bookings',
+      icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>',
+      count: 0
+    }
+  ];
+
+  // KYC form data
+  protected kycForm = signal({
+    aadharId: '',
+    panId: '',
+    file: null as File | null
+  });
+
+  protected showDocModal = signal<boolean>(false);
+
+  protected loading = signal<boolean>(false);
+  protected error = signal<string>('');
+
+  protected ticketsLoading = signal<boolean>(false);
+  protected ticketsError = signal<string>('');
+
+  // Edit profile modal state
+  protected showEditModal = signal<boolean>(false);
+  protected editSubmitting = signal<boolean>(false);
+  protected editSuccessMessage = signal<string>('');
+  protected editErrorMessage = signal<string>('');
+  protected editForm = signal<any>({
+    name: '',
+    email: '',
+    phone: '',
+    dateofbirth: '',
+    location: '',
+    address: '',
+    pincode: ''
+  });
+
+  // Verify email modal state (after email change)
+  protected showVerifyEmailModal = signal<boolean>(false);
+  protected verifySubmitting = signal<boolean>(false);
+  protected verifyErrorMessage = signal<string>('');
+  protected verifySuccessMessage = signal<string>('');
+  protected verifyForm = signal({ email: '', code: '' });
+
+  // Change password modal state
+  protected showChangePasswordModal = signal<boolean>(false);
+  protected passwordRequesting = signal<boolean>(false);
+  protected passwordSubmitting = signal<boolean>(false);
+  protected passwordErrorMessage = signal<string>('');
+  protected passwordSuccessMessage = signal<string>('');
+  protected resetForm = signal({ code: '', newPassword: '' });
+  
+  // Change password form state
+  protected changePasswordSubmitting = signal<boolean>(false);
+  protected changePasswordErrorMessage = signal<string>('');
+  protected changePasswordSuccessMessage = signal<string>('');
+  protected changePasswordForm = signal({ currentPassword: '', newPassword: '', confirmPassword: '' });
+
+  // Profile image upload state
+  protected uploadingImage = signal<boolean>(false);
+  protected imageUploadError = signal<string>('');
+  protected imageUploadSuccess = signal<string>('');
+
+  // AMC Payment state
+  protected razorpayKey = signal<string>('');
+  protected isAMCPaymentLoading = signal<boolean>(false);
+  protected amcPaymentError = signal<string>('');
+  protected showAMCPaymentModal = signal<boolean>(false);
+  protected selectedAMC = signal<AMC | null>(null);
+  protected selectedAMCYear = signal<number>(-1);
+  protected amcPaymentSuccess = signal<boolean>(false);
+
+  // Profile expansion state
+  protected profileExpanded = signal<boolean>(false);
+
+  constructor(
+    private userService: UserService,
+    private authService: AuthService,
+    private kycService: KycService,
+    private ticketService: TicketService,
+    private tokenService: TokenService,
+    private bookingService: BookingService,
+    private bookNowTokenService: BookNowTokenService,
+    private amcService: AMCService,
+    private paymentService: PaymentService,
+    private contractService: ContractService,
+    private sharedMemberService: SharedMemberService,
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    // Effect to trigger change detection when data changes
+    effect(() => {
+      const userData = this.user();
+      const ticketsData = this.tickets();
+      const tokensData = this.tokens();
+      const bookNowTokensData = this.bookNowTokens();
+      const amcsData = this.amcs();
+      const bookingsData = this.bookings();
+      const contractDocumentsData = this.contractDocuments();
+      
+      // Trigger change detection immediately when any data changes
+      if (isPlatformBrowser(this.platformId)) {
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  ngOnInit() {
+    this.loadUserProfile();
+    this.loadRazorpayKey();
+    this.updateSectionCounts();
+    // Don't load tickets here - wait for profile to load first
+  }
+
+  loadUserProfile() {
+    this.loading.set(true);
+    this.error.set('');
+    
+    // First try to get from localStorage if available
+    const storedUser = this.authService.getUserData();
+    if (storedUser) {
+      this.user.set({ ...this.user(), ...storedUser });
+    }
+
+    // Check if user is authenticated
+    const token = this.authService.getToken();
+    if (!token) {
+      this.loading.set(false);
+      this.error.set('Please login to view your profile.');
+      return;
+    }
+
+    // Then fetch fresh data from API
+    this.userService.getProfile().subscribe({
+      next: (response) => {
+        this.loading.set(false);
+        if (response && response.body && response.body.user) {
+          this.user.set({ ...this.user(), ...response.body.user });
+          // Update stored user data
+          this.authService.setUserData(this.user());
+          // Now load tickets, tokens, booknow tokens, AMCs, bookings, and contract documents since user is authenticated
+          this.loadUserTickets();
+          this.loadUserTokens();
+          this.loadUserBookNowTokens();
+          this.loadUserAMCs();
+          this.loadUserBookings();
+          this.loadUserContractDocuments();
+          this.loadUserSharedMembers();
+          this.updateSectionCounts();
+        }
+      },
+      error: (error) => {
+        this.loading.set(false);
+        console.error('Error loading profile:', error);
+        
+        if (error.status === 401) {
+          this.error.set('Authentication failed. Please login again.');
+          // Clear invalid token and user data
+          this.authService.removeToken();
+          this.authService.removeUserData();
+        } else if (error.status === 403) {
+          this.error.set('Access denied. You do not have permission to view this profile.');
+        } else {
+          this.error.set('Failed to load profile data. Please try again later.');
+        }
+        
+        // If API fails but we have stored data, use that
+        if (!this.user().name && storedUser) {
+          this.user.set({ ...this.user(), ...storedUser });
+        }
+      }
+    });
+  }
+
+    loadUserTickets() {
+    // Check if user is authenticated before making the request
+    const token = this.authService.getToken();
+    if (!token) {
+      this.ticketsError.set('Please login to view your tickets');
+      return;
+    }
+
+    this.ticketsLoading.set(true);
+    this.ticketsError.set('');
+
+    this.ticketService.getUserTickets().subscribe({
+      next: (response) => {
+        this.ticketsLoading.set(false);
+        
+        if (response && response.body && response.body.tickets) {
+          this.tickets.set(response.body.tickets);
+          this.updateSectionCounts();
+        }
+      },
+      error: (error) => {
+        this.ticketsLoading.set(false);
+        console.error('Error loading tickets:', error);
+        
+        if (error.status === 401) {
+          this.ticketsError.set('Authentication failed. Please login again.');
+          // Clear invalid token and user data
+          this.authService.removeToken();
+          this.authService.removeUserData();
+        } else if (error.status === 403) {
+          this.ticketsError.set('Access denied. You do not have permission to view tickets.');
+        } else {
+          this.ticketsError.set('Failed to load tickets. Please try again later.');
+        }
+      }
+    });
+  }
+
+  loadUserTokens() {
+    // Check if user is authenticated before making the request
+    const token = this.authService.getToken();
+    if (!token) {
+      this.tokensError.set('Please login to view your tokens');
+      return;
+    }
+
+    this.tokensLoading.set(true);
+    this.tokensError.set('');
+
+    this.tokenService.getUserTokens().subscribe({
+      next: (response) => {
+        this.tokensLoading.set(false);
+        
+        if (response && response.body && response.body.tokens) {
+          this.tokens.set(response.body.tokens);
+          this.updateSectionCounts();
+        }
+      },
+      error: (error) => {
+        this.tokensLoading.set(false);
+        console.error('Error loading tokens:', error);
+        
+        if (error.status === 401) {
+          this.tokensError.set('Authentication failed. Please login again.');
+          // Clear invalid token and user data
+          this.authService.removeToken();
+          this.authService.removeUserData();
+        } else if (error.status === 403) {
+          this.tokensError.set('Access denied. You do not have permission to view tokens.');
+        } else {
+          this.tokensError.set('Failed to load tokens. Please try again later.');
+        }
+      }
+    });
+  }
+
+  loadUserBookNowTokens() {
+    // Check if user is authenticated before making the request
+    const token = this.authService.getToken();
+    if (!token) {
+      this.bookNowTokensError.set('Please login to view your book now tokens');
+      return;
+    }
+
+    this.bookNowTokensLoading.set(true);
+    this.bookNowTokensError.set('');
+
+    this.bookNowTokenService.getUserBookNowTokens().subscribe({
+      next: (response) => {
+        this.bookNowTokensLoading.set(false);
+        
+        if (response && response.body && response.body.bookNowTokens) {
+          this.bookNowTokens.set(response.body.bookNowTokens);
+          this.updateSectionCounts();
+        }
+      },
+      error: (error) => {
+        this.bookNowTokensLoading.set(false);
+        console.error('Error loading book now tokens:', error);
+        
+        if (error.status === 401) {
+          this.bookNowTokensError.set('Authentication failed. Please login again.');
+          // Clear invalid token and user data
+          this.authService.removeToken();
+          this.authService.removeUserData();
+        } else if (error.status === 403) {
+          this.bookNowTokensError.set('Access denied. You do not have permission to view book now tokens.');
+        } else {
+          this.bookNowTokensError.set('Failed to load book now tokens. Please try again later.');
+        }
+      }
+    });
+  }
+
+  loadUserAMCs() {
+    // Check if user is authenticated before making the request
+    const token = this.authService.getToken();
+    if (!token) {
+      this.amcsError.set('Please login to view your AMC records');
+      return;
+    }
+
+    this.amcsLoading.set(true);
+    this.amcsError.set('');
+
+    this.amcService.getUserAMCs().subscribe({
+      next: (response) => {
+        this.amcsLoading.set(false);
+        
+        if (response && response.body && response.body.amcs) {
+          this.amcs.set(response.body.amcs);
+          this.updateSectionCounts();
+        }
+      },
+      error: (error) => {
+        this.amcsLoading.set(false);
+        console.error('Error loading AMCs:', error);
+        
+        if (error.status === 401) {
+          this.amcsError.set('Authentication failed. Please login again.');
+          // Clear invalid token and user data
+          this.authService.removeToken();
+          this.authService.removeUserData();
+        } else if (error.status === 403) {
+          this.amcsError.set('Access denied. You do not have permission to view AMC records.');
+        } else {
+          this.amcsError.set('Failed to load AMC records. Please try again later.');
+        }
+      }
+    });
+  }
+
+  loadUserBookings() {
+    // Check if user is authenticated before making the request
+    const token = this.authService.getToken();
+    if (!token) {
+      this.bookingsError.set('Please login to view your bookings');
+      return;
+    }
+
+    this.bookingsLoading.set(true);
+    this.bookingsError.set('');
+
+    this.bookingService.getUserBookings().subscribe({
+      next: (response) => {
+        this.bookingsLoading.set(false);
+        
+        if (response && response.body && response.body.bookings) {
+          this.bookings.set(response.body.bookings);
+          this.generateCalendar();
+          this.updateSectionCounts();
+        }
+      },
+      error: (error) => {
+        this.bookingsLoading.set(false);
+        console.error('Error loading bookings:', error);
+        
+        if (error.status === 401) {
+          this.bookingsError.set('Authentication failed. Please login again.');
+          // Clear invalid token and user data
+          this.authService.removeToken();
+          this.authService.removeUserData();
+        } else if (error.status === 403) {
+          this.bookingsError.set('Access denied. You do not have permission to view bookings.');
+        } else {
+          this.bookingsError.set('Failed to load bookings. Please try again later.');
+        }
+      }
+    });
+  }
+
+  // Helper method to format date
+  formatDate(dateString: string | Date): string {
+    if (!dateString) return 'Not provided';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid date';
+      
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return 'Invalid date';
+    }
+  }
+
+  // Helper method to calculate total AMC amount for a car
+  getTotalAMCAmount(amc: AMC): number {
+    return amc.amcamount.reduce((total, amount) => total + amount.amount, 0);
+  }
+
+  // Helper method to calculate paid AMC amount for a car
+  getPaidAMCAmount(amc: AMC): number {
+    return amc.amcamount
+      .filter(amount => amount.paid)
+      .reduce((total, amount) => total + amount.amount, 0);
+  }
+
+  // Helper method to calculate pending AMC amount for a car
+  getPendingAMCAmount(amc: AMC): number {
+    return amc.amcamount
+      .filter(amount => !amount.paid)
+      .reduce((total, amount) => total + amount.amount, 0);
+  }
+
+  // Helper method to get next due AMC
+  getNextDueAMC(amc: AMC): any {
+    const unpaidAmounts = amc.amcamount.filter(amount => !amount.paid);
+    if (unpaidAmounts.length === 0) return null;
+    
+    // Sort by due date and return the earliest
+    return unpaidAmounts.sort((a, b) => {
+      const dateA = a.duedate ? new Date(a.duedate) : new Date();
+      const dateB = b.duedate ? new Date(b.duedate) : new Date();
+      return dateA.getTime() - dateB.getTime();
+    })[0];
+  }
+
+  // Helper method to toggle AMC expansion
+  toggleAMCExpansion(amcId: string) {
+    const currentExpanded = this.expandedAMC();
+    if (currentExpanded === amcId) {
+      this.expandedAMC.set(null);
+    } else {
+      this.expandedAMC.set(amcId);
+    }
+  }
+
+  // Helper method to check if AMC is expanded
+  isAMCExpanded(amcId: string): boolean {
+    return this.expandedAMC() === amcId;
+  }
+
+  // Helper method to check if an AMC amount is overdue
+  isAMCAmountOverdue(amount: any): boolean {
+    if (amount.paid || !amount.duedate) {
+      return false;
+    }
+    const dueDate = new Date(amount.duedate);
+    const today = new Date();
+    return dueDate < today;
+  }
+
+  // Helper method to format government ID
+  formatGovernmentId(idType: string, idValue: string): string {
+    if (!idValue) return 'Not provided';
+    
+    // Mask sensitive information for display
+    if (idType === 'aadharid' && idValue.length >= 4) {
+      return `****-****-${idValue.slice(-4)}`;
+    }
+    if (idType === 'panid' && idValue.length >= 4) {
+      return `${idValue.slice(0, 2)}****${idValue.slice(-2)}`;
+    }
+    if (idType === 'licenseid' && idValue.length >= 4) {
+      return `${idValue.slice(0, 2)}****${idValue.slice(-2)}`;
+    }
+    
+    return idValue;
+  }
+
+  // Helper method to get verification status text
+  getVerificationStatus(): string {
+    return this.user().verified ? 'Verified' : 'Not Verified';
+  }
+
+  // Helper method to get KYC status display
+  getKycStatusDisplay(): string {
+    switch (this.user().kycStatus) {
+      case 'approved':
+        return 'Approved';
+      case 'rejected':
+        return 'Rejected';
+      case 'submitted':
+        return 'Under Review';
+      case 'pending':
+      default:
+        return 'Pending Verification';
+    }
+  }
+
+  // Helper method to get KYC status class
+  getKycStatusClass(): string {
+    switch (this.user().kycStatus) {
+      case 'approved':
+        return 'approved';
+      case 'rejected':
+        return 'rejected';
+      case 'submitted':
+        return 'submitted';
+      case 'pending':
+      default:
+        return 'pending';
+    }
+  }
+
+  // Helper method to get rejection comments from user data
+  getRejectionComments(): Array<{ comment: string; date: Date }> {
+    const userData = this.user();
+    if (userData && userData.rejected_comments && Array.isArray(userData.rejected_comments)) {
+      return userData.rejected_comments;
+    }
+    return [];
+  }
+
+  openDocModal() {
+    this.showDocModal.set(true);
+  }
+
+  closeDocModal() {
+    this.showDocModal.set(false);
+    this.resetKycForm();
+  }
+
+  resetKycForm() {
+    this.kycForm.set({
+      aadharId: '',
+      panId: '',
+      file: null
+    });
+  }
+
+  onFileSelect(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.kycForm.set({ ...this.kycForm(), file: file });
+    }
+  }
+
+
+
+  onSubmitKyc() {
+    // Simple form submission without any validations or loading states
+    const governmentIds = {
+      aadharid: this.kycForm().aadharId.replace(/[\s-]/g, ''),
+      panid: this.kycForm().panId.replace(/\s/g, '').toUpperCase()
+    };
+
+    // Update user profile with government IDs
+    this.userService.updateProfile({ governmentid: governmentIds }).subscribe({
+      next: (response) => {
+        // After successfully updating government IDs, submit KYC documents
+        this.submitKycDocuments();
+      },
+      error: (error) => {
+        console.error('Error updating government IDs:', error);
+        alert('Failed to update government IDs. Please try again.');
+      }
+    });
+  }
+
+  private submitKycDocuments() {
+    if (!this.kycForm().file) {
+      alert('Please select a document file to upload.');
+      return;
+    }
+
+    // Upload the document file and get the URL
+    this.userService.uploadKycDocument(this.kycForm().file!, 'kyc-documents').subscribe({
+      next: (uploadResponse) => {
+        if (uploadResponse && uploadResponse.status === 'success' && uploadResponse.body?.documentUrl) {
+          // Use the actual uploaded document URL
+          const kycDocs = [uploadResponse.body.documentUrl];
+          
+          // Submit KYC documents with the real URL
+          this.userService.submitKyc({ kycDocs }).subscribe({
+            next: (response) => {
+              if (response && response.status === 'success') {
+                // Update user's KYC status
+                this.user.set({ ...this.user(), kycStatus: 'submitted' });
+                alert('KYC documents submitted successfully! Your application is under review.');
+                this.closeDocModal();
+              } else {
+                alert('Failed to submit KYC documents. Please try again.');
+              }
+            },
+            error: (error) => {
+              console.error('Error submitting KYC documents:', error);
+              alert('Failed to submit KYC documents. Please try again.');
+            }
+          });
+        } else {
+          alert('Failed to upload document. Please try again.');
+        }
+      },
+      error: (error) => {
+        console.error('Error uploading document:', error);
+        alert('Failed to upload document. Please try again.');
+      }
+    });
+  }
+
+  // Calendar generation methods
+  generateCalendar() {
+    const year = this.currentMonth().getFullYear();
+    const month = this.currentMonth().getMonth();
+    
+    // Get first day of month and number of days
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    
+    const calendarDays: any[] = [];
+    
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      calendarDays.push({ day: '', isEmpty: true });
+    }
+    
+    // Add days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dayBookings = this.bookingService.hasBookingsOnDate(this.bookings(), date);
+      const bookingStatus = this.bookingService.getBookingStatusForDate(this.bookings(), date);
+      
+      calendarDays.push({
+        day: day,
+        date: date,
+        isEmpty: false,
+        bookings: dayBookings,
+        bookingStatus: bookingStatus,
+        isToday: this.isToday(date)
+      });
+    }
+    
+    this.calendarDays.set(calendarDays);
+  }
+
+  // Helper method to check if a date is today
+  isToday(date: Date): boolean {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  }
+
+  // Get current month display text
+  getCurrentMonthDisplay(): string {
+    return this.currentMonth().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long'
+    });
+  }
+
+  // Navigate to previous month
+  goToPreviousMonth() {
+    const newDate = new Date(this.currentMonth().getFullYear(), this.currentMonth().getMonth() - 1, 1);
+    this.currentMonth.set(newDate);
+    this.generateCalendar();
+  }
+
+  // Navigate to next month
+  goToNextMonth() {
+    const newDate = new Date(this.currentMonth().getFullYear(), this.currentMonth().getMonth() + 1, 1);
+    this.currentMonth.set(newDate);
+    this.generateCalendar();
+  }
+
+  // Get CSS class for calendar day based on booking status
+  getCalendarDayClass(day: any): string {
+    if (day.isEmpty) return 'calendar-day empty';
+    
+    let classes = 'calendar-day';
+    
+    if (day.isToday) {
+      classes += ' today';
+    }
+    
+    if (day.bookingStatus === 'accepted') {
+      classes += ' booking-accepted';
+    } else if (day.bookingStatus === 'rejected') {
+      classes += ' booking-rejected';
+    }
+    
+    return classes;
+  }
+
+  // Get booking tooltip text for a day
+  getBookingTooltip(day: any): string {
+    if (day.isEmpty || !day.bookings || day.bookings.length === 0) {
+      return '';
+    }
+    
+    const bookingTexts = day.bookings.map((booking: Booking) => {
+      const carName = booking.carid?.carname || 'Unknown Car';
+      const status = booking.status === 'accepted' ? '✓' : '✗';
+      return `${status} ${carName}`;
+    });
+    
+    return bookingTexts.join('\n');
+  }
+
+  private isBrowser(): boolean {
+    return isPlatformBrowser(this.platformId);
+  }
+
+  // =============== Edit Profile ===============
+  openEditModal() {
+    this.editErrorMessage.set('');
+    this.editSuccessMessage.set('');
+    // Initialize form with current user values
+    this.editForm.set({
+      name: this.user().name || '',
+      email: this.user().email || '',
+      phone: this.user().phone || '',
+      dateofbirth: this.user().dateofbirth ? new Date(this.user().dateofbirth).toISOString().split('T')[0] : '',
+      location: this.user().location || '',
+      address: this.user().address || '',
+      pincode: this.user().pincode || ''
+    });
+    this.showEditModal.set(true);
+  }
+
+  closeEditModal() {
+    if (this.editSubmitting()) return;
+    this.showEditModal.set(false);
+  }
+
+  saveProfile() {
+    this.editErrorMessage.set('');
+    this.editSuccessMessage.set('');
+    this.editSubmitting.set(true);
+
+    const payload: any = {
+      name: this.editForm().name?.trim(),
+      email: this.editForm().email?.trim(),
+      phone: this.editForm().phone?.trim(),
+      dateofbirth: this.editForm().dateofbirth ? new Date(this.editForm().dateofbirth).toISOString() : '',
+      location: this.editForm().location?.trim(),
+      address: this.editForm().address?.trim(),
+      pincode: this.editForm().pincode?.trim()
+    };
+
+    this.userService.updateProfile(payload).subscribe({
+      next: (response) => {
+        this.editSubmitting.set(false);
+        if (response && response.status === 'success') {
+          const updatedUser = response.body?.user || {};
+          this.user.set({ ...this.user(), ...updatedUser });
+          this.authService.setUserData(this.user());
+          const emailChanged = !!response.body?.emailChangeVerificationSent;
+          if (emailChanged) {
+            this.verifyForm.set({ ...this.verifyForm(), email: this.user().email });
+            this.showVerifyEmailModal.set(true);
+            this.editSuccessMessage.set('Profile saved. Please verify your new email.');
+          } else {
+            this.editSuccessMessage.set('Profile updated successfully.');
+          }
+          // Close modal after short delay if no email verification needed
+          if (!emailChanged) {
+            setTimeout(() => { this.showEditModal.set(false); }, 800);
+          }
+        } else {
+          this.editErrorMessage.set(response?.message || 'Failed to update profile.');
+        }
+      },
+      error: (error) => {
+        this.editSubmitting.set(false);
+        this.editErrorMessage.set(error.error?.message || 'Failed to update profile. Please try again.');
+      }
+    });
+  }
+
+  // =============== Verify Email (after change) ===============
+  closeVerifyEmailModal() {
+    if (this.verifySubmitting()) return;
+    this.showVerifyEmailModal.set(false);
+    this.verifyForm.set({ email: '', code: '' });
+    this.verifyErrorMessage.set('');
+    this.verifySuccessMessage.set('');
+  }
+
+  verifyNewEmail() {
+    this.verifyErrorMessage.set('');
+    this.verifySuccessMessage.set('');
+    if (!this.verifyForm().email || !this.verifyForm().code) {
+      this.verifyErrorMessage.set('Email and verification code are required.');
+      return;
+    }
+    this.verifySubmitting.set(true);
+    this.authService.verifyEmail({ email: this.verifyForm().email, code: this.verifyForm().code }).subscribe({
+      next: (response) => {
+        this.verifySubmitting.set(false);
+        if (response?.status === 'success') {
+          // Update token and user data
+          if (response.body?.token) {
+            this.authService.setToken(response.body.token);
+          }
+          if (response.body?.user) {
+            this.user.set({ ...this.user(), ...response.body.user });
+            this.authService.setUserData(this.user());
+          }
+          this.verifySuccessMessage.set('Email verified successfully!');
+          setTimeout(() => { this.closeVerifyEmailModal(); }, 800);
+        } else {
+          this.verifyErrorMessage.set(response?.message || 'Verification failed.');
+        }
+      },
+      error: (error) => {
+        this.verifySubmitting.set(false);
+        this.verifyErrorMessage.set(error.error?.message || 'Verification failed. Please try again.');
+      }
+    });
+  }
+
+  resendVerifyCode() {
+    if (!this.verifyForm().email) return;
+    this.verifyErrorMessage.set('');
+    this.verifySuccessMessage.set('');
+    this.verifySubmitting.set(true);
+    this.authService.resendVerificationCode(this.verifyForm().email).subscribe({
+      next: () => {
+        this.verifySubmitting.set(false);
+        this.verifySuccessMessage.set('Verification code sent.');
+      },
+      error: (error) => {
+        this.verifySubmitting.set(false);
+        this.verifyErrorMessage.set(error.error?.message || 'Failed to send code.');
+      }
+    });
+  }
+
+  // =============== Change Password ===============
+  openChangePasswordModal() {
+    this.passwordErrorMessage.set('');
+    this.passwordSuccessMessage.set('');
+    this.resetForm.set({ code: '', newPassword: '' });
+    this.showChangePasswordModal.set(true);
+  }
+
+  closeChangePasswordModal() {
+    if (this.passwordRequesting() || this.passwordSubmitting() || this.changePasswordSubmitting()) return;
+    this.showChangePasswordModal.set(false);
+    this.changePasswordForm.set({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    this.changePasswordErrorMessage.set('');
+    this.changePasswordSuccessMessage.set('');
+  }
+
+  requestPasswordCode() {
+    this.passwordErrorMessage.set('');
+    this.passwordSuccessMessage.set('');
+    this.passwordRequesting.set(true);
+    const email = this.user().email;
+    this.authService.requestPasswordReset(email).subscribe({
+      next: () => {
+        this.passwordRequesting.set(false);
+        this.passwordSuccessMessage.set('Reset code sent to your email.');
+      },
+      error: (error) => {
+        this.passwordRequesting.set(false);
+        this.passwordErrorMessage.set(error.error?.message || 'Failed to send reset code.');
+      }
+    });
+  }
+
+  submitNewPassword() {
+    this.passwordErrorMessage.set('');
+    this.passwordSuccessMessage.set('');
+    if (!this.resetForm().code || !this.resetForm().newPassword) {
+      this.passwordErrorMessage.set('Code and new password are required.');
+      return;
+    }
+    this.passwordSubmitting.set(true);
+    const payload = { email: this.user().email, code: this.resetForm().code, newPassword: this.resetForm().newPassword };
+    this.authService.resetPassword(payload).subscribe({
+      next: (response) => {
+        this.passwordSubmitting.set(false);
+        if (response?.status === 'success') {
+          this.passwordSuccessMessage.set('Password changed successfully.');
+          setTimeout(() => { this.closeChangePasswordModal(); }, 800);
+        } else {
+          this.passwordErrorMessage.set(response?.message || 'Failed to change password.');
+        }
+      },
+      error: (error) => {
+        this.passwordSubmitting.set(false);
+        this.passwordErrorMessage.set(error.error?.message || 'Failed to change password.');
+      }
+    });
+  }
+
+  // =============== Form Update Helper Methods ===============
+  public updateKycAadharId(value: string) {
+    this.kycForm.set({...this.kycForm(), aadharId: value});
+  }
+
+  public updateKycPanId(value: string) {
+    this.kycForm.set({...this.kycForm(), panId: value});
+  }
+
+  public updateEditFormName(value: string) {
+    this.editForm.set({...this.editForm(), name: value});
+  }
+
+  public updateEditFormEmail(value: string) {
+    this.editForm.set({...this.editForm(), email: value});
+  }
+
+  public updateEditFormPhone(value: string) {
+    this.editForm.set({...this.editForm(), phone: value});
+  }
+
+  public updateEditFormDateOfBirth(value: string) {
+    this.editForm.set({...this.editForm(), dateofbirth: value});
+  }
+
+  public updateEditFormLocation(value: string) {
+    this.editForm.set({...this.editForm(), location: value});
+  }
+
+  public updateEditFormPincode(value: string) {
+    this.editForm.set({...this.editForm(), pincode: value});
+  }
+
+  public updateEditFormAddress(value: string) {
+    this.editForm.set({...this.editForm(), address: value});
+  }
+
+  public updateVerifyFormEmail(value: string) {
+    this.verifyForm.set({...this.verifyForm(), email: value});
+  }
+
+  public updateVerifyFormCode(value: string) {
+    this.verifyForm.set({...this.verifyForm(), code: value});
+  }
+
+  public updateResetFormCode(value: string) {
+    this.resetForm.set({...this.resetForm(), code: value});
+  }
+
+  public updateResetFormPassword(value: string) {
+    this.resetForm.set({...this.resetForm(), newPassword: value});
+  }
+
+  // =============== Change Password Methods ===============
+  public updateChangePasswordCurrentPassword(value: string) {
+    this.changePasswordForm.set({...this.changePasswordForm(), currentPassword: value});
+  }
+
+  public updateChangePasswordNewPassword(value: string) {
+    this.changePasswordForm.set({...this.changePasswordForm(), newPassword: value});
+  }
+
+  public updateChangePasswordConfirmPassword(value: string) {
+    this.changePasswordForm.set({...this.changePasswordForm(), confirmPassword: value});
+  }
+
+  public onChangePassword() {
+    this.changePasswordErrorMessage.set('');
+    this.changePasswordSuccessMessage.set('');
+    
+    const form = this.changePasswordForm();
+    
+    if (!form.currentPassword || !form.newPassword || !form.confirmPassword) {
+      this.changePasswordErrorMessage.set('All fields are required.');
+      return;
+    }
+    
+    if (form.newPassword !== form.confirmPassword) {
+      this.changePasswordErrorMessage.set('New passwords do not match.');
+      return;
+    }
+    
+    if (form.newPassword.length < 6) {
+      this.changePasswordErrorMessage.set('New password must be at least 6 characters long.');
+      return;
+    }
+    
+    this.changePasswordSubmitting.set(true);
+    
+    // Here you would call your auth service to change the password
+    // For now, we'll simulate the API call
+    setTimeout(() => {
+      this.changePasswordSubmitting.set(false);
+      this.changePasswordSuccessMessage.set('Password changed successfully!');
+      this.changePasswordForm.set({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setTimeout(() => {
+        this.closeChangePasswordModal();
+      }, 1500);
+    }, 1000);
+  }
+
+  // =============== Profile Image Upload ===============
+  public triggerFileInput() {
+    // Create a hidden file input element
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+    
+    fileInput.onchange = (event: any) => {
+      this.onImageSelect(event);
+    };
+    
+    // Trigger the file dialog
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
+  }
+
+  public onImageSelect(event: any) {
+    const file = event.target.files[0];
+    if (!file) {
+      return;
+    }
+
+    // Clear previous messages
+    this.imageUploadError.set('');
+    this.imageUploadSuccess.set('');
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      this.imageUploadError.set('Please select a valid image file (JPEG, PNG, GIF, or WebP).');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      this.imageUploadError.set('Image size must be less than 5MB.');
+      return;
+    }
+
+    // Upload the image
+    this.uploadProfileImage(file);
+  }
+
+  private uploadProfileImage(file: File) {
+    this.uploadingImage.set(true);
+    this.imageUploadError.set('');
+    this.imageUploadSuccess.set('');
+
+    this.userService.uploadProfileImage(file).subscribe({
+      next: (response) => {
+        this.uploadingImage.set(false);
+        if (response && response.status === 'success') {
+          // Update the user's profile image
+          const updatedUser = { ...this.user(), profileimage: response.body?.profileimage || response.body?.imageUrl };
+          this.user.set(updatedUser);
+          this.authService.setUserData(updatedUser);
+          this.imageUploadSuccess.set('Profile image updated successfully!');
+          
+          // Clear success message after 3 seconds
+          setTimeout(() => {
+            this.imageUploadSuccess.set('');
+          }, 3000);
+        } else {
+          this.imageUploadError.set(response?.message || 'Failed to upload image.');
+        }
+      },
+      error: (error) => {
+        this.uploadingImage.set(false);
+        console.error('Error uploading profile image:', error);
+        this.imageUploadError.set(error.error?.message || 'Failed to upload image. Please try again.');
+      }
+    });
+  }
+
+  // =============== AMC Payment Methods ===============
+  loadRazorpayKey() {
+    this.paymentService.getRazorpayKey().subscribe({
+      next: (response) => {
+        this.razorpayKey.set(response.key);
+      },
+      error: (error) => {
+        console.error('Failed to load Razorpay key:', error);
+        this.amcPaymentError.set('Failed to load payment system. Please refresh the page.');
+      }
+    });
+  }
+
+  initiateAMCPayment(amc: AMC, yearIndex: number) {
+    if (!this.razorpayKey()) {
+      this.amcPaymentError.set('Payment system not ready. Please refresh the page.');
+      return;
+    }
+
+    const amcAmount = amc.amcamount[yearIndex];
+    if (!amcAmount || amcAmount.paid) {
+      this.amcPaymentError.set('Invalid AMC amount or already paid.');
+      return;
+    }
+
+    // For test mode, use a fixed small amount instead of the actual amount
+    const testAmount = 100; // ₹1 for testing
+    const actualAmount = amcAmount.amount;
+    
+
+    this.selectedAMC.set(amc);
+    this.selectedAMCYear.set(yearIndex);
+    this.isAMCPaymentLoading.set(true);
+    this.amcPaymentError.set('');
+
+    const orderData: PaymentOrder = {
+      amount: testAmount * 100, // Use test amount in paise
+      currency: 'INR',
+      receipt: `AMC_TEST_${amc._id}_${amcAmount.year}_${Date.now()}`.substring(0, 40)
+    };
+
+    this.paymentService.createOrder(orderData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.openRazorpayCheckout(response.order, `AMC Payment - Year ${amcAmount.year} - ${amc.carid.carname}`);
+        } else {
+          this.amcPaymentError.set(response.message || 'Failed to create payment order');
+          this.isAMCPaymentLoading.set(false);
+        }
+      },
+      error: (error) => {
+        console.error('Error creating payment order:', error);
+        this.amcPaymentError.set('Failed to create payment order. Please try again.');
+        this.isAMCPaymentLoading.set(false);
+      }
+    });
+  }
+
+  openRazorpayCheckout(order: any, description: string) {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const options = {
+      key: this.razorpayKey(),
+      amount: order.amount,
+      currency: order.currency,
+      name: 'Fraction Car Co-ownership',
+      description: description,
+      order_id: order.id,
+      handler: (response: any) => {
+        this.verifyAMCPayment(response);
+      },
+      prefill: {
+        name: this.user().name || 'User',
+        email: this.user().email || 'user@example.com',
+        contact: this.user().phone || '9999999999'
+      },
+      theme: {
+        color: '#3399cc'
+      },
+      modal: {
+        ondismiss: () => {
+          this.isAMCPaymentLoading.set(false);
+        }
+      }
+    };
+
+    const rzp = new (window as any).Razorpay(options);
+    rzp.open();
+  }
+
+  verifyAMCPayment(response: any) {
+    const verificationData: PaymentVerification = {
+      order_id: response.razorpay_order_id,
+      payment_id: response.razorpay_payment_id,
+      signature: response.razorpay_signature
+    };
+
+    this.paymentService.verifyPayment(verificationData).subscribe({
+      next: (result) => {
+        if (result.success) {
+          // Payment verified successfully, now update AMC payment status
+          this.updateAMCPaymentStatus();
+        } else {
+          this.amcPaymentError.set('Payment verification failed. Please contact support.');
+          this.isAMCPaymentLoading.set(false);
+        }
+      },
+      error: (error) => {
+        console.error('Error verifying payment:', error);
+        this.amcPaymentError.set('Payment verification failed. Please contact support.');
+        this.isAMCPaymentLoading.set(false);
+      }
+    });
+  }
+
+  updateAMCPaymentStatus() {
+    const amc = this.selectedAMC();
+    const yearIndex = this.selectedAMCYear();
+    
+    if (!amc || yearIndex === -1) {
+      this.amcPaymentError.set('Invalid AMC data. Please try again.');
+      this.isAMCPaymentLoading.set(false);
+      return;
+    }
+
+    const currentDate = new Date().toISOString();
+    
+    
+    this.paymentService.updateAMCPaymentStatus(amc._id!, yearIndex, true, currentDate).subscribe({
+      next: (response) => {
+        this.isAMCPaymentLoading.set(false);
+        if (response.status === 'success') {
+          // Update local AMC data
+          this.updateLocalAMCData(amc._id!, yearIndex, true, currentDate);
+          this.amcPaymentSuccess.set(true);
+          this.showAMCPaymentModal.set(true);
+          this.amcPaymentError.set('');
+        } else {
+          this.amcPaymentError.set(response.message || 'Failed to update AMC payment status.');
+        }
+      },
+      error: (error) => {
+        console.error('Error updating AMC payment status:', error);
+        console.error('Error details:', {
+          status: error.status,
+          statusText: error.statusText,
+          error: error.error,
+          message: error.message
+        });
+        
+        // Still show success modal but with a warning
+        this.updateLocalAMCData(amc._id!, yearIndex, true, currentDate);
+        this.amcPaymentSuccess.set(true);
+        this.showAMCPaymentModal.set(true);
+        this.isAMCPaymentLoading.set(false);
+        
+        // Show a warning message
+        setTimeout(() => {
+          this.amcPaymentError.set('Payment successful! AMC status updated locally. Please refresh the page to see the updated status.');
+        }, 2000);
+      }
+    });
+  }
+
+  updateLocalAMCData(amcId: string, yearIndex: number, paid: boolean, paiddate: string) {
+    const amcs = this.amcs();
+    const amcIndex = amcs.findIndex(amc => amc._id === amcId);
+    
+    if (amcIndex !== -1 && amcs[amcIndex].amcamount[yearIndex]) {
+      const updatedAmcs = [...amcs];
+      updatedAmcs[amcIndex] = {
+        ...updatedAmcs[amcIndex],
+        amcamount: updatedAmcs[amcIndex].amcamount.map((amount, index) => 
+          index === yearIndex 
+            ? { ...amount, paid, paiddate }
+            : amount
+        )
+      };
+      this.amcs.set(updatedAmcs);
+    }
+  }
+
+  closeAMCPaymentModal() {
+    this.showAMCPaymentModal.set(false);
+    this.selectedAMC.set(null);
+    this.selectedAMCYear.set(-1);
+    this.amcPaymentError.set('');
+    this.amcPaymentSuccess.set(false);
+  }
+
+  getAMCPaymentAmount(amc: AMC, yearIndex: number): number {
+    return amc.amcamount[yearIndex]?.amount || 0;
+  }
+
+  canPayAMC(amc: AMC, yearIndex: number): boolean {
+    const amcAmount = amc.amcamount[yearIndex];
+    return amcAmount && !amcAmount.paid;
+  }
+
+  getCurrentDate(): string {
+    return this.formatDate(new Date().toISOString());
+  }
+
+  // =============== Contract Documents Methods ===============
+  loadUserContractDocuments() {
+    // Check if user is authenticated before making the request
+    const token = this.authService.getToken();
+    if (!token) {
+      this.contractDocumentsError.set('Please login to view your contract documents');
+      return;
+    }
+
+    this.contractDocumentsLoading.set(true);
+    this.contractDocumentsError.set('');
+
+    this.contractService.getUserContractDocuments().subscribe({
+      next: (response) => {
+        this.contractDocumentsLoading.set(false);
+        
+        if (response && response.body && response.body.contracts) {
+          this.contractDocuments.set(response.body.contracts);
+        }
+      },
+      error: (error) => {
+        this.contractDocumentsLoading.set(false);
+        console.error('Error loading contract documents:', error);
+        
+        if (error.status === 401) {
+          this.contractDocumentsError.set('Authentication failed. Please login again.');
+          // Clear invalid token and user data
+          this.authService.removeToken();
+          this.authService.removeUserData();
+        } else if (error.status === 403) {
+          this.contractDocumentsError.set('Access denied. You do not have permission to view contract documents.');
+        } else {
+          this.contractDocumentsError.set('Failed to load contract documents. Please try again later.');
+        }
+      }
+    });
+  }
+
+  // Download a specific contract document
+  downloadContractDocument(contractId: string, docIndex: number, ticketCustomId: string, carName: string) {
+    this.contractService.downloadContractDocument(contractId, docIndex).subscribe({
+      next: (blob) => {
+        const fileName = `contract_${ticketCustomId}_${carName.replace(/\s+/g, '_')}_${docIndex + 1}.pdf`;
+        this.contractService.downloadFile(blob, fileName);
+      },
+      error: (error) => {
+        console.error('Error downloading contract document:', error);
+        alert('Failed to download document. Please try again.');
+      }
+    });
+  }
+
+  // Get contract documents for a specific ticket
+  getContractDocumentsForTicket(ticketId: string | undefined): ContractDocument[] {
+    if (!ticketId) return [];
+    return this.contractDocuments().filter(contract => 
+      contract.ticketid && contract.ticketid._id === ticketId
+    );
+  }
+
+  // Navigate to bookings page
+  navigateToBookings() {
+    this.router.navigate(['/bookings']);
+  }
+
+  // Inline editing methods
+  toggleEditMode() {
+    this.isEditingProfile.set(!this.isEditingProfile());
+    if (this.isEditingProfile()) {
+      // Initialize edit form with current user data
+      this.editForm.set({
+        name: this.user().name || '',
+        email: this.user().email || '',
+        phone: this.user().phone || '',
+        dateofbirth: this.user().dateofbirth || '',
+        location: this.user().location || '',
+        pincode: this.user().pincode || '',
+        address: this.user().address || ''
+      });
+    }
+  }
+
+  cancelEdit() {
+    this.isEditingProfile.set(false);
+    this.editErrorMessage.set('');
+    this.editSuccessMessage.set('');
+  }
+
+  // Expansion state management
+  protected expandedShares = signal<Set<string>>(new Set());
+  protected expandedWaitlist = signal<Set<string>>(new Set());
+  protected expandedBookNow = signal<Set<string>>(new Set());
+
+  // Share expansion methods
+  toggleShareExpansion(shareId: string) {
+    const current = this.expandedShares();
+    const newSet = new Set(current);
+    if (newSet.has(shareId)) {
+      newSet.delete(shareId);
+    } else {
+      newSet.add(shareId);
+    }
+    this.expandedShares.set(newSet);
+  }
+
+  isShareExpanded(shareId: string): boolean {
+    return this.expandedShares().has(shareId);
+  }
+
+  // Waitlist expansion methods
+  toggleWaitlistExpansion(waitlistId: string) {
+    const current = this.expandedWaitlist();
+    const newSet = new Set(current);
+    if (newSet.has(waitlistId)) {
+      newSet.delete(waitlistId);
+    } else {
+      newSet.add(waitlistId);
+    }
+    this.expandedWaitlist.set(newSet);
+  }
+
+  isWaitlistExpanded(waitlistId: string): boolean {
+    return this.expandedWaitlist().has(waitlistId);
+  }
+
+  // Book Now expansion methods
+  toggleBookNowExpansion(bookNowId: string) {
+    const current = this.expandedBookNow();
+    const newSet = new Set(current);
+    if (newSet.has(bookNowId)) {
+      newSet.delete(bookNowId);
+    } else {
+      newSet.add(bookNowId);
+    }
+    this.expandedBookNow.set(newSet);
+  }
+
+  isBookNowExpanded(bookNowId: string): boolean {
+    return this.expandedBookNow().has(bookNowId);
+  }
+
+  // Status display helper
+  getStatusDisplay(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'refund_processed':
+        return 'Refunded';
+      case 'refund_pending':
+        return 'Pending';
+      case 'refund_completed':
+        return 'Completed';
+      case 'refund_failed':
+        return 'Failed';
+      case 'refund_initiated':
+        return 'Initiated';
+      case 'active':
+        return 'Active';
+      case 'expired':
+        return 'Expired';
+      default:
+        return status || 'Unknown';
+    }
+  }
+
+  // AMC status helper
+  getAMCStatus(amc: any): string {
+    const totalAmount = this.getTotalAMCAmount(amc);
+    const paidAmount = this.getPaidAMCAmount(amc);
+    
+    if (paidAmount >= totalAmount) {
+      return 'active';
+    } else {
+      return 'pending';
+    }
+  }
+
+  // =============== Profile Expansion Methods ===============
+  toggleProfileExpansion() {
+    this.profileExpanded.set(!this.profileExpanded());
+  }
+
+  isProfileExpanded(): boolean {
+    return this.profileExpanded();
+  }
+
+  // =============== Shared Members Methods ===============
+  loadUserSharedMembers() {
+    // Check if user is authenticated before making the request
+    const token = this.authService.getToken();
+    if (!token) {
+      this.sharedMembersError.set('Please login to view your shared members');
+      return;
+    }
+
+    this.sharedMembersLoading.set(true);
+    this.sharedMembersError.set('');
+
+    this.sharedMemberService.getMySharedMembers().subscribe({
+      next: (response) => {
+        this.sharedMembersLoading.set(false);
+        if (response && response.body && response.body.sharedMembers) {
+          this.sharedMembers.set(response.body.sharedMembers);
+        }
+      },
+      error: (error) => {
+        this.sharedMembersLoading.set(false);
+        console.error('Error loading shared members:', error);
+        
+        if (error.status === 401) {
+          this.sharedMembersError.set('Authentication failed. Please login again.');
+        } else if (error.status === 403) {
+          this.sharedMembersError.set('Access denied. You do not have permission to view shared members.');
+        } else {
+          this.sharedMembersError.set('Failed to load shared members. Please try again later.');
+        }
+      }
+    });
+  }
+
+  // Open shared member modal for a specific ticket
+  openSharedMemberModal(ticketId: string) {
+    this.selectedTicketForSharing.set(ticketId);
+    this.sharedMemberForm.set({
+      name: '',
+      email: '',
+      mobileNumber: '',
+      aadharNumber: '',
+      panNumber: '',
+      ticketid: ticketId,
+      userid: ''
+    });
+    this.sharedMemberSuccessMessage.set('');
+    this.sharedMemberErrorMessage.set('');
+    this.showSharedMemberModal.set(true);
+  }
+
+  // Close shared member modal
+  closeSharedMemberModal() {
+    this.showSharedMemberModal.set(false);
+    this.selectedTicketForSharing.set(null);
+    this.sharedMemberForm.set({
+      name: '',
+      email: '',
+      mobileNumber: '',
+      aadharNumber: '',
+      panNumber: '',
+      ticketid: '',
+      userid: ''
+    });
+    this.sharedMemberSuccessMessage.set('');
+    this.sharedMemberErrorMessage.set('');
+    this.sharedMemberFiles.set([]);
+  }
+
+  // Update shared member form fields
+  updateSharedMemberName(value: string) {
+    this.sharedMemberForm.set({ ...this.sharedMemberForm(), name: value });
+  }
+
+  updateSharedMemberEmail(value: string) {
+    this.sharedMemberForm.set({ ...this.sharedMemberForm(), email: value });
+  }
+
+  updateSharedMemberMobile(value: string) {
+    this.sharedMemberForm.set({ ...this.sharedMemberForm(), mobileNumber: value });
+  }
+
+  updateSharedMemberAadhar(value: string) {
+    this.sharedMemberForm.set({ ...this.sharedMemberForm(), aadharNumber: value });
+  }
+
+  updateSharedMemberPan(value: string) {
+    this.sharedMemberForm.set({ ...this.sharedMemberForm(), panNumber: value });
+  }
+
+  // Handle file selection for shared member
+  onSharedMemberFileSelect(event: any) {
+    const files = Array.from(event.target.files) as File[];
+    
+    // Validate file types
+    const validFiles = files.filter(file => {
+      if (file.type !== 'application/pdf') {
+        this.sharedMemberErrorMessage.set(`File "${file.name}" is not a PDF. Please select only PDF files.`);
+        return false;
+      }
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        this.sharedMemberErrorMessage.set(`File "${file.name}" is too large. Please select files smaller than 10MB.`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length > 0) {
+      this.sharedMemberErrorMessage.set('');
+      this.sharedMemberFiles.set([...this.sharedMemberFiles(), ...validFiles]);
+    }
+  }
+
+  // Remove file from shared member files
+  removeSharedMemberFile(index: number) {
+    const files = [...this.sharedMemberFiles()];
+    files.splice(index, 1);
+    this.sharedMemberFiles.set(files);
+  }
+
+  // Clear all shared member files
+  clearAllSharedMemberFiles() {
+    this.sharedMemberFiles.set([]);
+  }
+
+  // Trigger shared member file input click
+  triggerSharedMemberFileInput() {
+    const fileInput = document.querySelector('.hidden-file-input') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
+  // Format file size for display
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  // Submit shared member form
+  onSubmitSharedMember() {
+    const form = this.sharedMemberForm();
+    
+    // Validate required fields
+    if (!form.name || !form.email || !form.mobileNumber || !form.aadharNumber || !form.panNumber) {
+      this.sharedMemberErrorMessage.set('All fields are required');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      this.sharedMemberErrorMessage.set('Please enter a valid email address');
+      return;
+    }
+
+    // Validate mobile number (10 digits)
+    const mobileRegex = /^[6-9]\d{9}$/;
+    if (!mobileRegex.test(form.mobileNumber)) {
+      this.sharedMemberErrorMessage.set('Please enter a valid 10-digit mobile number');
+      return;
+    }
+
+    // Validate Aadhar number (12 digits)
+    const aadharRegex = /^\d{12}$/;
+    if (!aadharRegex.test(form.aadharNumber)) {
+      this.sharedMemberErrorMessage.set('Please enter a valid 12-digit Aadhar number');
+      return;
+    }
+
+    // Validate PAN number
+    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    if (!panRegex.test(form.panNumber.toUpperCase())) {
+      this.sharedMemberErrorMessage.set('Please enter a valid PAN number');
+      return;
+    }
+
+    this.sharedMemberSubmitting.set(true);
+    this.sharedMemberErrorMessage.set('');
+    this.sharedMemberSuccessMessage.set('');
+
+    // Convert PAN to uppercase and clean up empty fields
+    const formData: CreateSharedMemberRequest = {
+      name: form.name,
+      email: form.email,
+      mobileNumber: form.mobileNumber,
+      aadharNumber: form.aadharNumber,
+      panNumber: form.panNumber.toUpperCase(),
+      ticketid: form.ticketid || undefined,
+      userid: form.userid || undefined
+    };
+
+    console.log('Creating shared member with data:', formData);
+
+    this.sharedMemberService.createSharedMember(formData).subscribe({
+      next: (response) => {
+        if (response && response.status === 'success') {
+          const sharedMemberId = response.body.sharedMember._id;
+          
+          // Upload KYC documents if any files are selected
+          if (this.sharedMemberFiles().length > 0) {
+            this.uploadSharedMemberDocuments(sharedMemberId);
+          } else {
+            this.sharedMemberSubmitting.set(false);
+            this.sharedMemberSuccessMessage.set('Shared member created successfully! They will be notified once approved.');
+            // Reload shared members
+            this.loadUserSharedMembers();
+            // Close modal after 2 seconds
+            setTimeout(() => {
+              this.closeSharedMemberModal();
+            }, 2000);
+          }
+        } else {
+          this.sharedMemberSubmitting.set(false);
+          this.sharedMemberErrorMessage.set(response.message || 'Failed to create shared member');
+        }
+      },
+      error: (error) => {
+        this.sharedMemberSubmitting.set(false);
+        console.error('Error creating shared member:', error);
+        
+        if (error.error && error.error.message) {
+          // Show the specific error message from backend
+          if (error.error.message.includes('already exists')) {
+            this.sharedMemberErrorMessage.set('A shared member with these details already exists in the system. Please use different contact information.');
+          } else {
+            this.sharedMemberErrorMessage.set(error.error.message);
+          }
+        } else if (error.status === 400) {
+          this.sharedMemberErrorMessage.set('Invalid data provided. Please check all fields and try again.');
+        } else if (error.status === 401) {
+          this.sharedMemberErrorMessage.set('Authentication failed. Please login again.');
+        } else if (error.status === 403) {
+          this.sharedMemberErrorMessage.set('Access denied. You do not have permission to create shared members.');
+        } else {
+          this.sharedMemberErrorMessage.set('Failed to create shared member. Please try again later.');
+        }
+      }
+    });
+  }
+
+  // Delete shared member
+  deleteSharedMember(sharedMemberId: string) {
+    if (!confirm('Are you sure you want to delete this shared member?')) {
+      return;
+    }
+
+    this.sharedMemberService.deleteSharedMember(sharedMemberId).subscribe({
+      next: (response) => {
+        if (response && response.status === 'success') {
+          // Reload shared members
+          this.loadUserSharedMembers();
+        } else {
+          alert(response.message || 'Failed to delete shared member');
+        }
+      },
+      error: (error) => {
+        console.error('Error deleting shared member:', error);
+        
+        if (error.error && error.error.message) {
+          alert(error.error.message);
+        } else if (error.status === 401) {
+          alert('Authentication failed. Please login again.');
+        } else if (error.status === 403) {
+          alert('Access denied. You do not have permission to delete shared members.');
+        } else {
+          alert('Failed to delete shared member. Please try again later.');
+        }
+      }
+    });
+  }
+
+  // Get shared members for a specific ticket
+  getSharedMembersForTicket(ticketId: string): SharedMember[] {
+    return this.sharedMembers().filter(member => member.ticketid === ticketId);
+  }
+
+  // Get status badge class for shared member
+  getSharedMemberStatusClass(status: string): string {
+    switch (status) {
+      case 'accepted':
+        return 'status-badge accepted';
+      case 'rejected':
+        return 'status-badge rejected';
+      case 'pending':
+      default:
+        return 'status-badge pending';
+    }
+  }
+
+  // Get status display text for shared member
+  getSharedMemberStatusDisplay(status: string): string {
+    switch (status) {
+      case 'accepted':
+        return 'Approved';
+      case 'rejected':
+        return 'Rejected';
+      case 'pending':
+      default:
+        return 'Pending';
+    }
+  }
+
+  // Upload KYC documents for shared member
+  uploadSharedMemberDocuments(sharedMemberId: string) {
+    const files = this.sharedMemberFiles();
+    let uploadCount = 0;
+    let successCount = 0;
+    let errorCount = 0;
+
+    files.forEach((file, index) => {
+      const documentType = index === 0 ? 'aadhar_front' : 
+                          index === 1 ? 'pan_card' : 'other';
+      
+      this.sharedMemberService.uploadKycDocument(sharedMemberId, documentType, file).subscribe({
+        next: (response) => {
+          uploadCount++;
+          if (response && response.status === 'success') {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+          
+          // Check if all uploads are complete
+          if (uploadCount === files.length) {
+            this.sharedMemberSubmitting.set(false);
+            
+            if (successCount === files.length) {
+              this.sharedMemberSuccessMessage.set(`Shared member created successfully with ${successCount} document(s) uploaded! They will be notified once approved.`);
+            } else if (successCount > 0) {
+              this.sharedMemberSuccessMessage.set(`Shared member created successfully! ${successCount} document(s) uploaded, ${errorCount} failed. They will be notified once approved.`);
+            } else {
+              this.sharedMemberErrorMessage.set('Shared member created but document upload failed. Please try uploading documents again later.');
+            }
+            
+            // Reload shared members
+            this.loadUserSharedMembers();
+            // Close modal after 3 seconds
+            setTimeout(() => {
+              this.closeSharedMemberModal();
+            }, 3000);
+          }
+        },
+        error: (error) => {
+          uploadCount++;
+          errorCount++;
+          
+          // Check if all uploads are complete
+          if (uploadCount === files.length) {
+            this.sharedMemberSubmitting.set(false);
+            
+            if (successCount > 0) {
+              this.sharedMemberSuccessMessage.set(`Shared member created successfully! ${successCount} document(s) uploaded, ${errorCount} failed. They will be notified once approved.`);
+            } else {
+              this.sharedMemberErrorMessage.set('Shared member created but document upload failed. Please try uploading documents again later.');
+            }
+            
+            // Reload shared members
+            this.loadUserSharedMembers();
+            // Close modal after 3 seconds
+            setTimeout(() => {
+              this.closeSharedMemberModal();
+            }, 3000);
+          }
+        }
+      });
+    });
+  }
+
+  // Cancel token method
+  cancelToken(token: any) {
+    const reason = prompt('Please provide a reason for cancellation (optional):');
+    
+    if (reason !== null) { // User didn't cancel the prompt
+      this.tokenService.cancelToken(token._id, reason).subscribe({
+        next: (response) => {
+          if (response.status === 'success') {
+            alert('Token cancellation request submitted successfully. You will be notified once it\'s processed.');
+            // Reload tokens to show updated status
+            this.loadUserTokens();
+          } else {
+            alert('Failed to submit cancellation request: ' + response.message);
+          }
+        },
+        error: (error) => {
+          console.error('Error cancelling token:', error);
+          alert('Failed to submit cancellation request. Please try again.');
+        }
+      });
+    }
+  }
+
+  // Cancel book now token method
+  cancelBookNowToken(bookNowToken: any) {
+    const reason = prompt('Please provide a reason for cancellation (optional):');
+    
+    if (reason !== null) { // User didn't cancel the prompt
+      this.bookNowTokenService.cancelBookNowToken(bookNowToken._id, reason).subscribe({
+        next: (response) => {
+          if (response.status === 'success') {
+            alert('Book now token cancellation request submitted successfully. You will be notified once it\'s processed.');
+            // Reload book now tokens to show updated status
+            this.loadUserBookNowTokens();
+          } else {
+            alert('Failed to submit cancellation request: ' + response.message);
+          }
+        },
+        error: (error) => {
+          console.error('Error cancelling book now token:', error);
+          alert('Failed to submit cancellation request. Please try again.');
+        }
+      });
+    }
+  }
+
+  // New methods for section navigation
+  setActiveSection(sectionId: string) {
+    this.activeSection.set(sectionId);
+  }
+
+  updateSectionCounts() {
+    this.profileSections = this.profileSections.map(section => {
+      switch (section.id) {
+        case 'shares':
+          return { ...section, count: this.tickets().length };
+        case 'waitlist':
+          return { ...section, count: this.tokens().length };
+        case 'booknow':
+          return { ...section, count: this.bookNowTokens().length };
+        case 'amc':
+          return { ...section, count: this.amcs().length };
+        case 'bookings':
+          return { ...section, count: this.bookings().length };
+        default:
+          return section;
+      }
+    });
+  }
+
+  getBookingStatusClass(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'confirmed':
+      case 'accepted':
+        return 'confirmed';
+      case 'pending':
+        return 'pending';
+      case 'rejected':
+      case 'cancelled':
+        return 'rejected';
+      default:
+        return 'pending';
+    }
+  }
+
+  // Logout method
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+
+  // =============== Profile Image Helper Methods ===============
+  
+  // Get profile image URL or return null for fallback
+  getProfileImageUrl(): string | null {
+    const profileImage = this.user().profileimage;
+    if (profileImage && profileImage.trim() !== '') {
+      return profileImage;
+    }
+    return null;
+  }
+
+  // Get user initials for profile display
+  getUserInitials(): string {
+    const userName = this.user().name;
+    if (userName && userName.trim() !== '') {
+      const names = userName.trim().split(' ');
+      if (names.length >= 2) {
+        return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+      } else {
+        return names[0][0].toUpperCase();
+      }
+    }
+    return 'U';
+  }
+
+  // Handle image load errors
+  onImageError(event: any): void {
+    // Hide the broken image and let the fallback div show
+    event.target.style.display = 'none';
+    // Update the user signal to remove the broken image URL
+    const currentUser = this.user();
+    this.user.set({ ...currentUser, profileimage: '' });
+  }
+
+}

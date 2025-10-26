@@ -52,6 +52,43 @@ export interface Permission {
   category: string;
 }
 
+export interface AdminActivity {
+  type: 'car' | 'ticket' | 'contract' | 'shared-member';
+  id: string;
+  title: string;
+  description: string;
+  createdAt: string;
+  status: string;
+  admin: {
+    name: string;
+    email: string;
+  };
+}
+
+export interface AdminActivitiesResponse {
+  status: string;
+  body: {
+    activities: AdminActivity[];
+    admin: {
+      name: string;
+      email: string;
+    };
+    counts: {
+      cars: number;
+      tickets: number;
+      contracts: number;
+      sharedMembers: number;
+    };
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+      itemsPerPage: number;
+    };
+  };
+  message: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -88,6 +125,16 @@ export class AdminService {
   // Delete admin
   deleteAdmin(id: string): Observable<AdminResponse> {
     return this.http.delete<AdminResponse>(`${this.baseUrl}/admins/${id}`);
+  }
+
+  // Get admin activities
+  getAdminActivities(adminId: string, page: number = 1, limit: number = 10, type: string = 'all'): Observable<AdminActivitiesResponse> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      type: type
+    });
+    return this.http.get<AdminActivitiesResponse>(`${this.baseUrl}/admins/${adminId}/activities?${params}`);
   }
 
   // Get available permissions (page-level access only)

@@ -45,6 +45,42 @@
 	transform: none;
 }
 
+/* Mobile video thumbnail styles */
+.video-container {
+  transition: transform 0.2s ease-in-out;
+}
+
+.video-container:hover {
+  transform: scale(1.02);
+}
+
+.video-container img {
+  transition: filter 0.2s ease-in-out;
+}
+
+.video-container:hover img {
+  filter: brightness(0.9);
+}
+
+/* Ensure proper aspect ratio for video thumbnails */
+.video-container img {
+  aspect-ratio: 16/9;
+}
+
+/* Mobile-specific video container styles */
+@media (max-width: 768px) {
+  .video-container {
+    width: 100%;
+    height: 12rem; /* 192px */
+  }
+  
+  .video-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
 /* Carousel styles */
 .carousel-wrapper { 
   position: relative; 
@@ -500,3 +536,118 @@
     border-width: 1px;
   }
 }
+
+/* Brands Modal Styles */
+.brands-modal {
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+.brands-modal-content {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Modal backdrop blur effect */
+.brands-modal-backdrop {
+  backdrop-filter: blur(4px);
+}
+
+/* Responsive modal styles */
+@media (max-width: 768px) {
+  .brands-modal-content {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+  
+  .brands-modal-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  /* Stack brands header on mobile */
+  .brands-header-mobile {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .brands-header-mobile .view-more-button {
+    align-self: flex-start;
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .brands-modal-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .brands-modal-brand {
+    padding: 1rem;
+  }
+  
+  .brands-modal-brand img {
+    height: 3rem;
+    width: 3rem;
+  }
+}
+
+/* Simple Steps Video Height Matching */
+.video-container-collapsed {
+  height: 750px;
+  transition: height 0.5s ease-in-out;
+}
+
+.video-container-expanded {
+  height: 1000px; /* Adjust this value based on your expanded content height */
+  transition: height 0.5s ease-in-out;
+}
+
+/* Ensure smooth transitions for video content */
+.video-container-collapsed .video-iframe,
+.video-container-expanded .video-iframe {
+  transition: height 0.5s ease-in-out;
+}
+
+/* Responsive adjustments for video height */
+@media (max-width: 768px) {
+  .video-container-collapsed {
+    height: auto;
+    min-height: 400px;
+  }
+  
+  .video-container-expanded {
+    height: auto;
+    min-height: 500px;
+  }
+}
+
+/* Timeline line dynamic control */
+.timeline-collapsed::before {
+  bottom: 3rem !important; /* Stop line before toggle button when collapsed */
+}
+
+.timeline-expanded::before {
+  bottom: 0 !important; /* Extend line to toggle button when expanded */
+}
+

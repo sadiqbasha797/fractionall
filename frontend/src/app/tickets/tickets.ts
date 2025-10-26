@@ -18,7 +18,7 @@ import { ExportService, ExportOptions } from '../services/export.service';
 export class Tickets implements OnInit {
   // Tab management
   activeTab: 'tickets' | 'shared-members' = 'tickets';
-  
+
   // Tickets data
   tickets: Ticket[] = [];
   filteredTickets: Ticket[] = [];
@@ -28,7 +28,14 @@ export class Tickets implements OnInit {
   searchTerm: string = '';
   statusFilter: string = 'all';
   resoldFilter: string = 'all';
-  
+  paymentFilter: string = 'all';
+  userFilter: string = 'all';
+  carFilter: string = 'all';
+  priceRangeFilter: string = 'all';
+  uniqueUsers: string[] = [];
+  uniqueCars: string[] = [];
+  showFilters = false;
+
   // Pagination for tickets
   currentPage = 1;
   itemsPerPage = 10;
@@ -51,20 +58,25 @@ export class Tickets implements OnInit {
   };
   isEditMode: boolean = false;
   currentTicketId: string | null = null;
-  
+
   // Shared members data
   sharedMembers: SharedMember[] = [];
   filteredSharedMembers: SharedMember[] = [];
   selectedSharedMember: SharedMember | null = null;
   sharedMemberSearchTerm: string = '';
   sharedMemberStatusFilter: string = 'all';
-  
+
   // Pagination for shared members
   sharedMemberCurrentPage = 1;
   sharedMemberItemsPerPage = 10;
   sharedMemberTotalPages = 0;
-  
+
   // Helper method for template
+  // TrackBy function for ngFor loops to improve performance and prevent issues
+  trackByTicketId(index: number, ticket: Ticket): string {
+    return ticket?._id || `ticket-${index}`;
+  }
+
   getMin(a: number, b: number): number {
     return Math.min(a, b);
   }
@@ -81,13 +93,16 @@ export class Tickets implements OnInit {
   isSharedMemberEditMode: boolean = false;
   currentSharedMemberId: string | null = null;
   sharedMemberStats: any = null;
-  
+
   // Dialog states
   showLoadingDialog: boolean = false;
   loadingMessage: string = '';
   showRejectDialog: boolean = false;
   rejectComments: string = '';
   private dialogElement: HTMLElement | null = null;
+
+  // Loading state for refresh functionality
+  isLoading: boolean = false;
 
   constructor(
     private ticketService: TicketService,
@@ -102,6 +117,7 @@ export class Tickets implements OnInit {
     this.getTickets();
     this.getSharedMembers();
     this.getSharedMemberStats();
+    // Load users and cars for form dropdowns
     this.getUsers();
     this.getCars();
     this.checkFontAwesomeLoaded();
@@ -116,12 +132,12 @@ export class Tickets implements OnInit {
       testElement.style.left = '-9999px';
       testElement.style.visibility = 'hidden';
       document.body.appendChild(testElement);
-      
+
       const computedStyle = window.getComputedStyle(testElement, ':before');
       const fontFamily = computedStyle.getPropertyValue('font-family');
-      
+
       document.body.removeChild(testElement);
-      
+
       const searchContainer = document.querySelector('.search-input-container');
       if (searchContainer) {
         if (fontFamily.includes('Font Awesome') || fontFamily.includes('FontAwesome')) {
@@ -136,7 +152,7 @@ export class Tickets implements OnInit {
   // Local dialog methods
   showConfirmDialog(title: string, message: string, confirmCallback: () => void): void {
     this.removeDialog();
-    
+
     const backdrop = this.renderer.createElement('div');
     this.renderer.setStyle(backdrop, 'position', 'fixed');
     this.renderer.setStyle(backdrop, 'top', '0');
@@ -148,31 +164,31 @@ export class Tickets implements OnInit {
     this.renderer.setStyle(backdrop, 'display', 'flex');
     this.renderer.setStyle(backdrop, 'align-items', 'center');
     this.renderer.setStyle(backdrop, 'justify-content', 'center');
-    
+
     const dialog = this.renderer.createElement('div');
     this.renderer.setStyle(dialog, 'background', '#374151');
     this.renderer.setStyle(dialog, 'border-radius', '12px');
     this.renderer.setStyle(dialog, 'max-width', '500px');
     this.renderer.setStyle(dialog, 'width', '90%');
     this.renderer.setStyle(dialog, 'padding', '24px');
-    
+
     const titleEl = this.renderer.createElement('h3');
     this.renderer.setStyle(titleEl, 'color', 'white');
     this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
     this.renderer.setStyle(titleEl, 'font-size', '1.5rem');
     const titleText = this.renderer.createText(title);
     this.renderer.appendChild(titleEl, titleText);
-    
+
     const messageEl = this.renderer.createElement('div');
     this.renderer.setProperty(messageEl, 'innerHTML', message);
     this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
     this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
-    
+
     const btnContainer = this.renderer.createElement('div');
     this.renderer.setStyle(btnContainer, 'display', 'flex');
     this.renderer.setStyle(btnContainer, 'justify-content', 'flex-end');
     this.renderer.setStyle(btnContainer, 'gap', '12px');
-    
+
     const cancelBtn = this.renderer.createElement('button');
     const cancelText = this.renderer.createText('Cancel');
     this.renderer.appendChild(cancelBtn, cancelText);
@@ -183,7 +199,7 @@ export class Tickets implements OnInit {
     this.renderer.setStyle(cancelBtn, 'border-radius', '8px');
     this.renderer.setStyle(cancelBtn, 'cursor', 'pointer');
     this.renderer.listen(cancelBtn, 'click', () => this.removeDialog());
-    
+
     const confirmBtn = this.renderer.createElement('button');
     const confirmText = this.renderer.createText('Confirm');
     this.renderer.appendChild(confirmBtn, confirmText);
@@ -197,7 +213,7 @@ export class Tickets implements OnInit {
       this.removeDialog();
       confirmCallback();
     });
-    
+
     this.renderer.appendChild(btnContainer, cancelBtn);
     this.renderer.appendChild(btnContainer, confirmBtn);
     this.renderer.appendChild(dialog, titleEl);
@@ -206,11 +222,11 @@ export class Tickets implements OnInit {
     this.renderer.appendChild(backdrop, dialog);
     this.renderer.appendChild(document.body, backdrop);
     this.dialogElement = backdrop;
-    
+
     this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
     this.renderer.listen(backdrop, 'click', () => this.removeDialog());
   }
-  
+
   removeDialog(): void {
     if (this.dialogElement) {
       this.renderer.removeChild(document.body, this.dialogElement);
@@ -228,7 +244,7 @@ export class Tickets implements OnInit {
 
   showMessageDialog(title: string, message: string, color: string): void {
     this.removeDialog();
-    
+
     const backdrop = this.renderer.createElement('div');
     this.renderer.setStyle(backdrop, 'position', 'fixed');
     this.renderer.setStyle(backdrop, 'top', '0');
@@ -240,7 +256,7 @@ export class Tickets implements OnInit {
     this.renderer.setStyle(backdrop, 'display', 'flex');
     this.renderer.setStyle(backdrop, 'align-items', 'center');
     this.renderer.setStyle(backdrop, 'justify-content', 'center');
-    
+
     const dialog = this.renderer.createElement('div');
     this.renderer.setStyle(dialog, 'background', '#374151');
     this.renderer.setStyle(dialog, 'border-radius', '12px');
@@ -248,7 +264,7 @@ export class Tickets implements OnInit {
     this.renderer.setStyle(dialog, 'width', '90%');
     this.renderer.setStyle(dialog, 'padding', '24px');
     this.renderer.setStyle(dialog, 'text-align', 'center');
-    
+
     const titleEl = this.renderer.createElement('h3');
     this.renderer.setStyle(titleEl, 'color', color);
     this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
@@ -256,12 +272,12 @@ export class Tickets implements OnInit {
     this.renderer.setStyle(titleEl, 'font-weight', '600');
     const titleText = this.renderer.createText(title);
     this.renderer.appendChild(titleEl, titleText);
-    
+
     const messageEl = this.renderer.createElement('div');
     this.renderer.setProperty(messageEl, 'innerHTML', message);
     this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
     this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
-    
+
     const okBtn = this.renderer.createElement('button');
     const okText = this.renderer.createText('OK');
     this.renderer.appendChild(okBtn, okText);
@@ -274,26 +290,44 @@ export class Tickets implements OnInit {
     this.renderer.setStyle(okBtn, 'font-size', '14px');
     this.renderer.setStyle(okBtn, 'font-weight', '600');
     this.renderer.listen(okBtn, 'click', () => this.removeDialog());
-    
+
     this.renderer.appendChild(dialog, titleEl);
     this.renderer.appendChild(dialog, messageEl);
     this.renderer.appendChild(dialog, okBtn);
     this.renderer.appendChild(backdrop, dialog);
     this.renderer.appendChild(document.body, backdrop);
     this.dialogElement = backdrop;
-    
+
     this.renderer.listen(backdrop, 'click', () => this.removeDialog());
     this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
   }
 
   getTickets(): void {
+    this.isLoading = true;
     this.ticketService.getTickets().subscribe((response) => {
+      this.isLoading = false;
       if (response.status === 'success') {
-        this.tickets = response.body.tickets;
+        // Filter out any invalid tickets and ensure they have required properties
+        const allTickets = response.body.tickets || [];
+        const invalidTickets = allTickets.filter(ticket =>
+          !ticket || !ticket._id || !ticket.ticketcustomid
+        );
+
+        if (invalidTickets.length > 0) {
+          console.warn('Found invalid tickets:', invalidTickets);
+        }
+
+        this.tickets = allTickets.filter(ticket =>
+          ticket &&
+          ticket._id &&
+          ticket.ticketcustomid
+        );
         this.filteredTickets = [...this.tickets];
+        this.extractUniqueUsersAndCars();
         // Initialize pagination after loading tickets
         this.applyFilters();
       } else {
+        console.error('Failed to load tickets:', response.message);
       }
     });
   }
@@ -302,38 +336,46 @@ export class Tickets implements OnInit {
     this.userService.getUsers().subscribe({
       next: (response: any) => {
         if (response.status === 'success') {
-          this.users = response.body.users;
+          this.users = response.body.users || [];
         } else {
+          console.error('Failed to load users:', response.message);
         }
       },
       error: (error) => {
+        console.error('Error loading users:', error);
       }
     });
   }
 
   getCars(): void {
-    this.carService.getCars().subscribe((response) => {
-      if (response.status === 'success') {
-        this.cars = response.body.cars.map((car: any) => ({
-          ...car,
-          _id: car._id || '',
-          carname: car.carname || '',
-          brandname: car.brandname || '',
-          color: car.color || '',
-          milege: car.milege || '',
-          seating: car.seating || 0,
-          features: car.features || [],
-          price: car.price || 0,
-          fractionprice: car.fractionprice || 0,
-          tokenprice: car.tokenprice || 0,
-          images: car.images || [],
-          status: car.status || 'active',
-          location: car.location || '',
-          pincode: car.pincode || '',
-          createdAt: car.createdAt || '',
-          updatedAt: car.updatedAt || ''
-        }));
-      } else {
+    this.carService.getCars().subscribe({
+      next: (response) => {
+        if (response.status === 'success') {
+          this.cars = (response.body.cars || []).map((car: any) => ({
+            ...car,
+            _id: car._id || '',
+            carname: car.carname || '',
+            brandname: car.brandname || '',
+            color: car.color || '',
+            milege: car.milege || '',
+            seating: car.seating || 0,
+            features: car.features || [],
+            price: car.price || 0,
+            fractionprice: car.fractionprice || 0,
+            tokenprice: car.tokenprice || 0,
+            images: car.images || [],
+            status: car.status || 'active',
+            location: car.location || '',
+            pincode: car.pincode || '',
+            createdAt: car.createdAt || '',
+            updatedAt: car.updatedAt || ''
+          }));
+        } else {
+          console.error('Failed to load cars:', response.message);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading cars:', error);
       }
     });
   }
@@ -346,6 +388,11 @@ export class Tickets implements OnInit {
     this.applyFilters();
   }
 
+  onTicketsSearchChange(value: string): void {
+    this.searchTerm = value;
+    this.applyFilters();
+  }
+
   onStatusFilterChange(): void {
     this.applyFilters();
   }
@@ -354,24 +401,65 @@ export class Tickets implements OnInit {
     this.applyFilters();
   }
 
+  onPaymentFilterChange(): void {
+    this.applyFilters();
+  }
+
+  onUserFilterChange(): void {
+    this.applyFilters();
+  }
+
+  onCarFilterChange(): void {
+    this.applyFilters();
+  }
+
+  onPriceRangeFilterChange(): void {
+    this.applyFilters();
+  }
+
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
+  }
+
   applyFilters(): void {
     this.filteredTickets = this.tickets.filter(ticket => {
-      const matchesSearch = !this.searchTerm || 
+      const matchesSearch = !this.searchTerm ||
         ticket.ticketcustomid.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         this.getUser(ticket).name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         this.getUser(ticket).email.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         this.getCar(ticket).carname.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         this.getCar(ticket).brandname.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         ticket.ticketstatus.toLowerCase().includes(this.searchTerm.toLowerCase());
-      
+
       const matchesStatus = this.statusFilter === 'all' || ticket.ticketstatus === this.statusFilter;
-      const matchesResold = this.resoldFilter === 'all' || 
-        (this.resoldFilter === 'true' && ticket.resold) || 
+      const matchesResold = this.resoldFilter === 'all' ||
+        (this.resoldFilter === 'true' && ticket.resold) ||
         (this.resoldFilter === 'false' && !ticket.resold);
-      
-      return matchesSearch && matchesStatus && matchesResold;
+
+      const matchesPayment = this.paymentFilter === 'all' ||
+        (this.paymentFilter === 'pending' && ticket.pendingamount > 0) ||
+        (this.paymentFilter === 'fully_paid' && ticket.pendingamount === 0);
+
+      // User filter
+      const matchesUser = this.userFilter === 'all' ||
+        this.getUser(ticket).name === this.userFilter;
+
+      // Car filter
+      const matchesCar = this.carFilter === 'all' ||
+        this.getCar(ticket).carname === this.carFilter;
+
+      // Price range filter
+      const ticketPrice = ticket.ticketprice || 0;
+      const matchesPriceRange = this.priceRangeFilter === 'all' ||
+        (this.priceRangeFilter === '0-50000' && ticketPrice >= 0 && ticketPrice <= 50000) ||
+        (this.priceRangeFilter === '50000-100000' && ticketPrice > 50000 && ticketPrice <= 100000) ||
+        (this.priceRangeFilter === '100000-200000' && ticketPrice > 100000 && ticketPrice <= 200000) ||
+        (this.priceRangeFilter === '200000+' && ticketPrice > 200000);
+
+      return matchesSearch && matchesStatus && matchesResold && matchesPayment &&
+        matchesUser && matchesCar && matchesPriceRange;
     });
-    
+
     // Update pagination
     this.totalPages = Math.ceil(this.filteredTickets.length / this.itemsPerPage);
     if (this.currentPage > this.totalPages) {
@@ -379,10 +467,17 @@ export class Tickets implements OnInit {
     }
   }
 
+  extractUniqueUsersAndCars(): void {
+    this.uniqueUsers = [...new Set(this.tickets.map(ticket => this.getUser(ticket).name).filter(name => name))];
+    this.uniqueCars = [...new Set(this.tickets.map(ticket => this.getCar(ticket).carname).filter(name => name))];
+  }
+
   get paginatedTickets(): Ticket[] {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
-    return this.filteredTickets.slice(startIndex, endIndex);
+    // Filter out any null/undefined tickets before slicing
+    const validTickets = this.filteredTickets.filter(ticket => ticket && ticket._id);
+    return validTickets.slice(startIndex, endIndex);
   }
 
   goToPage(page: number): void {
@@ -395,11 +490,11 @@ export class Tickets implements OnInit {
     const maxVisible = 5;
     let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
     let end = Math.min(this.totalPages, start + maxVisible - 1);
-    
+
     if (end - start + 1 < maxVisible) {
       start = Math.max(1, end - maxVisible + 1);
     }
-    
+
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
@@ -407,13 +502,24 @@ export class Tickets implements OnInit {
     this.searchTerm = '';
     this.statusFilter = 'all';
     this.resoldFilter = 'all';
+    this.paymentFilter = 'all';
+    this.userFilter = 'all';
+    this.carFilter = 'all';
+    this.priceRangeFilter = 'all';
     this.currentPage = 1;
     this.applyFilters();
   }
 
   getUser(ticket: Ticket): User {
+    // If userid is already a populated User object, return it directly
+    if (typeof ticket.userid === 'object' && ticket.userid !== null) {
+      return ticket.userid as User;
+    }
+
+    // If userid is a string, find the user in the users array
     if (typeof ticket.userid === 'string') {
-      return this.users.find(user => user._id === ticket.userid) || {
+      const foundUser = this.users.find(user => user._id === ticket.userid);
+      return foundUser || {
         _id: '',
         name: 'Unknown User',
         email: '',
@@ -430,10 +536,33 @@ export class Tickets implements OnInit {
         updatedAt: ''
       };
     }
-    return ticket.userid;
+
+    // Fallback for any other case
+    return {
+      _id: '',
+      name: 'Unknown User',
+      email: '',
+      phone: '',
+      dateofbirth: '',
+      address: '',
+      location: '',
+      pincode: '',
+      verified: false,
+      profileimage: '',
+      governmentid: {},
+      kycStatus: 'pending',
+      createdAt: '',
+      updatedAt: ''
+    };
   }
 
   getCar(ticket: Ticket): Car {
+    // If carid is already a populated Car object, return it directly
+    if (typeof ticket.carid === 'object' && ticket.carid !== null) {
+      return ticket.carid as Car;
+    }
+
+    // If carid is a string, find the car in the cars array
     if (typeof ticket.carid === 'string') {
       const foundCar = this.cars.find(car => car._id === ticket.carid);
       if (foundCar) {
@@ -497,7 +626,37 @@ export class Tickets implements OnInit {
         updatedAt: ''
       };
     }
-    return ticket.carid;
+
+    // Fallback for any other case
+    return {
+      _id: '',
+      carname: 'Unknown Car',
+      brandname: '',
+      color: '',
+      milege: '',
+      seating: 0,
+      features: [],
+      price: 0,
+      fractionprice: 0,
+      tokenprice: 0,
+      expectedpurchasedate: '',
+      ticketsavilble: 0,
+      totaltickets: 0,
+      tokensavailble: 0,
+      bookNowTokenAvailable: 0,
+      bookNowTokenPrice: 0,
+      amcperticket: 0,
+      contractYears: 0,
+      location: '',
+      pincode: '',
+      description: '',
+      images: [],
+      createdBy: '',
+      createdByModel: '',
+      status: 'active',
+      createdAt: '',
+      updatedAt: ''
+    };
   }
 
   formatDate(dateString: string): string {
@@ -531,6 +690,12 @@ export class Tickets implements OnInit {
   }
 
   viewTicketDetails(ticket: Ticket): void {
+    // Check if ticket is valid
+    if (!ticket) {
+      console.error('Invalid ticket object:', ticket);
+      return;
+    }
+
     this.selectedTicket = ticket;
   }
 
@@ -582,7 +747,7 @@ export class Tickets implements OnInit {
 
     // Prepare ticket data for submission
     const ticketData = { ...this.newTicket };
-    
+
     // Convert date string to ISO format if it's just a date
     if (ticketData.ticketbroughtdate && !ticketData.ticketbroughtdate.includes('T')) {
       ticketData.ticketbroughtdate = new Date(ticketData.ticketbroughtdate + 'T12:00:00.000Z').toISOString();
@@ -673,16 +838,22 @@ export class Tickets implements OnInit {
   }
 
   editTicket(ticket: Ticket): void {
+    // Check if ticket is valid and has an _id
+    if (!ticket || !ticket._id) {
+      console.error('Invalid ticket object:', ticket);
+      return;
+    }
+
     this.isEditMode = true;
-    this.currentTicketId = ticket._id!;
-    
+    this.currentTicketId = ticket._id;
+
     // Extract IDs from populated objects for form compatibility
     this.newTicket = {
       ...ticket,
       userid: typeof ticket.userid === 'object' ? ticket.userid._id || '' : ticket.userid,
       carid: typeof ticket.carid === 'object' ? ticket.carid._id || '' : ticket.carid
     };
-    
+
     const modal = document.querySelector('.modal') as HTMLElement;
     if (modal) {
       modal.style.display = "block";
@@ -690,7 +861,11 @@ export class Tickets implements OnInit {
   }
 
   deleteTicket(ticket: Ticket): void {
-    if (!ticket._id) return;
+    // Check if ticket is valid and has an _id
+    if (!ticket || !ticket._id) {
+      console.error('Invalid ticket object:', ticket);
+      return;
+    }
 
     this.showConfirmDialog(
       'Confirm Delete',
@@ -698,7 +873,7 @@ export class Tickets implements OnInit {
       () => {
         this.showLoadingDialog = true;
         this.loadingMessage = 'Deleting ticket...';
-        
+
         this.ticketService.deleteTicket(ticket._id!).subscribe({
           next: (response) => {
             this.showLoadingDialog = false;
@@ -717,6 +892,15 @@ export class Tickets implements OnInit {
         });
       }
     );
+  }
+
+  // Refresh functionality
+  refreshTickets(): void {
+    this.getTickets();
+  }
+
+  refreshSharedMembers(): void {
+    this.getSharedMembers();
   }
 
   // Export functionality
@@ -794,7 +978,9 @@ export class Tickets implements OnInit {
 
   // Shared member management methods
   getSharedMembers(): void {
+    this.isLoading = true;
     this.sharedMemberService.getAllSharedMembers().subscribe((response) => {
+      this.isLoading = false;
       if (response.status === 'success') {
         this.sharedMembers = response.body.sharedMembers || [];
         this.filteredSharedMembers = [...this.sharedMembers];
@@ -824,18 +1010,18 @@ export class Tickets implements OnInit {
 
   applySharedMemberFilters(): void {
     this.filteredSharedMembers = this.sharedMembers.filter(member => {
-      const matchesSearch = !this.sharedMemberSearchTerm || 
+      const matchesSearch = !this.sharedMemberSearchTerm ||
         member.name.toLowerCase().includes(this.sharedMemberSearchTerm.toLowerCase()) ||
         member.email.toLowerCase().includes(this.sharedMemberSearchTerm.toLowerCase()) ||
         member.mobileNumber.includes(this.sharedMemberSearchTerm) ||
         member.aadharNumber.includes(this.sharedMemberSearchTerm) ||
         member.panNumber.toLowerCase().includes(this.sharedMemberSearchTerm.toLowerCase());
-      
+
       const matchesStatus = this.sharedMemberStatusFilter === 'all' || member.status === this.sharedMemberStatusFilter;
-      
+
       return matchesSearch && matchesStatus;
     });
-    
+
     // Update pagination
     this.sharedMemberTotalPages = Math.ceil(this.filteredSharedMembers.length / this.sharedMemberItemsPerPage);
     if (this.sharedMemberCurrentPage > this.sharedMemberTotalPages) {
@@ -859,11 +1045,11 @@ export class Tickets implements OnInit {
     const maxVisible = 5;
     let start = Math.max(1, this.sharedMemberCurrentPage - Math.floor(maxVisible / 2));
     let end = Math.min(this.sharedMemberTotalPages, start + maxVisible - 1);
-    
+
     if (end - start + 1 < maxVisible) {
       start = Math.max(1, end - maxVisible + 1);
     }
-    
+
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
@@ -1038,7 +1224,7 @@ export class Tickets implements OnInit {
       () => {
         this.showLoadingDialog = true;
         this.loadingMessage = 'Deleting shared member...';
-        
+
         this.sharedMemberService.deleteSharedMember(member._id!).subscribe({
           next: (response) => {
             this.showLoadingDialog = false;
@@ -1062,7 +1248,7 @@ export class Tickets implements OnInit {
   approveSharedMember(member: SharedMember): void {
     this.showLoadingDialog = true;
     this.loadingMessage = 'Approving shared member...';
-    
+
     this.sharedMemberService.updateSharedMemberStatus(member._id!, 'accepted').subscribe({
       next: (response) => {
         this.showLoadingDialog = false;
@@ -1097,10 +1283,10 @@ export class Tickets implements OnInit {
 
     this.showLoadingDialog = true;
     this.loadingMessage = 'Rejecting shared member...';
-    
+
     this.sharedMemberService.updateSharedMemberStatus(
-      this.selectedSharedMember._id, 
-      'rejected', 
+      this.selectedSharedMember._id,
+      'rejected',
       this.rejectComments
     ).subscribe({
       next: (response) => {

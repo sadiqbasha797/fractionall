@@ -2,18 +2,18 @@
   <div class="layout-content-container flex flex-col w-full max-w-[1600px] mx-auto">
     <div class="@container">
       <div class="@[480px]:p-4">
-        <div data-animation="fade-up"
-          class="flex min-h-[480px] flex-col gap-6 bg-cover bg-center bg-no-repeat @[480px]:gap-8 @[480px]:rounded-xl items-start justify-end px-4 pb-10 @[480px]:px-10"
+        <div data-animation="fade-up" data-hero-section
+          class="flex min-h-[300px] sm:min-h-[400px] md:min-h-[480px] flex-col gap-4 sm:gap-6 bg-cover bg-center bg-no-repeat @[480px]:gap-8 @[480px]:rounded-xl items-start justify-end px-4 pb-6 sm:pb-8 md:pb-10 @[480px]:px-10"
           [style.background-image]="heroContent() ? 'linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url(' + heroContent()!.bgImage + ')' : 'linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url(\'./herocar.jpg\')'">
           <div class="flex flex-col gap-2 text-left">
             <!-- Hero Content or Skeleton Loading -->
             <div *ngIf="heroContent(); else heroSkeleton">
               <h1
-                class="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em]">
+                class="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em]">
                 {{ heroContent()?.heroText }}
               </h1>
               <h2
-                class="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal">
+                class="text-white text-xs sm:text-sm md:text-base lg:text-lg font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal">
                 {{ heroContent()?.subText }}
               </h2>
             </div>
@@ -34,13 +34,24 @@
         </div>
       </div>
     </div>
-    <h2 data-animation="fade-right"
-      class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full px-4 pb-3 pt-10 text-left">
-      Brands we support</h2>
-    <p data-animation="fade-right" data-delay="100"
-      class="text-[#90adcb] text-base max-w-[900px] mx-0 px-4 pb-6 text-left">We partner with leading manufacturers to
-      bring a curated selection of premium and reliable vehicles.</p>
-    <div class="w-full px-4 mb-12">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 px-4 gap-3 sm:gap-0 brands-header-mobile">
+      <div>
+        <h2 data-animation="fade-right"
+          class="text-white tracking-light text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full pb-2 pt-6 md:pb-3 md:pt-10 text-left">
+          Brands we support</h2>
+        <p data-animation="fade-right" data-delay="100"
+          class="text-[#90adcb] text-sm sm:text-base lg:text-lg max-w-[900px] mx-0 pb-4 text-left">We partner with leading manufacturers to
+          bring a curated selection of premium and reliable vehicles.</p>
+      </div>
+      <!-- View More Button -->
+      <div *ngIf="!brandsLoading() && brands().length > 5" class="flex-shrink-0 view-more-button sm:mt-3 md:mt-4 lg:mt-5 xl:mt-6">
+        <button (click)="openBrandsModal()"
+          class="inline-flex items-center gap-1 btn-outline-white font-semibold text-xs sm:text-sm px-3 py-1.5 rounded-md transition-colors duration-300 w-fit">
+          View More <span class="ml-1">&rarr;</span>
+        </button>
+      </div>
+    </div>
+    <div class="w-full px-4 mb-8 md:mb-12">
       <!-- Loading State -->
       <div *ngIf="brandsLoading()" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
         <div *ngFor="let i of [1,2,3,4,5,6,7,8,9,10]"
@@ -54,7 +65,7 @@
       <!-- Dynamic Brands -->
       <div *ngIf="!brandsLoading() && brands().length > 0"
         class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-        <div *ngFor="let brand of brands(); let i = index" data-animation="zoom-in" [attr.data-delay]="(i + 1) * 100"
+        <div *ngFor="let brand of visibleBrands(); let i = index" data-animation="zoom-in" [attr.data-delay]="(i + 1) * 100"
           class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 cursor-pointer"
           (click)="navigateToCarsWithBrand(brand.brandName)">
           <div class="bg-white/10 rounded-full p-4 mb-4">
@@ -65,25 +76,26 @@
         </div>
       </div>
 
+
       <!-- No Brands State -->
-      <div *ngIf="!brandsLoading() && brands().length === 0" class="text-center py-12">
+      <div *ngIf="!brandsLoading() && brands().length === 0" class="text-center py-8 md:py-12">
         <div class="text-[#90adcb] text-lg mb-4">No brands available at the moment</div>
         <p class="text-gray-400">Please check back later for brand information.</p>
       </div>
     </div>
     <!-- Car Carousel Section -->
-    <div class="container mx-auto px-4 mb-12">
-      <div class="flex items-center justify-between pb-3 pt-5">
+    <div class="container mx-auto px-4 mb-8 md:mb-12">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-3 pt-5 gap-2 sm:gap-0">
         <h2 data-animation="fade-right"
-          class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full text-left">
+          class="text-white tracking-light text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full text-left">
           Explore our cars</h2>
         <button (click)="navigateToCars()"
-          class="inline-flex items-center gap-1 btn-outline-white font-semibold text-base px-4 py-2 rounded-md transition-colors duration-300">
+          class="inline-flex items-center gap-1 btn-outline-white font-semibold text-xs sm:text-sm px-3 py-1.5 rounded-md transition-colors duration-300 w-fit sm:mt-3 md:mt-4 lg:mt-5 xl:mt-6">
           View More <span class="ml-1">&rarr;</span>
         </button>
       </div>
       <p data-animation="fade-right" data-delay="100"
-        class="text-[#90adcb] text-base max-w-[900px] mx-0 pb-6 text-left">Browse our carefully curated featured cars
+        class="text-[#90adcb] text-sm sm:text-base max-w-[900px] mx-0 pb-6 text-left">Browse our carefully curated featured cars
       </p>
       <!-- Loading State -->
       <div *ngIf="carsLoading()" class="carousel-wrapper relative" data-animation="fade-up" data-delay="200">
@@ -130,13 +142,14 @@
                     class="w-full aspect-video rounded-lg flex-1 overflow-hidden bg-gray-800 flex items-center justify-center">
                     <img *ngIf="car.image" [src]="car.image" [alt]="car.name || car.brand || 'car'"
                       class="w-full h-full object-cover" />
-                    <div *ngIf="!car.image" class="text-white">No image</div>
+                    <img *ngIf="!car.image" src="/car.png" [alt]="car.name || car.brand || 'car'"
+                      class="w-full h-full object-cover" />
                   </div>
                   <div class="flex flex-col gap-2 mt-4">
                     <div class="flex items-start justify-between gap-2 w-full">
                       <div class="flex flex-col flex-1">
-                        <div class="text-white font-bold text-lg">{{ car.name || 'Unknown Model' }}</div>
-                        <div class="text-gray-400 text-sm">{{ car.brand || 'Unknown Brand' }}</div>
+                        <div class="text-white font-bold text-base sm:text-lg lg:text-xl">{{ car.name || 'Unknown Model' }}</div>
+                        <div class="text-gray-400 text-xs sm:text-sm lg:text-base">{{ car.brand || 'Unknown Brand' }}</div>
                         <div class="flex items-center gap-2 mt-1">
                           <div *ngIf="car.location" class="flex items-center gap-1 text-gray-500 text-xs">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12px" height="12px" fill="currentColor"
@@ -149,7 +162,7 @@
                           </div>
                         </div>
                         <!-- Additional car details -->
-                        <div class="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                        <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 text-xs text-gray-500">
                           <div *ngIf="car.seats" class="flex items-center gap-1">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12px" height="12px" fill="currentColor"
                               viewBox="0 0 256 256">
@@ -168,18 +181,30 @@
                             </svg>
                             <span>{{ car.fuel }}</span>
                           </div>
-                          <div *ngIf="car.color" class="flex items-center gap-1">
-                            <div class="w-3 h-3 rounded-full border border-gray-600"
-                              [style.background-color]="getColorCode(car.color)"></div>
-                            <span>{{ car.color }}</span>
-                          </div>
                         </div>
                       </div>
                       <div class="flex flex-col items-end gap-1">
                         <div *ngIf="car.tokensAvailable === 0 && car.ticketsAvailable === 0"
                           class="text-xs bg-red-600 text-white rounded-full px-2 py-0.5">Sold Out</div>
-                        <div *ngIf="car.tokenPrice" class="text-blue-400 font-semibold text-base">₹{{ car.tokenPrice
-                          }}<span class="text-gray-400 text-sm font-normal">/per share</span></div>
+                        <div *ngIf="car.fractionPrice" class="flex items-center gap-2">
+                          <div class="text-blue-400 font-semibold text-base">₹{{ car.fractionPrice }}<span class="text-gray-400 text-sm font-normal">/per share</span></div>
+                          <button 
+                            (click)="showPricingInfo($event)"
+                            class="w-4 h-4 rounded-full bg-gray-600 hover:bg-gray-500 flex items-center justify-center transition-colors group relative"
+                            title="Pricing Information">
+                            <svg class="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                            </svg>
+                            <!-- Tooltip -->
+                            <div class="absolute bottom-full right-0 mb-2 w-64 p-3 bg-gray-800 border border-gray-600 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                              <div class="text-xs text-gray-300 leading-relaxed">
+                                The above prices are subject to change, the final prices will be based on dealers final proforma invoice at the time of purchase
+                              </div>
+                              <!-- Arrow -->
+                              <div class="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                            </div>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -203,24 +228,26 @@
       </div>
 
       <!-- No Cars State -->
-      <div *ngIf="!carsLoading() && cars().length === 0" class="text-center py-12" data-animation="fade-up"
+      <div *ngIf="!carsLoading() && cars().length === 0" class="text-center py-8 md:py-12" data-animation="fade-up"
         data-delay="200">
         <div class="text-[#90adcb] text-lg mb-4">No cars available at the moment</div>
         <p class="text-gray-400">Please check back later for new car listings.</p>
       </div>
     </div>
-    <div class="flex flex-col gap-10 px-4 py-10 @container mb-12">
+    <div class="flex flex-col gap-6 px-4 py-6 @container mb-8 md:gap-10 md:py-10 md:mb-12">
       <div class="flex flex-col gap-4">
         <h1 data-animation="fade-up"
-          class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-[720px]">
+          class="text-white tracking-light text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-[720px]">
           Simple Steps to Get You on the Road
         </h1>
         <p data-animation="fade-up" data-delay="100"
-          class="text-white text-base font-normal leading-normal max-w-[720px]">Your journey to luxury car co-ownership
+          class="text-white text-sm sm:text-base lg:text-lg font-normal leading-normal max-w-[720px]">Your journey to luxury car co-ownership
           starts here.</p>
       </div>
       <div class="timeline-wrapper">
-        <div class="timeline px-0">
+        <div #timelineRef class="timeline px-0" 
+             [class.timeline-collapsed]="!isSimpleStepsExpanded()"
+             [class.timeline-expanded]="isSimpleStepsExpanded()">
           <!-- Loading State -->
           <div *ngIf="simpleStepsLoading()" class="space-y-6">
             <div class="timeline-item animate-pulse">
@@ -243,7 +270,8 @@
 
           <!-- Dynamic Simple Steps -->
           <ng-container *ngIf="!simpleStepsLoading()">
-            <div *ngFor="let step of simpleSteps(); let i = index" [attr.data-animation]="'fade-right'"
+            <!-- First 5 steps (always visible) -->
+            <div *ngFor="let step of getVisibleSteps(); let i = index" [attr.data-animation]="'fade-right'"
               [attr.data-delay]="(i + 1) * 100" class="timeline-item">
               <div class="timeline-icon" aria-hidden>
                 <div
@@ -256,24 +284,137 @@
                 <p class="text-[#90adcb] text-sm mt-1">{{ step.stepName }}</p>
               </div>
             </div>
+            
+            <!-- Expandable steps (6th and beyond) -->
+            <div *ngIf="simpleSteps().length > 5" class="space-y-6">
+              <div *ngFor="let step of getExpandableSteps(); let i = index" 
+                   [attr.data-animation]="'fade-right'"
+                   [attr.data-delay]="(i + 6) * 100" 
+                   class="timeline-item transition-all duration-300"
+                   [class.opacity-0]="!isSimpleStepsExpanded()"
+                   [class.max-h-0]="!isSimpleStepsExpanded()"
+                   [class.overflow-hidden]="!isSimpleStepsExpanded()"
+                   [class.opacity-100]="isSimpleStepsExpanded()"
+                   [class.max-h-96]="isSimpleStepsExpanded()">
+                <div class="timeline-icon" aria-hidden>
+                  <div
+                    class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {{ i + 6 }}
+                  </div>
+                </div>
+                <div class="timeline-content">
+                  <h3 class="text-white text-base font-bold">{{ step.stepTitle }}</h3>
+                  <p class="text-[#90adcb] text-sm mt-1">{{ step.stepName }}</p>
+                </div>
+              </div>
+            </div>
+            
+            
           </ng-container>
         </div>
         <div class="timeline-empty">
           <div class="timeline-empty-inner">
-            <div class="image-card rounded-xl overflow-hidden h-[750px]" data-animation="fade-left" data-delay="200">
+            <!-- Mobile: Toggle Button above videos -->
+            <div *ngIf="simpleSteps().length > 5" class="block md:hidden -mt-8" data-animation="fade-up" data-delay="600">
+              <button 
+                (click)="toggleSimpleSteps()"
+                class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-sm font-medium rounded-lg transition-all duration-300 hover:scale-105 border-none">
+                <span>{{ isSimpleStepsExpanded() ? 'Show Less' : 'Show More' }}</span>
+                <svg class="w-4 h-4 transition-transform duration-300" [class.rotate-180]="isSimpleStepsExpanded()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Mobile: Vertical video layout -->
+            <div class="block md:hidden" data-animation="fade-left" data-delay="200">
+              <div class="space-y-4">
+                <!-- Loading State for Videos -->
+                <div *ngIf="simpleStepsVideosLoading()" class="space-y-4">
+                  <div class="w-full h-48 animate-pulse bg-gray-700 rounded-lg"></div>
+                  <div class="w-full h-48 animate-pulse bg-gray-700 rounded-lg"></div>
+                </div>
+
+                <!-- Dynamic Videos -->
+                <div *ngIf="!simpleStepsVideosLoading() && simpleStepsVideos().length > 0" class="space-y-4">
+                  <!-- Video 1 -->
+                  <div class="w-full h-48 video-container cursor-pointer relative group" 
+                       *ngIf="simpleStepsVideos()[0]?.video1"
+                       (click)="redirectToYouTube(simpleStepsVideos()[0].video1)">
+                    <img [src]="getYouTubeThumbnail(simpleStepsVideos()[0].video1)" 
+                         [alt]="'Simple Steps Video 1'"
+                         class="w-full h-full rounded-lg object-cover"
+                         loading="lazy"
+                         (error)="onThumbnailError($event, simpleStepsVideos()[0].video1)">
+                    <!-- Play button overlay -->
+                    <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-lg group-hover:bg-opacity-40 transition-all duration-200">
+                      <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
+                        <svg class="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <!-- YouTube label -->
+                    <div class="absolute bottom-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded">
+                      YouTube
+                    </div>
+                  </div>
+
+                  <!-- Video 2 -->
+                  <div class="w-full h-48 video-container cursor-pointer relative group" 
+                       *ngIf="simpleStepsVideos()[0]?.video2"
+                       (click)="redirectToYouTube(simpleStepsVideos()[0].video2)">
+                    <img [src]="getYouTubeThumbnail(simpleStepsVideos()[0].video2)" 
+                         [alt]="'Simple Steps Video 2'"
+                         class="w-full h-full rounded-lg object-cover"
+                         loading="lazy"
+                         (error)="onThumbnailError($event, simpleStepsVideos()[0].video2)">
+                    <!-- Play button overlay -->
+                    <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-lg group-hover:bg-opacity-40 transition-all duration-200">
+                      <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
+                        <svg class="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <!-- YouTube label -->
+                    <div class="absolute bottom-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded">
+                      YouTube
+                    </div>
+                  </div>
+
+                  <!-- Fallback if no videos -->
+                  <div
+                    *ngIf="!simpleStepsVideosLoading() && (!simpleStepsVideos() || simpleStepsVideos().length === 0 || (!simpleStepsVideos()[0]?.video1 && !simpleStepsVideos()[0]?.video2))"
+                    class="w-full h-48 flex items-center justify-center bg-gray-800 rounded-lg">
+                    <div class="text-center p-4">
+                      <div class="text-2xl mb-2">🎥</div>
+                      <h3 class="text-white text-sm font-semibold mb-1">Videos Coming Soon</h3>
+                      <p class="text-gray-400 text-xs">We're working on adding helpful videos.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Desktop: Original vertical layout -->
+            <div class="hidden md:block image-card rounded-xl overflow-hidden" 
+                 [class.video-container-collapsed]="!isSimpleStepsExpanded()"
+                 [class.video-container-expanded]="isSimpleStepsExpanded()"
+                 data-animation="fade-left" data-delay="200">
               <div class="w-full h-full">
                 <!-- Loading State for Videos -->
                 <div *ngIf="simpleStepsVideosLoading()"
                   class="flex flex-col gap-4 w-full h-full justify-center items-center">
-                  <div class="w-full h-[534px] animate-pulse bg-gray-700 rounded-lg"></div>
-                  <div class="w-full h-[534px] animate-pulse bg-gray-700 rounded-lg"></div>
+                  <div class="w-full flex-1 animate-pulse bg-gray-700 rounded-lg"></div>
+                  <div class="w-full flex-1 animate-pulse bg-gray-700 rounded-lg"></div>
                 </div>
 
                 <!-- Dynamic Videos -->
                 <div *ngIf="!simpleStepsVideosLoading() && simpleStepsVideos().length > 0"
                   class="flex flex-col gap-4 w-full h-full justify-center items-center">
                   <!-- Video 1 -->
-                  <div class="w-full h-[534px] video-container" *ngIf="simpleStepsVideos()[0]?.video1">
+                  <div class="w-full flex-1 video-container" *ngIf="simpleStepsVideos()[0]?.video1">
                     <iframe width="100%" height="100%" [src]="sanitizeUrl(simpleStepsVideos()[0].video1)"
                       frameborder="0"
                       allow="encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -283,7 +424,7 @@
                   </div>
 
                   <!-- Video 2 -->
-                  <div class="w-full h-[534px] video-container" *ngIf="simpleStepsVideos()[0]?.video2">
+                  <div class="w-full flex-1 video-container" *ngIf="simpleStepsVideos()[0]?.video2">
                     <iframe width="100%" height="100%" [src]="sanitizeUrl(simpleStepsVideos()[0].video2)"
                       frameborder="0"
                       allow="encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -309,11 +450,22 @@
           </div>
         </div>
       </div>
+      <!-- Toggle Button (Desktop only - placed at bottom of section) -->
+      <div *ngIf="simpleSteps().length > 5" class="hidden md:block -mt-8" data-animation="fade-up" data-delay="600">
+        <button 
+          (click)="toggleSimpleSteps()"
+          class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-sm font-medium rounded-lg transition-all duration-300 hover:scale-105 border-none">
+          <span>{{ isSimpleStepsExpanded() ? 'Show Less' : 'Show More' }}</span>
+          <svg class="w-4 h-4 transition-transform duration-300" [class.rotate-180]="isSimpleStepsExpanded()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+      </div>
     </div>
     <h2 data-animation="fade-right"
-      class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full px-4 pb-3 pt-5 text-left">
+      class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full px-4 pb-2 pt-4 md:pb-3 md:pt-5 text-left">
       Why Choose Fraction Car?</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 mb-12">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 p-4 mb-8 md:gap-6 md:mb-12">
       <div data-animation="fade-up" data-delay="100"
         class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
         <div class="text-3xl">🚘</div>
@@ -368,7 +520,7 @@
     <h2 data-animation="fade-right"
       class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-full px-4 pb-3 pt-5 text-left">
       Trust & Security Matters</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 mb-12">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 mb-6 md:mb-12">
       <div data-animation="fade-up" data-delay="100"
         class="flex flex-col gap-4 p-6 rounded-xl border border-[#314d68] bg-[#101a23] hover:border-blue-500 transition-all duration-300">
         <div class="flex items-center gap-3">
@@ -420,55 +572,216 @@
     </div>
 
     <!-- Co-owning vs Renting Comparison -->
-    <div class="px-4 py-8">
-      <h2 data-animation="fade-right"
-        class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] mb-8">
-        Co-owning vs Renting</h2>
-
-      <div class="overflow-x-auto">
-        <table class="w-full border-collapse">
-          <thead>
-            <tr>
-              <th class="text-left p-4 bg-[#101a23] border-b border-[#314d68] text-white">Feature</th>
-              <th class="text-left p-4 bg-[#101a23] border-b border-[#314d68] text-white">Fraction Car (Co-Ownership)
-              </th>
-              <th class="text-left p-4 bg-[#101a23] border-b border-[#314d68] text-white">Rental Cars</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="p-4 border-b border-[#314d68] text-white font-medium">Cost</td>
-              <td class="p-4 border-b border-[#314d68] text-blue-400">5x cheaper than rentals</td>
-              <td class="p-4 border-b border-[#314d68] text-gray-400">Higher daily/weekly costs</td>
-            </tr>
-            <tr>
-              <td class="p-4 border-b border-[#314d68] text-white font-medium">Car Condition</td>
-              <td class="p-4 border-b border-[#314d68] text-blue-400">Brand-new showroom cars</td>
-              <td class="p-4 border-b border-[#314d68] text-gray-400">Usually older models</td>
-            </tr>
-            <tr>
-              <td class="p-4 border-b border-[#314d68] text-white font-medium">Ownership</td>
-              <td class="p-4 border-b border-[#314d68] text-blue-400">You own 8.33% (or more) via LLP</td>
-              <td class="p-4 border-b border-[#314d68] text-gray-400">Zero ownership rights</td>
-            </tr>
-            <tr>
-              <td class="p-4 border-b border-[#314d68] text-white font-medium">Quality</td>
-              <td class="p-4 border-b border-[#314d68] text-blue-400">Owners treat it better</td>
-              <td class="p-4 border-b border-[#314d68] text-gray-400">Worn out due to multiple users</td>
-            </tr>
-            <tr>
-              <td class="p-4 border-b border-[#314d68] text-white font-medium">Branding</td>
-              <td class="p-4 border-b border-[#314d68] text-blue-400">No logos/branding</td>
-              <td class="p-4 border-b border-[#314d68] text-gray-400">Often comes with rental branding</td>
-            </tr>
-            <tr>
-              <td class="p-4 border-b border-[#314d68] text-white font-medium">Usage Rights</td>
-              <td class="p-4 border-b border-[#314d68] text-blue-400">30 days/year per share</td>
-              <td class="p-4 border-b border-[#314d68] text-gray-400">Limited to rental period only</td>
-            </tr>
-          </tbody>
-        </table>
+    <div class="px-4 pt-8 pb-6 md:py-12">
+      <div class="text-center mb-8 md:mb-12">
+        <h2 data-animation="fade-up"
+          class="text-white text-4xl font-bold leading-tight mb-4">
+          Co-owning vs Renting
+        </h2>
+        <p data-animation="fade-up" data-delay="100" class="text-gray-400 text-lg max-w-2xl mx-auto">
+          Discover why fractional car ownership is the smarter choice compared to traditional car rentals
+        </p>
       </div>
+
+      <!-- Comparison Cards -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        
+        <!-- Fraction Car Card -->
+        <div data-animation="fade-up" data-delay="200" 
+             class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-900/20 to-blue-800/10 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 group">
+          <!-- Header -->
+          <div class="relative p-8 pb-6">
+            <div class="flex items-center gap-4 mb-6">
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-white text-2xl font-bold">Fraction Car</h3>
+                <p class="text-blue-300 text-sm">Co-Ownership Model</p>
+              </div>
+            </div>
+            
+            <!-- Features List -->
+            <div class="space-y-4">
+              <div class="flex items-start gap-3">
+                <div class="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-white font-semibold">5x cheaper</span>
+                  <span class="text-gray-300"> than traditional rentals</span>
+                </div>
+              </div>
+              
+              <div class="flex items-start gap-3">
+                <div class="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-white font-semibold">Brand-new showroom cars</span>
+                  <span class="text-gray-300"> in pristine condition</span>
+                </div>
+              </div>
+              
+              <div class="flex items-start gap-3">
+                <div class="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-white font-semibold">8.33% ownership</span>
+                  <span class="text-gray-300"> via LLP structure</span>
+                </div>
+              </div>
+              
+              <div class="flex items-start gap-3">
+                <div class="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-white font-semibold">30 days/year</span>
+                  <span class="text-gray-300"> usage rights per share</span>
+                </div>
+              </div>
+              
+              <div class="flex items-start gap-3">
+                <div class="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-white font-semibold">No branding</span>
+                  <span class="text-gray-300"> or rental logos</span>
+                </div>
+              </div>
+              
+              <div class="flex items-start gap-3">
+                <div class="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-white font-semibold">Better care</span>
+                  <span class="text-gray-300"> from co-owners</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Bottom accent -->
+          <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-blue-600"></div>
+        </div>
+
+        <!-- Rental Cars Card -->
+        <div data-animation="fade-up" data-delay="300" 
+             class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900/20 to-gray-800/10 border border-gray-600/30 hover:border-gray-500/50 transition-all duration-300 group">
+          <!-- Header -->
+          <div class="relative p-8 pb-6">
+            <div class="flex items-center gap-4 mb-6">
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-white text-2xl font-bold">Rental Cars</h3>
+                <p class="text-gray-400 text-sm">Traditional Rental Model</p>
+              </div>
+            </div>
+            
+            <!-- Features List -->
+            <div class="space-y-4">
+              <div class="flex items-start gap-3">
+                <div class="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-white font-semibold">Higher costs</span>
+                  <span class="text-gray-300"> for daily/weekly rentals</span>
+                </div>
+              </div>
+              
+              <div class="flex items-start gap-3">
+                <div class="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-white font-semibold">Older models</span>
+                  <span class="text-gray-300"> with wear and tear</span>
+                </div>
+              </div>
+              
+              <div class="flex items-start gap-3">
+                <div class="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-white font-semibold">Zero ownership</span>
+                  <span class="text-gray-300"> rights or benefits</span>
+                </div>
+              </div>
+              
+              <div class="flex items-start gap-3">
+                <div class="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-white font-semibold">Limited usage</span>
+                  <span class="text-gray-300"> to rental period only</span>
+                </div>
+              </div>
+              
+              <div class="flex items-start gap-3">
+                <div class="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-white font-semibold">Rental branding</span>
+                  <span class="text-gray-300"> and logos visible</span>
+                </div>
+              </div>
+              
+              <div class="flex items-start gap-3">
+                <div class="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-white font-semibold">Worn condition</span>
+                  <span class="text-gray-300"> from multiple users</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Bottom accent -->
+          <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-gray-500 to-gray-600"></div>
+        </div>
+      </div>
+
+      <!-- Call to Action (removed empty block to reduce spacing) -->
     </div>
 
     <!-- FAQ Section Header -->
@@ -497,7 +810,7 @@
 
     <!-- Dynamic FAQ Section -->
     <div *ngIf="!loading()" class="faq-container">
-      <div *ngIf="getFAQsForCategory(activeFaqCategory()).length === 0" class="text-center py-12">
+      <div *ngIf="getFAQsForCategory(activeFaqCategory()).length === 0" class="text-center py-8 md:py-12">
         <div class="text-gray-400 text-lg">No FAQs available for this category.</div>
       </div>
       <div class="space-y-4 mb-4">
@@ -578,6 +891,40 @@
     <div *ngIf="loading()" class="flex flex-col p-4 gap-3 mb-20">
       <div class="text-center py-8">
         <div class="text-[#90adcb]">Loading FAQs...</div>
+      </div>
+    </div>
+
+    <!-- Brands Modal -->
+    <div *ngIf="showBrandsModal()" 
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 brands-modal brands-modal-backdrop"
+         (click)="closeBrandsModal()">
+      <div class="bg-gray-900 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden brands-modal-content"
+           (click)="$event.stopPropagation()">
+        <!-- Modal Header -->
+        <div class="flex justify-between items-center p-6 border-b border-gray-700">
+          <h2 class="text-2xl font-bold text-white">All Brands</h2>
+          <button (click)="closeBrandsModal()" 
+                  class="text-gray-400 hover:text-white transition-colors duration-200">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Modal Content -->
+        <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 brands-modal-grid">
+            <div *ngFor="let brand of brands(); let i = index"
+                 class="flex flex-col items-center bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 cursor-pointer brands-modal-brand"
+                 (click)="navigateToCarsWithBrandFromModal(brand.brandName)">
+              <div class="bg-white/10 rounded-full p-4 mb-4">
+                <img [src]="brand.brandLogo" [alt]="brand.brandName" class="h-16 w-16 object-contain" />
+              </div>
+              <span class="text-white text-base font-semibold text-center">{{ brand.brandName }}</span>
+              <span class="text-gray-400 text-xs mt-2">{{ brand.subText }}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

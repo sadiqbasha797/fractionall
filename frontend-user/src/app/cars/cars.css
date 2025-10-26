@@ -118,3 +118,39 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none; /* Safari and Chrome */
 }
+
+/* Mobile pagination styles */
+.mobile-pagination {
+  padding: 1rem 0.5rem;
+}
+
+.mobile-pagination button {
+  min-width: 48px;
+  min-height: 48px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-pagination button:active {
+  transform: scale(0.95);
+}
+
+.mobile-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Ensure mobile pagination is visible and properly spaced */
+@media (max-width: 767px) {
+  .mobile-pagination {
+    display: flex !important;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem;
+  }
+  
+  .mobile-pagination button {
+    flex-shrink: 0;
+  }
+}

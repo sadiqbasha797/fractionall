@@ -1,0 +1,3 @@
+<app-preloader *ngIf="showPreloader()" [showPreloader]="showPreloader()"></app-preloader>
+<app-navbar *ngIf="shouldShowNavbar()"></app-navbar>
+<router-outlet />

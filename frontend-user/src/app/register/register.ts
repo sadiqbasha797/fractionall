@@ -19,6 +19,7 @@ export class Register implements OnInit, OnDestroy {
     email: '',
     mobile: '',
     password: '',
+    confirmPassword: '',
     location: '',
     pincode: ''
   };
@@ -27,6 +28,7 @@ export class Register implements OnInit, OnDestroy {
   errorMessage = '';
   successMessage = '';
   showPassword = false;
+  showConfirmPassword = false;
   isPincodeLoading = false;
   pincodeError = '';
   private pincodeTimeout: any;
@@ -131,6 +133,16 @@ export class Register implements OnInit, OnDestroy {
       return false;
     }
 
+    if (!this.registerData.confirmPassword.trim()) {
+      this.errorMessage = 'Please confirm your password';
+      return false;
+    }
+
+    if (this.registerData.password !== this.registerData.confirmPassword) {
+      this.errorMessage = 'Passwords do not match';
+      return false;
+    }
+
     if (!this.registerData.location.trim()) {
       this.errorMessage = 'Location is required';
       return false;
@@ -161,6 +173,24 @@ export class Register implements OnInit, OnDestroy {
 
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
+  }
+
+  toggleConfirmPasswordVisibility() {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
+  onPasswordChange() {
+    // Clear any password mismatch error when user starts typing
+    if (this.errorMessage === 'Passwords do not match') {
+      this.errorMessage = '';
+    }
+  }
+
+  onConfirmPasswordChange() {
+    // Clear any password mismatch error when user starts typing
+    if (this.errorMessage === 'Passwords do not match') {
+      this.errorMessage = '';
+    }
   }
 
   onPincodeChange() {

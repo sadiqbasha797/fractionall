@@ -42,104 +42,45 @@
       </div>
     </div>
 
-    <!-- Search and Filters Section -->
+    <!-- Action Buttons Section -->
     <div class="px-4 sm:px-6 py-4 sm:py-6">
-      <div class="flex flex-col gap-4">
-        <!-- Search Bar -->
-        <div class="w-full">
-          <label class="block text-sm font-medium text-gray-300 mb-2">Search Transactions</label>
-          <div class="relative search-input-container">
-            <input
-              type="text"
-              [(ngModel)]="searchTerm"
-              (input)="applyFilters()"
-              placeholder="Search by payment ID, email, or amount..."
-              class="search-input w-full pl-10 pr-4 py-3 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300">
-            <i class="fas fa-search search-icon"></i>
-            <!-- Fallback SVG icon in case Font Awesome doesn't load -->
-            <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="m21 21-4.35-4.35"></path>
-            </svg>
-          </div>
-        </div>
+      <div class="flex items-center justify-end gap-2">
+        <button 
+          (click)="clearFilters()" 
+          class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
+        >
+          <i class="fas fa-times text-sm"></i>
+          <span>Clear</span>
+        </button>
 
-        <!-- Filters Row -->
-        <div class="flex flex-wrap gap-3">
-          <!-- Status Filter -->
-          <div class="flex-1 min-w-[200px]">
-            <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
-            <select 
-              [(ngModel)]="statusFilter" 
-              (change)="applyFilters()"
-              class="w-full px-4 py-3 rounded-xl bg-gray-700/50 backdrop-blur-sm border border-gray-600/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300">
-              <option value="">All Statuses</option>
-              <option value="captured">Successful</option>
-              <option value="authorized">Authorized</option>
-              <option value="failed">Failed</option>
-            </select>
-          </div>
+        <button 
+          (click)="refreshTransactions()" 
+          [disabled]="isLoading"
+          class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Refresh transactions"
+          aria-label="Refresh transactions"
+        >
+          <i class="fas fa-sync-alt text-sm" [class.animate-spin]="isLoading"></i>
+          <span>Refresh</span>
+        </button>
 
-          <!-- Method Filter -->
-          <div class="flex-1 min-w-[200px]">
-            <label class="block text-sm font-medium text-gray-300 mb-2">Payment Method</label>
-            <select 
-              [(ngModel)]="methodFilter" 
-              (change)="applyFilters()"
-              class="w-full px-4 py-3 rounded-xl bg-gray-700/50 backdrop-blur-sm border border-gray-600/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300">
-              <option value="">All Methods</option>
-              <option value="card">Card</option>
-              <option value="netbanking">Net Banking</option>
-              <option value="wallet">Wallet</option>
-              <option value="upi">UPI</option>
-            </select>
-          </div>
+        <button 
+          (click)="showRefundsList()" 
+          class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
+        >
+          <i class="fas fa-undo text-sm"></i>
+          <span>Refunds</span>
+        </button>
 
-          <!-- Date Range -->
-          <div class="flex-1 min-w-[200px]">
-            <label class="block text-sm font-medium text-gray-300 mb-2">From Date</label>
-            <input 
-              type="date" 
-              [(ngModel)]="fromDate" 
-              (change)="applyFilters()"
-              class="w-full px-4 py-3 rounded-xl bg-gray-700/50 backdrop-blur-sm border border-gray-600/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 cursor-pointer"
-              (click)="openDatePicker('fromDate')"
-              id="fromDate">
-          </div>
-
-          <div class="flex-1 min-w-[200px]">
-            <label class="block text-sm font-medium text-gray-300 mb-2">To Date</label>
-            <input 
-              type="date" 
-              [(ngModel)]="toDate" 
-              (change)="applyFilters()"
-              class="w-full px-4 py-3 rounded-xl bg-gray-700/50 backdrop-blur-sm border border-gray-600/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 cursor-pointer"
-              (click)="openDatePicker('toDate')"
-              id="toDate">
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex flex-wrap gap-3">
-          <button 
-            (click)="showRefundsList()" 
-            class="btn-secondary px-6 py-3 rounded-xl flex items-center space-x-2 hover:bg-gray-600/50 transition-all duration-300">
-            <i class="fas fa-undo"></i>
-            <span>Refunds</span>
-          </button>
-          <button 
-            (click)="exportTransactions()" 
-            class="btn-primary px-6 py-3 rounded-xl flex items-center space-x-2 hover:bg-blue-600 transition-all duration-300">
-            <i class="fas fa-download"></i>
-            <span>Export CSV</span>
-          </button>
-          <button 
-            (click)="clearFilters()" 
-            class="px-6 py-3 rounded-xl bg-gray-600/50 hover:bg-gray-600 text-white flex items-center space-x-2 transition-all duration-300">
-            <i class="fas fa-times"></i>
-            <span>Clear Filters</span>
-          </button>
-        </div>
+        <button 
+          (click)="exportTransactions()" 
+          class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
+          title="Export data"
+          aria-label="Export data"
+        >
+          <i class="fas fa-download text-sm"></i>
+          <span>Export</span>
+        </button>
       </div>
     </div>
   </header>
@@ -149,17 +90,130 @@
     <section class="max-w-7xl mx-auto">
       <div class="h-full rounded-xl border border-gray-700 bg-gray-900 shadow-sm min-w-0">
         <!-- scrollable table container -->
-        <div class="table-container" style="max-height: 72vh;">
+        <div class="table-container" [style.max-height]="showFilters ? '68vh' : '72vh'">
           <table class="min-w-full divide-y divide-gray-700" role="table" aria-label="Transactions table">
           <thead>
+            <!-- Column Headers -->
             <tr class="bg-gray-800">
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Transaction</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">
+                <div class="flex items-center gap-2">
+                  <button 
+                    (click)="toggleFilters()" 
+                    [class]="'filter-toggle-btn ' + (showFilters ? 'active' : '')"
+                    title="{{ showFilters ? 'Hide filters' : 'Show filters' }}"
+                  >
+                    <i [class]="'fas text-xs ' + (showFilters ? 'fa-eye-slash' : 'fa-filter')"></i>
+                  </button>
+                  <span>Transaction</span>
+                </div>
+              </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Payment Method</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Customer</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Amount</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Date</th>
               <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase">Actions</th>
+            </tr>
+            <!-- Filter Row -->
+            <tr *ngIf="showFilters" class="border-b border-gray-600 filter-row">
+              <th class="px-6 py-2">
+                <!-- Search Filter -->
+                <div class="relative">
+                  <input 
+                    type="search" 
+                    [(ngModel)]="searchTerm"
+                    (input)="applyFilters()"
+                    placeholder="Search transactions..."
+                    class="table-filter-input pr-8"
+                  />
+                  <i class="fas fa-search absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs"></i>
+                </div>
+              </th>
+              <th class="px-6 py-2">
+                <!-- Status Filter -->
+                <select 
+                  [(ngModel)]="statusFilter" 
+                  (change)="applyFilters()"
+                  class="table-filter-select"
+                >
+                  <option value="">All Status</option>
+                  <option value="captured">Successful</option>
+                  <option value="failed">Failed</option>
+                  <option value="created">Pending</option>
+                  <option value="authorized">Authorized</option>
+                  <option value="refunded">Refunded</option>
+                </select>
+              </th>
+              <th class="px-6 py-2">
+                <!-- Method Filter -->
+                <select 
+                  [(ngModel)]="methodFilter" 
+                  (change)="applyFilters()"
+                  class="table-filter-select"
+                >
+                  <option value="">All Methods</option>
+                  <option value="card">Card</option>
+                  <option value="netbanking">Net Banking</option>
+                  <option value="wallet">Wallet</option>
+                  <option value="upi">UPI</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                </select>
+              </th>
+              <th class="px-6 py-2">
+                <!-- Customer Email Filter -->
+                <input 
+                  type="search" 
+                  [(ngModel)]="searchTerm"
+                  (input)="applyFilters()"
+                  placeholder="Filter by email..."
+                  class="table-filter-input"
+                />
+              </th>
+              <th class="px-6 py-2">
+                <!-- Amount Range Filter -->
+                <select 
+                  [(ngModel)]="amountRangeFilter" 
+                  (change)="applyFilters()"
+                  class="table-filter-select"
+                >
+                  <option value="all">All Amounts</option>
+                  <option value="0-1000">₹0 - ₹1K</option>
+                  <option value="1000-5000">₹1K - ₹5K</option>
+                  <option value="5000-10000">₹5K - ₹10K</option>
+                  <option value="10000+">₹10K+</option>
+                </select>
+              </th>
+              <th class="px-6 py-2">
+                <!-- Date Range Filter -->
+                <div class="flex gap-1">
+                  <input 
+                    type="date" 
+                    [(ngModel)]="fromDate" 
+                    (change)="applyFilters()"
+                    class="table-filter-input text-xs"
+                    style="font-size: 10px; padding: 0.25rem;"
+                    title="From date"
+                  />
+                  <input 
+                    type="date" 
+                    [(ngModel)]="toDate" 
+                    (change)="applyFilters()"
+                    class="table-filter-input text-xs"
+                    style="font-size: 10px; padding: 0.25rem;"
+                    title="To date"
+                  />
+                </div>
+              </th>
+              <th class="px-6 py-2 text-center">
+                <!-- Clear Filters Button -->
+                <button 
+                  (click)="clearFilters()" 
+                  class="table-clear-btn"
+                  title="Clear all filters"
+                >
+                  <i class="fas fa-times"></i>
+                </button>
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-700 bg-gray-900">
@@ -410,7 +464,7 @@
           <input
             type="number"
             class="form-control"
-            [(ngModel)]="refundForm.refundAmount"
+            [(ngModel)]="refundAmountInRupees"
             min="0"
             step="0.01">
         </div>

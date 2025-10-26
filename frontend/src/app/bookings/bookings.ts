@@ -7,6 +7,7 @@ import { ExportService, ExportOptions } from '../services/export.service';
 import { UserService, User } from '../services/user.service';
 import { CarService, Car } from '../services/car.service';
 import { TicketService, Ticket } from '../services/ticket.service';
+import { BlockedDateService, BlockedDate } from '../services/blocked-date.service';
 
 interface FilterOptions {
   status: string;
@@ -54,6 +55,9 @@ export class Bookings implements OnInit {
   // Dialog element
   private dialogElement: HTMLElement | null = null;
   
+  // Loading state for refresh functionality
+  isLoading: boolean = false;
+  
   // Status update
   statusUpdateBooking: Booking | null = null;
   newStatus: 'accepted' | 'rejected' = 'accepted';
@@ -74,6 +78,18 @@ export class Bookings implements OnInit {
   showCalendarView = false;
   currentDate = new Date();
   
+  // Blocked dates
+  showBlockedDatesDialog = false;
+  blockedDates: BlockedDate[] = [];
+  newBlockedDate: Partial<BlockedDate> = {
+    carid: '',
+    blockedFrom: '',
+    blockedTo: '',
+    reason: 'Maintenance'
+  };
+  isEditBlockedDateMode = false;
+  currentBlockedDateId: string | null = null;
+  
   constructor(
     private bookingService: BookingService,
     private authService: AuthService,
@@ -81,6 +97,7 @@ export class Bookings implements OnInit {
     private userService: UserService,
     private carService: CarService,
     private ticketService: TicketService,
+    private blockedDateService: BlockedDateService,
     private renderer: Renderer2
   ) {}
   
@@ -218,18 +235,28 @@ export class Bookings implements OnInit {
   }
 
   loadBookings() {
+    this.isLoading = true;
     this.bookingService.getBookings().subscribe({
       next: (response) => {
         if (response.status === 'success' && response.body.bookings) {
           this.bookings = response.body.bookings;
           this.applyFilters();
         }
+        this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading bookings:', error);
         this.showErrorDialog('Failed to load bookings. Please try again.');
+        this.isLoading = false;
       }
     });
+  }
+
+  // Refresh functionality
+  refreshBookings(): void {
+    this.loadBookings();
+    this.loadUsers();
+    this.loadCars();
   }
 
   loadUsers() {
@@ -962,6 +989,147 @@ export class Bookings implements OnInit {
     };
 
     this.exportService.exportToExcel(options);
+  }
+
+  // Blocked Dates Methods
+  canManageBlockedDates(): boolean {
+    const userRole = this.authService.getUserRole();
+    return userRole === 'admin' || userRole === 'superadmin';
+  }
+
+  showBlockedDatesModal(): void {
+    this.showBlockedDatesDialog = true;
+    this.loadBlockedDates();
+  }
+
+  closeBlockedDatesModal(): void {
+    this.showBlockedDatesDialog = false;
+    this.resetBlockedDateForm();
+  }
+
+  loadBlockedDates(): void {
+    this.blockedDateService.getBlockedDates().subscribe({
+      next: (response) => {
+        if (response.status === 'success') {
+          this.blockedDates = response.body.blockedDates || [];
+        }
+      },
+      error: (error) => {
+        console.error('Error loading blocked dates:', error);
+      }
+    });
+  }
+
+  createBlockedDate(): void {
+    if (!this.newBlockedDate.carid || !this.newBlockedDate.blockedFrom || !this.newBlockedDate.blockedTo) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    const blockedDateData = {
+      carid: this.newBlockedDate.carid,
+      blockedFrom: this.newBlockedDate.blockedFrom,
+      blockedTo: this.newBlockedDate.blockedTo,
+      reason: this.newBlockedDate.reason || 'Maintenance'
+    };
+
+    this.blockedDateService.createBlockedDate(blockedDateData).subscribe({
+      next: (response) => {
+        if (response.status === 'success') {
+          this.loadBlockedDates();
+          this.resetBlockedDateForm();
+          alert('Blocked date created successfully');
+        } else {
+          alert(response.message || 'Failed to create blocked date');
+        }
+      },
+      error: (error) => {
+        console.error('Error creating blocked date:', error);
+        alert('Failed to create blocked date');
+      }
+    });
+  }
+
+  editBlockedDate(blockedDate: BlockedDate): void {
+    this.isEditBlockedDateMode = true;
+    this.currentBlockedDateId = blockedDate._id;
+    this.newBlockedDate = {
+      carid: typeof blockedDate.carid === 'string' ? blockedDate.carid : blockedDate.carid._id,
+      blockedFrom: blockedDate.blockedFrom,
+      blockedTo: blockedDate.blockedTo,
+      reason: blockedDate.reason
+    };
+  }
+
+  updateBlockedDate(): void {
+    if (!this.currentBlockedDateId) return;
+
+    const blockedDateData = {
+      blockedFrom: this.newBlockedDate.blockedFrom,
+      blockedTo: this.newBlockedDate.blockedTo,
+      reason: this.newBlockedDate.reason
+    };
+
+    this.blockedDateService.updateBlockedDate(this.currentBlockedDateId, blockedDateData).subscribe({
+      next: (response) => {
+        if (response.status === 'success') {
+          this.loadBlockedDates();
+          this.resetBlockedDateForm();
+          alert('Blocked date updated successfully');
+        } else {
+          alert(response.message || 'Failed to update blocked date');
+        }
+      },
+      error: (error) => {
+        console.error('Error updating blocked date:', error);
+        alert('Failed to update blocked date');
+      }
+    });
+  }
+
+  deleteBlockedDate(id: string): void {
+    if (confirm('Are you sure you want to delete this blocked date?')) {
+      this.blockedDateService.deleteBlockedDate(id).subscribe({
+        next: (response) => {
+          if (response.status === 'success') {
+            this.loadBlockedDates();
+            alert('Blocked date deleted successfully');
+          } else {
+            alert(response.message || 'Failed to delete blocked date');
+          }
+        },
+        error: (error) => {
+          console.error('Error deleting blocked date:', error);
+          alert('Failed to delete blocked date');
+        }
+      });
+    }
+  }
+
+  resetBlockedDateForm(): void {
+    this.newBlockedDate = {
+      carid: '',
+      blockedFrom: '',
+      blockedTo: '',
+      reason: 'Maintenance'
+    };
+    this.isEditBlockedDateMode = false;
+    this.currentBlockedDateId = null;
+  }
+
+  getCarNameForBlockedDate(carid: any): string {
+    if (typeof carid === 'string') {
+      const car = this.cars.find(c => c._id === carid);
+      return car ? `${car.carname} - ${car.brandname}` : 'Unknown Car';
+    }
+    return `${carid.carname} - ${carid.brandname}`;
+  }
+
+  getCreatedBy(createdBy: any): string {
+    if (typeof createdBy === 'string') {
+      return 'Admin';
+    }
+    return createdBy.name || 'Admin';
   }
 
 }

@@ -1,9 +1,10 @@
-import { Component, OnInit, ChangeDetectorRef, signal, effect } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ChangeDetectorRef, signal, effect, Renderer2, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BookingService, Booking as BookingServiceType } from '../services/booking.service';
 import { TicketService, Ticket } from '../services/ticket.service';
 import { AuthService } from '../services/auth.service';
+import { BlockedDateService, BlockedDate } from '../services/blocked-date.service';
 
 interface Car {
   id: string;
@@ -26,6 +27,8 @@ interface CalendarDay {
   isFirstOrLast: boolean;
   isBookedByUser: boolean;
   isBookedByOthers: boolean;
+  isBlocked: boolean;
+  blockedReason?: string;
   date?: Date;
 }
 
@@ -50,7 +53,7 @@ interface DateFilter {
   templateUrl: './bookings.html',
   styleUrls: ['./bookings.css']
 })
-export class Bookings implements OnInit {
+export class Bookings implements OnInit, AfterViewInit {
   // Form data
   bookingForm: BookingForm = {
     fromDate: '',
@@ -66,6 +69,7 @@ export class Bookings implements OnInit {
   currentUserId = signal<string>('');
   loading = signal<boolean>(false);
   initialLoading = signal<boolean>(true);
+  bookingSubmissionLoading = signal<boolean>(false);
 
   // Available cars
   availableCars: Car[] = [
@@ -87,6 +91,13 @@ export class Bookings implements OnInit {
   filteredBookings = signal<Booking[]>([]);
   showStatusFilter = signal<boolean>(false);
   statusFilter = signal<'all' | 'previous' | 'upcoming'>('all');
+  
+  // Dropdown states for embedded filters
+  protected isStatusDropdownOpen = signal<boolean>(false);
+
+  // Blocked dates data
+  blockedDates = signal<BlockedDate[]>([]);
+  loadingBlockedDates = signal<boolean>(false);
 
   // Date filter
   dateFilter: DateFilter = {
@@ -119,7 +130,10 @@ export class Bookings implements OnInit {
     private bookingService: BookingService,
     private ticketService: TicketService,
     public authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private blockedDateService: BlockedDateService,
+    private cdr: ChangeDetectorRef,
+    private renderer: Renderer2,
+    private elementRef: ElementRef
   ) {
     // Effect to handle reactive updates for zoneless change detection
     effect(() => {
@@ -146,12 +160,16 @@ export class Bookings implements OnInit {
       this.updateCalendar();
       this.updateBookingsList();
       this.setupDateInputHandlers();
+      this.initializeDropdowns();
     }, 0);
   }
 
   private updateCalendar(): void {
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth();
+    
+    // Debug: Log current blocked dates
+    console.log('Current blocked dates in updateCalendar:', this.blockedDates());
     
     // Update month display
     this.currentMonthDisplay = new Intl.DateTimeFormat('en-US', { 
@@ -176,7 +194,8 @@ export class Bookings implements OnInit {
         isBooked: false,
         isFirstOrLast: false,
         isBookedByUser: false,
-        isBookedByOthers: false
+        isBookedByOthers: false,
+        isBlocked: false
       });
     }
 
@@ -190,6 +209,15 @@ export class Bookings implements OnInit {
       const isBookedByOthers = this.bookingService.isBookedByOthers(this.carBookings(), currentDate, this.currentUserId());
       const isBooked = isBookedByUser || isBookedByOthers;
       
+      // Check if date is blocked
+      const blockedDateInfo = this.blockedDateService.getBlockedDateInfo(this.blockedDates(), currentDate);
+      const isBlocked = !!blockedDateInfo;
+      
+      // Debug logging for blocked dates
+      if (isBlocked) {
+        console.log(`Date ${dateString} is blocked:`, blockedDateInfo);
+      }
+      
       // Check if date is in the past
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -198,11 +226,13 @@ export class Bookings implements OnInit {
       this.calendarDays.push({
         number: day,
         isEmpty: false,
-        isAvailable: !isBooked && !isPastDate,
+        isAvailable: !isBooked && !isPastDate && !isBlocked,
         isBooked: isBooked,
         isFirstOrLast: this.isFirstOrLastInBookedRange(dateString),
         isBookedByUser: isBookedByUser,
         isBookedByOthers: isBookedByOthers,
+        isBlocked: isBlocked,
+        blockedReason: blockedDateInfo?.reason,
         date: currentDate
       });
     }
@@ -290,6 +320,104 @@ export class Bookings implements OnInit {
     }, 0);
   }
 
+  ngAfterViewInit(): void {
+    // Initialize dropdowns after view is initialized
+    if (typeof document !== 'undefined') {
+      // Use multiple setTimeout attempts to ensure DOM is fully rendered
+      setTimeout(() => this.initializeDropdowns(), 100);
+      setTimeout(() => this.initializeDropdowns(), 500);
+      setTimeout(() => this.initializeDropdowns(), 1000);
+    }
+  }
+
+  private initializeDropdowns(): void {
+    // Check if we're in the browser environment
+    if (typeof document === 'undefined') {
+      return;
+    }
+    
+    const dropdowns = [
+      { button: 'status-dropdown', menu: 'status-menu' }
+    ];
+
+    let foundElements = 0;
+    dropdowns.forEach(({ button, menu }) => {
+      const btn = this.elementRef.nativeElement.querySelector(`#${button}`);
+      const menuEl = this.elementRef.nativeElement.querySelector(`#${menu}`);
+      
+      if (!btn || !menuEl) {
+        console.log(`Dropdown elements not found: ${button}, ${menu}`);
+        return;
+      }
+      
+      foundElements++;
+      
+      // Remove any existing listeners to prevent duplicates
+      if (btn.hasAttribute('data-listener-added')) {
+        return;
+      }
+      btn.setAttribute('data-listener-added', 'true');
+      
+      // Button click handler
+      this.renderer.listen(btn, 'click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Close other dropdowns
+        dropdowns.forEach(({ menu: m }) => {
+          const el = this.elementRef.nativeElement.querySelector(`#${m}`);
+          if (el && m !== menu) {
+            this.renderer.addClass(el, 'hidden');
+          }
+        });
+        
+        // Toggle current dropdown and blur state
+        if (menuEl.classList.contains('hidden')) {
+          this.renderer.removeClass(menuEl, 'hidden');
+          if (menu === 'status-menu') {
+            this.isStatusDropdownOpen.set(true);
+          }
+        } else {
+          this.renderer.addClass(menuEl, 'hidden');
+          this.isStatusDropdownOpen.set(false);
+        }
+      });
+
+      // Handle menu item clicks
+      const links = menuEl.querySelectorAll('a');
+      links.forEach((link: Element) => {
+        this.renderer.listen(link, 'click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const linkText = link.textContent?.trim() || '';
+          
+          // Close all dropdowns and blur state
+          dropdowns.forEach(({ menu: m }) => {
+            const el = this.elementRef.nativeElement.querySelector(`#${m}`);
+            if (el) this.renderer.addClass(el, 'hidden');
+          });
+          this.isStatusDropdownOpen.set(false);
+          
+          // Update button label
+          const label = btn.querySelector('p');
+          if (label) label.textContent = linkText;
+          btn.setAttribute('data-active', linkText);
+          
+          // Apply filter based on which dropdown
+          if (menu === 'status-menu') {
+            let status: 'all' | 'previous' | 'upcoming' = 'all';
+            if (linkText === 'Previous') status = 'previous';
+            else if (linkText === 'Upcoming') status = 'upcoming';
+            this.filterByStatus(status);
+          }
+        });
+      });
+    });
+    
+    console.log(`Found ${foundElements} dropdown elements`);
+  }
+
   // Real-time validation when form fields change
   protected onFormFieldChange(): void {
     if (this.bookingForm.fromDate && this.bookingForm.toDate && this.bookingForm.selectedCar) {
@@ -352,6 +480,9 @@ export class Bookings implements OnInit {
       return;
     }
 
+    // Set loading state
+    this.bookingSubmissionLoading.set(true);
+
     // Validate dates are not in the past
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
@@ -361,16 +492,19 @@ export class Bookings implements OnInit {
     
     if (fromDate < today) {
       alert('From date cannot be in the past. Please select today or a future date.');
+      this.bookingSubmissionLoading.set(false);
       return;
     }
     
     if (toDate < today) {
       alert('To date cannot be in the past. Please select today or a future date.');
+      this.bookingSubmissionLoading.set(false);
       return;
     }
     
     if (fromDate > toDate) {
       alert('From date cannot be after To date. Please select valid date range.');
+      this.bookingSubmissionLoading.set(false);
       return;
     }
 
@@ -378,6 +512,22 @@ export class Bookings implements OnInit {
     if (!this.validateBookingRules()) {
       const errorMessage = this.validationErrors().join('\n');
       alert(errorMessage);
+      this.bookingSubmissionLoading.set(false);
+      return;
+    }
+
+    // Check for blocked dates
+    const blockedDatesInRange = this.blockedDateService.hasBlockedDatesInRange(
+      this.blockedDates(), 
+      fromDate, 
+      toDate
+    );
+    
+    if (blockedDatesInRange.length > 0) {
+      const blockedDateInfo = blockedDatesInRange[0];
+      const reason = blockedDateInfo.reason || 'Maintenance';
+      alert(`Selected dates are blocked due to ${reason.toLowerCase()}. Please choose different dates.`);
+      this.bookingSubmissionLoading.set(false);
       return;
     }
 
@@ -385,6 +535,7 @@ export class Bookings implements OnInit {
     const isAvailable = await this.checkBookingAvailability();
     if (!isAvailable) {
       alert('Selected dates are not available. Please choose different dates.');
+      this.bookingSubmissionLoading.set(false);
       return;
     }
 
@@ -398,6 +549,7 @@ export class Bookings implements OnInit {
 
     this.bookingService.createBooking(bookingData).subscribe({
       next: (response: any) => {
+        this.bookingSubmissionLoading.set(false);
         if (response.status === 'success') {
           alert('Booking submitted successfully!');
           // Reset form
@@ -418,6 +570,7 @@ export class Bookings implements OnInit {
         this.cdr.detectChanges();
       },
       error: (error: any) => {
+        this.bookingSubmissionLoading.set(false);
         alert('Failed to create booking. Please try again.');
         // Trigger change detection for zoneless mode
         this.cdr.detectChanges();
@@ -446,6 +599,12 @@ export class Bookings implements OnInit {
       } else if (day.isBookedByUser) {
         alert('You already have a booking on this date.');
       }
+      return;
+    }
+    
+    if (day.isBlocked) {
+      const reason = day.blockedReason || 'Maintenance';
+      alert(`This date is blocked due to ${reason.toLowerCase()}. Please select a different date.`);
       return;
     }
     
@@ -489,10 +648,27 @@ export class Bookings implements OnInit {
     }
     this.statusFilter.set(status);
     this.showStatusFilter.set(false);
+    this.isStatusDropdownOpen.set(false);
     this.updateBookingsList();
   }
 
   onDateFilterChange(): void {
+    this.updateBookingsList();
+  }
+
+  // Check if any filters are active
+  protected hasActiveFilters(): boolean {
+    return this.statusFilter() !== 'all' || 
+           this.dateFilter.from !== '' || 
+           this.dateFilter.to !== '';
+  }
+
+  // Clear all filters
+  protected clearAllFilters(): void {
+    this.statusFilter.set('all');
+    this.dateFilter.from = '';
+    this.dateFilter.to = '';
+    this.isStatusDropdownOpen.set(false);
     this.updateBookingsList();
   }
 
@@ -530,11 +706,8 @@ export class Bookings implements OnInit {
           
           this.userCars.set(filteredTickets);
           
-          // Set first car as default if available
-          if (filteredTickets.length > 0) {
-            this.selectedCarForAvailability.set(filteredTickets[0].carid._id);
-            this.loadCarBookings();
-          }
+          // Don't automatically select first car - let user choose
+          // This ensures the dropdown shows "Choose a car" by default
         }
         this.initialLoading.set(false);
       },
@@ -580,6 +753,45 @@ export class Bookings implements OnInit {
     });
   }
 
+  // Load blocked dates for the selected car for availability
+  private loadBlockedDates(): void {
+    if (!this.isUserAuthenticated()) {
+      return;
+    }
+
+    // If no car is selected for availability, clear blocked dates
+    if (!this.selectedCarForAvailability()) {
+      this.blockedDates.set([]);
+      return;
+    }
+
+    this.loadingBlockedDates.set(true);
+    
+    console.log('Loading blocked dates for car:', this.selectedCarForAvailability());
+    console.log('Available user cars:', this.userCars().map(car => ({ id: car.carid._id, name: car.carid.carname, brand: car.carid.brandname })));
+    
+    // Load blocked dates for the selected car
+    this.blockedDateService.getCarBlockedDates(this.selectedCarForAvailability()).subscribe({
+      next: (response) => {
+        console.log('Blocked dates API response:', response);
+        if (response.status === 'success' && response.body.blockedDates) {
+          console.log('Setting blocked dates:', response.body.blockedDates);
+          this.blockedDates.set(response.body.blockedDates);
+        } else {
+          console.log('No blocked dates found or API error');
+          this.blockedDates.set([]);
+        }
+        this.loadingBlockedDates.set(false);
+        this.updateCalendar(); // Refresh calendar with blocked dates
+      },
+      error: (error) => {
+        console.error('Error loading blocked dates:', error);
+        this.blockedDates.set([]);
+        this.loadingBlockedDates.set(false);
+      }
+    });
+  }
+
   // Load bookings for selected car
   private loadCarBookings(): void {
     const selectedCar = this.selectedCarForAvailability();
@@ -601,8 +813,20 @@ export class Bookings implements OnInit {
   }
 
   // Handle car selection change
-  onCarSelectionChange(): void {
-    this.loadCarBookings();
+  onCarSelectionChange(carId: string): void {
+    console.log('onCarSelectionChange called with carId:', carId);
+    this.selectedCarForAvailability.set(carId);
+    
+    // Only load bookings and blocked dates if a car is actually selected
+    if (carId) {
+      this.loadCarBookings();
+      this.loadBlockedDates(); // Reload blocked dates when car selection changes
+    } else {
+      // Clear bookings and blocked dates when no car is selected
+      this.carBookings.set([]);
+      this.blockedDates.set([]);
+      this.updateCalendar(); // Refresh calendar
+    }
   }
 
   // Check if booking is available before submission

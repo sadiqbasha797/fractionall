@@ -53,14 +53,28 @@
 .table-container {
   overflow-x: auto;
   overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #6b7280 #374151; /* gray-500 on gray-700 */
   scroll-behavior: smooth;
   position: relative;
 }
 
 .table-container::-webkit-scrollbar {
-  display: none; /* WebKit */
+  width: 8px;
+  height: 8px;
+  background: #374151; /* gray-700 */
+}
+.table-container::-webkit-scrollbar-track {
+  background: #374151; /* gray-700 */
+  border-radius: 4px;
+}
+.table-container::-webkit-scrollbar-thumb {
+  background: #6b7280; /* gray-500 */
+  border-radius: 4px;
+  border: 2px solid #374151; /* gray-700 */
+}
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af; /* gray-400 */
 }
 
 /* Ensure table has minimum width for proper horizontal scrolling */
@@ -99,13 +113,27 @@
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
-/* Hide scrollbars but keep scrolling for .no-scrollbar containers */
+/* Show scrollbars for .no-scrollbar containers */
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  scrollbar-width: thin;  /* Firefox */
+  scrollbar-color: #6b7280 #374151; /* gray-500 on gray-700 */
 }
 .no-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  width: 8px;
+  height: 8px;
+  background: #374151; /* gray-700 */
+}
+.no-scrollbar::-webkit-scrollbar-track {
+  background: #374151; /* gray-700 */
+  border-radius: 4px;
+}
+.no-scrollbar::-webkit-scrollbar-thumb {
+  background: #6b7280; /* gray-500 */
+  border-radius: 4px;
+  border: 2px solid #374151; /* gray-700 */
+}
+.no-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af; /* gray-400 */
 }
 
 /* Table header sticky with subtle background */

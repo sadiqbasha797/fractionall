@@ -203,6 +203,7 @@ class NotificationService {
       'booking_done': 'medium',
       'kyc_approved': 'high',
       'kyc_rejected': 'high',
+      'kyc_reminder': 'medium',
       'user_joined_waitlist': 'medium',
       'user_purchased_token': 'medium',
       'user_purchased_booknow_token': 'medium',
@@ -215,7 +216,14 @@ class NotificationService {
       'user_deactivated': 'high',
       'user_reactivated': 'high',
       'user_suspension_expired': 'high',
-      'user_status_changed': 'high'
+      'user_status_changed': 'high',
+      'refund': 'high',
+      'token_refund_requested': 'high',
+      'token_refund_approved': 'high',
+      'token_refund_rejected': 'high',
+      'booknow_token_refund_requested': 'high',
+      'booknow_token_refund_approved': 'high',
+      'booknow_token_refund_rejected': 'high'
     };
 
     return priorityMap[type] || 'medium';
@@ -355,6 +363,23 @@ class NotificationService {
       '❌ KYC Rejected',
       `Your KYC documents have been rejected. Reason: ${rejectionComments}. Please resubmit your documents.`,
       { userName, rejectionComments }
+    );
+  }
+
+  // Create KYC reminder notification for user
+  static async createKYCReminderNotification(userId, userName, daysSinceRegistration) {
+    return await this.createUserNotification(
+      userId,
+      'kyc_reminder',
+      '📋 KYC Verification Reminder',
+      `Hi ${userName}! Please complete your KYC verification to access all features and start booking cars. Your account was created ${daysSinceRegistration} day${daysSinceRegistration > 1 ? 's' : ''} ago.`,
+      { 
+        userName, 
+        daysSinceRegistration,
+        reminderType: 'kyc_pending'
+      },
+      userId,
+      'User'
     );
   }
 

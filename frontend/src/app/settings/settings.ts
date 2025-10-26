@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AdminService, Admin, CreateAdminRequest, EditAdminRequest, UpdateAdminRequest, Permission } from '../services/admin.service';
+import { AdminService, Admin, CreateAdminRequest, EditAdminRequest, UpdateAdminRequest, Permission, AdminActivity, AdminActivitiesResponse } from '../services/admin.service';
 import { AuthService } from '../services/auth.service';
 
 @Component({
@@ -48,6 +48,22 @@ export class Settings implements OnInit {
   currentPage = 1;
   itemsPerPage = 10;
   totalPages = 0;
+  
+  // Admin Activity Tracking
+  showActivityModal = false;
+  selectedAdminForActivity: Admin | null = null;
+  adminActivities: AdminActivity[] = [];
+  activityCounts = {
+    cars: 0,
+    tickets: 0,
+    contracts: 0,
+    sharedMembers: 0
+  };
+  activityType = 'all';
+  activityCurrentPage = 1;
+  activityItemsPerPage = 10;
+  activityTotalPages = 0;
+  isLoadingActivities = false;
 
   constructor(
     private adminService: AdminService,
@@ -82,6 +98,12 @@ export class Settings implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  // Refresh functionality
+  refreshAdmins(): void {
+    this.loadAdmins();
+    this.loadPermissions();
   }
 
   updatePagination() {
@@ -290,6 +312,7 @@ export class Settings implements OnInit {
     this.showCreateModal = false;
     this.showEditModal = false;
     this.showDeleteModal = false;
+    this.showActivityModal = false;
     this.errorMessage = '';
     this.successMessage = '';
   }
@@ -301,6 +324,95 @@ export class Settings implements OnInit {
 
   getActiveAdminsCount(): number {
     return this.admins.filter(admin => admin.role !== 'inactive').length;
+  }
+  
+  // Admin Activity Tracking Methods
+  openActivityModal(admin: Admin) {
+    this.selectedAdminForActivity = admin;
+    this.showActivityModal = true;
+    this.activityType = 'all';
+    this.activityCurrentPage = 1;
+    this.loadAdminActivities();
+  }
+  
+  closeActivityModal() {
+    this.showActivityModal = false;
+    this.selectedAdminForActivity = null;
+    this.adminActivities = [];
+    this.activityCounts = {
+      cars: 0,
+      tickets: 0,
+      contracts: 0,
+      sharedMembers: 0
+    };
+  }
+  
+  loadAdminActivities() {
+    if (!this.selectedAdminForActivity) return;
+    
+    this.isLoadingActivities = true;
+    this.adminService.getAdminActivities(
+      this.selectedAdminForActivity._id,
+      this.activityCurrentPage,
+      this.activityItemsPerPage,
+      this.activityType
+    ).subscribe({
+      next: (response: AdminActivitiesResponse) => {
+        if (response.status === 'success') {
+          this.adminActivities = response.body.activities;
+          this.activityCounts = response.body.counts;
+          this.activityTotalPages = response.body.pagination.totalPages;
+        }
+        this.isLoadingActivities = false;
+      },
+      error: (error) => {
+        console.error('Error loading admin activities:', error);
+        this.errorMessage = 'Failed to load admin activities';
+        this.isLoadingActivities = false;
+      }
+    });
+  }
+  
+  onActivityTypeChange() {
+    this.activityCurrentPage = 1;
+    this.loadAdminActivities();
+  }
+  
+  onActivityPageChange(page: number) {
+    this.activityCurrentPage = page;
+    this.loadAdminActivities();
+  }
+  
+  getActivityTypeIcon(type: string): string {
+    switch (type) {
+      case 'car': return 'fas fa-car';
+      case 'ticket': return 'fas fa-ticket-alt';
+      case 'contract': return 'fas fa-file-contract';
+      case 'shared-member': return 'fas fa-users';
+      default: return 'fas fa-circle';
+    }
+  }
+  
+  getActivityTypeColor(type: string): string {
+    switch (type) {
+      case 'car': return 'text-blue-400';
+      case 'ticket': return 'text-green-400';
+      case 'contract': return 'text-purple-400';
+      case 'shared-member': return 'text-yellow-400';
+      default: return 'text-gray-400';
+    }
+  }
+  
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      case 'expired': return 'bg-gray-100 text-gray-800';
+      case 'accepted': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   }
 
 }

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, Renderer2, ViewChild, HostListener, Inject, PLATFORM_ID, OnInit, signal, effect } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, Renderer2, ViewChild, HostListener, Inject, PLATFORM_ID, OnInit, signal, effect, DestroyRef, inject, computed } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
@@ -7,6 +7,7 @@ import { HomePublicService, HeroContent, SimpleStep, FeaturedCar, Brand, SimpleS
 import { FaqPublicService, FAQ, FAQCategory } from '../services/faq-public.service';
 import { CarPublicService } from '../services/car-public.service';
 import { AnimationService } from '../services/animation.service';
+import { ScrollNavigationService } from '../services/scroll-navigation.service';
 
 @Component({
   selector: 'app-home',
@@ -19,7 +20,9 @@ import { AnimationService } from '../services/animation.service';
 export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private observer: IntersectionObserver | null = null;
   private isBrowser = false;
+  private destroyRef = inject(DestroyRef);
   @ViewChild('carouselTrack', { static: false }) private carouselTrack?: ElementRef<HTMLDivElement>;
+  @ViewChild('timelineRef', { static: false }) private timelineRef?: ElementRef<HTMLDivElement>;
 
   // Dynamic content - converted to signals
   heroContent = signal<HeroContent | null>(null);
@@ -35,6 +38,14 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   simpleStepsVideosLoading = signal<boolean>(true);
   brands = signal<Brand[]>([]);
   brandsLoading = signal<boolean>(true);
+  
+  // Brands view more functionality
+  visibleBrands = computed(() => this.brands().slice(0, 5));
+  remainingBrands = computed(() => this.brands().slice(5));
+  showBrandsModal = signal<boolean>(false);
+  
+  // Simple steps expand/collapse state
+  isSimpleStepsExpanded = signal<boolean>(false);
 
   // Dynamic carousel state - converted to signals
   cars = signal<any[]>([]);
@@ -64,18 +75,25 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     private carService: CarPublicService,
     private animationService: AnimationService,
     private router: Router,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private scrollNavigationService: ScrollNavigationService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     
     // Effect to handle data loading and ensure proper change detection
-    effect(() => {
+    // Use DestroyRef to properly manage effect lifecycle
+    const effectRef = effect(() => {
       if (this.isBrowser) {
         // Trigger change detection when data changes
         setTimeout(() => {
           this.initAngularAnimations();
         }, 100);
       }
+    });
+    
+    // Register effect cleanup with component destruction
+    this.destroyRef.onDestroy(() => {
+      effectRef.destroy();
     });
   }
 
@@ -105,6 +123,92 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     
     return this.sanitizer.bypassSecurityTrustResourceUrl(processedUrl);
+  }
+
+  // Method to get YouTube thumbnail URL with fallback
+  getYouTubeThumbnail(videoUrl: string): string {
+    if (!videoUrl) return '';
+    
+    // Extract video ID for thumbnail
+    let videoId = '';
+    
+    if (videoUrl.includes('youtube.com/watch?v=')) {
+      videoId = videoUrl.split('v=')[1]?.split('&')[0];
+    } else if (videoUrl.includes('youtu.be/')) {
+      videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0];
+    } else if (videoUrl.includes('youtube.com/embed/')) {
+      videoId = videoUrl.split('/embed/')[1]?.split('?')[0];
+    }
+    
+    if (videoId) {
+      // Try high quality first, fallback to medium quality if not available
+      return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    }
+    
+    return '';
+  }
+
+  // Method to handle thumbnail load error and try fallback
+  onThumbnailError(event: any, videoUrl: string): void {
+    const img = event.target as HTMLImageElement;
+    const videoId = this.extractVideoId(videoUrl);
+    
+    if (videoId) {
+      // Try different thumbnail qualities as fallback
+      const fallbackUrls = [
+        `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`, // Medium quality
+        `https://img.youtube.com/vi/${videoId}/default.jpg`,   // Default quality
+        `https://img.youtube.com/vi/${videoId}/0.jpg`         // First frame
+      ];
+      
+      let currentIndex = 0;
+      const tryNextFallback = () => {
+        if (currentIndex < fallbackUrls.length) {
+          img.src = fallbackUrls[currentIndex];
+          currentIndex++;
+        } else {
+          // If all fallbacks fail, show a placeholder
+          img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDMyMCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTgwIiBmaWxsPSIjMzc0MTUxIi8+CjxwYXRoIGQ9Ik0xNDAgODBMMTYwIDEwMEwxNDAgMTIwTDEyMCAxMDBMMTQwIDgwWiIgZmlsbD0iI0VGNjY2NiIvPgo8L3N2Zz4K';
+        }
+      };
+      
+      img.onerror = tryNextFallback;
+    }
+  }
+
+  // Helper method to extract video ID
+  private extractVideoId(videoUrl: string): string {
+    if (!videoUrl) return '';
+    
+    if (videoUrl.includes('youtube.com/watch?v=')) {
+      return videoUrl.split('v=')[1]?.split('&')[0] || '';
+    } else if (videoUrl.includes('youtu.be/')) {
+      return videoUrl.split('youtu.be/')[1]?.split('?')[0] || '';
+    } else if (videoUrl.includes('youtube.com/embed/')) {
+      return videoUrl.split('/embed/')[1]?.split('?')[0] || '';
+    }
+    
+    return '';
+  }
+
+  // Method to redirect to YouTube video
+  redirectToYouTube(videoUrl: string): void {
+    if (!videoUrl) return;
+    
+    // Convert embed URL to watch URL if needed
+    let watchUrl = videoUrl;
+    
+    if (videoUrl.includes('youtube.com/embed/')) {
+      const videoId = videoUrl.split('/embed/')[1]?.split('?')[0];
+      if (videoId) {
+        watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
+      }
+    }
+    
+    // Open YouTube video in new tab
+    if (this.isBrowser) {
+      window.open(watchUrl, '_blank', 'noopener,noreferrer');
+    }
   }
 
   ngOnInit(): void {
@@ -216,6 +320,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
           ]);
         }
         this.simpleStepsLoading.set(false);
+        setTimeout(() => this.updateTimelineHeight(), 0);
       },
       error: (error) => {
         console.error('Error loading simple steps:', error);
@@ -244,6 +349,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
           }
         ]);
         this.simpleStepsLoading.set(false);
+        setTimeout(() => this.updateTimelineHeight(), 0);
       }
     });
   }
@@ -374,24 +480,26 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   loadFeaturedCars(): void {
     this.homeService.getPublicFeaturedCars().subscribe({
       next: (response) => {
-        if (response.status === 'success') {
+        if (response.status === 'success' && response.body.featuredCars) {
           // Transform featured cars data to match the carousel format
-          const transformedCars = response.body.featuredCars.map((featuredCar: FeaturedCar) => ({
-            id: featuredCar.carId._id,
-            image: featuredCar.carId.images && featuredCar.carId.images.length > 0 ? featuredCar.carId.images[0] : '/car-1.jpg',
-            tokenPrice: featuredCar.carId.tokenprice ? featuredCar.carId.tokenprice.toLocaleString() : '0',
-            name: featuredCar.carId.carname || 'Unknown',
-            brand: featuredCar.carId.brandname || 'Unknown',
-            fuel: this.getFuelType(featuredCar.carId.milege || ''),
-            seats: featuredCar.carId.seats || 5,
-            color: featuredCar.carId.color || 'Unknown',
-            ticketsAvailable: featuredCar.carId.ticketsavilble || 0,
-            totalTickets: featuredCar.carId.totaltickets || 0,
-            location: featuredCar.carId.location || 'Unknown',
-            description: featuredCar.carId.description || '',
-            tokensAvailable: featuredCar.carId.tokensavailble || 0,
-            bookNowTokenAvailable: featuredCar.carId.bookNowTokenAvailable || 0,
-            bookNowTokenPrice: featuredCar.carId.bookNowTokenPrice || 0,
+          const transformedCars = response.body.featuredCars
+            .filter((featuredCar: FeaturedCar) => featuredCar && featuredCar.carId && featuredCar.carId._id) // Filter out null/undefined items
+            .map((featuredCar: FeaturedCar) => ({
+              id: featuredCar.carId._id,
+              image: featuredCar.carId.images && featuredCar.carId.images.length > 0 ? featuredCar.carId.images[0] : '/car-1.jpg',
+              tokenPrice: featuredCar.carId.tokenprice ? featuredCar.carId.tokenprice.toLocaleString() : '0',
+              name: featuredCar.carId.carname || 'Unknown',
+              brand: featuredCar.carId.brandname || 'Unknown',
+              fuel: this.getFuelType(featuredCar.carId.milege || ''),
+              seats: featuredCar.carId.seats || 5,
+              color: featuredCar.carId.color || 'Unknown',
+              ticketsAvailable: featuredCar.carId.ticketsavilble || 0,
+              totalTickets: featuredCar.carId.totaltickets || 0,
+              location: featuredCar.carId.location || 'Unknown',
+              description: featuredCar.carId.description || '',
+              tokensAvailable: featuredCar.carId.tokensavailble || 0,
+              bookNowTokenAvailable: featuredCar.carId.bookNowTokenAvailable || 0,
+              bookNowTokenPrice: featuredCar.carId.bookNowTokenPrice || 0,
             price: featuredCar.carId.price || 0,
             fractionPrice: featuredCar.carId.fractionprice || 0,
             isFeatured: true
@@ -539,10 +647,16 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     // Initialize Angular animations
     this.initAngularAnimations();
     
+    // Register scroll sections for navigation highlighting
+    this.registerScrollSections();
+    
     // Start auto-scroll after a short delay
     setTimeout(() => {
       this.startAutoScroll();
     }, 1000);
+
+    // Compute initial timeline line height with longer delay to ensure DOM is ready
+    setTimeout(() => this.updateTimelineHeight(), 200);
   }
 
   private initAngularAnimations(): void {
@@ -563,6 +677,9 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     } else {
       this.currentIndex.set(0);
     }
+
+    // Update timeline height on resize
+    this.updateTimelineHeight();
   }
 
   private updateVisibleCount() {
@@ -607,6 +724,29 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate(['/car-details', carId]);
   }
 
+  // Show pricing information tooltip
+  showPricingInfo(event: Event): void {
+    event.stopPropagation();
+    // The tooltip is handled by CSS hover states, this method can be used for additional functionality if needed
+  }
+
+  // Toggle simple steps expand/collapse
+  protected toggleSimpleSteps(): void {
+    this.isSimpleStepsExpanded.set(!this.isSimpleStepsExpanded());
+    // Recalculate timeline height after expand/collapse with longer delay for DOM updates
+    setTimeout(() => this.updateTimelineHeight(), 100);
+  }
+
+  // Get first 5 steps (always visible)
+  protected getVisibleSteps(): SimpleStep[] {
+    return this.simpleSteps().slice(0, 5);
+  }
+
+  // Get expandable steps (6th and beyond)
+  protected getExpandableSteps(): SimpleStep[] {
+    return this.simpleSteps().slice(5);
+  }
+
   navigateToCars() {
     this.router.navigate(['/cars']);
   }
@@ -617,6 +757,20 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
         brand: brandName
       }
     });
+  }
+
+  // Brands modal methods
+  openBrandsModal(): void {
+    this.showBrandsModal.set(true);
+  }
+
+  closeBrandsModal(): void {
+    this.showBrandsModal.set(false);
+  }
+
+  navigateToCarsWithBrandFromModal(brandName: string): void {
+    this.closeBrandsModal();
+    this.router.navigate(['/cars'], { queryParams: { brand: brandName } });
   }
 
   // Auto-scroll functionality
@@ -689,6 +843,79 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  // Dynamically set the vertical line to stop at the last visible step
+  private updateTimelineHeight(): void {
+    if (!this.isBrowser || !this.timelineRef) return;
+    const timelineEl = this.timelineRef.nativeElement;
+    
+    // Force a reflow to ensure DOM is updated
+    timelineEl.offsetHeight;
+    
+    // Check if we're on mobile using window width (more reliable than CSS detection)
+    const isMobile = window.innerWidth < 768;
+    
+    // Get the current expansion state
+    const isExpanded = this.isSimpleStepsExpanded();
+    
+    // Find all visible timeline items - specifically check for collapsed state classes
+    const items = Array.from(timelineEl.querySelectorAll<HTMLElement>('.timeline-item'))
+      .filter(el => {
+        // Check if element has collapsed classes (these indicate hidden expandable steps)
+        const hasCollapsedClasses = el.classList.contains('opacity-0') || 
+                                   el.classList.contains('max-h-0') || 
+                                   el.classList.contains('overflow-hidden');
+        
+        // If it has collapsed classes, it's hidden
+        if (hasCollapsedClasses) return false;
+        
+        // Additional checks for other hidden states
+        const rect = el.getBoundingClientRect();
+        const computedStyle = window.getComputedStyle(el);
+        return rect.height > 0 && 
+               computedStyle.display !== 'none' && 
+               computedStyle.visibility !== 'hidden' &&
+               computedStyle.opacity !== '0';
+      });
+    
+    if (items.length === 0) {
+      timelineEl.style.setProperty('--timeline-height', '100%');
+      return;
+    }
+    
+    // If not expanded, only consider the first 5 steps (getVisibleSteps)
+    const visibleItems = isExpanded ? items : items.slice(0, 5);
+    const lastItem = visibleItems[visibleItems.length - 1];
+    
+    if (!lastItem) {
+      timelineEl.style.setProperty('--timeline-height', '100%');
+      return;
+    }
+    
+    const icon = lastItem.querySelector<HTMLElement>('.timeline-icon');
+    const iconHalf = icon ? Math.round(icon.clientHeight / 2) : 16;
+    const timelineTop = timelineEl.getBoundingClientRect().top + window.scrollY;
+    const lastCenterY = lastItem.getBoundingClientRect().top + window.scrollY + iconHalf;
+    const heightPx = Math.max(0, Math.round(lastCenterY - timelineTop));
+    
+    // Calculate final height based on expansion state and device type
+    let finalHeight = heightPx + iconHalf;
+    
+    if (isMobile) {
+      // On mobile, ensure the line stops exactly at the last visible item
+      const lastItemBottom = lastItem.getBoundingClientRect().bottom + window.scrollY;
+      const timelineBottom = timelineEl.getBoundingClientRect().bottom + window.scrollY;
+      
+      // Use the bottom of the last item as the stopping point
+      const bottomBasedHeight = Math.max(0, lastItemBottom - timelineTop);
+      finalHeight = Math.max(finalHeight, bottomBasedHeight);
+      
+      // Add a small buffer but don't let it extend too far
+      finalHeight = Math.min(finalHeight + 10, bottomBasedHeight + 20);
+    }
+    
+    timelineEl.style.setProperty('--timeline-height', finalHeight + 'px');
+  }
+
   // Get color code for color display
   getColorCode(colorName: string): string {
     if (!colorName) return '#6b7280'; // Default gray
@@ -725,6 +952,43 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     
     // Clean up auto-scroll interval
     this.stopAutoScroll();
+    
+    // Unregister scroll sections
+    this.scrollNavigationService.unregisterSections();
+  }
+
+  /**
+   * Register scroll sections for navigation highlighting
+   */
+  private registerScrollSections(): void {
+    if (!this.isBrowser) return;
+
+    const sections = [];
+
+    // Register FAQ section
+    const faqElement = document.querySelector('[data-faq-section]') as HTMLElement;
+    if (faqElement) {
+      sections.push({
+        id: 'faq',
+        element: faqElement,
+        offset: faqElement.offsetTop
+      });
+    }
+
+    // Register other sections if needed (hero, about, etc.)
+    const heroElement = document.querySelector('[data-hero-section]') as HTMLElement;
+    if (heroElement) {
+      sections.push({
+        id: 'home',
+        element: heroElement,
+        offset: heroElement.offsetTop
+      });
+    }
+
+    // Register sections with the scroll navigation service
+    if (sections.length > 0) {
+      this.scrollNavigationService.registerSections(sections);
+    }
   }
 
 }

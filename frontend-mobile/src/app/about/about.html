@@ -1,0 +1,103 @@
+<div class="px-4 md:px-8 flex flex-1 justify-center py-5 min-h-screen pb-20" style="background-color: #f5f5f5;">
+  <div class="layout-content-container flex flex-col w-full max-w-[1600px] mx-auto">
+    <div class="@container">
+      <div class="@[480px]:p-4">
+        <main class="flex-1">
+          <!-- Hero Section with Dynamic Background -->
+          <section class="about-hero relative min-h-[150px] sm:min-h-[200px] md:min-h-[250px] lg:min-h-[300px] flex items-center justify-center overflow-hidden mb-8 md:mb-16 hidden md:flex" data-animation="fade-up"
+                   style="margin: 0 -1rem; width: calc(100% + 2rem);">
+            <div class="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] opacity-50"></div>
+            <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" 
+                 [style.background-image]="backgroundImageStyle"></div>
+            <div class="relative z-10 text-center px-4 max-w-4xl mx-auto">
+              <!-- Loading State -->
+              <div *ngIf="loading" class="flex flex-col items-center justify-center py-20">
+                <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white mb-4"></div>
+                <p class="text-white text-sm">Loading...</p>
+              </div>
+              
+              <!-- Error State -->
+              <div *ngIf="error && !loading" class="flex flex-col items-center justify-center py-20">
+                <i class="fas fa-exclamation-triangle text-2xl text-red-400 mb-4"></i>
+                <p class="text-white text-sm mb-4">{{ error }}</p>
+                <button (click)="loadAboutContent()" class="btn-outline-white px-4 py-2 text-sm font-bold rounded-xl">
+                  Try Again
+                </button>
+              </div>
+              
+              <!-- Dynamic Content -->
+              <div *ngIf="!loading && !error">
+                <h1 class="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black leading-tight tracking-[-0.033em] text-white mb-6" data-animation="fade-up">
+                  {{ aboutContent?.aboutherotext || 'Redefining Car Ownership' }}
+                </h1>
+                <p class="text-xs sm:text-sm md:text-base lg:text-lg text-[#90adcb] mb-8 max-w-3xl mx-auto leading-relaxed" data-animation="fade-up" data-delay="100">
+                  {{ aboutContent?.aboutherosubtext || 'India\'s first fractional car ownership platform, making luxury cars accessible without financial burden' }}
+                </p>
+                <button (click)="scrollToSection('story-section')" class="btn-outline-white px-4 py-2 text-sm font-bold rounded-xl transform hover:scale-105 transition-all duration-300" data-animation="fade-up" data-delay="200">
+                  Explore Our Story
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Simple Steps Section -->
+          <section class="py-4 md:py-6" data-animation="fade-up">
+            <div class="container mx-auto px-4">
+              <div class="text-center mb-4 md:mb-6">
+                <h2 class="text-2xl md:text-3xl font-black text-gray-800 mb-4" data-animation="fade-up">Simple Steps</h2>
+                <p class="text-base text-gray-600 max-w-2xl mx-auto" data-animation="fade-up" data-delay="100">
+                  Your journey to luxury car co-ownership starts here
+                </p>
+              </div>
+              
+              <!-- Simple Steps List -->
+              <div class="simple-steps-list">
+                <div *ngFor="let step of simpleSteps(); let i = index" 
+                     class="simple-step-card mb-4" 
+                     data-animation="fade-up" [attr.data-delay]="(i + 1) * 100">
+                  <div class="step-header flex items-center gap-4 cursor-pointer" (click)="toggleStep(i)">
+                    <div class="step-number">
+                      <span>{{ i + 1 }}</span>
+                    </div>
+                    <div class="flex-1">
+                      <h3 class="step-title">{{ step.stepTitle }}</h3>
+                    </div>
+                    <div class="step-toggle-icon">
+                      <svg class="w-5 h-5 transition-transform duration-300" 
+                           [class.rotate-180]="isStepExpanded(i)"
+                           fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="step-content" 
+                       [class.expanded]="isStepExpanded(i)">
+                    <p class="step-description">{{ step.stepName }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Call to Action Section -->
+          <section class="py-4 md:py-6 text-center hidden" data-animation="fade-up">
+            <div class="container mx-auto px-4">
+              <h2 class="text-2xl md:text-3xl font-black text-gray-800 mb-3 md:mb-5">Ready to Start Your Journey?</h2>
+              <p class="text-base text-gray-600 mb-5 md:mb-7 max-w-2xl mx-auto">
+                Join thousands of car enthusiasts who have already discovered the future of car ownership
+              </p>
+              <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button (click)="navigateToCars()" class="border-2 border-gray-800 text-gray-800 px-6 py-3 text-base font-bold rounded-xl transform hover:scale-105 transition-all duration-300 hover:bg-gray-800 hover:text-white">
+                  Browse Cars
+                </button>
+                <button (click)="navigateToHome()" class="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-3 text-base font-bold rounded-xl transform hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/25">
+                  Back to Home
+                </button>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, timeout } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface ContactFormData {
@@ -105,7 +105,9 @@ export class ContactService {
 
   // Submit contact form (public)
   submitContactForm(formData: ContactFormData): Observable<ContactFormResponse> {
-    return this.http.post<ContactFormResponse>(`${this.apiUrl}/contact/submit`, formData);
+    return this.http.post<ContactFormResponse>(`${this.apiUrl}/contact/submit`, formData).pipe(
+      timeout(30000) // 30 second timeout
+    );
   }
 
   // Get all contact forms (admin only)

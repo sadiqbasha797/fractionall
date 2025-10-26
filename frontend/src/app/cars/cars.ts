@@ -25,8 +25,12 @@ export class Cars implements OnInit, OnDestroy {
   brandFilter: string = 'all';
   locationFilter: string = 'all';
   bookingsFilter: string = 'all';
+  sharesFilter: string = 'all';
+  waitlistFilter: string = 'all';
+  bookNowTokensFilter: string = 'all';
   uniqueBrands: string[] = [];
   uniqueLocations: string[] = [];
+  showFilters = false;
 
   // Pagination
   currentPage = 1;
@@ -129,10 +133,13 @@ export class Cars implements OnInit, OnDestroy {
   // Dialog states
   showDialog: boolean = false;
   showCarModal: boolean = false;
-  
+
   // Loading dialog
   showLoadingDialog: boolean = false;
   loadingMessage: string = '';
+
+  // Loading state for refresh functionality
+  isLoading: boolean = false;
 
   // Pincode and location auto-fill properties
   isPincodeLoading: boolean = false;
@@ -159,15 +166,15 @@ export class Cars implements OnInit, OnDestroy {
     if (this.pincodeTimeout) {
       clearTimeout(this.pincodeTimeout);
     }
-  }  
-  
+  }
+
   // Dialog methods - Render directly to body
   showConfirmDialog(title: string, message: string, confirmCallback: () => void): void {
     console.log('showConfirmDialog called - Rendering to BODY');
-    
+
     // Remove any existing dialog
     this.removeDialog();
-    
+
     // Create dialog backdrop
     const backdrop = this.renderer.createElement('div');
     this.renderer.setStyle(backdrop, 'position', 'fixed');
@@ -180,7 +187,7 @@ export class Cars implements OnInit, OnDestroy {
     this.renderer.setStyle(backdrop, 'display', 'flex');
     this.renderer.setStyle(backdrop, 'align-items', 'center');
     this.renderer.setStyle(backdrop, 'justify-content', 'center');
-    
+
     // Create dialog box
     const dialog = this.renderer.createElement('div');
     this.renderer.setStyle(dialog, 'background', '#374151');
@@ -188,7 +195,7 @@ export class Cars implements OnInit, OnDestroy {
     this.renderer.setStyle(dialog, 'max-width', '500px');
     this.renderer.setStyle(dialog, 'width', '90%');
     this.renderer.setStyle(dialog, 'padding', '24px');
-    
+
     // Title
     const titleEl = this.renderer.createElement('h3');
     this.renderer.setStyle(titleEl, 'color', 'white');
@@ -196,19 +203,19 @@ export class Cars implements OnInit, OnDestroy {
     this.renderer.setStyle(titleEl, 'font-size', '1.5rem');
     const titleText = this.renderer.createText(title);
     this.renderer.appendChild(titleEl, titleText);
-    
+
     // Message
     const messageEl = this.renderer.createElement('div');
     this.renderer.setProperty(messageEl, 'innerHTML', message);
     this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
     this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
-    
+
     // Buttons
     const btnContainer = this.renderer.createElement('div');
     this.renderer.setStyle(btnContainer, 'display', 'flex');
     this.renderer.setStyle(btnContainer, 'justify-content', 'flex-end');
     this.renderer.setStyle(btnContainer, 'gap', '12px');
-    
+
     const cancelBtn = this.renderer.createElement('button');
     const cancelText = this.renderer.createText('Cancel');
     this.renderer.appendChild(cancelBtn, cancelText);
@@ -219,7 +226,7 @@ export class Cars implements OnInit, OnDestroy {
     this.renderer.setStyle(cancelBtn, 'border-radius', '8px');
     this.renderer.setStyle(cancelBtn, 'cursor', 'pointer');
     this.renderer.listen(cancelBtn, 'click', () => this.removeDialog());
-    
+
     const confirmBtn = this.renderer.createElement('button');
     const confirmText = this.renderer.createText('Confirm');
     this.renderer.appendChild(confirmBtn, confirmText);
@@ -233,24 +240,24 @@ export class Cars implements OnInit, OnDestroy {
       this.removeDialog();
       confirmCallback();
     });
-    
+
     this.renderer.appendChild(btnContainer, cancelBtn);
     this.renderer.appendChild(btnContainer, confirmBtn);
     this.renderer.appendChild(dialog, titleEl);
     this.renderer.appendChild(dialog, messageEl);
     this.renderer.appendChild(dialog, btnContainer);
     this.renderer.appendChild(backdrop, dialog);
-    
+
     // Append to document.body
     this.renderer.appendChild(document.body, backdrop);
     this.dialogElement = backdrop;
-    
+
     console.log('✅ Dialog APPENDED TO BODY:', backdrop);
-    
+
     this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
     this.renderer.listen(backdrop, 'click', () => this.removeDialog());
   }
-  
+
   removeDialog(): void {
     if (this.dialogElement) {
       this.renderer.removeChild(document.body, this.dialogElement);
@@ -272,7 +279,7 @@ export class Cars implements OnInit, OnDestroy {
 
   showMessageDialog(title: string, message: string, color: string): void {
     this.removeDialog();
-    
+
     const backdrop = this.renderer.createElement('div');
     this.renderer.setStyle(backdrop, 'position', 'fixed');
     this.renderer.setStyle(backdrop, 'top', '0');
@@ -284,7 +291,7 @@ export class Cars implements OnInit, OnDestroy {
     this.renderer.setStyle(backdrop, 'display', 'flex');
     this.renderer.setStyle(backdrop, 'align-items', 'center');
     this.renderer.setStyle(backdrop, 'justify-content', 'center');
-    
+
     const dialog = this.renderer.createElement('div');
     this.renderer.setStyle(dialog, 'background', '#374151');
     this.renderer.setStyle(dialog, 'border-radius', '12px');
@@ -292,7 +299,7 @@ export class Cars implements OnInit, OnDestroy {
     this.renderer.setStyle(dialog, 'width', '90%');
     this.renderer.setStyle(dialog, 'padding', '24px');
     this.renderer.setStyle(dialog, 'text-align', 'center');
-    
+
     const titleEl = this.renderer.createElement('h3');
     this.renderer.setStyle(titleEl, 'color', color);
     this.renderer.setStyle(titleEl, 'margin', '0 0 16px 0');
@@ -300,12 +307,12 @@ export class Cars implements OnInit, OnDestroy {
     this.renderer.setStyle(titleEl, 'font-weight', '600');
     const titleText = this.renderer.createText(title);
     this.renderer.appendChild(titleEl, titleText);
-    
+
     const messageEl = this.renderer.createElement('div');
     this.renderer.setProperty(messageEl, 'innerHTML', message);
     this.renderer.setStyle(messageEl, 'color', '#E5E7EB');
     this.renderer.setStyle(messageEl, 'margin-bottom', '24px');
-    
+
     const okBtn = this.renderer.createElement('button');
     const okText = this.renderer.createText('OK');
     this.renderer.appendChild(okBtn, okText);
@@ -318,14 +325,14 @@ export class Cars implements OnInit, OnDestroy {
     this.renderer.setStyle(okBtn, 'font-size', '14px');
     this.renderer.setStyle(okBtn, 'font-weight', '600');
     this.renderer.listen(okBtn, 'click', () => this.removeDialog());
-    
+
     this.renderer.appendChild(dialog, titleEl);
     this.renderer.appendChild(dialog, messageEl);
     this.renderer.appendChild(dialog, okBtn);
     this.renderer.appendChild(backdrop, dialog);
     this.renderer.appendChild(document.body, backdrop);
     this.dialogElement = backdrop;
-    
+
     this.renderer.listen(backdrop, 'click', () => this.removeDialog());
     this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
   }
@@ -369,7 +376,9 @@ export class Cars implements OnInit, OnDestroy {
   }
 
   getCars(): void {
+    this.isLoading = true;
     this.carService.getCars().subscribe((response) => {
+      this.isLoading = false;
       if (response.status === 'success') {
         this.cars = response.body.cars;
         this.filteredCars = [...this.cars];
@@ -381,6 +390,9 @@ export class Cars implements OnInit, OnDestroy {
       } else {
         console.error('Failed to get cars:', response.message);
       }
+    }, (error) => {
+      this.isLoading = false;
+      console.error('Error loading cars:', error);
     });
   }
 
@@ -412,6 +424,22 @@ export class Cars implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
+  onSharesFilterChange(): void {
+    this.applyFilters();
+  }
+
+  onWaitlistFilterChange(): void {
+    this.applyFilters();
+  }
+
+  onBookNowTokensFilterChange(): void {
+    this.applyFilters();
+  }
+
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
+  }
+
   applyFilters(): void {
     this.filteredCars = this.cars.filter(car => {
       const matchesSearch = !this.searchTerm ||
@@ -428,7 +456,32 @@ export class Cars implements OnInit, OnDestroy {
         (this.bookingsFilter === 'active' && !car.stopBookings) ||
         (this.bookingsFilter === 'stopped' && car.stopBookings);
 
-      return matchesSearch && matchesStatus && matchesBrand && matchesLocation && matchesBookings;
+      // Shares filter
+      const sharesAvailable = car.ticketsavilble || 0;
+      const matchesShares = this.sharesFilter === 'all' ||
+        (this.sharesFilter === '0' && sharesAvailable === 0) ||
+        (this.sharesFilter === '1-5' && sharesAvailable >= 1 && sharesAvailable <= 5) ||
+        (this.sharesFilter === '6-10' && sharesAvailable >= 6 && sharesAvailable <= 10) ||
+        (this.sharesFilter === '11-12' && sharesAvailable >= 11 && sharesAvailable <= 12);
+
+      // Waitlist filter
+      const waitlistAvailable = car.tokensavailble || 0;
+      const matchesWaitlist = this.waitlistFilter === 'all' ||
+        (this.waitlistFilter === '0' && waitlistAvailable === 0) ||
+        (this.waitlistFilter === '1-5' && waitlistAvailable >= 1 && waitlistAvailable <= 5) ||
+        (this.waitlistFilter === '6-10' && waitlistAvailable >= 6 && waitlistAvailable <= 10) ||
+        (this.waitlistFilter === '11-20' && waitlistAvailable >= 11 && waitlistAvailable <= 20);
+
+      // Book Now Tokens filter
+      const bookNowTokensAvailable = car.bookNowTokenAvailable || 0;
+      const matchesBookNowTokens = this.bookNowTokensFilter === 'all' ||
+        (this.bookNowTokensFilter === '0' && bookNowTokensAvailable === 0) ||
+        (this.bookNowTokensFilter === '1-5' && bookNowTokensAvailable >= 1 && bookNowTokensAvailable <= 5) ||
+        (this.bookNowTokensFilter === '6-10' && bookNowTokensAvailable >= 6 && bookNowTokensAvailable <= 10) ||
+        (this.bookNowTokensFilter === '11-12' && bookNowTokensAvailable >= 11 && bookNowTokensAvailable <= 12);
+
+      return matchesSearch && matchesStatus && matchesBrand && matchesLocation && matchesBookings &&
+        matchesShares && matchesWaitlist && matchesBookNowTokens;
     });
 
     // Update pagination
@@ -468,6 +521,9 @@ export class Cars implements OnInit, OnDestroy {
     this.brandFilter = 'all';
     this.locationFilter = 'all';
     this.bookingsFilter = 'all';
+    this.sharesFilter = 'all';
+    this.waitlistFilter = 'all';
+    this.bookNowTokensFilter = 'all';
     this.currentPage = 1;
     this.applyFilters();
   }
@@ -675,13 +731,13 @@ export class Cars implements OnInit, OnDestroy {
   deleteCar(car: Car): void {
     console.log('Attempting to delete car:', car.carname);
     console.log('Calling showConfirmDialog...');
-      
+
     this.showConfirmDialog(
       'Confirm Delete',
       `Are you sure you want to delete <strong>${car.carname}</strong>? This action cannot be undone.`,
       () => this.executeCarDeletion(car)
     );
-    
+
     console.log('After showConfirmDialog, showDialog:', this.showDialog);
   }
 

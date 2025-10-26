@@ -61,27 +61,55 @@
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
-/* Hide scrollbars but keep scrolling for .no-scrollbar containers */
+/* Show scrollbars for .no-scrollbar containers */
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  scrollbar-width: thin;  /* Firefox */
+  scrollbar-color: #6b7280 #374151; /* gray-500 on gray-700 */
 }
 .no-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  width: 8px;
+  height: 8px;
+  background: #374151; /* gray-700 */
+}
+.no-scrollbar::-webkit-scrollbar-track {
+  background: #374151; /* gray-700 */
+  border-radius: 4px;
+}
+.no-scrollbar::-webkit-scrollbar-thumb {
+  background: #6b7280; /* gray-500 */
+  border-radius: 4px;
+  border: 2px solid #374151; /* gray-700 */
+}
+.no-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af; /* gray-400 */
 }
 
-/* Table container with horizontal scroll but hidden scrollbar */
+/* Table container with visible scrollbars */
 .table-container {
   overflow-x: auto;
   overflow-y: auto;
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  scrollbar-width: thin;  /* Firefox */
+  scrollbar-color: #6b7280 #374151; /* gray-500 on gray-700 */
   scroll-behavior: smooth; /* Smooth scrolling */
   position: relative;
 }
 
 .table-container::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  width: 8px;
+  height: 8px;
+  background: #374151; /* gray-700 */
+}
+.table-container::-webkit-scrollbar-track {
+  background: #374151; /* gray-700 */
+  border-radius: 4px;
+}
+.table-container::-webkit-scrollbar-thumb {
+  background: #6b7280; /* gray-500 */
+  border-radius: 4px;
+  border: 2px solid #374151; /* gray-700 */
+}
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af; /* gray-400 */
 }
 
 /* Add subtle scroll indicators */
@@ -164,6 +192,94 @@ thead tr {
   z-index: 2;
   background-color: #1f2937; /* bg-gray-800 - consistent with AMC */
   color: #e5e7eb; /* light text */
+}
+
+/* Filter row styling */
+.filter-row {
+  background-color: #1f2937; /* bg-gray-800 - same as table header */
+  position: sticky;
+  top: 48px; /* Position below the header row */
+  z-index: 1;
+}
+
+/* Animation for filter row */
+.filter-row {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Filter inputs and selects styling */
+.table-filter-input,
+.table-filter-select {
+  background-color: #4b5563; /* bg-gray-600 */
+  border: 1px solid #6b7280; /* border-gray-500 */
+  color: #ffffff;
+  font-size: 0.75rem; /* text-xs */
+  padding: 0.375rem 0.5rem; /* py-1.5 px-2 */
+  border-radius: 0.25rem; /* rounded */
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.table-filter-input:focus,
+.table-filter-select:focus {
+  outline: none;
+  border-color: #3b82f6; /* border-blue-500 */
+  box-shadow: 0 0 0 1px #3b82f6; /* ring-1 ring-blue-500 */
+}
+
+.table-filter-input::placeholder {
+  color: #9ca3af; /* placeholder-gray-400 */
+}
+
+/* Clear filters button in table */
+.table-clear-btn {
+  background-color: #4b5563; /* bg-gray-600 */
+  color: #d1d5db; /* text-gray-300 */
+  border: none;
+  padding: 0.25rem 0.5rem; /* px-2 py-1 */
+  border-radius: 0.25rem; /* rounded */
+  font-size: 0.75rem; /* text-xs */
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.table-clear-btn:hover {
+  background-color: #6b7280; /* bg-gray-500 */
+  color: #ffffff; /* text-white */
+}
+
+/* Filter toggle button styling */
+.filter-toggle-btn {
+  background-color: transparent;
+  border: 1px solid #4b5563;
+  color: #9ca3af;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-toggle-btn:hover {
+  background-color: #4b5563;
+  color: #ffffff;
+  border-color: #6b7280;
+}
+
+.filter-toggle-btn.active {
+  background-color: #3b82f6;
+  color: #ffffff;
+  border-color: #3b82f6;
 }
 
 /* Prevent text from wrapping in table cells where utility class used */

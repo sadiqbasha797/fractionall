@@ -1,13 +1,28 @@
-<footer class="bg-gray-800 text-text-secondary py-12">
+<footer class="bg-gray-800 text-text-secondary py-6">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-      <div class="md:col-span-1">
-        <div class="flex items-center gap-4">
-          <img src="car.png" alt="Car" class="h-[70px] w-auto lg:ml-10">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
+      <!-- Column 1: Logo -->
+      <div class="col-span-2 md:col-span-1">
+        <div class="flex flex-col items-center md:items-start">
+          <img src="car.png" alt="Car" class="h-[90px] w-auto mb-4">
+          <div class="text-center md:text-left">
+          </div>
         </div>
       </div>
-      <div class="md:col-span-1">
-        <h3 class="text-lg font-semibold text-text-primary mb-4">Quick Links</h3>
+
+      <!-- Column 2: Legal -->
+      <div class="col-span-1 md:col-span-1">
+        <h3 class="text-lg font-semibold text-text-primary mb-3">Legal</h3>
+        <ul class="space-y-2">
+          <li><a class="hover:text-primary-color transition-colors cursor-pointer" (click)="openPrivacyPolicy()">Privacy Policy</a></li>
+          <li><a class="hover:text-primary-color transition-colors cursor-pointer" (click)="openTermsConditions()">Terms & Conditions</a></li>
+          <li><a class="hover:text-primary-color transition-colors cursor-pointer" (click)="openDisclaimerPolicy()">Disclaimer Policy</a></li>
+        </ul>
+      </div>
+
+      <!-- Column 3: Quick Links -->
+      <div class="col-span-1 md:col-span-1 -mt-1 md:mt-0">
+        <h3 class="text-lg font-semibold text-text-primary mb-3">Quick Links</h3>
         <ul class="space-y-2">
           <li><a class="hover:text-primary-color transition-colors cursor-pointer" routerLink="/home">Home</a></li>
           <li><a class="hover:text-primary-color transition-colors cursor-pointer" routerLink="/cars">Cars</a></li>
@@ -15,8 +30,11 @@
           <li><a class="hover:text-primary-color transition-colors cursor-pointer" routerLink="/contact-us">Contact us</a></li>
         </ul>
       </div>
-      <div class="md:col-span-1">
-        <div class="flex space-x-4 mb-6">
+
+      <!-- Column 4: Social Media, Apps, Certifications -->
+      <div class="col-span-2 md:col-span-1 md:-ml-12">
+        <!-- Social Media -->
+        <div class="flex space-x-4 mb-4">
           <a class="text-text-secondary hover:text-primary-color transition-colors" href="#">
             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -27,7 +45,7 @@
           <a class="text-text-secondary hover:text-primary-color transition-colors" href="#">
             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path
-                d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.223.085c.645 1.956 2.52 3.379 4.738 3.418a9.896 9.896 0 01-6.117 2.107c-.398 0-.79-.023-1.175-.068a13.963 13.963 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z">
+                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z">
               </path>
             </svg>
           </a>
@@ -40,23 +58,331 @@
           </a>
         </div>
         
-        <!-- ISO Certification moved here -->
-        <div class="flex flex-col items-start gap-2">
-          <img src="iso.png.png" alt="ISO Certified" class="h-20 w-auto iso-certification cursor-pointer" title="ISO Certified Quality Management System">
-          <div class="text-left">
-            <p class="text-text-primary font-semibold text-sm">ISO Certified</p>
-            <p class="text-text-secondary text-xs">ISO / IEC 27001:2022</p>
+        <!-- Mobile Apps Section -->
+        <div class="flex flex-col items-start gap-3 mb-4">
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 bg-gray-700 px-3 py-2 rounded-lg">
+              <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.6589 13.8533 8 12 8c-1.8533 0-3.5902.6589-4.9236 1.7108L5.054 6.2086a.416.416 0 00-.5676-.1521.416.416 0 00-.1521.5676l1.9973 3.4592C2.6883 11.1867.3432 14.6589 0 18.761h24c-.3432-4.1021-2.6883-7.5743-6.1185-9.4396"/>
+              </svg>
+              <span class="text-xs text-gray-300">Android App</span>
+            </div>
+            <div class="flex items-center gap-2 bg-gray-700 px-3 py-2 rounded-lg">
+              <svg class="h-5 w-5 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+              </svg>
+              <span class="text-xs text-gray-300">iOS App</span>
+            </div>
+          </div>
+          <p class="text-xs text-gray-400 italic">Loading soon...</p>
+        </div>
+        
+        <!-- ISO Certification and StartUp India -->
+        <div class="flex flex-row items-start gap-4">
+          <div class="flex flex-col items-start gap-2">
+            <img src="iso.png.png" alt="ISO Certified" class="h-12 w-auto iso-certification cursor-pointer" title="ISO Certified Quality Management System">
+            <div class="text-left">
+              <p class="text-text-primary font-semibold text-sm">ISO Certified</p>
+              <p class="text-text-secondary text-xs">ISO / IEC 27001:2022</p>
+            </div>
+          </div>
+          <div class="flex flex-col items-start gap-2">
+            <img src="startup-india-logo.png" alt="StartUp India" class="h-12 w-auto startup-india-logo cursor-pointer" title="StartUp India Certified">
+            <div class="text-left">
+              <p class="text-text-primary font-semibold text-sm">StartUp India</p>
+              <p class="text-text-secondary text-xs">Government Recognized</p>
+            </div>
           </div>
         </div>
       </div>
-      <div class="md:col-span-1">
-        <h3 class="text-lg font-semibold text-text-primary mb-4">Contact</h3>
-        <p class="mb-2">No 51, 5th Floor, 5th Main road, above Alchemy Coffee Roasters, 36th Cross Rd, 5th Block, Jayanagar, Bengaluru, Karnataka 560041</p>
-        <p class="mb-4">+91 73496 72233</p>
+
+      <!-- Column 5: Contact -->
+      <div class="col-span-2 md:col-span-1">
+        <h3 class="text-lg font-semibold text-text-primary mb-3">Contact</h3>
+         <p class="mb-2 text-sm">No 51, 5th Floor, 5th Main road, above Alchemy Coffee Roasters, 36th Cross Rd, 5th Block, Jayanagar, Bengaluru, Karnataka 560041</p>
+         <p class="mb-2">contactus@fractioncar.com</p>
+         <p class="mb-2">+91 734967 2233</p>
+         <p class="mb-4">+91 784267 2233</p>
       </div>
     </div>
-    <div class="mt-8 pt-8 border-t border-gray-800 text-center text-sm">
+    <div class="mt-6 pt-6 border-t border-gray-800 text-center text-sm">
       <p>© 2025 Fractioncar. All Rights Reserved.</p>
+      
+      <div class="mt-4 text-xs text-gray-400 space-y-2">
+        <div>
+          <p class="font-semibold text-gray-300 mb-1">Automobile Brand References:</p>
+          <p>All automobile brand names, logos, and images appearing on this Website are used strictly for identification and descriptive purposes only. Fraction Car LLP makes no claim of ownership, affiliation, or endorsement with any automobile manufacturer unless explicitly mentioned.</p>
+          <p class="mt-1">Any respective trademarks and copyrights belong to their rightful owners.</p>
+        </div>
+        
+        <div>
+          <p class="font-semibold text-gray-300 mb-1">Trademark Disclaimer:</p>
+          <p>All brand names, logos, and car model names mentioned on this website are the property of their respective owners.</p>
+          <p>Fraction Car LLP is not affiliated with, endorsed by, or sponsored by any automobile manufacturer unless explicitly stated.</p>
+          <p>The use of these names and images is solely for identification and descriptive purposes only.</p>
+        </div>
+      </div>
     </div>
   </div>
 </footer>
+
+<!-- Privacy Policy Modal -->
+<div *ngIf="showPrivacyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closePrivacyPolicy()">
+  <div class="bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden" (click)="$event.stopPropagation()">
+    <div class="flex items-center justify-between p-6 border-b border-gray-700">
+      <h2 class="text-2xl font-bold text-white">Privacy Policy</h2>
+      <button (click)="closePrivacyPolicy()" class="text-gray-400 hover:text-white transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+      <div class="prose prose-invert max-w-none text-gray-300">
+        <p class="text-sm text-gray-400 mb-4">Effective Date: 16-Sep-2025 | Entity: Fraction Car LLP | Website: www.fractioncar.com</p>
+        
+        <h3 class="text-lg font-semibold text-white mb-3">1. Introduction</h3>
+        <p class="mb-4">Fraction Car LLP ("Company", "we", "our", "us") respects your privacy and is committed to protecting your personal data.</p>
+        <p class="mb-4">This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our Website www.fractioncar.com ("Website").</p>
+        <p class="mb-6">By accessing or using our Website, you agree to the terms of this Privacy Policy. If you do not agree, please do not use the Website.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">2. Information We Collect</h3>
+        <p class="mb-3">We may collect the following types of information when you interact with our Website:</p>
+        <h4 class="text-md font-medium text-white mb-2">A. Personal Information</h4>
+        <p class="mb-2">Information you voluntarily provide, such as:</p>
+        <ul class="list-disc list-inside mb-4 space-y-1">
+          <li>Name</li>
+          <li>Email address</li>
+          <li>Phone number</li>
+          <li>City or location</li>
+          <li>KYC documents, Income proof documents and others</li>
+        </ul>
+        <h4 class="text-md font-medium text-white mb-2">B. Non-Personal / Technical Information</h4>
+        <p class="mb-2">Automatically collected information, such as:</p>
+        <ul class="list-disc list-inside mb-6 space-y-1">
+          <li>IP address</li>
+          <li>Browser type and version</li>
+          <li>Device information</li>
+          <li>Operating system</li>
+          <li>Referring URLs and browsing actions on our Website</li>
+          <li>Cookies and similar tracking technologies (explained below)</li>
+        </ul>
+
+        <h3 class="text-lg font-semibold text-white mb-3">3. Use of Information</h3>
+        <p class="mb-2">We use your information to:</p>
+        <ul class="list-disc list-inside mb-4 space-y-1">
+          <li>Provide and improve our Website and services</li>
+          <li>Respond to inquiries and support requests</li>
+          <li>Send updates, newsletters, or promotional materials (only if you opt-in)</li>
+          <li>Analyze website usage and improve performance</li>
+          <li>Comply with legal obligations or enforce our policies</li>
+        </ul>
+        <p class="mb-6">We do not sell or rent your personal information to any third party.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">4. Cookies and Tracking Technologies</h3>
+        <p class="mb-2">Our Website uses cookies to:</p>
+        <ul class="list-disc list-inside mb-4 space-y-1">
+          <li>Enhance your browsing experience</li>
+          <li>Remember user preferences</li>
+          <li>Analyze traffic and user behavior</li>
+        </ul>
+        <p class="mb-6">You can choose to disable cookies through your browser settings. However, some parts of the Website may not function properly if cookies are disabled.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">5. Sharing and Disclosure of Information</h3>
+        <p class="mb-2">We may share your information only in the following cases:</p>
+        <ul class="list-disc list-inside mb-4 space-y-1">
+          <li>With service providers who assist in operating the Website (e.g., hosting, analytics, marketing) — bound by confidentiality agreements.</li>
+          <li>To comply with legal obligations or lawful requests from authorities.</li>
+          <li>In case of a merger or acquisition, where business assets, including user data, are transferred.</li>
+        </ul>
+        <p class="mb-6">We do not share your information with unrelated third parties for marketing or advertising purposes.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">6. Data Retention</h3>
+        <p class="mb-6">We retain your personal information only as long as necessary to fulfill the purposes stated in this policy, comply with legal requirements, or resolve disputes.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">7. Data Security</h3>
+        <p class="mb-4">We implement reasonable technical and organizational measures to protect your information against unauthorized access, loss, misuse, or alteration.</p>
+        <p class="mb-6">However, no method of electronic storage or transmission is 100% secure, and we cannot guarantee absolute security.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">8. Your Rights</h3>
+        <p class="mb-2">Depending on your location, you may have the right to:</p>
+        <ul class="list-disc list-inside mb-4 space-y-1">
+          <li>Access, update, or correct your personal data</li>
+          <li>Request deletion of your data</li>
+          <li>Withdraw consent for communications</li>
+          <li>Object to or restrict certain types of processing</li>
+        </ul>
+        <p class="mb-6">To exercise these rights, contact us at contactus@fractioncar.com.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">9. Third-Party Links</h3>
+        <p class="mb-6">Our Website may contain links to third-party sites. We are not responsible for the content, privacy practices, or operations of such external sites. Please review their respective privacy policies before interacting.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">10. Updates to This Policy</h3>
+        <p class="mb-4">We may update this Privacy Policy from time to time to reflect legal, operational, or service changes.</p>
+        <p class="mb-6">The updated version will be posted on this page with a revised "Effective Date." Continued use of the Website constitutes your acceptance of such updates.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">11. Contact Us</h3>
+        <p class="mb-4">If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us at:</p>
+        <div class="bg-gray-700 p-4 rounded-lg">
+          <p class="mb-2">📧 contactus@fractioncar.com</p>
+          <p>🏢 Fraction Car LLP, No.51(1), 5th Floor (above Alchemy Coffee), 5th Main, 5th Block, Jayanagar, Bangalore – 560041</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Terms & Conditions Modal -->
+<div *ngIf="showTermsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeTermsConditions()">
+  <div class="bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden" (click)="$event.stopPropagation()">
+    <div class="flex items-center justify-between p-6 border-b border-gray-700">
+      <h2 class="text-2xl font-bold text-white">Terms & Conditions:</h2>
+      <button (click)="closeTermsConditions()" class="text-gray-400 hover:text-white transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+      <div class="prose prose-invert max-w-none text-gray-300">
+        <h3 class="text-lg font-semibold text-white mb-3">1. Introduction</h3>
+        <p class="mb-4">Welcome to www.fractioncar.com ("Website"), owned and operated by Fraction Car LLP, having its registered office at No.51(1), 5th Floor (above Alchemy Coffee), 5th Main, 5th Block, Jayanagar, Bangalore – 560041 ("we", "our", "us").</p>
+        <p class="mb-6">By accessing or using this Website, you agree to comply with and be bound by the following terms and conditions. If you do not agree, please do not use the Website.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">2. Ownership of Content</h3>
+        <p class="mb-6">All content available on this Website — including but not limited to text, images, graphics, logos, icons, designs, videos, data compilations, and software — is the exclusive property of Fraction Car LLP or its content partners and is protected under applicable copyright, trademark, and intellectual property laws of India and international conventions.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">3. Permitted Use</h3>
+        <h4 class="text-md font-medium text-white mb-2">You may:</h4>
+        <ul class="list-disc list-inside mb-4 space-y-1">
+          <li>Access and view the content on this Website for your personal, non-commercial use only.</li>
+          <li>Download or print portions of the Website content solely for informational or reference purposes, provided you do not modify, reproduce, distribute, or exploit the content in any way.</li>
+        </ul>
+        <h4 class="text-md font-medium text-white mb-2">You may not:</h4>
+        <ul class="list-disc list-inside mb-6 space-y-1">
+          <li>Copy, reproduce, republish, upload, post, transmit, distribute, or create derivative works from any Website content without our prior written permission.</li>
+          <li>Use any logo, trademark, or other proprietary graphic belonging to Fraction Car LLP without explicit consent.</li>
+          <li>Use any automated means (bots, scrapers, crawlers, etc.) to extract data or content from this Website.</li>
+        </ul>
+
+        <h3 class="text-lg font-semibold text-white mb-3">4. Copyright Infringement Claims</h3>
+        <p class="mb-2">If you believe that any content on this Website infringes your copyright or intellectual property rights, please contact us at contactus@fractioncar.com with:</p>
+        <ul class="list-disc list-inside mb-4 space-y-1">
+          <li>A description of the copyrighted work claimed to be infringed;</li>
+          <li>The exact URL or location of the infringing material;</li>
+          <li>Your contact details (name, address, phone number, and email); and</li>
+          <li>A statement affirming your ownership of the copyright.</li>
+        </ul>
+        <p class="mb-6">We will review and, if necessary, remove the infringing content promptly.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">5. Trademarks</h3>
+        <p class="mb-4">"Fraction Car," "Sharing is Gearing," the Fraction Car logo, and all related names, logos, and designs are trademarks or registered trademarks of Fraction Car LLP.</p>
+        <p class="mb-6">Any unauthorized use of these trademarks is strictly prohibited.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">6. User-Generated Content</h3>
+        <p class="mb-4">If users submit or share any content (such as reviews, comments, or media), they grant Fraction Car LLP a non-exclusive, royalty-free, worldwide, perpetual license to use, reproduce, and display such content for promotional and operational purposes.</p>
+        <p class="mb-6">Users are responsible for ensuring their submissions do not infringe any third-party rights.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">7. Third-Party Links</h3>
+        <p class="mb-6">This Website may contain links to third-party websites or services. Fraction Car LLP is not responsible for the content, privacy practices, or operations of these external sites.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">8. Disclaimer</h3>
+        <p class="mb-4">All information and materials provided on this Website are for general informational purposes only. Fraction Car LLP makes no warranties, express or implied, regarding the accuracy, completeness, or reliability of the content.</p>
+        <p class="mb-6">Use of any content or materials from this Website is at your own discretion and risk.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">9. Changes to Terms</h3>
+        <p class="mb-4">We may modify or update these Terms & Conditions at any time without prior notice. Any changes will be effective immediately upon posting on this page.</p>
+        <p class="mb-6">Your continued use of the Website after such changes constitutes acceptance of the updated Terms.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">10. Contact Us</h3>
+        <p class="mb-4">For any questions or concerns regarding these Terms or intellectual property issues, please contact:</p>
+        <div class="bg-gray-700 p-4 rounded-lg">
+          <p class="mb-2">📧 contactus@fractioncar.com</p>
+          <p>🏢 Fraction Car LLP, No.51(1), 5th Floor (above Alchemy Coffee), 5th Main, 5th Block, Jayanagar, Bangalore – 560041</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Disclaimer Policy Modal -->
+<div *ngIf="showDisclaimerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeDisclaimerPolicy()">
+  <div class="bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden" (click)="$event.stopPropagation()">
+    <div class="flex items-center justify-between p-6 border-b border-gray-700">
+      <h2 class="text-2xl font-bold text-white">Disclaimer Policy</h2>
+      <button (click)="closeDisclaimerPolicy()" class="text-gray-400 hover:text-white transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+      <div class="prose prose-invert max-w-none text-gray-300">
+        <p class="text-sm text-gray-400 mb-4">Effective Date: 16-Sep-2025 | Entity: Fraction Car LLP | Website: www.fractioncar.com</p>
+        
+        <h3 class="text-lg font-semibold text-white mb-3">1. General Disclaimer</h3>
+        <p class="mb-4">The information contained on this Website is provided by Fraction Car LLP ("we," "our," or "us") for general informational purposes only.</p>
+        <p class="mb-4">While we strive to ensure that all information on this Website is accurate, complete, and up to date, we make no representations or warranties of any kind, express or implied, about the accuracy, reliability, suitability, or availability of the information, products, or services mentioned herein.</p>
+        <p class="mb-6">Your use of this Website and reliance on any information is strictly at your own risk.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">2. No Professional or Financial Advice</h3>
+        <p class="mb-4">The content available on this Website is intended for general informational purposes only and should not be construed as legal, financial, or professional advice.</p>
+        <p class="mb-6">Before making any decision or taking any action based on the information provided, you should consult appropriate professionals or advisors.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">3. Service Information Disclaimer</h3>
+        <p class="mb-4">Fraction Car LLP operates in the domain of fractional car ownership and shared mobility solutions.</p>
+        <p class="mb-4">All product, vehicle, or service descriptions, prices, and availability listed on this Website are subject to change without prior notice.</p>
+        <p class="mb-4">Actual services, ownership models, or features may vary depending on legal, financial, and operational considerations at the time of engagement.</p>
+        <p class="mb-2">Fraction Car LLP does not guarantee:</p>
+        <ul class="list-disc list-inside mb-6 space-y-1">
+          <li>The continuous availability of any specific vehicle or service plan.</li>
+          <li>The performance or condition of third-party vehicles or services featured on the platform.</li>
+        </ul>
+
+        <h3 class="text-lg font-semibold text-white mb-3">4. External Links Disclaimer</h3>
+        <p class="mb-4">This Website may contain links to external websites or third-party platforms for user convenience.</p>
+        <p class="mb-4">We do not control, endorse, or guarantee the content, accuracy, or security of these external sites.</p>
+        <p class="mb-6">Visiting third-party websites through links on our Website is at your own discretion and risk.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">5. Limitation of Liability</h3>
+        <p class="mb-2">Under no circumstances shall Fraction Car LLP, its partners, employees, or affiliates be liable for any direct, indirect, incidental, consequential, or special damages arising from:</p>
+        <ul class="list-disc list-inside mb-4 space-y-1">
+          <li>The use or inability to use this Website,</li>
+          <li>Reliance on any information or material contained herein, or</li>
+          <li>Any errors, omissions, interruptions, or delays in the Website's operation.</li>
+        </ul>
+        <p class="mb-6">This limitation applies even if we have been advised of the possibility of such damages.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">6. No Warranties</h3>
+        <p class="mb-2">This Website and all content, materials, and services are provided on an "as is" and "as available" basis without warranties of any kind, whether express or implied, including but not limited to:</p>
+        <ul class="list-disc list-inside mb-4 space-y-1">
+          <li>Warranties of merchantability,</li>
+          <li>Fitness for a particular purpose,</li>
+          <li>Non-infringement, or</li>
+          <li>Availability and uninterrupted access.</li>
+        </ul>
+        <p class="mb-6">We do not warrant that this Website will be free from viruses, technical errors, or security vulnerabilities.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">7. Changes to This Disclaimer</h3>
+        <p class="mb-4">Fraction Car LLP reserves the right to modify or update this Disclaimer Policy at any time without prior notice.</p>
+        <p class="mb-6">Any changes will be reflected on this page, and the revised date will be updated accordingly. Your continued use of the Website signifies acceptance of such modifications.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">8. Automobile Brand References</h3>
+        <p class="mb-4">All automobile brand names, logos, and images appearing on this Website are used strictly for identification and descriptive purposes only. Fraction Car LLP makes no claim of ownership, affiliation, or endorsement with any automobile manufacturer unless explicitly mentioned.</p>
+        <p class="mb-6">Any respective trademarks and copyrights belong to their rightful owners.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">9. Trademark Disclaimer</h3>
+        <p class="mb-4">All brand names, logos, and car model names mentioned on this website are the property of their respective owners.</p>
+        <p class="mb-4">Fraction Car LLP is not affiliated with, endorsed by, or sponsored by any automobile manufacturer unless explicitly stated.</p>
+        <p class="mb-6">The use of these names and images is solely for identification and descriptive purposes.</p>
+
+        <h3 class="text-lg font-semibold text-white mb-3">10. Contact Us</h3>
+        <p class="mb-4">If you have any questions or concerns about this Disclaimer Policy, please contact:</p>
+        <div class="bg-gray-700 p-4 rounded-lg">
+          <p class="mb-2">📧 contactus@fractioncar.com</p>
+          <p>🏢 Fraction Car LLP, No.51(1), 5th Floor (above Alchemy Coffee), 5th Main, 5th Block, Jayanagar, Bangalore – 560041</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

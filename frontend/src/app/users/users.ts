@@ -8,6 +8,7 @@ import { TicketService } from '../services/ticket.service';
 import { TokenService } from '../services/token.service';
 import { BookNowTokenService } from '../services/book-now-token.service';
 import { AuthService } from '../services/auth.service';
+import { NotificationService, BulkNotificationData, CreateNotificationData } from '../services/notification.service';
 import { LoadingDialogComponent } from '../shared/loading-dialog/loading-dialog.component';
 import { ExportService, ExportOptions } from '../services/export.service';
 
@@ -47,6 +48,13 @@ export class Users implements OnInit {
   kycStatusFilter = signal<'all' | 'pending' | 'submitted' | 'approved' | 'rejected'>('all');
   userStatusFilter = signal<'all' | 'active' | 'suspended' | 'deactivated'>('all');
   dateRangeFilter = signal('all');
+  locationFilter = signal('all');
+  showFilters = signal(false);
+  
+  // Excel-like filter properties
+  showExcelFilters = signal(false);
+  emailFilter = signal('all');
+  phoneFilter = signal('all');
   
   // Pagination
   currentPage = 1;
@@ -61,6 +69,8 @@ export class Users implements OnInit {
   showStatusModal = signal(false);
   showStatusHistoryModal = signal(false);
   showSuspensionStatsModal = signal(false);
+  showNotificationModal = signal(false);
+  showBulkNotificationModal = signal(false);
   
   // User details data
   userTickets = signal<any[]>([]);
@@ -92,6 +102,25 @@ export class Users implements OnInit {
   };
   
   editingUserId = signal<string | null>(null);
+  
+  // Notification form data
+  notificationForm = {
+    title: '',
+    message: '',
+    type: 'general_notification',
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
+    expiresAt: ''
+  };
+  
+  // Bulk notification data
+  selectedUsersForNotification = signal<string[]>([]);
+  bulkNotificationForm = {
+    title: '',
+    message: '',
+    type: 'general_notification',
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
+    expiresAt: ''
+  };
   
   // UI State
   loading: boolean = false;
@@ -131,6 +160,32 @@ export class Users implements OnInit {
   uniqueKycStatuses: string[] = ['pending', 'submitted', 'approved', 'rejected'];
   
   // Computed properties
+  uniqueLocations = computed(() => {
+    const locations = this.users()
+      .map(user => user.location)
+      .filter(location => location && location.trim() !== '')
+      .filter((location, index, self) => self.indexOf(location) === index)
+      .sort();
+    return locations;
+  });
+
+  uniqueEmails = computed(() => {
+    const emails = this.users()
+      .map(user => user.email)
+      .filter(email => email && email.trim() !== '')
+      .filter((email, index, self) => self.indexOf(email) === index)
+      .sort();
+    return emails;
+  });
+
+  uniquePhones = computed(() => {
+    const phones = this.users()
+      .map(user => user.phone)
+      .filter(phone => phone && phone.trim() !== '')
+      .filter((phone, index, self) => self.indexOf(phone) === index)
+      .sort();
+    return phones;
+  });
   filteredKycUsers = computed(() => {
     let usersArray = this.users();
     
@@ -144,6 +199,21 @@ export class Users implements OnInit {
       usersArray = usersArray.filter(user => user.status === this.userStatusFilter());
     }
     
+    // Filter by location
+    if (this.locationFilter() !== 'all') {
+      usersArray = usersArray.filter(user => user.location === this.locationFilter());
+    }
+    
+    // Filter by email (Excel-like filter)
+    if (this.emailFilter() !== 'all') {
+      usersArray = usersArray.filter(user => user.email === this.emailFilter());
+    }
+
+    // Filter by phone (Excel-like filter)
+    if (this.phoneFilter() !== 'all') {
+      usersArray = usersArray.filter(user => user.phone === this.phoneFilter());
+    }
+
     // Filter by search term
     const search = this.searchTerm().toLowerCase();
     if (search) {
@@ -198,6 +268,7 @@ export class Users implements OnInit {
     private tokenService: TokenService,
     private bookNowTokenService: BookNowTokenService,
     private authService: AuthService,
+    private notificationService: NotificationService,
     private router: Router,
     private exportService: ExportService,
     private renderer: Renderer2
@@ -413,6 +484,26 @@ export class Users implements OnInit {
   onUserStatusFilterChange() {
     this.filteredUsers.set(this.filteredKycUsers());
   }
+
+  onLocationFilterChange() {
+    this.filteredUsers.set(this.filteredKycUsers());
+  }
+
+  toggleFilters() {
+    this.showFilters.set(!this.showFilters());
+  }
+
+  toggleExcelFilters() {
+    this.showExcelFilters.set(!this.showExcelFilters());
+  }
+
+  onEmailFilterChange() {
+    this.filteredUsers.set(this.filteredKycUsers());
+  }
+
+  onPhoneFilterChange() {
+    this.filteredUsers.set(this.filteredKycUsers());
+  }
   
   // Pagination methods
   goToPage(page: number) {
@@ -446,6 +537,9 @@ export class Users implements OnInit {
     this.kycStatusFilter.set('all');
     this.userStatusFilter.set('all');
     this.dateRangeFilter.set('all');
+    this.locationFilter.set('all');
+    this.emailFilter.set('all');
+    this.phoneFilter.set('all');
     this.currentPage = 1;
     this.onSearchChange();
   }
@@ -717,13 +811,18 @@ export class Users implements OnInit {
     this.showStatusModal.set(false);
     this.showStatusHistoryModal.set(false);
     this.showSuspensionStatsModal.set(false);
+    this.showNotificationModal.set(false);
+    this.showBulkNotificationModal.set(false);
     this.selectedUser.set(null);
     this.rejectionComment.set('');
     this.statusReason.set('');
     this.statusHistory.set(null);
     this.suspensionStats.set(null);
     this.editingUserId.set(null);
+    this.selectedUsersForNotification.set([]);
     this.resetUserForm();
+    this.resetNotificationForm();
+    this.resetBulkNotificationForm();
     this.error.set(null);
     this.success.set(null);
     // Clear user additional details
@@ -884,6 +983,144 @@ export class Users implements OnInit {
   clearMessages() {
     this.error.set(null);
     this.success.set(null);
+  }
+
+  // Notification methods
+  openNotificationModal(user: ExtendedUser) {
+    this.selectedUser.set(user);
+    this.resetNotificationForm();
+    this.showNotificationModal.set(true);
+  }
+
+  openBulkNotificationModal() {
+    this.resetBulkNotificationForm();
+    this.selectedUsersForNotification.set([]);
+    this.showBulkNotificationModal.set(true);
+  }
+
+  resetNotificationForm() {
+    this.notificationForm = {
+      title: '',
+      message: '',
+      type: 'general_notification',
+      priority: 'medium',
+      expiresAt: ''
+    };
+  }
+
+  resetBulkNotificationForm() {
+    this.bulkNotificationForm = {
+      title: '',
+      message: '',
+      type: 'general_notification',
+      priority: 'medium',
+      expiresAt: ''
+    };
+  }
+
+  toggleUserSelection(userId: string) {
+    const selected = this.selectedUsersForNotification();
+    if (selected.includes(userId)) {
+      this.selectedUsersForNotification.set(selected.filter(id => id !== userId));
+    } else {
+      this.selectedUsersForNotification.set([...selected, userId]);
+    }
+  }
+
+  isUserSelected(userId: string): boolean {
+    return this.selectedUsersForNotification().includes(userId);
+  }
+
+  selectAllUsers() {
+    const allUserIds = this.paginatedUsers().map(user => user._id!);
+    this.selectedUsersForNotification.set(allUserIds);
+  }
+
+  deselectAllUsers() {
+    this.selectedUsersForNotification.set([]);
+  }
+
+  async sendIndividualNotification() {
+    if (!this.selectedUser() || !this.notificationForm.title.trim() || !this.notificationForm.message.trim()) {
+      this.error.set('Please fill in all required fields');
+      return;
+    }
+
+    this.isLoading.set(true);
+    try {
+      const notificationData: CreateNotificationData = {
+        recipientType: 'specific',
+        recipientId: this.selectedUser()!._id!,
+        recipientRole: 'user',
+        title: this.notificationForm.title.trim(),
+        message: this.notificationForm.message.trim(),
+        type: this.notificationForm.type,
+        priority: this.notificationForm.priority,
+        expiresAt: this.notificationForm.expiresAt || undefined
+      };
+
+      const response = await this.notificationService.createNotification(notificationData).toPromise();
+      if (response?.status === 'success') {
+        this.success.set(`Notification sent successfully to ${this.selectedUser()!.name}`);
+        this.closeModals();
+      } else {
+        this.error.set(response?.message || 'Failed to send notification');
+      }
+    } catch (err: any) {
+      this.error.set(err.error?.message || err.message || 'Failed to send notification');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  async sendBulkNotification() {
+    const selectedUsers = this.selectedUsersForNotification();
+    if (selectedUsers.length === 0) {
+      this.error.set('Please select at least one user');
+      return;
+    }
+
+    if (!this.bulkNotificationForm.title.trim() || !this.bulkNotificationForm.message.trim()) {
+      this.error.set('Please fill in all required fields');
+      return;
+    }
+
+    this.isLoading.set(true);
+    try {
+      const bulkData: BulkNotificationData = {
+        userIds: selectedUsers,
+        title: this.bulkNotificationForm.title.trim(),
+        message: this.bulkNotificationForm.message.trim(),
+        type: this.bulkNotificationForm.type,
+        priority: this.bulkNotificationForm.priority,
+        expiresAt: this.bulkNotificationForm.expiresAt || undefined
+      };
+
+      const response = await this.notificationService.sendBulkNotifications(bulkData).toPromise();
+      if (response?.status === 'success') {
+        this.success.set(`Notification sent successfully to ${response.body.notificationsSent} user(s)`);
+        this.closeModals();
+      } else {
+        this.error.set(response?.message || 'Failed to send bulk notification');
+      }
+    } catch (err: any) {
+      this.error.set(err.error?.message || err.message || 'Failed to send bulk notification');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  getNotificationTypes() {
+    return this.notificationService.getNotificationTypes();
+  }
+
+  getPriorityLevels() {
+    return this.notificationService.getPriorityLevels();
+  }
+
+  // Helper method to format notification type for display
+  formatNotificationType(type: string): string {
+    return type.replace(/_/g, ' ').toUpperCase();
   }
   
   deleteUser(user: ExtendedUser): void {

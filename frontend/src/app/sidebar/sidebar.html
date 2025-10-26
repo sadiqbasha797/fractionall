@@ -1,8 +1,8 @@
 <div class="h-full">
   <!-- Make sidebar fixed on all viewports so it stays in place while main content scrolls -->
   <aside id="sidebar-aside" 
-         class="fixed w-64 h-full bg-gray-900 z-[70] transition-transform duration-300 ease-in-out sidebar-container flex flex-col md:block"
-         [style.transform]="!isMobileMenuOpen ? 'translateX(-100%)' : 'translateX(0)'"
+         class="fixed w-64 h-full bg-gray-900 z-[70] transition-transform duration-300 ease-in-out sidebar-container flex flex-col"
+         [style.transform]="(!isMobileMenuOpen && isMobile) ? 'translateX(-100%)' : 'translateX(0)'"
          [style.left]="'0'"
          [style.top]="'0'">
       <div class="flex flex-col h-full">
@@ -16,14 +16,14 @@
                 </div>
               </div>
             </div>
-          <!-- Close button for mobile -->
-          <button class="md:hidden text-gray-400 hover:text-white" (click)="closeSidebar()">
+          <!-- Close button for mobile devices -->
+          <button *ngIf="isMobile" class="text-gray-400 hover:text-white" (click)="closeSidebar()">
             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
         </div>
-        <nav class="mt-6 px-3 flex-1 sidebar-nav overflow-y-auto no-scrollbar">
+        <nav class="mt-6 px-3 flex-1 sidebar-nav overflow-y-auto">
           <!-- Dashboard -->
           <a *ngIf="hasPermission('dashboard')" class="flex items-center px-4 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-gray-800 rounded-lg mb-2" routerLink="dashboard" [class.bg-gray-800]="isActive('dashboard')" [class.text-white]="isActive('dashboard')">
             <svg class="w-7 h-7 mr-3 p-1 rounded border border-blue-500/50 bg-blue-500/10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">

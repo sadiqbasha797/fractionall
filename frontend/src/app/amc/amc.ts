@@ -18,38 +18,42 @@ export class Amc implements OnInit {
   amcs: AMC[] = [];
   users: User[] = [];
   cars: Car[] = [];
-  filteredCars: Car[] = []; // Cars filtered based on selected user's tickets
   userTickets: Ticket[] = []; // Tickets for the selected user
   tickets: Ticket[] = [];
   filteredAmcs: AMC[] = [];
-  
+
   // Pagination
   currentPage = 1;
   itemsPerPage = 10;
   totalPages = 0;
-  
+
   // Search and filter
   searchTerm = '';
   statusFilter = 'all';
   yearFilter = 'all';
-  
+  carFilter = 'all';
+  ticketPriceFilter = 'all';
+  amountFilter = 'all';
+  uniqueCars: string[] = [];
+  showFilters = false;
+
   // Form data
   showCreateForm = false;
   showEditForm = false;
   editingAmc: AMC | null = null;
-  
+
   // Form fields
   selectedUserId = '';
-  selectedCarId = '';
   selectedTicketId = '';
   amcAmounts: AMCAmount[] = [];
-  
+
   // Dialog
   private dialogElement: HTMLElement | null = null;
-  
+
   // Loading states
   isSubmitting = false;
-  
+  isLoading: boolean = false;
+
   // Error handling
   errorMessage = '';
   successMessage = '';
@@ -67,7 +71,7 @@ export class Amc implements OnInit {
     private ticketService: TicketService,
     private exportService: ExportService,
     private renderer: Renderer2
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.checkUserRole();
@@ -213,12 +217,12 @@ export class Amc implements OnInit {
     const user = localStorage.getItem('user');
     const admin = localStorage.getItem('admin');
     const superAdmin = localStorage.getItem('superadmin');
-    
+
     // If no role data in localStorage, try to get it from JWT token
     if (!user && !admin && !superAdmin && token) {
       try {
         const payload = this.parseJWT(token);
-        
+
         if (payload.role === 'admin') {
           this.userRole = 'admin';
           this.isAdmin = true;
@@ -260,7 +264,7 @@ export class Amc implements OnInit {
     try {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
       }).join(''));
       return JSON.parse(jsonPayload);
@@ -271,36 +275,49 @@ export class Amc implements OnInit {
   }
 
   loadData() {
+    this.isLoading = true;
     this.errorMessage = '';
-    
-    // Load all data in parallel
+
+    // Load AMC data - backend populates userid, carid, and ticketid
+    this.amcService.getAMCs().subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        if (response.status === 'success') {
+          this.amcs = response.body.amcs || [];
+          this.filteredAmcs = [...this.amcs];
+          this.extractUniqueCars();
+          this.calculatePagination();
+        } else {
+          this.errorMessage = response.message || 'Failed to load AMC data';
+        }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('Error loading AMC data:', error);
+        this.errorMessage = 'Failed to load AMC data. Please try again.';
+      }
+    });
+
+    // Load users, cars, and tickets for form dropdowns and fallback data
     Promise.all([
-      this.amcService.getAMCs().toPromise(),
       this.userService.getUsers().toPromise(),
       this.carService.getCars().toPromise(),
       this.ticketService.getTickets().toPromise()
-    ]).then(([amcResponse, userResponse, carResponse, ticketResponse]) => {
-      if (amcResponse?.status === 'success') {
-        this.amcs = amcResponse.body.amcs || [];
-        this.filteredAmcs = [...this.amcs];
-        this.calculatePagination();
-      }
-      
+    ]).then(([userResponse, carResponse, ticketResponse]) => {
       if (userResponse?.status === 'success') {
         this.users = userResponse.body.users || [];
       }
-      
+
       if (carResponse?.status === 'success') {
         this.cars = carResponse.body.cars || [];
-        this.filteredCars = [...this.cars]; // Initialize filtered cars with all cars
       }
-      
+
       if (ticketResponse?.status === 'success') {
         this.tickets = ticketResponse.body.tickets || [];
       }
-    }).catch(error => {
-      console.error('Error loading data:', error);
-      this.errorMessage = 'Failed to load data. Please try again.';
+    }).catch((error) => {
+      console.error('Error loading additional data:', error);
+      // Don't show error for this as AMC data is the main concern
     });
   }
 
@@ -317,24 +334,64 @@ export class Amc implements OnInit {
     this.applyFilters();
   }
 
+  onCarFilterChange() {
+    this.applyFilters();
+  }
+
+  onTicketPriceFilterChange() {
+    this.applyFilters();
+  }
+
+  onAmountFilterChange() {
+    this.applyFilters();
+  }
+
+  toggleFilters() {
+    this.showFilters = !this.showFilters;
+  }
+
   applyFilters() {
     this.filteredAmcs = this.amcs.filter(amc => {
-      const matchesSearch = this.searchTerm === '' || 
+      const matchesSearch = this.searchTerm === '' ||
         this.getUserName(amc).toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         this.getCarName(amc).toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         this.getTicketId(amc).toLowerCase().includes(this.searchTerm.toLowerCase());
-      
-      const matchesStatus = this.statusFilter === 'all' || 
+
+      const matchesStatus = this.statusFilter === 'all' ||
         this.getPaymentStatus(amc) === this.statusFilter;
-      
-      const matchesYear = this.yearFilter === 'all' || 
+
+      const matchesYear = this.yearFilter === 'all' ||
         amc.amcamount.some(amount => amount.year.toString() === this.yearFilter);
-      
-      return matchesSearch && matchesStatus && matchesYear;
+
+      // Car filter
+      const matchesCar = this.carFilter === 'all' ||
+        this.getCarName(amc) === this.carFilter;
+
+      // Ticket price filter
+      const ticketPrice = this.getTicketPrice(amc);
+      const matchesTicketPrice = this.ticketPriceFilter === 'all' ||
+        (this.ticketPriceFilter === '0-50000' && ticketPrice >= 0 && ticketPrice <= 50000) ||
+        (this.ticketPriceFilter === '50000-100000' && ticketPrice > 50000 && ticketPrice <= 100000) ||
+        (this.ticketPriceFilter === '100000-200000' && ticketPrice > 100000 && ticketPrice <= 200000) ||
+        (this.ticketPriceFilter === '200000+' && ticketPrice > 200000);
+
+      // Amount filter
+      const totalAmount = this.getTotalAmount(amc);
+      const matchesAmount = this.amountFilter === 'all' ||
+        (this.amountFilter === '0-10000' && totalAmount >= 0 && totalAmount <= 10000) ||
+        (this.amountFilter === '10000-25000' && totalAmount > 10000 && totalAmount <= 25000) ||
+        (this.amountFilter === '25000-50000' && totalAmount > 25000 && totalAmount <= 50000) ||
+        (this.amountFilter === '50000+' && totalAmount > 50000);
+
+      return matchesSearch && matchesStatus && matchesYear && matchesCar && matchesTicketPrice && matchesAmount;
     });
-    
+
     this.currentPage = 1;
     this.calculatePagination();
+  }
+
+  extractUniqueCars(): void {
+    this.uniqueCars = [...new Set(this.amcs.map(amc => this.getCarName(amc)).filter(car => car))];
   }
 
   // Pagination methods
@@ -371,7 +428,6 @@ export class Amc implements OnInit {
 
   resetForm() {
     this.selectedUserId = '';
-    this.selectedCarId = '';
     this.selectedTicketId = '';
     this.amcAmounts = [];
     this.addNewYear();
@@ -379,16 +435,20 @@ export class Amc implements OnInit {
 
   populateForm(amc: AMC) {
     this.selectedUserId = typeof amc.userid === 'string' ? amc.userid : (amc.userid._id || '');
-    this.selectedCarId = typeof amc.carid === 'string' ? amc.carid : (amc.carid._id || '');
     this.selectedTicketId = typeof amc.ticketid === 'string' ? amc.ticketid : (amc.ticketid._id || '');
     this.amcAmounts = [...amc.amcamount];
+
+    // Load user tickets when editing
+    if (this.selectedUserId) {
+      this.getUserTickets(this.selectedUserId);
+    }
   }
 
   addNewYear() {
     const currentYear = new Date().getFullYear();
-    const lastYear = this.amcAmounts.length > 0 ? 
+    const lastYear = this.amcAmounts.length > 0 ?
       Math.max(...this.amcAmounts.map(a => a.year)) : currentYear - 1;
-    
+
     this.amcAmounts.push({
       year: lastYear + 1,
       amount: 0,
@@ -413,15 +473,25 @@ export class Amc implements OnInit {
 
   createAMC() {
     if (!this.validateForm()) return;
-    
+
+    // Get the selected ticket to extract car ID
+    const selectedTicket = this.userTickets.find(ticket => ticket._id === this.selectedTicketId);
+    if (!selectedTicket) {
+      this.errorMessage = 'Selected ticket not found';
+      return;
+    }
+
+    // Get car ID from the ticket
+    const carId = typeof selectedTicket.carid === 'string' ? selectedTicket.carid : selectedTicket.carid._id;
+
     this.isSubmitting = true;
     const amcData = {
       userid: this.selectedUserId,
-      carid: this.selectedCarId,
+      carid: carId,
       ticketid: this.selectedTicketId,
       amcamount: this.amcAmounts
     };
-    
+
     this.amcService.createAMC(amcData).subscribe({
       next: (response) => {
         if (response.status === 'success') {
@@ -443,12 +513,12 @@ export class Amc implements OnInit {
 
   updateAMC() {
     if (!this.validateForm() || !this.editingAmc?._id) return;
-    
+
     this.isSubmitting = true;
     const amcData = {
       amcamount: this.amcAmounts
     };
-    
+
     this.amcService.updateAMC(this.editingAmc._id, amcData).subscribe({
       next: (response) => {
         if (response.status === 'success') {
@@ -494,13 +564,13 @@ export class Amc implements OnInit {
 
   updatePaymentStatus(amc: AMC, yearIndex: number, paid: boolean) {
     if (!amc._id) return;
-    
+
     const paymentData: PaymentStatusUpdate = {
       yearIndex,
       paid,
       paiddate: paid ? new Date().toISOString() : undefined
     };
-    
+
     this.amcService.updateAMCPaymentStatus(amc._id, paymentData).subscribe({
       next: (response) => {
         if (response.status === 'success') {
@@ -519,23 +589,23 @@ export class Amc implements OnInit {
 
   // Helper methods
   validateForm(): boolean {
-    if (!this.selectedUserId || !this.selectedCarId || !this.selectedTicketId) {
-      this.errorMessage = 'Please select user, car, and ticket';
+    if (!this.selectedUserId || !this.selectedTicketId) {
+      this.errorMessage = 'Please select user and ticket';
       return false;
     }
-    
+
     if (this.amcAmounts.length === 0) {
       this.errorMessage = 'Please add at least one year of AMC amount';
       return false;
     }
-    
+
     for (const amount of this.amcAmounts) {
       if (amount.amount <= 0) {
         this.errorMessage = 'AMC amount must be greater than 0';
         return false;
       }
     }
-    
+
     return true;
   }
 
@@ -549,34 +619,160 @@ export class Amc implements OnInit {
   }
 
   // Display helper methods
+  getCarAMCAmount(ticket: Ticket): string {
+    // If carid is already a populated Car object, return it directly
+    if (typeof ticket.carid === 'object' && ticket.carid !== null) {
+      return ticket.carid.amcperticket?.toString() || '0';
+    }
+
+    // If carid is a string, find the car in the cars array
+    if (typeof ticket.carid === 'string') {
+      const car = this.cars.find(c => c._id === ticket.carid);
+      return car ? car.amcperticket?.toString() || '0' : '0';
+    }
+
+    return '0';
+  }
+
+  getUserNameForTicket(ticket: Ticket): string {
+    // If userid is already a populated User object, return it directly
+    if (typeof ticket.userid === 'object' && ticket.userid !== null) {
+      return ticket.userid.name || 'Unknown User';
+    }
+
+    // If userid is a string, find the user in the users array
+    if (typeof ticket.userid === 'string') {
+      const user = this.users.find(u => u._id === ticket.userid);
+      return user ? user.name : 'Unknown User';
+    }
+
+    return 'Unknown User';
+  }
+
+  getCarNameForTicket(ticket: Ticket): string {
+    // If carid is already a populated Car object, return it directly
+    if (typeof ticket.carid === 'object' && ticket.carid !== null) {
+      return `${ticket.carid.brandname || ''} ${ticket.carid.carname || ''}`.trim() || 'Unknown Car';
+    }
+
+    // If carid is a string, find the car in the cars array
+    if (typeof ticket.carid === 'string') {
+      const car = this.cars.find(c => c._id === ticket.carid);
+      return car ? `${car.brandname} ${car.carname}` : 'Unknown Car';
+    }
+
+    return 'Unknown Car';
+  }
+
   getUserName(amc: AMC): string {
+    // If userid is already a populated User object, return it directly
+    if (typeof amc.userid === 'object' && amc.userid !== null) {
+      return amc.userid.name || 'Unknown User';
+    }
+
+    // If userid is a string, find the user in the users array
     if (typeof amc.userid === 'string') {
       const user = this.users.find(u => u._id === amc.userid);
       return user ? user.name : 'Unknown User';
     }
-    return amc.userid.name;
+
+    return 'Unknown User';
   }
 
   getCarName(amc: AMC): string {
+    // If carid is already a populated Car object, return it directly
+    if (typeof amc.carid === 'object' && amc.carid !== null) {
+      return `${amc.carid.brandname || ''} ${amc.carid.carname || ''}`.trim() || 'Unknown Car';
+    }
+
+    // If carid is a string, find the car in the cars array
     if (typeof amc.carid === 'string') {
       const car = this.cars.find(c => c._id === amc.carid);
       return car ? `${car.brandname} ${car.carname}` : 'Unknown Car';
     }
-    return `${amc.carid.brandname} ${amc.carid.carname}`;
+
+    return 'Unknown Car';
+  }
+
+  getUserEmail(amc: AMC): string {
+    // If userid is already a populated User object, return it directly
+    if (typeof amc.userid === 'object' && amc.userid !== null) {
+      return amc.userid.email || '';
+    }
+
+    // If userid is a string, find the user in the users array
+    if (typeof amc.userid === 'string') {
+      const user = this.users.find(u => u._id === amc.userid);
+      return user ? user.email : '';
+    }
+
+    return '';
+  }
+
+  getCarBrand(amc: AMC): string {
+    // If carid is already a populated Car object, return it directly
+    if (typeof amc.carid === 'object' && amc.carid !== null) {
+      return amc.carid.brandname || '';
+    }
+
+    // If carid is a string, find the car in the cars array
+    if (typeof amc.carid === 'string') {
+      const car = this.cars.find(c => c._id === amc.carid);
+      return car ? car.brandname : '';
+    }
+
+    return '';
+  }
+
+  getUserProfileImage(amc: AMC): string {
+    // If userid is already a populated User object, return it directly
+    if (typeof amc.userid === 'object' && amc.userid !== null) {
+      return amc.userid.profileimage || '';
+    }
+
+    // If userid is a string, find the user in the users array
+    if (typeof amc.userid === 'string') {
+      const user = this.users.find(u => u._id === amc.userid);
+      return user ? user.profileimage || '' : '';
+    }
+
+    return '';
   }
 
   getTicketId(amc: AMC): string {
+    // If ticketid is already a populated Ticket object, return it directly
+    if (typeof amc.ticketid === 'object' && amc.ticketid !== null) {
+      return amc.ticketid.ticketcustomid || 'Unknown Ticket';
+    }
+
+    // If ticketid is a string, find the ticket in the tickets array
     if (typeof amc.ticketid === 'string') {
       const ticket = this.tickets.find(t => t._id === amc.ticketid);
       return ticket ? ticket.ticketcustomid : 'Unknown Ticket';
     }
-    return amc.ticketid.ticketcustomid;
+
+    return 'Unknown Ticket';
+  }
+
+  getTicketPrice(amc: AMC): number {
+    // If ticketid is already a populated Ticket object, return it directly
+    if (typeof amc.ticketid === 'object' && amc.ticketid !== null) {
+      return amc.ticketid.ticketprice || 0;
+    }
+
+    // If ticketid is a string, find the ticket in the tickets array
+    if (typeof amc.ticketid === 'string') {
+      const ticket = this.tickets.find(t => t._id === amc.ticketid);
+      return ticket ? ticket.ticketprice : 0;
+    }
+
+    return 0;
   }
 
   getPaymentStatus(amc: AMC): string {
     const totalYears = amc.amcamount.length;
     const paidYears = amc.amcamount.filter(amount => amount.paid).length;
-    
+
     if (paidYears === 0) return 'unpaid';
     if (paidYears === totalYears) return 'paid';
     return 'partial';
@@ -632,7 +828,7 @@ export class Amc implements OnInit {
     const pages: number[] = [];
     const startPage = Math.max(1, this.currentPage - 2);
     const endPage = Math.min(this.totalPages, this.currentPage + 2);
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
@@ -656,7 +852,7 @@ export class Amc implements OnInit {
       pendingAmount: this.getPendingAmount(amc),
       status: this.getPaymentStatus(amc),
       createdDate: this.formatDate(amc.createdAt || ''),
-      paymentDetails: amc.amcamount.map(a => 
+      paymentDetails: amc.amcamount.map(a =>
         `${a.year}: ${a.paid ? 'Paid' : 'Unpaid'} (${this.formatCurrency(a.amount)})`
       ).join('; ')
     }));
@@ -683,28 +879,34 @@ export class Amc implements OnInit {
     this.exportService.exportToExcel(options);
   }
 
-  getUserEmail(amc: AMC): string {
-    if (typeof amc.userid === 'string') {
-      const user = this.users.find(u => u._id === amc.userid);
-      return user ? user.email : 'Unknown Email';
+  getCarNameFromTicket(ticket: Ticket): string {
+    // If carid is already a populated Car object, return it directly
+    if (typeof ticket.carid === 'object' && ticket.carid !== null) {
+      return `${ticket.carid.brandname || ''} ${ticket.carid.carname || ''}`.trim() || 'Unknown Car';
     }
-    return amc.userid.email;
+
+    // If carid is a string, find the car in the cars array
+    if (typeof ticket.carid === 'string') {
+      const car = this.cars.find(c => c._id === ticket.carid);
+      return car ? `${car.brandname} ${car.carname}` : 'Unknown Car';
+    }
+
+    return 'Unknown Car';
   }
 
-  getCarBrand(amc: AMC): string {
+  getCarImage(amc: AMC): string {
+    // If carid is already a populated Car object, return it directly
+    if (typeof amc.carid === 'object' && amc.carid !== null) {
+      return (amc.carid.images && amc.carid.images.length > 0) ? amc.carid.images[0] : '';
+    }
+
+    // If carid is a string, find the car in the cars array
     if (typeof amc.carid === 'string') {
       const car = this.cars.find(c => c._id === amc.carid);
-      return car ? car.brandname : 'Unknown Brand';
+      return (car && car.images && car.images.length > 0) ? car.images[0] : '';
     }
-    return amc.carid.brandname || 'Unknown Brand';
-  }
 
-  getTicketPrice(amc: AMC): number {
-    if (typeof amc.ticketid === 'string') {
-      const ticket = this.tickets.find(t => t._id === amc.ticketid);
-      return ticket ? ticket.ticketprice : 0;
-    }
-    return amc.ticketid.ticketprice || 0;
+    return '';
   }
 
   getAMCYears(amc: AMC): string {
@@ -719,6 +921,9 @@ export class Amc implements OnInit {
     this.searchTerm = '';
     this.statusFilter = 'all';
     this.yearFilter = 'all';
+    this.carFilter = 'all';
+    this.ticketPriceFilter = 'all';
+    this.amountFilter = 'all';
     this.applyFilters();
   }
 
@@ -730,7 +935,6 @@ export class Amc implements OnInit {
   getUserTickets(userId: string) {
     if (!userId) {
       this.userTickets = [];
-      this.filteredCars = [...this.cars];
       return;
     }
 
@@ -742,50 +946,28 @@ export class Amc implements OnInit {
             const ticketUserId = typeof ticket.userid === 'string' ? ticket.userid : ticket.userid._id;
             return ticketUserId === userId && ticket.ticketstatus === 'active';
           });
-          
-          // Filter cars based on user's tickets
-          this.filterCarsByUserTickets();
         } else {
           this.userTickets = [];
-          this.filteredCars = [...this.cars];
         }
       },
       error: (error) => {
         console.error('Error loading user tickets:', error);
         this.userTickets = [];
-        this.filteredCars = [...this.cars];
       }
     });
-  }
-
-  // Filter cars based on user's tickets
-  filterCarsByUserTickets() {
-    if (this.userTickets.length === 0) {
-      this.filteredCars = [];
-      return;
-    }
-
-    // Get car IDs from user's tickets
-    const userCarIds = this.userTickets.map(ticket => {
-      return typeof ticket.carid === 'string' ? ticket.carid : ticket.carid._id;
-    });
-
-    // Filter cars to only include those the user has tickets for
-    this.filteredCars = this.cars.filter(car => userCarIds.includes(car._id!));
   }
 
   // Handle user selection change
   onUserSelectionChange() {
     if (this.selectedUserId) {
       this.getUserTickets(this.selectedUserId);
-      // Reset car and ticket selections when user changes
-      this.selectedCarId = '';
+      // Reset ticket selection when user changes
       this.selectedTicketId = '';
     } else {
       this.userTickets = [];
-      this.filteredCars = [...this.cars];
-      this.selectedCarId = '';
       this.selectedTicketId = '';
     }
   }
+
 }
+

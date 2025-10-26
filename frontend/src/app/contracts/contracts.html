@@ -91,6 +91,17 @@
           <!-- Action Buttons -->
           <div class="flex items-end gap-2 sm:ml-auto">
             <button 
+              (click)="refreshContracts()" 
+              [disabled]="isLoading"
+              class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 disabled:opacity-50 disabled:cursor-not-allowed h-10"
+              title="Refresh contracts"
+              aria-label="Refresh contracts"
+            >
+              <i class="fas fa-sync-alt text-sm" [class.animate-spin]="isLoading"></i>
+              <span>Refresh</span>
+            </button>
+
+            <button 
               (click)="clearFilters()" 
               class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
             >
@@ -122,8 +133,19 @@
   <main class="flex-1 py-4 overflow-auto">
     <section class="max-w-7xl mx-auto">
       <div class="h-full rounded-xl border border-gray-700 bg-gray-900 shadow-sm overflow-hidden">
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="flex items-center justify-center py-12">
+          <div class="text-center">
+            <div class="inline-flex items-center justify-center w-12 h-12 bg-purple-600/20 rounded-full mb-4">
+              <i class="fas fa-sync-alt text-purple-400 text-xl animate-spin"></i>
+            </div>
+            <p class="text-gray-400 text-lg font-medium">Loading contracts...</p>
+            <p class="text-gray-500 text-sm mt-1">Please wait while we fetch the latest data</p>
+          </div>
+        </div>
+
         <!-- Scrollable table container -->
-        <div class="table-container" style="max-height: 72vh;">
+        <div *ngIf="!isLoading" class="table-container" style="max-height: 72vh;">
           <table class="w-full divide-y divide-gray-700" role="table" aria-label="LLP & Purchase table">
             <thead>
               <tr class="bg-gray-800">
@@ -235,7 +257,7 @@
         </div>
         
         <!-- Pagination -->
-        <div *ngIf="filteredContracts.length > 0" class="flex items-center justify-between border-t border-gray-700 bg-gray-900 px-6 py-4">
+        <div *ngIf="!isLoading && filteredContracts.length > 0" class="flex items-center justify-between border-t border-gray-700 bg-gray-900 px-6 py-4">
           <div class="flex items-center space-x-2 text-sm text-gray-300">
             <span>Showing</span>
             <span class="font-medium text-gray-100">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>

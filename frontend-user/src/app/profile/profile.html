@@ -252,9 +252,9 @@
               <div class="date-item">Purchased: <span>{{ formatDate(ticket.ticketbroughtdate) }}</span></div>
             </div>
             <div class="ticket-pricing">
-              <div class="price-item">Total Price: <span>₹{{ ticket.ticketprice }}</span></div>
-              <div class="price-item">Paid: <span>₹{{ ticket.pricepaid }}</span></div>
-              <div class="price-item" *ngIf="ticket.pendingamount > 0">Pending: <span>₹{{ ticket.pendingamount }}</span></div>
+              <div class="price-item">Total Price: <span>₹{{ formatPrice(ticket.ticketprice) }}</span></div>
+              <div class="price-item">Paid: <span>₹{{ formatPrice(ticket.pricepaid) }}</span></div>
+              <div class="price-item" *ngIf="ticket.pendingamount > 0">Pending: <span>₹{{ formatPrice(ticket.pendingamount) }}</span></div>
             </div>
             <div class="ticket-comments" *ngIf="ticket.comments">
               <p><strong>Comments:</strong> {{ ticket.comments }}</p>
@@ -395,7 +395,7 @@
               <div class="date-item">Purchased: <span>{{ formatDate(token.date) }}</span></div>
             </div>
             <div class="ticket-pricing">
-              <div class="price-item">Amount Paid: <span>₹{{ token.amountpaid }}</span></div>
+              <div class="price-item">Amount Paid: <span>₹{{ formatPrice(token.amountpaid) }}</span></div>
             </div>
             <div class="ticket-actions" *ngIf="token.status === 'active'">
               <button (click)="cancelToken(token)" class="cancel-btn">
@@ -432,7 +432,7 @@
           <div *ngFor="let bookNowToken of bookNowTokens()" class="booknow-token-item" [class.expired]="bookNowToken.status === 'expired'">
             <!-- Car Image -->
             <div class="booknow-token-car-image" *ngIf="bookNowToken.carid">
-              <img [src]="bookNowToken.carid.images && bookNowToken.carid.images.length > 0 ? bookNowToken.carid.images[0] : 'public/car.png'" [alt]="bookNowToken.carid.carname" />
+              <img [src]="bookNowToken.carid.images && bookNowToken.carid.images.length > 0 ? bookNowToken.carid.images[0] : '/car.png'" [alt]="bookNowToken.carid.carname" />
             </div>
             <div class="ticket-header">
               <span class="ticket-type">BOOK NOW TOKEN #{{ bookNowToken.customtokenid }}</span>
@@ -448,7 +448,7 @@
               <div class="date-item">Purchased: <span>{{ formatDate(bookNowToken.date) }}</span></div>
             </div>
             <div class="ticket-pricing">
-              <div class="price-item">Amount Paid: <span>₹{{ bookNowToken.amountpaid }}</span></div>
+              <div class="price-item">Amount Paid: <span>₹{{ formatPrice(bookNowToken.amountpaid) }}</span></div>
             </div>
             <div class="ticket-actions" *ngIf="bookNowToken.status === 'active'">
               <button (click)="cancelBookNowToken(bookNowToken)" class="cancel-btn">

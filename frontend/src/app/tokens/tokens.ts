@@ -36,6 +36,11 @@ export class Tokens implements OnInit {
   searchTerm: string = '';
   statusFilter: string = 'all';
   carFilter: string = 'all';
+  userFilter: string = 'all';
+  amountRangeFilter: string = 'all';
+  uniqueUsers: string[] = [];
+  uniqueCars: string[] = [];
+  showFilters = false;
 
   // Form properties
   newToken: Token = {
@@ -73,6 +78,9 @@ export class Tokens implements OnInit {
   showLoadingDialog: boolean = false;
   loadingMessage: string = '';
   private dialogElement: HTMLElement | null = null;
+
+  // Loading state for refresh functionality
+  isLoading: boolean = false;
 
   // Pagination properties
   currentPage: number = 1;
@@ -290,11 +298,14 @@ export class Tokens implements OnInit {
 
   // Data fetching methods
   getTokens(): void {
+    this.isLoading = true;
     this.tokenService.getTokens().subscribe({
       next: (response) => {
+        this.isLoading = false;
         if (response.status === 'success') {
           this.tokens = response.body.tokens || [];
           this.filteredTokens = [...this.tokens];
+          this.extractUniqueUsersAndCars();
           // Initialize pagination after loading tokens
           this.applyFilters();
         } else {
@@ -304,6 +315,7 @@ export class Tokens implements OnInit {
         }
       },
       error: (error) => {
+        this.isLoading = false;
         console.error('Error fetching tokens:', error);
         this.tokens = [];
         this.filteredTokens = [];
@@ -316,14 +328,18 @@ export class Tokens implements OnInit {
   }
 
   getBookNowTokens(): void {
+    this.isLoading = true;
     this.bookNowTokenService.getBookNowTokens().subscribe({
       next: (response) => {
+        this.isLoading = false;
         this.bookNowTokens = response.body.bookNowTokens || [];
         this.filteredBookNowTokens = [...this.bookNowTokens];
+        this.extractUniqueUsersAndCars();
         // Initialize pagination after loading book now tokens
         this.applyFilters();
       },
       error: (error) => {
+        this.isLoading = false;
         console.error('Error fetching book now tokens:', error);
         this.bookNowTokens = [];
         this.filteredBookNowTokens = [];
@@ -427,6 +443,18 @@ export class Tokens implements OnInit {
     this.applyFilters();
   }
 
+  onUserFilterChange(): void {
+    this.applyFilters();
+  }
+
+  onAmountRangeFilterChange(): void {
+    this.applyFilters();
+  }
+
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
+  }
+
   applyFilters(): void {
     if (this.activeTab === 'waitlist') {
       this.filteredTokens = this.tokens.filter(token => {
@@ -443,7 +471,19 @@ export class Tokens implements OnInit {
         const tokenCarId = typeof token.carid === 'string' ? token.carid : token.carid._id;
         const matchesCar = this.carFilter === 'all' || tokenCarId === this.carFilter;
 
-        return matchesSearch && matchesStatus && matchesCar;
+        // User filter
+        const matchesUser = this.userFilter === 'all' || 
+          this.getUser(token).name === this.userFilter;
+
+        // Amount range filter
+        const amountPaid = token.amountpaid || 0;
+        const matchesAmountRange = this.amountRangeFilter === 'all' ||
+          (this.amountRangeFilter === '0-1000' && amountPaid >= 0 && amountPaid <= 1000) ||
+          (this.amountRangeFilter === '1000-5000' && amountPaid > 1000 && amountPaid <= 5000) ||
+          (this.amountRangeFilter === '5000-10000' && amountPaid > 5000 && amountPaid <= 10000) ||
+          (this.amountRangeFilter === '10000+' && amountPaid > 10000);
+
+        return matchesSearch && matchesStatus && matchesCar && matchesUser && matchesAmountRange;
       });
     } else {
       let filtered = [...this.bookNowTokens];
@@ -475,6 +515,25 @@ export class Tokens implements OnInit {
         });
       }
 
+      // User filter for book now tokens
+      if (this.userFilter !== 'all') {
+        filtered = filtered.filter(token => {
+          const user = this.getBookNowUser(token);
+          return user.name === this.userFilter;
+        });
+      }
+
+      // Amount range filter for book now tokens
+      if (this.amountRangeFilter !== 'all') {
+        filtered = filtered.filter(token => {
+          const amountPaid = token.amountpaid || 0;
+          return (this.amountRangeFilter === '0-1000' && amountPaid >= 0 && amountPaid <= 1000) ||
+                 (this.amountRangeFilter === '1000-5000' && amountPaid > 1000 && amountPaid <= 5000) ||
+                 (this.amountRangeFilter === '5000-10000' && amountPaid > 5000 && amountPaid <= 10000) ||
+                 (this.amountRangeFilter === '10000+' && amountPaid > 10000);
+        });
+      }
+
       this.filteredBookNowTokens = filtered;
     }
     this.updatePagination();
@@ -484,13 +543,34 @@ export class Tokens implements OnInit {
     this.searchTerm = '';
     this.statusFilter = 'all';
     this.carFilter = 'all';
+    this.userFilter = 'all';
+    this.amountRangeFilter = 'all';
     this.currentPage = 1;
-    if (this.activeTab === 'waitlist') {
-      this.filteredTokens = [...this.tokens];
-    } else {
-      this.filteredBookNowTokens = [...this.bookNowTokens];
-    }
-    this.updatePagination();
+    this.applyFilters();
+  }
+
+  extractUniqueUsersAndCars(): void {
+    const allUsers = new Set<string>();
+    const allCars = new Set<string>();
+
+    // Extract from waitlist tokens
+    this.tokens.forEach(token => {
+      const user = this.getUser(token);
+      const car = this.getCar(token);
+      if (user.name) allUsers.add(user.name);
+      if (car.carname) allCars.add(car.carname);
+    });
+
+    // Extract from book now tokens
+    this.bookNowTokens.forEach(token => {
+      const user = this.getBookNowUser(token);
+      const car = this.getBookNowCar(token);
+      if (user.name) allUsers.add(user.name);
+      if (car.carname) allCars.add(car.carname);
+    });
+
+    this.uniqueUsers = Array.from(allUsers);
+    this.uniqueCars = Array.from(allCars);
   }
 
   // Helper methods for waitlist tokens
@@ -992,6 +1072,15 @@ export class Tokens implements OnInit {
       this.newBookNowToken.expirydate = this.formExpiryDate;
       this.newBookNowToken.status = this.formStatus as 'active' | 'expired' | 'dropped';
     }
+  }
+
+  // Refresh functionality
+  refreshTokens(): void {
+    this.getTokens();
+  }
+
+  refreshBookNowTokens(): void {
+    this.getBookNowTokens();
   }
 
   // Export functionality

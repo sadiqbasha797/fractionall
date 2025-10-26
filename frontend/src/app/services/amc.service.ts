@@ -109,4 +109,6 @@ export class AmcService {
       headers: this.getAuthHeaders()
     });
   }
+
+  // Generate AMC automatically for all active tickets
 }

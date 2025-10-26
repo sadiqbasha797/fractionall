@@ -53,9 +53,11 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <button 
-              (click)="loadAdmins()"
+              (click)="refreshAdmins()"
               [disabled]="isLoading"
               class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 h-10 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Refresh admins"
+              aria-label="Refresh admins"
             >
               <i class="fas fa-sync-alt text-sm" [class.animate-spin]="isLoading"></i>
               <span>Refresh</span>
@@ -193,6 +195,11 @@
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div class="flex items-center justify-end space-x-2">
+                      <button class="p-2 text-gray-300 hover:text-green-400 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-green-300" 
+                              (click)="openActivityModal(admin)" title="View Activities" [attr.aria-label]="'View activities for admin ' + admin.name">
+                        <i class="fas fa-history w-5 h-5"></i>
+                      </button>
+                      
                       <button class="p-2 text-gray-300 hover:text-blue-300 rounded-lg hover:bg-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-blue-300" 
                               (click)="openEditModal(admin)" title="Edit Admin" [attr.aria-label]="'Edit admin ' + admin.name">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -484,6 +491,111 @@
           <span *ngIf="isLoading" class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
           {{ isLoading ? 'Deleting...' : 'Delete Admin' }}
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Activity Modal -->
+  <div *ngIf="showActivityModal" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm overflow-y-auto h-full w-full z-[80]">
+    <div class="relative top-4 mx-auto p-6 w-full max-w-6xl shadow-2xl rounded-2xl bg-gray-800 border border-gray-700">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h3 class="text-2xl font-semibold text-white">Admin Activities</h3>
+          <p class="text-gray-400 mt-1">{{ selectedAdminForActivity?.name }} - {{ selectedAdminForActivity?.email }}</p>
+        </div>
+        <button (click)="closeActivityModal()" class="text-gray-400 hover:text-white transition-colors duration-200">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Activity Type Filter -->
+      <div class="mb-6">
+        <div class="flex flex-wrap gap-2">
+          <button 
+            *ngFor="let type of ['all', 'cars', 'tickets', 'contracts', 'shared-members']"
+            (click)="activityType = type; onActivityTypeChange()"
+            [class]="activityType === type ? 
+              'bg-blue-600 text-white border-blue-500' : 
+              'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'"
+            class="px-4 py-2 rounded-lg border text-sm font-medium transition-colors duration-200">
+            <i [class]="getActivityTypeIcon(type) + ' ' + getActivityTypeColor(type)" class="mr-2"></i>
+            {{ type === 'all' ? 'All Activities' : type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ') }}
+            <span class="ml-2 px-2 py-0.5 bg-gray-600 text-xs rounded-full">
+              {{ type === 'all' ? (activityCounts.cars + activityCounts.tickets + activityCounts.contracts + activityCounts.sharedMembers) : 
+                 type === 'cars' ? activityCounts.cars :
+                 type === 'tickets' ? activityCounts.tickets :
+                 type === 'contracts' ? activityCounts.contracts :
+                 type === 'shared-members' ? activityCounts.sharedMembers : 0 }}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Activities List -->
+      <div class="bg-gray-700 rounded-lg border border-gray-600">
+        <div *ngIf="isLoadingActivities" class="flex items-center justify-center py-12">
+          <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mb-4"></div>
+            <p class="text-gray-400">Loading activities...</p>
+          </div>
+        </div>
+
+        <div *ngIf="!isLoadingActivities && adminActivities.length === 0" class="text-center py-12">
+          <i class="fas fa-inbox text-4xl text-gray-500 mb-4"></i>
+          <p class="text-gray-400">No activities found for this admin</p>
+        </div>
+
+        <div *ngIf="!isLoadingActivities && adminActivities.length > 0" class="divide-y divide-gray-600">
+          <div *ngFor="let activity of adminActivities" class="p-4 hover:bg-gray-600 transition-colors duration-150">
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
+                  <i [class]="getActivityTypeIcon(activity.type) + ' ' + getActivityTypeColor(activity.type)"></i>
+                </div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-sm font-medium text-white truncate">{{ activity.title }}</h4>
+                  <span [class]="getStatusColor(activity.status)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                    {{ activity.status }}
+                  </span>
+                </div>
+                <p class="text-sm text-gray-400 mt-1">{{ activity.description }}</p>
+                <div class="flex items-center mt-2 text-xs text-gray-500">
+                  <i class="fas fa-clock mr-1"></i>
+                  <span>{{ activity.createdAt | date:'medium' }}</span>
+                  <span class="mx-2">•</span>
+                  <i class="fas fa-user mr-1"></i>
+                  <span>{{ activity.admin.name }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="!isLoadingActivities && activityTotalPages > 1" class="mt-6 flex items-center justify-between">
+        <div class="text-sm text-gray-400">
+          Showing page {{ activityCurrentPage }} of {{ activityTotalPages }}
+        </div>
+        <div class="flex items-center space-x-2">
+          <button 
+            (click)="onActivityPageChange(activityCurrentPage - 1)"
+            [disabled]="activityCurrentPage === 1"
+            class="px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
+            Previous
+          </button>
+          <span class="px-3 py-1 bg-gray-600 text-white rounded">{{ activityCurrentPage }}</span>
+          <button 
+            (click)="onActivityPageChange(activityCurrentPage + 1)"
+            [disabled]="activityCurrentPage === activityTotalPages"
+            class="px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
+            Next
+          </button>
+        </div>
       </div>
     </div>
   </div>

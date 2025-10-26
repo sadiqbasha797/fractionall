@@ -21,6 +21,11 @@
   border: 1px solid transparent;
   font-weight: 500;
   font-size: 0.875rem;
+  margin-right: 0.25rem;
+}
+
+.dashboard-tab:last-child {
+  margin-right: 0;
 }
 
 .dashboard-tab:hover {
@@ -35,6 +40,11 @@
   border: 1px solid rgba(59, 130, 246, 0.3);
   font-weight: 600;
   font-size: 0.875rem;
+  margin-right: 0.25rem;
+}
+
+.dashboard-tab-active:last-child {
+  margin-right: 0;
 }
 
 .dashboard-tab-active:hover {

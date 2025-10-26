@@ -1,12 +1,12 @@
 <div class="dashboard-container">
   <!-- Dashboard Selector -->
   <div class="dashboard-selector mb-6 mx-4 sm:mx-6">
-    <div class="flex flex-wrap gap-2 bg-gray-800/50 rounded-lg p-2">
+    <div class="flex bg-gray-800/50 rounded-lg p-2">
       <button 
         *ngFor="let view of dashboardViews" 
         (click)="switchView(view.id)"
         [class]="currentView === view.id ? 'dashboard-tab-active' : 'dashboard-tab'"
-        class="flex items-center space-x-2 px-4 py-2 rounded-md transition-all duration-200">
+        class="flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-all duration-200">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="view.icon"/>
         </svg>
@@ -113,6 +113,36 @@
               <div class="stat-value-minimal">{{ formatCurrency(dashboardStats.overview?.totalRevenue || 0) }}</div>
               <div class="stat-change-minimal text-blue-400">
                 All time
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Top Performing Cars -->
+    <section *ngIf="topPerformingCars.length > 0" class="fade-in">
+      <h2 class="text-xl font-bold text-white mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+        </svg>
+        Top Performing Cars
+      </h2>
+      
+      <div class="top-cars-grid">
+        <div *ngFor="let car of topPerformingCars" class="top-car-card">
+          <img [src]="car?.image" [alt]="car?.carname" class="top-car-image">
+          <div class="mt-3">
+            <h4 class="text-sm font-medium text-white truncate">{{ car?.carname }}</h4>
+            <p class="text-xs text-gray-400">{{ car?.brand }}</p>
+            <div class="mt-2 space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="text-gray-400">Bookings:</span>
+                <span class="text-white font-medium">{{ car?.totalBookings }}</span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span class="text-gray-400">Revenue:</span>
+                <span class="text-green-400 font-medium">{{ formatCurrency(car?.totalRevenue || 0) }}</span>
               </div>
             </div>
           </div>
@@ -259,35 +289,6 @@
       </div>
     </section>
 
-    <!-- Top Performing Cars -->
-    <section *ngIf="topPerformingCars.length > 0" class="fade-in">
-      <h2 class="text-xl font-bold text-white mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-        </svg>
-        Top Performing Cars
-      </h2>
-      
-      <div class="top-cars-grid">
-        <div *ngFor="let car of topPerformingCars" class="top-car-card">
-          <img [src]="car?.image" [alt]="car?.carname" class="top-car-image">
-          <div class="mt-3">
-            <h4 class="text-sm font-medium text-white truncate">{{ car?.carname }}</h4>
-            <p class="text-xs text-gray-400">{{ car?.brand }}</p>
-            <div class="mt-2 space-y-1">
-              <div class="flex justify-between text-xs">
-                <span class="text-gray-400">Bookings:</span>
-                <span class="text-white font-medium">{{ car?.totalBookings }}</span>
-              </div>
-              <div class="flex justify-between text-xs">
-                <span class="text-gray-400">Revenue:</span>
-                <span class="text-green-400 font-medium">{{ formatCurrency(car?.totalRevenue || 0) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
   </div>
 
   <!-- Revenue Dashboard Content -->

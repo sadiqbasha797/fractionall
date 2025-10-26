@@ -14,17 +14,19 @@
             <p class="text-gray-400 text-sm mt-1">Organize and manage your car inventory</p>
           </div>
         </div>
-        
+
         <!-- Stats Cards -->
         <div class="flex items-center space-x-3 sm:space-x-4">
-          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600/50 flex-1 sm:flex-none">
+          <div
+            class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600/50 flex-1 sm:flex-none">
             <div class="flex items-center space-x-2">
               <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               <span class="text-xs sm:text-sm text-gray-300">Total Cars</span>
             </div>
             <div class="text-xl sm:text-2xl font-bold text-white mt-1">{{cars.length}}</div>
           </div>
-          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600/50 flex-1 sm:flex-none">
+          <div
+            class="bg-gray-700/50 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600/50 flex-1 sm:flex-none">
             <div class="flex items-center space-x-2">
               <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
               <span class="text-xs sm:text-sm text-gray-300">Filtered</span>
@@ -35,117 +37,33 @@
       </div>
     </div>
 
-    <!-- Search and Filters Section -->
+    <!-- Action Buttons Section -->
     <div class="px-4 sm:px-6 py-4 sm:py-6">
-      <div class="flex flex-col gap-4">
-        <!-- Search Bar -->
-        <div class="w-full">
-          <label class="block text-sm font-medium text-gray-300 mb-2">Search Cars</label>
-          <div class="relative search-input-container">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i class="fas fa-search search-icon"></i>
-              <!-- Fallback SVG icon in case Font Awesome doesn't load -->
-              <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-              </svg>
-            </div>
-            <input 
-              type="search" 
-              [(ngModel)]="searchTerm" 
-              (ngModelChange)="onSearchChange()"
-              placeholder="Search by name, brand, status, location, or pincode..."
-              class="w-full pl-10 pr-4 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
-            />
-          </div>
-        </div>
+      <div class="flex items-center justify-end gap-2">
+        <button (click)="clearFilters()"
+          class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10">
+          <i class="fas fa-times text-sm"></i>
+          <span>Clear</span>
+        </button>
 
-        <!-- Filters and Actions Row -->
-        <div class="flex flex-col sm:flex-row gap-4">
-          <!-- Filters Group -->
-          <div class="flex flex-col sm:flex-row gap-4 flex-1">
-            <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
-              <select 
-                [(ngModel)]="statusFilter" 
-                (ngModelChange)="onStatusFilterChange()"
-                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="pending">Pending</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
+        <button (click)="exportData()"
+          class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
+          title="Export data" aria-label="Export data">
+          <i class="fas fa-download text-sm"></i>
+          <span>Export</span>
+        </button>
 
-            <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-300 mb-2">Brand</label>
-              <select 
-                [(ngModel)]="brandFilter" 
-                (ngModelChange)="onBrandFilterChange()"
-                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
-              >
-                <option value="all">All Brands</option>
-                <option *ngFor="let brand of uniqueBrands" [value]="brand">{{ brand }}</option>
-              </select>
-            </div>
+        <button (click)="getCars()" [disabled]="isLoading"
+          class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 h-10 disabled:opacity-50 disabled:cursor-not-allowed">
+          <i class="fas fa-sync-alt text-sm" [class.animate-spin]="isLoading"></i>
+          <span>Refresh</span>
+        </button>
 
-            <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-300 mb-2">Location</label>
-              <select 
-                [(ngModel)]="locationFilter" 
-                (ngModelChange)="onLocationFilterChange()"
-                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
-              >
-                <option value="all">All Locations</option>
-                <option *ngFor="let location of uniqueLocations" [value]="location">{{ location }}</option>
-              </select>
-            </div>
-
-            <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-300 mb-2">Bookings</label>
-              <select 
-                [(ngModel)]="bookingsFilter" 
-                (ngModelChange)="onBookingsFilterChange()"
-                class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-sm"
-              >
-                <option value="all">All Bookings</option>
-                <option value="active">Active Bookings</option>
-                <option value="stopped">Stopped Bookings</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex items-end gap-2 sm:ml-auto">
-            <button 
-              (click)="clearFilters()" 
-              class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
-            >
-              <i class="fas fa-times text-sm"></i>
-              <span>Clear</span>
-            </button>
-
-            <button 
-              (click)="exportData()" 
-              class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
-              title="Export data"
-              aria-label="Export data"
-            >
-              <i class="fas fa-download text-sm"></i>
-              <span>Export</span>
-            </button>
-
-
-            <button 
-              (click)="showCreateCarModal()" 
-              class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 h-10"
-            >
-              <i class="fas fa-plus text-sm"></i>
-              <span>Add Car</span>
-            </button>
-          </div>
-        </div>
+        <button (click)="showCreateCarModal()"
+          class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg text-white text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 h-10">
+          <i class="fas fa-plus text-sm"></i>
+          <span>Add Car</span>
+        </button>
       </div>
     </div>
   </header>
@@ -153,94 +71,187 @@
   <main class="flex-1 py-4 overflow-auto">
     <section class="max-w-7xl mx-auto">
       <div class="h-full rounded-xl border border-gray-700 bg-gray-900 shadow-sm min-w-0">
-        <!-- scrollable table container -->
-        <div class="table-container" style="max-height: 72vh;">
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <span class="ml-2 text-gray-400">Loading cars...</span>
+        </div>
+
+        <!-- Table Container -->
+        <div *ngIf="!isLoading" class="table-container" [style.max-height]="showFilters ? '64vh' : '68vh'">
           <table class="min-w-full divide-y divide-gray-700" role="table" aria-label="Cars table">
-          <thead>
-            <tr class="bg-gray-800">
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Car</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Bookings</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Shares</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Waitlist</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Book Now Tokens</th>
-              <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-700 bg-gray-900">
-            <tr *ngIf="filteredCars.length === 0" class="text-center">
-              <td colspan="7" class="px-6 py-12 text-gray-400">
-                <p class="text-lg font-medium text-gray-500 mb-2">No cars found</p>
-              </td>
-            </tr>
-      <tr *ngFor="let car of paginatedCars" class="hover:bg-gray-800 transition duration-150">
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-gray-700">
-        <img [src]="car.images[0]" [alt]="car.carname" class="h-12 w-12 object-cover" />
+            <thead>
+              <!-- Column Headers -->
+              <tr class="bg-gray-800">
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">
+                  <div class="flex items-center gap-2">
+                    <button 
+                      (click)="toggleFilters()" 
+                      [class]="'filter-toggle-btn ' + (showFilters ? 'active' : '')"
+                      title="{{ showFilters ? 'Hide filters' : 'Show filters' }}"
+                    >
+                      <i [class]="'fas text-xs ' + (showFilters ? 'fa-eye-slash' : 'fa-filter')"></i>
+                    </button>
+                    <span>Car</span>
                   </div>
-                  <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-100">{{ car.carname }}</div>
-                    <div class="text-xs text-gray-300">{{ car.color }}</div>
-                    <div class="text-xs text-gray-400" *ngIf="car.location">{{ car.location }}, {{ car.pincode }}</div>
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Bookings</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Shares</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Waitlist</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Book Now Tokens</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase">Actions</th>
+              </tr>
+              <!-- Filter Row -->
+              <tr *ngIf="showFilters" class="border-b border-gray-600 filter-row">
+                <th class="px-6 py-2">
+                  <!-- Search Filter -->
+                  <div class="relative">
+                    <input type="search" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()"
+                      placeholder="Search cars..." class="table-filter-input pr-8" />
+                    <i
+                      class="fas fa-search absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs"></i>
                   </div>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
+                </th>
+                <th class="px-6 py-2">
+                  <!-- Status Filter -->
+                  <select [(ngModel)]="statusFilter" (ngModelChange)="onStatusFilterChange()"
+                    class="table-filter-select">
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="pending">Pending</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </th>
+                <th class="px-6 py-2">
+                  <!-- Bookings Filter -->
+                  <select [(ngModel)]="bookingsFilter" (ngModelChange)="onBookingsFilterChange()"
+                    class="table-filter-select">
+                    <option value="all">All Bookings</option>
+                    <option value="active">Active</option>
+                    <option value="stopped">Stopped</option>
+                  </select>
+                </th>
+                <th class="px-6 py-2">
+                  <!-- Shares Available Filter -->
+                  <select [(ngModel)]="sharesFilter" (ngModelChange)="onSharesFilterChange()"
+                    class="table-filter-select">
+                    <option value="all">All Shares</option>
+                    <option value="0">0 Available</option>
+                    <option value="1-5">1-5 Available</option>
+                    <option value="6-10">6-10 Available</option>
+                    <option value="11-12">11-12 Available</option>
+                  </select>
+                </th>
+                <th class="px-6 py-2">
+                  <!-- Waitlist Tokens Filter -->
+                  <select [(ngModel)]="waitlistFilter" (ngModelChange)="onWaitlistFilterChange()"
+                    class="table-filter-select">
+                    <option value="all">All Waitlist</option>
+                    <option value="0">0 Available</option>
+                    <option value="1-5">1-5 Available</option>
+                    <option value="6-10">6-10 Available</option>
+                    <option value="11-20">11-20 Available</option>
+                  </select>
+                </th>
+                <th class="px-6 py-2">
+                  <!-- Book Now Tokens Filter -->
+                  <select [(ngModel)]="bookNowTokensFilter" (ngModelChange)="onBookNowTokensFilterChange()"
+                    class="table-filter-select">
+                    <option value="all">All Tokens</option>
+                    <option value="0">0 Available</option>
+                    <option value="1-5">1-5 Available</option>
+                    <option value="6-10">6-10 Available</option>
+                    <option value="11-12">11-12 Available</option>
+                  </select>
+                </th>
+                <th class="px-6 py-2 text-center">
+                  <!-- Clear Filters Button -->
+                  <button (click)="clearFilters()" class="table-clear-btn" title="Clear all filters">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-700 bg-gray-900">
+              <tr *ngIf="filteredCars.length === 0" class="text-center">
+                <td colspan="7" class="px-6 py-12 text-gray-400">
+                  <p class="text-lg font-medium text-gray-500 mb-2">No cars found</p>
+                </td>
+              </tr>
+              <tr *ngFor="let car of paginatedCars" class="hover:bg-gray-800 transition duration-150">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-gray-700">
+                      <img [src]="car.images[0]" [alt]="car.carname" class="h-12 w-12 object-cover" />
+                    </div>
+                    <div class="ml-4">
+                      <div class="text-sm font-medium text-gray-100">{{ car.carname }}</div>
+                      <div class="text-xs text-gray-300">{{ car.color }}</div>
+                      <div class="text-xs text-gray-400" *ngIf="car.location">{{ car.location }}, {{ car.pincode }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
                       (car.status === 'active' ? 'status-badge-approved' : 
                        car.status === 'pending' ? 'status-badge-pending' : 'status-badge-rejected')">
-                  {{ car.status }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="inline-flex items-center rounded-full px-3 py-0.5 text-xs font-medium"
-                      [class]="car.stopBookings ? 'bg-red-900/50 text-red-300 border border-red-700' : 'bg-green-900/50 text-green-300 border border-green-700'">
-                  <i class="fas mr-1" [class]="car.stopBookings ? 'fa-pause' : 'fa-play'"></i>
-                  {{ car.stopBookings ? 'Stopped' : 'Active' }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-300">
-                  <span class="font-medium">{{ car.ticketsavilble }}</span>
-                  <span class="text-gray-400">/</span>
-                  <span>{{ car.totaltickets }}</span>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-300">
-                  <span class="font-medium">{{ car.tokensavailble }}</span>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-300">
-                  <div class="font-medium">{{ car.bookNowTokenAvailable }} / 12</div>
-                  <div class="text-xs text-gray-400">₹{{ car.bookNowTokenPrice | number:'1.0-0' }}</div>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <div class="flex items-center justify-center space-x-2">
-                  <button (click)="viewCarDetails(car)" class="p-2 text-gray-300 hover:text-blue-300 rounded-lg hover:bg-gray-800 transition" 
-                          title="View Details" aria-label="View details for {{car.carname}}">
-                    <i class="fas fa-eye text-sm"></i>
-                  </button>
-                  <button (click)="editCar(car)" class="p-2 text-gray-300 hover:text-yellow-300 rounded-lg hover:bg-gray-800 transition" 
-                          title="Edit" aria-label="Edit {{car.carname}}">
-                    <i class="fas fa-edit text-sm"></i>
-                  </button>
-                  <button (click)="deleteCar(car)" class="p-2 text-gray-300 hover:text-red-300 rounded-lg hover:bg-gray-800 transition" 
-                          title="Delete" aria-label="Delete {{car.carname}}">
-                    <i class="fas fa-trash text-sm"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-        
+                    {{ car.status }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="inline-flex items-center rounded-full px-3 py-0.5 text-xs font-medium"
+                    [class]="car.stopBookings ? 'bg-red-900/50 text-red-300 border border-red-700' : 'bg-green-900/50 text-green-300 border border-green-700'">
+                    <i class="fas mr-1" [class]="car.stopBookings ? 'fa-pause' : 'fa-play'"></i>
+                    {{ car.stopBookings ? 'Stopped' : 'Active' }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-300">
+                    <span class="font-medium">{{ car.ticketsavilble }}</span>
+                    <span class="text-gray-400">/</span>
+                    <span>{{ car.totaltickets }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-300">
+                    <span class="font-medium">{{ car.tokensavailble }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-300">
+                    <div class="font-medium">{{ car.bookNowTokenAvailable }} / 12</div>
+                    <div class="text-xs text-gray-400">₹{{ car.bookNowTokenPrice | number:'1.0-0' }}</div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                  <div class="flex items-center justify-center space-x-2">
+                    <button (click)="viewCarDetails(car)"
+                      class="p-2 text-gray-300 hover:text-blue-300 rounded-lg hover:bg-gray-800 transition"
+                      title="View Details" aria-label="View details for {{car.carname}}">
+                      <i class="fas fa-eye text-sm"></i>
+                    </button>
+                    <button (click)="editCar(car)"
+                      class="p-2 text-gray-300 hover:text-yellow-300 rounded-lg hover:bg-gray-800 transition"
+                      title="Edit" aria-label="Edit {{car.carname}}">
+                      <i class="fas fa-edit text-sm"></i>
+                    </button>
+                    <button (click)="deleteCar(car)"
+                      class="p-2 text-gray-300 hover:text-red-300 rounded-lg hover:bg-gray-800 transition"
+                      title="Delete" aria-label="Delete {{car.carname}}">
+                      <i class="fas fa-trash text-sm"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <!-- Pagination -->
-        <div *ngIf="filteredCars.length > 0" class="flex items-center justify-between border-t border-gray-700 bg-gray-900 px-6 py-4">
+        <div *ngIf="!isLoading && filteredCars.length > 0"
+          class="flex items-center justify-between border-t border-gray-700 bg-gray-900 px-6 py-4">
           <div class="flex items-center space-x-2 text-sm text-gray-300">
             <span>Showing</span>
             <span class="font-medium text-gray-100">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
@@ -251,24 +262,21 @@
             <span>cars</span>
           </div>
           <div class="flex items-center space-x-2">
-            <button [disabled]="currentPage === 1" 
-                    (click)="goToPage(currentPage - 1)"
-                    class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150">
+            <button [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)"
+              class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150">
               Previous
             </button>
-            
+
             <!-- Page Numbers -->
             <div class="flex items-center space-x-1">
-              <button *ngFor="let page of getPageNumbers()" 
-                      (click)="goToPage(page)" 
-                      [class]="'px-3 py-2 rounded-lg text-sm font-medium transition ' + (page === currentPage ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 border border-gray-700')">
+              <button *ngFor="let page of getPageNumbers()" (click)="goToPage(page)"
+                [class]="'px-3 py-2 rounded-lg text-sm font-medium transition ' + (page === currentPage ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 border border-gray-700')">
                 {{ page }}
               </button>
             </div>
-            
-            <button [disabled]="currentPage === totalPages || totalPages === 0" 
-                    (click)="goToPage(currentPage + 1)"
-                    class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150">
+
+            <button [disabled]="currentPage === totalPages || totalPages === 0" (click)="goToPage(currentPage + 1)"
+              class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150">
               Next
             </button>
           </div>
@@ -279,545 +287,553 @@
 </div>
 
 
-  <!-- Create Car Modal -->
-  <div *ngIf="showCarModal" class="modal fixed inset-0 bg-gray-900/80 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center p-4" style="z-index: 999999 !important;">
-    <div class="relative w-full max-w-4xl sm:max-w-5xl shadow-2xl rounded-2xl bg-gray-800 border border-gray-700 my-auto">
-      <div class="p-4 sm:p-6">
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-4">
-          <h3 class="text-xl sm:text-2xl font-semibold text-white">{{ isEditMode ? 'Edit Car Details' : 'Create New Car' }}</h3>
-          <button (click)="closeModal()" class="text-gray-400 hover:text-white transition-colors duration-200">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div class="mt-2">
-          <form (ngSubmit)="submitCarForm()" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="carname">
-                Car Name
-              </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="carname" type="text" placeholder="Enter car name" 
-                     [(ngModel)]="newCar.carname" name="carname" required>
-            </div>
+<!-- Create Car Modal -->
+<div *ngIf="showCarModal"
+  class="modal fixed inset-0 bg-gray-900/80 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center p-4"
+  style="z-index: 999999 !important;">
+  <div class="relative w-full max-w-4xl sm:max-w-5xl shadow-2xl rounded-2xl bg-gray-800 border border-gray-700 my-auto">
+    <div class="p-4 sm:p-6">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-4">
+        <h3 class="text-xl sm:text-2xl font-semibold text-white">{{ isEditMode ? 'Edit Car Details' : 'Create New Car'
+          }}</h3>
+        <button (click)="closeModal()" class="text-gray-400 hover:text-white transition-colors duration-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="mt-2">
+        <form (ngSubmit)="submitCarForm()" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="carname">
+              Car Name
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="carname" type="text" placeholder="Enter car name" [(ngModel)]="newCar.carname" name="carname"
+              required>
+          </div>
 
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="brandname">
-                Brand Name
-              </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="brandname" type="text" placeholder="Enter brand name" 
-                     [(ngModel)]="newCar.brandname" name="brandname" required>
-            </div>
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="brandname">
+              Brand Name
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="brandname" type="text" placeholder="Enter brand name" [(ngModel)]="newCar.brandname" name="brandname"
+              required>
+          </div>
 
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="color">
-                Color
-              </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="color" type="text" placeholder="Enter color" 
-                     [(ngModel)]="newCar.color" name="color" required>
-            </div>
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="color">
+              Color
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="color" type="text" placeholder="Enter color" [(ngModel)]="newCar.color" name="color" required>
+          </div>
 
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="milege">
-                Mileage
-              </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="milege" type="text" placeholder="Enter mileage" 
-                     [(ngModel)]="newCar.milege" name="milege" required>
-            </div>
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="milege">
+              Mileage
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="milege" type="text" placeholder="Enter mileage" [(ngModel)]="newCar.milege" name="milege" required>
+          </div>
 
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="seating">
-                Seating Capacity
-              </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="seating" type="number" placeholder="Enter seating capacity" 
-                     [(ngModel)]="newCar.seating" name="seating" required>
-            </div>
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="seating">
+              Seating Capacity
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="seating" type="number" placeholder="Enter seating capacity" [(ngModel)]="newCar.seating"
+              name="seating" required>
+          </div>
 
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="features">
-                Features
-              </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="features" type="text" placeholder="Feature1, Feature2, Feature3" 
-                     [ngModel]="newCar.features.join(', ')" name="features" 
-                     (ngModelChange)="updateFeatures($event)">
-            </div>
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="features">
+              Features
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="features" type="text" placeholder="Feature1, Feature2, Feature3"
+              [ngModel]="newCar.features.join(', ')" name="features" (ngModelChange)="updateFeatures($event)">
+          </div>
 
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="pincode">
-                Pincode
-              </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="pincode" type="text" placeholder="Enter 6-digit pincode" 
-                     [(ngModel)]="newCar.pincode" name="pincode" 
-                     (ngModelChange)="onPincodeChange()" maxlength="6">
-              <div *ngIf="pincodeError" class="text-red-400 text-sm mt-1">
-                {{ pincodeError }}
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="pincode">
+              Pincode
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="pincode" type="text" placeholder="Enter 6-digit pincode" [(ngModel)]="newCar.pincode" name="pincode"
+              (ngModelChange)="onPincodeChange()" maxlength="6">
+            <div *ngIf="pincodeError" class="text-red-400 text-sm mt-1">
+              {{ pincodeError }}
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="location">
+              Location
+              <span *ngIf="newCar.location && !isPincodeLoading" class="text-green-400 text-xs ml-2">
+                ✓ Auto-filled
+              </span>
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="location" type="text" placeholder="Enter location" [(ngModel)]="newCar.location" name="location"
+              [readonly]="isPincodeLoading" [class.bg-gray-600]="isPincodeLoading">
+            <div *ngIf="isPincodeLoading" class="text-blue-400 text-sm mt-1 flex items-center">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
+              </svg>
+              Fetching location...
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="price">
+              Estimated Car price *
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="price" type="number" placeholder="Enter price" [(ngModel)]="newCar.price" name="price" required>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="fractionprice">
+              Fraction price per share *
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="fractionprice" type="number" placeholder="Enter fraction price" [(ngModel)]="newCar.fractionprice"
+              name="fractionprice" required>
+          </div>
+
+          <div class="sm:col-span-2 lg:col-span-3 mt-2">
+            <p class="text-xs text-gray-400 italic">
+              * This is estimated price and actual prices will be considered based on final proforma invoice at the time
+              of actual purchase
+            </p>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="tokenprice">
+              Waitlist price
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="tokenprice" type="number" placeholder="Enter token price" [(ngModel)]="newCar.tokenprice"
+              name="tokenprice" required>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="bookNowTokenPrice">
+              Book Now Token Price
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="bookNowTokenPrice" type="number" placeholder="Enter book now token price"
+              [(ngModel)]="newCar.bookNowTokenPrice" name="bookNowTokenPrice">
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="amcperticket">
+              AMC Per Share
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="amcperticket" type="number" placeholder="Enter AMC per ticket" [(ngModel)]="newCar.amcperticket"
+              name="amcperticket">
+          </div>
+
+
+
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="totaltickets">
+              Total Shares
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="totaltickets" type="number" placeholder="Enter total shares (max 12)"
+              [(ngModel)]="newCar.totaltickets" name="totaltickets" (ngModelChange)="onTotalTicketsChange()" max="12"
+              min="1">
+            <p class="text-xs text-gray-400">Maximum 12 total shares allowed</p>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="ticketsavilble">
+              Shares Available
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="ticketsavilble" type="number" placeholder="Enter available tickets"
+              [(ngModel)]="newCar.ticketsavilble" name="ticketsavilble">
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="tokensavailble">
+              Waitlist Available
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="tokensavailble" type="number" placeholder="Enter available tokens (max 20)"
+              [(ngModel)]="newCar.tokensavailble" name="tokensavailble" (ngModelChange)="onWaitlistTokensChange()"
+              max="20" min="0">
+            <p class="text-xs text-gray-400">Maximum 20 waitlist tokens allowed</p>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="bookNowTokenAvailable">
+              Book Now Token Available
+            </label>
+            <input
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="bookNowTokenAvailable" type="number" placeholder="Enter available book now tokens (max 12)"
+              [(ngModel)]="newCar.bookNowTokenAvailable" name="bookNowTokenAvailable"
+              (ngModelChange)="onBookNowTokensChange()" max="12" min="0">
+            <p class="text-xs text-gray-400">Maximum 12 book now tokens allowed</p>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="status">
+              Status
+            </label>
+            <select
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white
+                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="status" [(ngModel)]="newCar.status" name="status">
+              <option value="active">Active</option>
+              <option value="pending">Pending</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-gray-300 text-sm font-medium" for="stopBookings">
+              Stop Bookings
+            </label>
+
+            <!-- Warning message when no availability -->
+            <div *ngIf="!canEnableBookings() && newCar.tokensavailble === 0 && newCar.bookNowTokenAvailable === 0"
+              class="bg-red-900/20 border border-red-700 rounded-lg p-3 mb-3">
+              <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle text-red-400 mr-2"></i>
+                <span class="text-sm text-red-300">
+                  Both waitlist and book now tokens are filled. Bookings are automatically stopped.
+                  Add vacancy to open bookings.
+                </span>
               </div>
             </div>
 
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="location">
-                Location
-                <span *ngIf="newCar.location && !isPincodeLoading" class="text-green-400 text-xs ml-2">
-                  ✓ Auto-filled
+            <div class="flex items-center space-x-3">
+              <label class="flex items-center">
+                <input type="radio" id="stopBookingsFalse" name="stopBookings" [value]="false"
+                  [(ngModel)]="newCar.stopBookings" [disabled]="!canEnableBookings()"
+                  class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span class="ml-2 text-sm" [class]="!canEnableBookings() ? 'text-gray-500' : 'text-gray-300'">
+                  Active (Allow Bookings)
                 </span>
               </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="location" type="text" placeholder="Enter location" 
-                     [(ngModel)]="newCar.location" name="location"
-                     [readonly]="isPincodeLoading"
-                     [class.bg-gray-600]="isPincodeLoading">
-              <div *ngIf="isPincodeLoading" class="text-blue-400 text-sm mt-1 flex items-center">
-                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Fetching location...
-              </div>
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="price">
-                Estimated Car price *
+              <label class="flex items-center">
+                <input type="radio" id="stopBookingsTrue" name="stopBookings" [value]="true"
+                  [(ngModel)]="newCar.stopBookings"
+                  class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500 focus:ring-2">
+                <span class="ml-2 text-sm text-gray-300">Stopped (Block Bookings)</span>
               </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="price" type="number" placeholder="Enter price" 
-                     [(ngModel)]="newCar.price" name="price" required>
             </div>
+          </div>
 
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="fractionprice">
-                Fraction price per share *
-              </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="fractionprice" type="number" placeholder="Enter fraction price" 
-                     [(ngModel)]="newCar.fractionprice" name="fractionprice" required>
-            </div>
+          <div class="space-y-2 sm:col-span-2 lg:col-span-3">
+            <label class="block text-gray-300 text-sm font-medium" for="description">
+              Description
+            </label>
+            <textarea
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              id="description" rows="3" placeholder="Enter car description" [(ngModel)]="newCar.description"
+              name="description"></textarea>
+          </div>
 
-            <div class="sm:col-span-2 lg:col-span-3 mt-2">
-              <p class="text-xs text-gray-400 italic">
-                * This is estimated price and actual prices will be considered based on final proforma invoice at the time of actual purchase
-              </p>
-            </div>
+          <div class="space-y-2 sm:col-span-2 lg:col-span-3">
+            <label class="block text-gray-300 text-sm font-medium" for="images">
+              Car Images
+            </label>
 
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="tokenprice">
-                Waitlist price
-              </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="tokenprice" type="number" placeholder="Enter token price" 
-                     [(ngModel)]="newCar.tokenprice" name="tokenprice" required>
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="bookNowTokenPrice">
-                Book Now Token Price
-              </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="bookNowTokenPrice" type="number" placeholder="Enter book now token price" 
-                     [(ngModel)]="newCar.bookNowTokenPrice" name="bookNowTokenPrice">
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="amcperticket">
-                AMC Per Share
-              </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="amcperticket" type="number" placeholder="Enter AMC per ticket" 
-                     [(ngModel)]="newCar.amcperticket" name="amcperticket">
-            </div>
-
-
-
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="totaltickets">
-                Total Shares
-              </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="totaltickets" type="number" placeholder="Enter total shares (max 12)" 
-                     [(ngModel)]="newCar.totaltickets" name="totaltickets"
-                     (ngModelChange)="onTotalTicketsChange()" max="12" min="1">
-              <p class="text-xs text-gray-400">Maximum 12 total shares allowed</p>
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="ticketsavilble">
-                Shares Available
-              </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="ticketsavilble" type="number" placeholder="Enter available tickets" 
-                     [(ngModel)]="newCar.ticketsavilble" name="ticketsavilble">
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="tokensavailble">
-                Waitlist Available
-              </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="tokensavailble" type="number" placeholder="Enter available tokens (max 20)" 
-                     [(ngModel)]="newCar.tokensavailble" name="tokensavailble"
-                     (ngModelChange)="onWaitlistTokensChange()" max="20" min="0">
-              <p class="text-xs text-gray-400">Maximum 20 waitlist tokens allowed</p>
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="bookNowTokenAvailable">
-                Book Now Token Available
-              </label>
-              <input class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                     id="bookNowTokenAvailable" type="number" placeholder="Enter available book now tokens (max 12)" 
-                     [(ngModel)]="newCar.bookNowTokenAvailable" name="bookNowTokenAvailable"
-                     (ngModelChange)="onBookNowTokensChange()" max="12" min="0">
-              <p class="text-xs text-gray-400">Maximum 12 book now tokens allowed</p>
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="status">
-                Status
-              </label>
-              <select class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                      id="status" [(ngModel)]="newCar.status" name="status">
-                <option value="active">Active</option>
-                <option value="pending">Pending</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-gray-300 text-sm font-medium" for="stopBookings">
-                Stop Bookings
-              </label>
-              
-              <!-- Warning message when no availability -->
-              <div *ngIf="!canEnableBookings() && newCar.tokensavailble === 0 && newCar.bookNowTokenAvailable === 0" 
-                   class="bg-red-900/20 border border-red-700 rounded-lg p-3 mb-3">
-                <div class="flex items-center">
-                  <i class="fas fa-exclamation-triangle text-red-400 mr-2"></i>
-                  <span class="text-sm text-red-300">
-                    Both waitlist and book now tokens are filled. Bookings are automatically stopped. 
-                    Add vacancy to open bookings.
-                  </span>
+            <!-- Existing Images Display (Edit Mode) -->
+            <div *ngIf="isEditMode && newCar.images && newCar.images.length > 0" class="mb-4">
+              <p class="text-sm text-gray-400 mb-3">Current Images:</p>
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                <div *ngFor="let image of newCar.images; let i = index" class="relative group">
+                  <img [src]="image" [alt]="'Car image ' + (i + 1)"
+                    class="w-full h-20 sm:h-24 object-cover rounded-lg border border-gray-600">
+                  <button type="button" (click)="removeExistingImage(i)"
+                    class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200 opacity-0 group-hover:opacity-100">
+                    ×
+                  </button>
                 </div>
               </div>
-              
-              <div class="flex items-center space-x-3">
-                <label class="flex items-center">
-                  <input type="radio" 
-                         id="stopBookingsFalse" 
-                         name="stopBookings" 
-                         [value]="false" 
-                         [(ngModel)]="newCar.stopBookings"
-                         [disabled]="!canEnableBookings()"
-                         class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                  <span class="ml-2 text-sm" 
-                        [class]="!canEnableBookings() ? 'text-gray-500' : 'text-gray-300'">
-                    Active (Allow Bookings)
-                  </span>
-                </label>
-                <label class="flex items-center">
-                  <input type="radio" 
-                         id="stopBookingsTrue" 
-                         name="stopBookings" 
-                         [value]="true" 
-                         [(ngModel)]="newCar.stopBookings"
-                         class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500 focus:ring-2">
-                  <span class="ml-2 text-sm text-gray-300">Stopped (Block Bookings)</span>
-                </label>
-              </div>
             </div>
 
-            <div class="space-y-2 sm:col-span-2 lg:col-span-3">
-              <label class="block text-gray-300 text-sm font-medium" for="description">
-                Description
-              </label>
-              <textarea class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
-                        id="description" rows="3" placeholder="Enter car description" 
-                        [(ngModel)]="newCar.description" name="description"></textarea>
-            </div>
-
-            <div class="space-y-2 sm:col-span-2 lg:col-span-3">
-              <label class="block text-gray-300 text-sm font-medium" for="images">
-                Car Images
-              </label>
-              
-              <!-- Existing Images Display (Edit Mode) -->
-              <div *ngIf="isEditMode && newCar.images && newCar.images.length > 0" class="mb-4">
-                <p class="text-sm text-gray-400 mb-3">Current Images:</p>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  <div *ngFor="let image of newCar.images; let i = index" class="relative group">
-                    <img [src]="image" [alt]="'Car image ' + (i + 1)" 
-                         class="w-full h-20 sm:h-24 object-cover rounded-lg border border-gray-600">
-                    <button type="button" 
-                            (click)="removeExistingImage(i)"
-                            class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200 opacity-0 group-hover:opacity-100">
-                      ×
-                    </button>
+            <!-- Selected Files Preview (New Uploads) -->
+            <div *ngIf="selectedFiles && selectedFiles.length > 0" class="mb-4">
+              <p class="text-sm text-gray-400 mb-3">New Images to Upload:</p>
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                <div *ngFor="let file of selectedFiles; let i = index" class="relative group">
+                  <div
+                    class="w-full h-20 sm:h-24 bg-gray-600 rounded-lg border border-gray-500 flex items-center justify-center">
+                    <span class="text-xs text-gray-300 text-center px-2">{{ file.name }}</span>
                   </div>
+                  <button type="button" (click)="removeSelectedFile(i)"
+                    class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200 opacity-0 group-hover:opacity-100">
+                    ×
+                  </button>
                 </div>
               </div>
+            </div>
 
-              <!-- Selected Files Preview (New Uploads) -->
-              <div *ngIf="selectedFiles && selectedFiles.length > 0" class="mb-4">
-                <p class="text-sm text-gray-400 mb-3">New Images to Upload:</p>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  <div *ngFor="let file of selectedFiles; let i = index" class="relative group">
-                    <div class="w-full h-20 sm:h-24 bg-gray-600 rounded-lg border border-gray-500 flex items-center justify-center">
-                      <span class="text-xs text-gray-300 text-center px-2">{{ file.name }}</span>
-                    </div>
-                    <button type="button" 
-                            (click)="removeSelectedFile(i)"
-                            class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200 opacity-0 group-hover:opacity-100">
-                      ×
-                    </button>
-                  </div>
+            <!-- Upload New Images -->
+            <div class="flex items-center justify-center w-full">
+              <label
+                class="flex flex-col items-center justify-center w-full h-24 sm:h-32 border-2 border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-700 hover:bg-gray-600 transition-colors duration-200">
+                <div class="flex flex-col items-center justify-center pt-3 pb-4 sm:pt-5 sm:pb-6">
+                  <svg class="w-6 h-6 sm:w-8 sm:h-8 mb-2 sm:mb-4 text-gray-400" aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
+                  </svg>
+                  <p class="mb-2 text-xs sm:text-sm text-gray-400 text-center px-2">
+                    {{ isEditMode ? 'Add more images' : 'Click to upload car images' }}
+                  </p>
                 </div>
-              </div>
-
-              <!-- Upload New Images -->
-              <div class="flex items-center justify-center w-full">
-                <label class="flex flex-col items-center justify-center w-full h-24 sm:h-32 border-2 border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-700 hover:bg-gray-600 transition-colors duration-200">
-                  <div class="flex flex-col items-center justify-center pt-3 pb-4 sm:pt-5 sm:pb-6">
-                    <svg class="w-6 h-6 sm:w-8 sm:h-8 mb-2 sm:mb-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                    </svg>
-                    <p class="mb-2 text-xs sm:text-sm text-gray-400 text-center px-2">
-                      {{ isEditMode ? 'Add more images' : 'Click to upload car images' }}
-                    </p>
-                  </div>
-                  <input id="images" type="file" class="hidden" multiple (change)="onFileSelected($event)" name="images" accept="image/*" />
-                </label>
-              </div>
+                <input id="images" type="file" class="hidden" multiple (change)="onFileSelected($event)" name="images"
+                  accept="image/*" />
+              </label>
             </div>
+          </div>
 
-            <div class="sm:col-span-2 lg:col-span-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 mt-6">
-              <button type="button" 
-                      (click)="closeModal()"
-                      class="w-full sm:w-auto px-6 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-600 transition-colors duration-200">
-                Cancel
-              </button>
-              <button type="submit"
-                      class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200">
-                {{ isEditMode ? 'Update Car' : 'Create Car' }}
-              </button>
-            </div>
-          </form>
-        </div>
+          <div
+            class="sm:col-span-2 lg:col-span-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 mt-6">
+            <button type="button" (click)="closeModal()"
+              class="w-full sm:w-auto px-6 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-600 transition-colors duration-200">
+              Cancel
+            </button>
+            <button type="submit"
+              class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200">
+              {{ isEditMode ? 'Update Car' : 'Create Car' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
-  
+  </div>
+
 </div>
 
 <!-- View Car Details Modal -->
-<div *ngIf="selectedCar" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm overflow-y-auto h-full w-full z-[80] flex items-center justify-center p-4">
+<div *ngIf="selectedCar"
+  class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm overflow-y-auto h-full w-full z-[80] flex items-center justify-center p-4">
   <div class="relative w-full max-w-7xl shadow-2xl rounded-2xl bg-gray-800 border border-gray-700 my-auto">
     <div class="p-4 sm:p-6">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-4">
-      <h3 class="text-xl sm:text-2xl font-semibold text-white">Car Details</h3>
-      <button (click)="closeViewModal()" class="text-gray-400 hover:text-white transition-colors duration-200">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
+        <h3 class="text-xl sm:text-2xl font-semibold text-white">Car Details</h3>
+        <button (click)="closeViewModal()" class="text-gray-400 hover:text-white transition-colors duration-200">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+            stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
 
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
-      <!-- Car Images and Basic Info -->
-      <div class="space-y-6">
-        <div class="bg-gray-700/50 rounded-lg p-4 sm:p-6 border border-gray-600">
-          <h4 class="text-lg font-semibold text-white mb-4">Car Images</h4>
-          <div class="aspect-video rounded-lg overflow-hidden mb-4">
-            <img [src]="selectedCar.images[currentImageIndex]" [alt]="selectedCar.carname" 
-                 class="w-full h-full object-cover">
-          </div>
-          <div class="flex gap-2 overflow-x-auto py-2">
-            <div *ngFor="let image of selectedCar.images; let i = index" 
-                 class="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden cursor-pointer border-2"
-                 [class.border-blue-500]="i === currentImageIndex"
-                 [class.border-gray-600]="i !== currentImageIndex"
-                 (click)="currentImageIndex = i">
-              <img [src]="image" [alt]="selectedCar.carname" class="w-full h-full object-cover">
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
+        <!-- Car Images and Basic Info -->
+        <div class="space-y-6">
+          <div class="bg-gray-700/50 rounded-lg p-4 sm:p-6 border border-gray-600">
+            <h4 class="text-lg font-semibold text-white mb-4">Car Images</h4>
+            <div class="aspect-video rounded-lg overflow-hidden mb-4">
+              <img [src]="selectedCar.images[currentImageIndex]" [alt]="selectedCar.carname"
+                class="w-full h-full object-cover">
+            </div>
+            <div class="flex gap-2 overflow-x-auto py-2">
+              <div *ngFor="let image of selectedCar.images; let i = index"
+                class="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden cursor-pointer border-2"
+                [class.border-blue-500]="i === currentImageIndex" [class.border-gray-600]="i !== currentImageIndex"
+                (click)="currentImageIndex = i">
+                <img [src]="image" [alt]="selectedCar.carname" class="w-full h-full object-cover">
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Basic Car Information -->
-        <div class="bg-gray-700/50 rounded-lg p-4 sm:p-6 border border-gray-600">
-          <h4 class="text-lg font-semibold text-white mb-4">Basic Information</h4>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <p class="text-sm text-gray-400">Car Name</p>
-              <p class="font-medium text-white">{{ selectedCar.carname }}</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-400">Brand</p>
-              <p class="font-medium text-white">{{ selectedCar.brandname }}</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-400">Color</p>
-              <p class="font-medium text-white">{{ selectedCar.color }}</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-400">Seating</p>
-              <p class="font-medium text-white">{{ selectedCar.seating }}</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-400">Mileage</p>
-              <p class="font-medium text-white">{{ selectedCar.milege }}</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-400">Status</p>
-              <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
+          <!-- Basic Car Information -->
+          <div class="bg-gray-700/50 rounded-lg p-4 sm:p-6 border border-gray-600">
+            <h4 class="text-lg font-semibold text-white mb-4">Basic Information</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p class="text-sm text-gray-400">Car Name</p>
+                <p class="font-medium text-white">{{ selectedCar.carname }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-400">Brand</p>
+                <p class="font-medium text-white">{{ selectedCar.brandname }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-400">Color</p>
+                <p class="font-medium text-white">{{ selectedCar.color }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-400">Seating</p>
+                <p class="font-medium text-white">{{ selectedCar.seating }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-400">Mileage</p>
+                <p class="font-medium text-white">{{ selectedCar.milege }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-400">Status</p>
+                <span [class]="'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' + 
                     (selectedCar.status === 'active' ? 'status-badge-approved' : 
                      selectedCar.status === 'pending' ? 'status-badge-pending' : 
                      'status-badge-rejected')">
-                {{ selectedCar.status }}
-              </span>
+                  {{ selectedCar.status }}
+                </span>
+              </div>
+              <div>
+                <p class="text-sm text-gray-400">Bookings</p>
+                <span class="inline-flex items-center rounded-full px-3 py-0.5 text-xs font-medium"
+                  [class]="selectedCar.stopBookings ? 'bg-red-900/50 text-red-300 border border-red-700' : 'bg-green-900/50 text-green-300 border border-green-700'">
+                  <i class="fas mr-1" [class]="selectedCar.stopBookings ? 'fa-pause' : 'fa-play'"></i>
+                  {{ selectedCar.stopBookings ? 'Stopped' : 'Active' }}
+                </span>
+              </div>
             </div>
-            <div>
-              <p class="text-sm text-gray-400">Bookings</p>
-              <span class="inline-flex items-center rounded-full px-3 py-0.5 text-xs font-medium"
-                    [class]="selectedCar.stopBookings ? 'bg-red-900/50 text-red-300 border border-red-700' : 'bg-green-900/50 text-green-300 border border-green-700'">
-                <i class="fas mr-1" [class]="selectedCar.stopBookings ? 'fa-pause' : 'fa-play'"></i>
-                {{ selectedCar.stopBookings ? 'Stopped' : 'Active' }}
-              </span>
+            <div class="mt-4" *ngIf="selectedCar.description">
+              <p class="text-sm text-gray-400">Description</p>
+              <p class="text-white">{{ selectedCar.description }}</p>
             </div>
-          </div>
-          <div class="mt-4" *ngIf="selectedCar.description">
-            <p class="text-sm text-gray-400">Description</p>
-            <p class="text-white">{{ selectedCar.description }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pricing and Availability Info -->
-      <div class="space-y-6">
-        <!-- Pricing Information -->
-        <div class="bg-gray-700/50 rounded-lg p-4 sm:p-6 border border-gray-600">
-          <h4 class="text-lg font-semibold text-white mb-4">Pricing Details</h4>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <p class="text-sm text-gray-400">Estimated Car price *</p>
-              <p class="font-medium text-white">₹{{ selectedCar.price | number:'1.0-0' }}</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-400">Fraction price per share *</p>
-              <p class="font-medium text-white">₹{{ selectedCar.fractionprice | number:'1.0-0' }}</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-400">Waitlist price</p>
-              <p class="font-medium text-white">₹{{ selectedCar.tokenprice | number:'1.0-0' }}</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-400">Book Now Token Price</p>
-              <p class="font-medium text-white">₹{{ selectedCar.bookNowTokenPrice | number:'1.0-0' }}</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-400">AMC Per Share</p>
-              <p class="font-medium text-white">₹{{ selectedCar.amcperticket | number:'1.0-0' }}</p>
-            </div>
-          </div>
-          <div class="mt-4">
-            <p class="text-xs text-gray-400 italic">
-              * This is estimated price and actual prices will be considered based on final proforma invoice at the time of actual purchase
-            </p>
           </div>
         </div>
 
-        <!-- Availability Information -->
-        <div class="bg-gray-700/50 rounded-lg p-4 sm:p-6 border border-gray-600">
-          <h4 class="text-lg font-semibold text-white mb-4">Availability</h4>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <p class="text-sm text-gray-400">Total Shares</p>
-              <p class="font-medium text-white">{{ selectedCar.totaltickets }}</p>
+        <!-- Pricing and Availability Info -->
+        <div class="space-y-6">
+          <!-- Pricing Information -->
+          <div class="bg-gray-700/50 rounded-lg p-4 sm:p-6 border border-gray-600">
+            <h4 class="text-lg font-semibold text-white mb-4">Pricing Details</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p class="text-sm text-gray-400">Estimated Car price *</p>
+                <p class="font-medium text-white">₹{{ selectedCar.price | number:'1.0-0' }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-400">Fraction price per share *</p>
+                <p class="font-medium text-white">₹{{ selectedCar.fractionprice | number:'1.0-0' }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-400">Waitlist price</p>
+                <p class="font-medium text-white">₹{{ selectedCar.tokenprice | number:'1.0-0' }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-400">Book Now Token Price</p>
+                <p class="font-medium text-white">₹{{ selectedCar.bookNowTokenPrice | number:'1.0-0' }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-400">AMC Per Share</p>
+                <p class="font-medium text-white">₹{{ selectedCar.amcperticket | number:'1.0-0' }}</p>
+              </div>
             </div>
-            <div>
-              <p class="text-sm text-gray-400">Shares Available</p>
-              <p class="font-medium text-green-400">{{ selectedCar.ticketsavilble }}</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-400">Waitlist Tokens</p>
-              <p class="font-medium text-white">{{ selectedCar.tokensavailble }}</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-400">Book Now Tokens</p>
-              <p class="font-medium text-white">{{ selectedCar.bookNowTokenAvailable }} / 12</p>
+            <div class="mt-4">
+              <p class="text-xs text-gray-400 italic">
+                * This is estimated price and actual prices will be considered based on final proforma invoice at the
+                time of actual purchase
+              </p>
             </div>
           </div>
-          <div class="mt-4">
-            <p class="text-sm text-gray-400">Shares Progress</p>
-            <div class="w-full bg-gray-600 rounded-full h-2">
-              <div class="bg-blue-500 h-2 rounded-full" [style.width.%]="getTicketsProgress(selectedCar)"></div>
-            </div>
-            <p class="text-xs text-gray-400 mt-1">{{ getTicketsProgress(selectedCar) | number:'1.0-1' }}% Sold</p>
-          </div>
-        </div>
 
-        <!-- Location and Features -->
-        <div class="bg-gray-700/50 rounded-lg p-4 sm:p-6 border border-gray-600">
-          <h4 class="text-lg font-semibold text-white mb-4">Location & Features</h4>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-            <div>
-              <p class="text-sm text-gray-400">Location</p>
-              <p class="font-medium text-white">{{ selectedCar.location || 'N/A' }}</p>
+          <!-- Availability Information -->
+          <div class="bg-gray-700/50 rounded-lg p-4 sm:p-6 border border-gray-600">
+            <h4 class="text-lg font-semibold text-white mb-4">Availability</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p class="text-sm text-gray-400">Total Shares</p>
+                <p class="font-medium text-white">{{ selectedCar.totaltickets }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-400">Shares Available</p>
+                <p class="font-medium text-green-400">{{ selectedCar.ticketsavilble }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-400">Waitlist Tokens</p>
+                <p class="font-medium text-white">{{ selectedCar.tokensavailble }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-400">Book Now Tokens</p>
+                <p class="font-medium text-white">{{ selectedCar.bookNowTokenAvailable }} / 12</p>
+              </div>
             </div>
-            <div>
-              <p class="text-sm text-gray-400">Pincode</p>
-              <p class="font-medium text-white">{{ selectedCar.pincode || 'N/A' }}</p>
+            <div class="mt-4">
+              <p class="text-sm text-gray-400">Shares Progress</p>
+              <div class="w-full bg-gray-600 rounded-full h-2">
+                <div class="bg-blue-500 h-2 rounded-full" [style.width.%]="getTicketsProgress(selectedCar)"></div>
+              </div>
+              <p class="text-xs text-gray-400 mt-1">{{ getTicketsProgress(selectedCar) | number:'1.0-1' }}% Sold</p>
             </div>
           </div>
-          <div *ngIf="selectedCar.features && selectedCar.features.length > 0">
-            <p class="text-sm text-gray-400 mb-2">Features</p>
-            <div class="flex flex-wrap gap-2">
-              <span *ngFor="let feature of selectedCar.features" 
-                    class="inline-flex items-center rounded-full bg-blue-900/50 px-3 py-1 text-sm font-medium text-blue-300 border border-blue-700">
-                {{ feature }}
-              </span>
+
+          <!-- Location and Features -->
+          <div class="bg-gray-700/50 rounded-lg p-4 sm:p-6 border border-gray-600">
+            <h4 class="text-lg font-semibold text-white mb-4">Location & Features</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div>
+                <p class="text-sm text-gray-400">Location</p>
+                <p class="font-medium text-white">{{ selectedCar.location || 'N/A' }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-400">Pincode</p>
+                <p class="font-medium text-white">{{ selectedCar.pincode || 'N/A' }}</p>
+              </div>
+            </div>
+            <div *ngIf="selectedCar.features && selectedCar.features.length > 0">
+              <p class="text-sm text-gray-400 mb-2">Features</p>
+              <div class="flex flex-wrap gap-2">
+                <span *ngFor="let feature of selectedCar.features"
+                  class="inline-flex items-center rounded-full bg-blue-900/50 px-3 py-1 text-sm font-medium text-blue-300 border border-blue-700">
+                  {{ feature }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
 
 
-<!-- Dialog is now rendered programmatically to document.body -->
+  <!-- Dialog is now rendered programmatically to document.body -->
 
-<app-loading-dialog
-  [visible]="showLoadingDialog"
-  [title]="loadingMessage"
-  [message]="loadingMessage"
-  [allowCancel]="false">
-</app-loading-dialog>
-
-
-
-
-
+  <app-loading-dialog [visible]="showLoadingDialog" [title]="loadingMessage" [message]="loadingMessage"
+    [allowCancel]="false">
+  </app-loading-dialog>

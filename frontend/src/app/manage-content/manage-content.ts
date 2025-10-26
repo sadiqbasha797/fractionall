@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { HomeService, HeroContent, Brand, SimpleStep, FAQ, FeaturedCar, Car, SimpleStepsVideo, FAQCategory, About } from '../services/home.service';
 
 
@@ -26,6 +27,9 @@ export class ManageContent implements OnInit {
   // Loading states
   loading = false;
   submitting = false;
+  
+  // Loading state for refresh functionality
+  isLoading: boolean = false;
 
   // Data arrays
   heroContents: HeroContent[] = [];
@@ -242,6 +246,36 @@ export class ManageContent implements OnInit {
     this.dialogElement = backdrop;
     this.renderer.listen(backdrop, 'click', () => this.removeDialog());
     this.renderer.listen(dialog, 'click', (e: Event) => e.stopPropagation());
+  }
+
+  // ==================== REFRESH METHODS ====================
+
+  refreshHeroContent(): void {
+    this.isLoading = true;
+    this.loadHeroContents().finally(() => {
+      this.isLoading = false;
+    });
+  }
+
+  refreshBrands(): void {
+    this.isLoading = true;
+    this.loadBrands().finally(() => {
+      this.isLoading = false;
+    });
+  }
+
+  refreshSimpleSteps(): void {
+    this.isLoading = true;
+    this.loadSimpleSteps().finally(() => {
+      this.isLoading = false;
+    });
+  }
+
+  refreshFaqs(): void {
+    this.isLoading = true;
+    this.loadFaqs().finally(() => {
+      this.isLoading = false;
+    });
   }
 
   // ==================== GENERAL METHODS ====================
@@ -950,25 +984,39 @@ export class ManageContent implements OnInit {
   async loadFeaturedCarsData(): Promise<void> {
     this.loading = true;
     try {
-      // Load featured cars and all cars in parallel
+      // Load featured cars and all cars in parallel using firstValueFrom instead of deprecated toPromise()
       const [featuredCarsResponse, carsResponse] = await Promise.all([
-        this.homeService.getFeaturedCars().toPromise(),
-        this.homeService.getCars().toPromise()
+        firstValueFrom(this.homeService.getFeaturedCars()),
+        firstValueFrom(this.homeService.getCars())
       ]);
 
+      console.log('Featured cars response:', featuredCarsResponse); // Debug log
+      
       if (featuredCarsResponse?.status === 'success') {
-        this.featuredCars = featuredCarsResponse.body.featuredCars || [];
+        this.featuredCars = featuredCarsResponse.body?.featuredCars || [];
+        console.log('Loaded featured cars:', this.featuredCars); // Debug log
+      } else {
+        console.error('Failed to load featured cars:', featuredCarsResponse);
+        this.featuredCars = [];
       }
 
       if (carsResponse?.status === 'success') {
-        this.allCars = carsResponse.body.cars || [];
+        this.allCars = carsResponse.body?.cars || [];
         this.filteredCars = [...this.allCars];
         this.uniqueCarBrands = [...new Set(this.allCars.map(car => car.brandname?.trim()).filter(brand => brand))].sort();
         this.applyCarFilters();
+        console.log('Loaded all cars:', this.allCars.length); // Debug log
+      } else {
+        console.error('Failed to load cars:', carsResponse);
+        this.allCars = [];
+        this.filteredCars = [];
       }
     } catch (error) {
       console.error('Error loading featured cars data:', error);
       this.showErrorDialog('Failed to load featured cars data');
+      this.featuredCars = [];
+      this.allCars = [];
+      this.filteredCars = [];
     } finally {
       this.loading = false;
     }
@@ -1000,7 +1048,7 @@ export class ManageContent implements OnInit {
   }
 
   isCarFeatured(carId: string): boolean {
-    return this.featuredCars.some(fc => fc.carId._id === carId);
+    return this.featuredCars.some(fc => fc.carId?._id === carId);
   }
 
   addToFeaturedCars(car: Car): void {
@@ -1027,6 +1075,12 @@ export class ManageContent implements OnInit {
   }
 
   removeFromFeaturedCars(carId: string, carName: string): void {
+    if (!carId) {
+      console.error('Cannot remove featured car: carId is undefined');
+      this.showErrorDialog('Cannot remove car: Invalid car ID');
+      return;
+    }
+    
     this.showConfirmDialog('Remove from Featured Cars', `Are you sure you want to remove "${carName}" from featured cars?`, () => {
       this.submitting = true;
       this.homeService.removeFeaturedCar(carId).subscribe({
@@ -1047,6 +1101,11 @@ export class ManageContent implements OnInit {
         }
       });
     });
+  }
+
+  // TrackBy function for featured cars to improve performance
+  trackByFeaturedCarId(index: number, featuredCar: FeaturedCar): string {
+    return featuredCar._id || featuredCar.carId?._id || index.toString();
   }
 
   // ==================== ABOUT METHODS ====================

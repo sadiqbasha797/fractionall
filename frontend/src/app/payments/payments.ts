@@ -20,51 +20,63 @@ export class Payments implements OnInit {
   refunds: Refund[] = [];
   selectedRefund: Refund | null = null;
   pendingTokenRefunds: any[] = [];
-  
+
   // Authentication status
   isAuthenticated = false;
   userRole = '';
   authToken = '';
-  
+
   // Loading states
   loading = false;
   loadingStats = false;
   loadingRefunds = false;
-  
+
+  // Loading state for refresh functionality
+  isLoading: boolean = false;
+
   // Pagination
   currentPage = 1;
   pageSize = 10; // Set to 10 for better pagination
   totalPages = 1;
   totalItems = 0;
   hasMore = false;
-  
+
   // Filters
   filters: PaymentFilters = {
     count: 10, // Set to 10 for better pagination
     skip: 0
   };
-  
+
   // Filter form values
   statusFilter = '';
   methodFilter = '';
   fromDate = '';
   toDate = '';
   searchTerm = '';
-  
+
+  // Excel-like filter properties
+  showFilters = false;
+  uniqueEmails: string[] = [];
+  uniqueMethods: string[] = [];
+  amountRangeFilter = 'all';
+
   // Modal state
   showDetailsModal = false;
   showExportModal = false;
   showRefundModal = false;
   showRefundDetailsModal = false;
   showRefundsListModal = false;
-  
+
   // Refund form
   refundForm: RefundRequest = {
     paymentId: '',
     refundAmount: 0,
     reason: ''
   };
-  
+
+  // Refund amount in rupees for display
+  refundAmountInRupees: number = 0;
+
   // Available filter options
   statusOptions = [
     { value: '', label: 'All Statuses' },
@@ -74,7 +86,7 @@ export class Payments implements OnInit {
     { value: 'authorized', label: 'Authorized' },
     { value: 'refunded', label: 'Refunded' }
   ];
-  
+
   methodOptions = [
     { value: '', label: 'All Methods' },
     { value: 'card', label: 'Card' },
@@ -89,23 +101,23 @@ export class Payments implements OnInit {
     private tokenService: TokenService,
     private bookNowTokenService: BookNowTokenService,
     private authService: AuthService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Check authentication status
     this.checkAuthStatus();
-    
+
     this.loadTransactions();
     this.loadStats();
     this.loadRefunds();
     this.loadPendingTokenRefunds();
   }
-  
+
   checkAuthStatus(): void {
     this.isAuthenticated = this.authService.isLoggedIn();
     this.userRole = this.authService.getUserRole() || '';
     this.authToken = this.authService.getToken() || '';
-    
+
     console.log('Authentication Status:', {
       isAuthenticated: this.isAuthenticated,
       userRole: this.userRole,
@@ -117,18 +129,20 @@ export class Payments implements OnInit {
   // Load transactions with current filters
   loadTransactions(loadMore = false, page?: number): void {
     this.loading = true;
-    
+    this.isLoading = true;
+
     if (page !== undefined) {
       this.currentPage = page;
     }
-    
-    if (!loadMore) {
+
+    if (!loadMore && page === undefined) {
+      // Only reset to first page when applying filters (not when navigating to specific page)
       this.currentPage = 1;
-      this.filters.skip = 0;
       this.transactions = [];
-    } else {
-      this.filters.skip = (this.currentPage - 1) * this.pageSize;
     }
+
+    // Always calculate skip based on current page
+    this.filters.skip = (this.currentPage - 1) * this.pageSize;
 
     this.filters.count = this.pageSize;
     this.filters.status = this.statusFilter || undefined;
@@ -143,16 +157,19 @@ export class Payments implements OnInit {
             this.transactions = [...this.transactions, ...response.data.payments];
           } else {
             this.transactions = response.data.payments;
+            this.extractUniqueValues();
           }
           this.hasMore = response.data.has_more;
           this.totalItems = response.data.total_count;
           this.totalPages = Math.ceil(response.data.total_count / this.pageSize);
         }
         this.loading = false;
+        this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading transactions:', error);
         this.loading = false;
+        this.isLoading = false;
       }
     });
   }
@@ -160,7 +177,7 @@ export class Payments implements OnInit {
   // Load payment statistics
   loadStats(): void {
     this.loadingStats = true;
-    
+
     this.paymentService.getPaymentStats(this.fromDate, this.toDate).subscribe({
       next: (response) => {
         if (response.success) {
@@ -197,6 +214,17 @@ export class Payments implements OnInit {
     this.resetFilters();
   }
 
+  // Toggle filters visibility
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
+  }
+
+  // Extract unique values for filters
+  extractUniqueValues(): void {
+    this.uniqueEmails = [...new Set(this.transactions.map(t => t.email).filter(email => email))];
+    this.uniqueMethods = [...new Set(this.transactions.map(t => t.method).filter(method => method))];
+  }
+
   // Load more transactions (pagination)
   loadMoreTransactions(): void {
     if (this.hasMore && !this.loading) {
@@ -218,11 +246,11 @@ export class Payments implements OnInit {
     const maxVisible = 5;
     let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
     let end = Math.min(this.totalPages, start + maxVisible - 1);
-    
+
     if (end - start + 1 < maxVisible) {
       start = Math.max(1, end - maxVisible + 1);
     }
-    
+
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
@@ -348,9 +376,9 @@ export class Payments implements OnInit {
     if (!this.searchTerm) {
       return this.transactions;
     }
-    
+
     const term = this.searchTerm.toLowerCase();
-    return this.transactions.filter(transaction => 
+    return this.transactions.filter(transaction =>
       transaction.id.toLowerCase().includes(term) ||
       transaction.email.toLowerCase().includes(term) ||
       transaction.contact.includes(term) ||
@@ -368,7 +396,7 @@ export class Payments implements OnInit {
   // Load refunds
   loadRefunds(): void {
     this.loadingRefunds = true;
-    
+
     this.paymentService.getAllRefunds(1, 50).subscribe({
       next: (response) => {
         if (response.success) {
@@ -387,9 +415,10 @@ export class Payments implements OnInit {
   showRefundModalForTransaction(transaction: PaymentTransaction): void {
     this.refundForm = {
       paymentId: transaction.id,
-      refundAmount: this.formatAmount(transaction.amount),
+      refundAmount: transaction.amount, // Will be set in paise
       reason: ''
     };
+    this.refundAmountInRupees = this.formatAmount(transaction.amount); // Display in rupees
     this.showRefundModal = true;
   }
 
@@ -402,25 +431,31 @@ export class Payments implements OnInit {
 
     // Check authentication before proceeding
     this.checkAuthStatus();
-    
+
     if (!this.isAuthenticated) {
       alert('You are not authenticated. Please log in again.');
       return;
     }
-    
+
     if (this.userRole !== 'superadmin') {
       alert('Only superadmins can initiate refunds.');
       return;
     }
 
-    console.log('Initiating refund with form:', this.refundForm);
+    // Convert rupees to paise for the API call
+    const refundRequest = {
+      ...this.refundForm,
+      refundAmount: Math.round(this.refundAmountInRupees * 100) // Convert rupees to paise
+    };
+
+    console.log('Initiating refund with form:', refundRequest);
     console.log('Authentication status:', {
       isAuthenticated: this.isAuthenticated,
       userRole: this.userRole,
       hasToken: !!this.authToken
     });
 
-    this.paymentService.initiateRefund(this.refundForm).subscribe({
+    this.paymentService.initiateRefund(refundRequest).subscribe({
       next: (response) => {
         console.log('Refund initiation response:', response);
         if (response.success) {
@@ -464,6 +499,7 @@ export class Payments implements OnInit {
       refundAmount: 0,
       reason: ''
     };
+    this.refundAmountInRupees = 0;
   }
 
   closeRefundDetailsModal(): void {
@@ -534,17 +570,25 @@ export class Payments implements OnInit {
 
   // Check if transaction can be refunded
   canRefundTransaction(transaction: PaymentTransaction): boolean {
-    return transaction.status === 'captured' && 
-           transaction.amount > 0 && 
-           !this.hasExistingRefund(transaction.id);
+    return transaction.status === 'captured' &&
+      transaction.amount > 0 &&
+      !this.hasExistingRefund(transaction.id);
   }
 
   // Check if transaction has existing refund
   hasExistingRefund(paymentId: string): boolean {
-    return this.refunds.some(refund => 
-      refund.originalPaymentId === paymentId && 
+    return this.refunds.some(refund =>
+      refund.originalPaymentId === paymentId &&
       ['initiated', 'processed', 'successful'].includes(refund.refundStatus)
     );
+  }
+
+  // Refresh functionality
+  refreshTransactions(): void {
+    this.loadTransactions();
+    this.loadStats();
+    this.loadRefunds();
+    this.loadPendingTokenRefunds();
   }
 
   // Load pending token refunds
@@ -563,7 +607,7 @@ export class Payments implements OnInit {
               userPhone: token.userid?.phone || 'N/A',
               carName: token.carid?.carname || 'N/A'
             }));
-          
+
           this.pendingTokenRefunds = [...this.pendingTokenRefunds, ...refundInitiatedTokens];
         }
       },
@@ -586,7 +630,7 @@ export class Payments implements OnInit {
               userPhone: token.userid?.phone || 'N/A',
               carName: token.carid?.carname || 'N/A'
             }));
-          
+
           this.pendingTokenRefunds = [...this.pendingTokenRefunds, ...refundInitiatedBookNowTokens];
         }
       },

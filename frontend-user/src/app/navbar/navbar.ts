@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
+import { ScrollNavigationService } from '../services/scroll-navigation.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -13,20 +14,28 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./navbar.css'],
 })
 export class NavbarComponent implements OnInit, OnDestroy {
-  menuOpen = false;
   profileDropdownOpen = false;
   isLoggedIn = false;
   userData: any = null;
+  isMobile = false;
   private authSubscription?: Subscription;
+  private scrollSubscription?: Subscription;
+  activeScrollSection = '';
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private scrollNavigationService: ScrollNavigationService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
     // Check initial auth state
     this.checkAuthState();
+    
+    // Detect mobile device using user agent instead of screen width
+    // since we're forcing desktop view on mobile
+    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     // Listen for auth state changes (if you implement a subject for this)
     // For now, we'll check on component init and after navigation
@@ -35,11 +44,23 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.router.events.subscribe(() => {
       this.checkAuthState();
     });
+
+    // Subscribe to scroll navigation service for active section updates
+    this.scrollSubscription = this.scrollNavigationService.activeSection$.subscribe(
+      (activeSection) => {
+        this.activeScrollSection = activeSection;
+        // Trigger change detection after the current cycle to avoid ExpressionChangedAfterItHasBeenCheckedError
+        setTimeout(() => this.cdr.detectChanges(), 0);
+      }
+    );
   }
 
   ngOnDestroy() {
     if (this.authSubscription) {
       this.authSubscription.unsubscribe();
+    }
+    if (this.scrollSubscription) {
+      this.scrollSubscription.unsubscribe();
     }
   }
 
@@ -52,52 +73,66 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
-  openMenu() { 
-    this.menuOpen = true; 
-  }
-  
-  closeMenu() { 
-    this.menuOpen = false; 
-  }
-  
-  toggleMenu() { 
-    this.menuOpen = !this.menuOpen; 
-  }
 
   navigateToLogin() {
-    this.closeMenu();
     this.router.navigate(['/login']);
   }
 
   navigateToProfile() {
-    this.closeMenu();
     this.closeProfileDropdown();
     this.router.navigate(['/profile']);
   }
 
   navigateToInvestor() {
-    this.closeMenu();
     this.router.navigate(['/contact-us'], { queryParams: { type: 'investor' } });
   }
 
   scrollToFAQ() {
-    this.closeMenu();
-    // First navigate to home page
-    this.router.navigate(['/home']).then(() => {
-      // Wait for navigation to complete, then scroll to FAQ section
-      setTimeout(() => {
-        const faqElement = document.querySelector('[data-faq-section]');
-        if (faqElement) {
-          faqElement.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
-    });
+    // Check if we're already on the home page
+    if (this.router.url === '/home') {
+      // If already on home page, scroll directly to FAQ section
+      this.scrollToFAQSection();
+    } else {
+      // Navigate to home page first, then scroll to FAQ section
+      this.router.navigate(['/home']).then(() => {
+        this.scrollToFAQSection();
+      });
+    }
+  }
+
+  private scrollToFAQSection() {
+    // Use a more robust approach to ensure the element is available
+    const scrollToElement = () => {
+      const faqElement = document.querySelector('[data-faq-section]');
+      if (faqElement) {
+        // Get navbar height to offset the scroll position
+        const navbar = document.querySelector('nav');
+        const navbarHeight = navbar ? navbar.offsetHeight : 0;
+        
+        // Check if we're on mobile for additional offset
+        const mobileOffset = this.isMobile ? 40 : 20; // More offset on mobile
+        
+        // Calculate the position to scroll to (accounting for navbar height and device type)
+        const elementPosition = faqElement.getBoundingClientRect().top + window.pageYOffset;
+        const offsetPosition = elementPosition - navbarHeight - mobileOffset;
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      } else {
+        // If element not found, try again after a short delay
+        setTimeout(scrollToElement, 100);
+      }
+    };
+    
+    // Start scrolling after a short delay to ensure page is loaded
+    setTimeout(scrollToElement, 200);
   }
 
   logout() {
     this.authService.logout();
     this.checkAuthState();
-    this.closeMenu();
     this.closeProfileDropdown();
     this.router.navigate(['/']);
   }
@@ -138,6 +173,27 @@ export class NavbarComponent implements OnInit, OnDestroy {
       return this.userData.name.split(' ')[0];
     }
     return 'User';
+  }
+
+  // Check if a navigation item should be active based on scroll position
+  isNavItemActive(route: string): boolean {
+    // For home page, check if we're on home route and not in FAQ section
+    if (route === '/home') {
+      return this.router.url === '/home' && this.activeScrollSection !== 'faq';
+    }
+    
+    // For FAQ, check if we're in FAQ section
+    if (route === 'faq') {
+      return this.activeScrollSection === 'faq';
+    }
+    
+    // For other routes, use routerLinkActive
+    return this.router.url === route;
+  }
+
+  // Check if FAQ should be active
+  isFaqActive(): boolean {
+    return this.activeScrollSection === 'faq';
   }
 
   // Close dropdown when clicking outside

@@ -1499,6 +1499,20 @@ export class Profile implements OnInit {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
+  // Format price with commas
+  formatPrice(price: string | number | undefined): string {
+    if (!price) return 'N/A';
+    
+    // Convert to string and remove any existing commas and currency symbols
+    const priceStr = price.toString().replace(/[₹,\s]/g, '');
+    const priceNum = parseFloat(priceStr);
+    
+    if (isNaN(priceNum)) return 'N/A';
+    
+    // Format with commas using Indian number system
+    return priceNum.toLocaleString('en-IN');
+  }
+
   // Submit shared member form
   onSubmitSharedMember() {
     const form = this.sharedMemberForm();

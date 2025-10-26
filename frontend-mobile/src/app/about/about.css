@@ -1,0 +1,370 @@
+/* About page specific styles */
+.about-hero {
+  background: linear-gradient(135deg, #f5f5f5 0%, #e5e5e5 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.about-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.4) 0%, rgba(30, 41, 59, 0.3) 100%);
+  z-index: 1;
+}
+
+/* Feature Cards */
+.about-feature-card {
+  background: rgba(16, 26, 35, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(49, 77, 104, 0.3);
+  border-radius: 1rem;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.about-feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+
+.about-feature-card:hover::before {
+  opacity: 1;
+}
+
+.about-feature-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 20px 40px rgba(59, 130, 246, 0.1), 0 0 20px rgba(59, 130, 246, 0.05);
+}
+
+.feature-icon {
+  width: 4rem;
+  height: 4rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  color: white;
+  position: relative;
+  z-index: 1;
+}
+
+.feature-icon svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+/* Story Card */
+.about-story-card {
+  background: rgba(16, 26, 35, 0.8);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(49, 77, 104, 0.4);
+  border-radius: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.about-story-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(6, 182, 212, 0.03) 100%);
+  z-index: 0;
+}
+
+.about-story-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Button Styles */
+.btn-outline-white {
+  background: transparent !important;
+  border: none !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-white:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.btn-outline-white:hover {
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.18), 0 0 10px rgba(59, 130, 246, 0.25);
+  transform: translateY(-1px) scale(1.01);
+}
+
+/* Gradient Button */
+.bg-gradient-to-r {
+  background: linear-gradient(to right, #2563eb, #06b6d4);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.bg-gradient-to-r:hover {
+  background: linear-gradient(to right, #1d4ed8, #0891b2);
+  transform: translateY(-1px) scale(1.01);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .about-hero {
+    min-height: 500px;
+  }
+  
+  .about-hero h1 {
+    font-size: 3rem;
+    line-height: 1.1;
+  }
+  
+  .about-hero p {
+    font-size: 1.125rem;
+    line-height: 1.6;
+  }
+  
+  .about-feature-card {
+    padding: 1.5rem;
+  }
+  
+  .about-story-card {
+    padding: 1.5rem;
+  }
+  
+  .feature-icon {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 1rem;
+  }
+  
+  .feature-icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-hero {
+    min-height: 400px;
+  }
+  
+  .about-hero h1 {
+    font-size: 2.5rem;
+  }
+  
+  .about-hero p {
+    font-size: 1rem;
+  }
+  
+  .about-feature-card {
+    padding: 1.25rem;
+  }
+  
+  .about-story-card {
+    padding: 1.25rem;
+  }
+  
+  .feature-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  
+  .feature-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+/* Animation enhancements */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.about-feature-card:hover .feature-icon {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Glass morphism effect */
+.about-feature-card,
+.about-story-card {
+  background: rgba(16, 26, 35, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Simple Steps List Styles */
+.simple-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Step card styling */
+.simple-step-card {
+  background: rgba(245, 245, 245, 0.8);
+  border: 1px solid rgba(156, 163, 175, 0.3);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  min-height: auto;
+  width: 100%;
+}
+
+/* Step header styling */
+.step-header {
+  transition: all 0.3s ease;
+}
+
+.step-header:hover {
+  transform: translateX(4px);
+}
+
+.step-toggle-icon {
+  color: #6b7280;
+  transition: all 0.3s ease;
+}
+
+.step-toggle-icon:hover {
+  color: #374151;
+}
+
+/* Step content styling */
+.step-content {
+  overflow: hidden;
+  transition: all 0.3s ease;
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.step-content.expanded {
+  max-height: 200px;
+  opacity: 1;
+  margin-top: 1rem;
+  padding-top: 0;
+}
+
+.simple-step-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+
+.simple-step-card:hover::before {
+  opacity: 1;
+}
+
+.simple-step-card:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-2px);
+}
+
+.simple-step-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.step-number {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  margin-top: 0.25rem; /* Align with first line of text */
+}
+
+.step-title {
+  color: #1f2937;
+  font-weight: bold;
+  font-size: 1rem;
+  margin-bottom: 0;
+  line-height: 1.4;
+  margin-top: 0;
+  transition: color 0.3s ease;
+}
+
+.step-header:hover .step-title {
+  color: #374151;
+}
+
+.step-description {
+  color: #4b5563;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin-top: 0; /* Remove any top margin */
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .simple-steps-list {
+    gap: 0.75rem;
+    max-width: 100%;
+  }
+  
+  .simple-step-card {
+    padding: 1rem;
+  }
+  
+  .step-number {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.75rem;
+  }
+  
+  .step-title {
+    font-size: 0.875rem;
+  }
+  
+  .step-description {
+    font-size: 0.8rem;
+  }
+  
+  .step-content.expanded {
+    max-height: 120px;
+  }
+  
+  .step-toggle-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+}

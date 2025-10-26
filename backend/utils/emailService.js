@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const nodemailer = require('nodemailer');
 const { createTransporter } = require('../config/mail');
 const logger = require('./logger');
 
@@ -27,6 +28,20 @@ const replacePlaceholders = (template, data) => {
   return processedTemplate;
 };
 
+// Create contact form specific transporter
+const createContactFormTransporter = () => {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'contact-us@fractioncar.com',
+      pass: 'svkr fjvh reja dxcd'
+    },
+    tls: {
+      rejectUnauthorized: false
+    }
+  });
+};
+
 // Generic email sending function
 const sendEmail = async (to, subject, htmlContent, textContent = null) => {
   try {
@@ -34,7 +49,7 @@ const sendEmail = async (to, subject, htmlContent, textContent = null) => {
     
     const mailOptions = {
       from: {
-        name: 'Fraction - Car Sharing',
+        name: 'FractionCar - Car Sharing',
         address: process.env.MAIL
       },
       to: to,
@@ -51,6 +66,37 @@ const sendEmail = async (to, subject, htmlContent, textContent = null) => {
     };
   } catch (error) {
     logger(`Error sending email to ${to}: ${error.message}`);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
+
+// Contact form specific email sending function
+const sendContactFormEmail = async (to, subject, htmlContent, textContent = null) => {
+  try {
+    const transporter = createContactFormTransporter();
+    
+    const mailOptions = {
+      from: {
+        name: 'FractionCar - Contact Support',
+        address: 'contact-us@fractioncar.com'
+      },
+      to: to,
+      subject: subject,
+      html: htmlContent,
+      text: textContent || htmlContent.replace(/<[^>]*>/g, '') // Strip HTML for text version
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    logger(`Contact form email sent successfully to ${to}: ${result.messageId}`);
+    return {
+      success: true,
+      messageId: result.messageId
+    };
+  } catch (error) {
+    logger(`Error sending contact form email to ${to}: ${error.message}`);
     return {
       success: false,
       error: error.message
@@ -149,6 +195,35 @@ const sendKycRejectedEmail = async (userDetails, rejectionComments) => {
   }
 };
 
+// KYC reminder email
+const sendKycReminderEmail = async (userDetails, daysSinceRegistration) => {
+  try {
+    const template = readTemplate('kyc-reminder');
+    
+    const templateData = {
+      userName: userDetails.name,
+      daysSinceRegistration: daysSinceRegistration,
+      registrationDate: userDetails.createdAt.toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      kycLink: `${process.env.FRONTEND_URL || 'http://localhost:4200'}/kyc-verification`
+    };
+    
+    const htmlContent = replacePlaceholders(template, templateData);
+    
+    return await sendEmail(
+      userDetails.email,
+      '📋 Complete Your KYC Verification - Fraction',
+      htmlContent
+    );
+  } catch (error) {
+    logger(`Error sending KYC reminder email: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+};
+
 
 // Password reset email (if needed in future)
 const sendPasswordResetEmail = async (userDetails, resetToken) => {
@@ -194,7 +269,7 @@ const sendVerificationEmail = async (userDetails, verificationCode) => {
     
     return await sendEmail(
       userDetails.email,
-      '📧 Verify Your Email - Fraction Account',
+      '📧 Verify Your Email - Fraction Car Account',
       htmlContent
     );
   } catch (error) {
@@ -235,6 +310,12 @@ const sendTokenPurchaseConfirmationEmail = async (userDetails, tokenDetails, car
   try {
     const template = readTemplate('token-purchase-confirmation');
     
+    // Map car fields safely from schema
+    const carName = carDetails?.carname || carDetails?.name || 'N/A';
+    const carBrand = carDetails?.brandname || carDetails?.brand || 'N/A';
+    const carYear = carDetails?.year || carDetails?.modelYear || 'N/A';
+    const carLocation = carDetails?.location || 'N/A';
+
     const templateData = {
       userName: userDetails.name,
       tokenId: tokenDetails._id,
@@ -252,10 +333,10 @@ const sendTokenPurchaseConfirmationEmail = async (userDetails, tokenDetails, car
         day: 'numeric'
       }),
       status: tokenDetails.status,
-      carName: carDetails.name,
-      carBrand: carDetails.brand,
-      carYear: carDetails.year,
-      carLocation: carDetails.location,
+      carName: carName,
+      carBrand: carBrand,
+      carYear: carYear,
+      carLocation: carLocation,
       amountPaid: tokenDetails.amountpaid,
       dashboardLink: `${process.env.FRONTEND_URL || 'http://localhost:4200'}/dashboard`
     };
@@ -278,6 +359,12 @@ const sendBookNowTokenPurchaseConfirmationEmail = async (userDetails, tokenDetai
   try {
     const template = readTemplate('booknow-token-purchase-confirmation');
     
+    // Map car fields safely from schema
+    const carName = carDetails?.carname || carDetails?.name || 'N/A';
+    const carBrand = carDetails?.brandname || carDetails?.brand || 'N/A';
+    const carYear = carDetails?.year || carDetails?.modelYear || 'N/A';
+    const carLocation = carDetails?.location || 'N/A';
+
     const templateData = {
       userName: userDetails.name,
       tokenId: tokenDetails._id,
@@ -295,10 +382,10 @@ const sendBookNowTokenPurchaseConfirmationEmail = async (userDetails, tokenDetai
         day: 'numeric'
       }),
       status: tokenDetails.status,
-      carName: carDetails.name,
-      carBrand: carDetails.brand,
-      carYear: carDetails.year,
-      carLocation: carDetails.location,
+      carName: carName,
+      carBrand: carBrand,
+      carYear: carYear,
+      carLocation: carLocation,
       amountPaid: tokenDetails.amountpaid,
       bookingLink: `${process.env.FRONTEND_URL || 'http://localhost:4200'}/cars/${carDetails._id}`
     };
@@ -534,6 +621,12 @@ const sendBookingConfirmationEmail = async (userDetails, bookingDetails, carDeta
     const durationDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
     const duration = durationDays === 1 ? '1 day' : `${durationDays} days`;
     
+    // Map car fields safely from schema
+    const carName = carDetails?.carname || carDetails?.name || 'N/A';
+    const carBrand = carDetails?.brandname || carDetails?.brand || 'N/A';
+    const carYear = carDetails?.year || carDetails?.modelYear || 'N/A';
+    const carLocation = carDetails?.location || 'N/A';
+    
     const templateData = {
       userName: userDetails.name,
       bookingId: bookingDetails._id,
@@ -559,10 +652,10 @@ const sendBookingConfirmationEmail = async (userDetails, bookingDetails, carDeta
       }),
       bookingStatus: bookingDetails.status,
       comments: bookingDetails.comments || '',
-      carName: carDetails.name,
-      carBrand: carDetails.brand,
-      carYear: carDetails.year,
-      carLocation: carDetails.location,
+      carName: carName,
+      carBrand: carBrand,
+      carYear: carYear,
+      carLocation: carLocation,
       bookingDetailsLink: `${process.env.FRONTEND_URL || 'http://localhost:4200'}/bookings/${bookingDetails._id}`
     };
     
@@ -848,9 +941,11 @@ const sendSharedMemberRejectedNotification = async (userDetails, sharedMemberDet
 
 module.exports = {
   sendEmail,
+  sendContactFormEmail,
   sendWelcomeEmail,
   sendKycApprovedEmail,
   sendKycRejectedEmail,
+  sendKycReminderEmail,
   sendBookingConfirmationEmail,
   sendPasswordResetEmail,
   sendVerificationEmail,

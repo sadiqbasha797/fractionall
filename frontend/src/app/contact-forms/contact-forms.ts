@@ -16,6 +16,9 @@ export class ContactForms implements OnInit {
   loading = false;
   error = '';
   
+  // Loading state for refresh functionality
+  isLoading: boolean = false;
+  
   // Pagination
   currentPage = 1;
   itemsPerPage = 10;
@@ -24,7 +27,6 @@ export class ContactForms implements OnInit {
   
   // Filters
   statusFilter = '';
-  priorityFilter = '';
   searchQuery = '';
   
   // Selected contact form for details
@@ -33,8 +35,11 @@ export class ContactForms implements OnInit {
   
   // Update form
   updateStatus = '';
-  updatePriority = '';
   adminNote = '';
+  
+  // Reply form
+  replySubject = '';
+  replyMessage = '';
 
   constructor(private contactService: ContactService) {}
 
@@ -44,13 +49,13 @@ export class ContactForms implements OnInit {
 
   loadContactForms() {
     this.loading = true;
+    this.isLoading = true;
     this.error = '';
     
     const params = {
       page: this.currentPage,
       limit: this.itemsPerPage,
       ...(this.statusFilter && { status: this.statusFilter }),
-      ...(this.priorityFilter && { priority: this.priorityFilter }),
       ...(this.searchQuery && { search: this.searchQuery })
     };
 
@@ -61,12 +66,19 @@ export class ContactForms implements OnInit {
         this.totalPages = response.body.pagination.totalPages;
         this.totalContactForms = response.body.pagination.totalItems;
         this.loading = false;
+        this.isLoading = false;
       },
       error: (error) => {
         this.error = error.error?.message || 'Failed to load contact forms';
         this.loading = false;
+        this.isLoading = false;
       }
     });
+  }
+
+  // Refresh functionality
+  refreshContactForms(): void {
+    this.loadContactForms();
   }
 
 
@@ -101,17 +113,24 @@ export class ContactForms implements OnInit {
   viewDetails(contactForm: ContactForm) {
     this.selectedContactForm = contactForm;
     this.updateStatus = contactForm.status;
-    this.updatePriority = contactForm.priority;
     this.adminNote = '';
+    this.replySubject = `Re: ${contactForm.subject}`;
+    this.replyMessage = '';
     this.showDetailsModal = true;
+    
+    // Automatically mark as read when admin/superadmin opens the contact form
+    if (contactForm.status === 'new') {
+      this.markAsRead(contactForm._id);
+    }
   }
 
   closeDetailsModal() {
     this.showDetailsModal = false;
     this.selectedContactForm = null;
     this.updateStatus = '';
-    this.updatePriority = '';
     this.adminNote = '';
+    this.replySubject = '';
+    this.replyMessage = '';
   }
 
   updateContactForm() {
@@ -120,9 +139,6 @@ export class ContactForms implements OnInit {
     const updateData: any = {};
     if (this.updateStatus !== this.selectedContactForm.status) {
       updateData.status = this.updateStatus;
-    }
-    if (this.updatePriority !== this.selectedContactForm.priority) {
-      updateData.priority = this.updatePriority;
     }
     if (this.adminNote.trim()) {
       updateData.adminNote = this.adminNote.trim();
@@ -172,24 +188,72 @@ export class ContactForms implements OnInit {
     }
   }
 
-  getPriorityClass(priority: string): string {
-    switch (priority) {
-      case 'high': return 'priority-high';
-      case 'medium': return 'priority-medium';
-      case 'low': return 'priority-low';
-      default: return 'priority-default';
-    }
-  }
-
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleString('en-IN');
   }
 
   clearFilters() {
     this.statusFilter = '';
-    this.priorityFilter = '';
     this.searchQuery = '';
     this.onFilterChange();
+  }
+
+  markAsRead(contactFormId: string) {
+    this.contactService.updateContactFormStatus(contactFormId, { status: 'read' }).subscribe({
+      next: (response) => {
+        // Update the contact form in the list
+        const index = this.contactForms.findIndex(form => form._id === contactFormId);
+        if (index !== -1) {
+          this.contactForms[index] = response.body.contactForm;
+        }
+        // Update selected contact form if it's the same
+        if (this.selectedContactForm?._id === contactFormId) {
+          this.selectedContactForm = response.body.contactForm;
+          this.updateStatus = 'read';
+        }
+      },
+      error: (error) => {
+        console.error('Failed to mark as read:', error);
+      }
+    });
+  }
+
+  sendReply() {
+    if (!this.selectedContactForm || !this.replyMessage.trim()) return;
+
+    const replyData = {
+      subject: this.replySubject.trim() || `Re: ${this.selectedContactForm.subject}`,
+      message: this.replyMessage.trim()
+    };
+
+    this.contactService.sendReply(this.selectedContactForm._id, replyData).subscribe({
+      next: (response) => {
+        // Update the contact form status to replied
+        this.selectedContactForm = response.body.contactForm;
+        this.updateStatus = 'replied';
+        
+        // Update the contact form in the list
+        const index = this.contactForms.findIndex(form => form._id === this.selectedContactForm!._id);
+        if (index !== -1) {
+          this.contactForms[index] = response.body.contactForm;
+        }
+        
+        // Clear reply form
+        this.clearReply();
+        
+        // Show success message
+        this.error = ''; // Clear any existing errors
+        // You could add a success message here if needed
+      },
+      error: (error) => {
+        this.error = error.error?.message || 'Failed to send reply';
+      }
+    });
+  }
+
+  clearReply() {
+    this.replySubject = this.selectedContactForm ? `Re: ${this.selectedContactForm.subject}` : '';
+    this.replyMessage = '';
   }
 
   // Add Math property for template access

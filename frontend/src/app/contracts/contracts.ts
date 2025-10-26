@@ -28,6 +28,12 @@ export class Contracts implements OnInit {
   searchTerm: string = '';
   createdByFilter: string = 'all';
   documentsFilter: string = 'all';
+  userFilter: string = 'all';
+  carFilter: string = 'all';
+  priceRangeFilter: string = 'all';
+  uniqueUsers: string[] = [];
+  uniqueCars: string[] = [];
+  showFilters = false;
   
   // Pagination
   currentPage = 1;
@@ -62,6 +68,9 @@ export class Contracts implements OnInit {
   // Loading states
   isSubmitting: boolean = false;
   isUploading: boolean = false;
+  
+  // Loading state for refresh functionality
+  isLoading: boolean = false;
 
   // User permissions
   isAdmin: boolean = false;
@@ -260,6 +269,14 @@ export class Contracts implements OnInit {
     });
   }
 
+  // Refresh functionality
+  refreshContracts(): void {
+    this.isLoading = true;
+    this.loadInitialData().finally(() => {
+      this.isLoading = false;
+    });
+  }
+
   async loadUsers(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.userService.getUsers().subscribe({
@@ -321,6 +338,22 @@ export class Contracts implements OnInit {
     this.applyFilters();
   }
 
+  onUserFilterChange(): void {
+    this.applyFilters();
+  }
+
+  onCarFilterChange(): void {
+    this.applyFilters();
+  }
+
+  onPriceRangeFilterChange(): void {
+    this.applyFilters();
+  }
+
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
+  }
+
   applyFilters(): void {
     this.filteredContracts = this.contracts.filter(contract => {
       const matchesSearch = !this.searchTerm || 
@@ -335,7 +368,24 @@ export class Contracts implements OnInit {
         (this.documentsFilter === 'with-docs' && contract.contract_docs && contract.contract_docs.length > 0) ||
         (this.documentsFilter === 'without-docs' && (!contract.contract_docs || contract.contract_docs.length === 0));
       
-      return matchesSearch && matchesCreatedBy && matchesDocuments;
+      // User filter
+      const matchesUser = this.userFilter === 'all' || 
+        this.getUserName(contract.userid) === this.userFilter;
+
+      // Car filter
+      const matchesCar = this.carFilter === 'all' || 
+        this.getCarName(contract.carid) === this.carFilter;
+
+      // Price range filter
+      const ticketPrice = this.getTicketPrice(contract.ticketid);
+      const matchesPriceRange = this.priceRangeFilter === 'all' ||
+        (this.priceRangeFilter === '0-50000' && ticketPrice >= 0 && ticketPrice <= 50000) ||
+        (this.priceRangeFilter === '50000-100000' && ticketPrice > 50000 && ticketPrice <= 100000) ||
+        (this.priceRangeFilter === '100000-200000' && ticketPrice > 100000 && ticketPrice <= 200000) ||
+        (this.priceRangeFilter === '200000+' && ticketPrice > 200000);
+
+      return matchesSearch && matchesCreatedBy && matchesDocuments && 
+             matchesUser && matchesCar && matchesPriceRange;
     });
     
     // Update pagination

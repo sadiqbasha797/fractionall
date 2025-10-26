@@ -9,6 +9,7 @@ import { Bookings } from './bookings/bookings';
 import { About } from './about/about';
 import { ContactUs } from './contact-us/contact-us';
 import { NotificationsComponent } from './notifications/notifications.component';
+import { OurStoryComponent } from './our-story/our-story';
 
 export const routes: Routes = [
   { path: 'home', component: HomeComponent },
@@ -20,6 +21,7 @@ export const routes: Routes = [
   { path: 'bookings', component: Bookings },
   { path: 'notifications', component: NotificationsComponent },
   { path: 'about', component: About },
+  { path: 'our-story', component: OurStoryComponent },
   { path: 'contact-us', component: ContactUs },
   { path: '', redirectTo: '/home', pathMatch: 'full' },
   { path: '**', redirectTo: '/home' } // Wildcard route for any unmatched URL

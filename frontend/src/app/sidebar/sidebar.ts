@@ -11,6 +11,7 @@ import { AuthService } from '../services/auth.service';
 })
 export class Sidebar implements OnInit {
   @Input() isMobileMenuOpen: boolean = false;
+  @Input() isMobile: boolean = false;
   @Output() sidebarClose = new EventEmitter<void>();
   
   

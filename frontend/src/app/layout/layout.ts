@@ -24,7 +24,8 @@ export class Layout implements OnInit {
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
     if (this.isBrowser) {
-      this.isMobile = window.innerWidth < 768;
+      // Force desktop layout but detect actual mobile device for sidebar behavior
+      this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       this.isSidebarOpen = !this.isMobile; // Open by default on desktop, closed on mobile
     }
   }
@@ -32,15 +33,9 @@ export class Layout implements OnInit {
   @HostListener('window:resize', ['$event'])
   onResize(event: any) {
     if (this.isBrowser) {
-      const wasNotMobile = !this.isMobile;
-      this.isMobile = window.innerWidth < 768;
-      if (wasNotMobile && this.isMobile) {
-        // Switching to mobile view
-        this.isSidebarOpen = false;
-      } else if (!this.isMobile && !wasNotMobile) {
-        // Switching to desktop view
-        this.isSidebarOpen = true;
-      }
+      // Maintain mobile detection based on user agent, not screen size
+      // since we're forcing desktop view on mobile devices
+      // No need to change isMobile based on window width anymore
     }
   }
 
