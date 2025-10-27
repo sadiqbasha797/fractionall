@@ -559,7 +559,7 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // Helper methods for template
-  getFormattedPrice(price: string | undefined): string {
+ getFormattedPrice(price: number | string | undefined): string {
     if (!price) return 'N/A';
     
     // Convert to string and remove any existing commas and currency symbols
@@ -569,13 +569,15 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
     if (isNaN(priceNum)) return 'N/A';
     
     // Format with commas using Indian number system
-    const formattedPrice = priceNum.toLocaleString('en-IN');
+    const formattedPrice = Math.abs(priceNum).toLocaleString('en-IN', {
+      maximumFractionDigits: 0
+    });
     
     // If original price didn't include currency symbol, add ₹
-    if (!price.includes('₹') && !price.includes('Rs')) {
+    if (typeof price === 'string' && !price.includes('₹') && !price.includes('Rs')) {
       return `₹${formattedPrice}`;
     }
-    return formattedPrice;
+    return `₹${formattedPrice}`;
   }
 
   getFractionPrice(): string {
@@ -586,9 +588,9 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
     
     // Calculate fraction price if not provided
     if (carData?.price && carData?.totaltickets) {
-      const priceNum = parseFloat(carData.price.replace(/[₹,\s]/g, ''));
+      const priceNum = parseFloat(carData.price.toString().replace(/[₹,\s]/g, ''));
       const fractionPrice = priceNum / carData.totaltickets;
-      return `₹${fractionPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      return this.getFormattedPrice(fractionPrice);
     }
     
     return 'N/A';
@@ -607,10 +609,10 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   getAMCPerYear(): string {
     const carData = this.carData();
     if (carData?.amcperticket) {
-      const amcPerTicket = parseFloat(carData.amcperticket.replace(/[₹,\s]/g, ''));
+      const amcPerTicket = parseFloat(carData.amcperticket.toString().replace(/[₹,\s]/g, ''));
       const contractYears = this.getContractYears();
       const amcPerYear = amcPerTicket / contractYears;
-      return `₹${amcPerYear.toFixed(0)}`;
+      return this.getFormattedPrice(amcPerYear);
     }
     return '₹11,000'; // Default fallback (₹55,000 / 5 years)
   }
@@ -618,8 +620,8 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   getTotalAMCForContract(): string {
     const carData = this.carData();
     if (carData?.amcperticket) {
-      const amcPerTicket = parseFloat(carData.amcperticket.replace(/[₹,\s]/g, ''));
-      return `₹${amcPerTicket.toFixed(0)}`;
+      const amcPerTicket = parseFloat(carData.amcperticket.toString().replace(/[₹,\s]/g, ''));
+      return this.getFormattedPrice(amcPerTicket);
     }
     return '₹55,000'; // Default fallback
   }
@@ -1138,9 +1140,9 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   getPaymentAmount(): number {
     const carData = this.carData();
     if (this.paymentType() === 'book-now') {
-      return parseFloat(carData?.bookNowTokenPrice?.replace(/[₹,\s]/g, '') || '3999');
+      return parseFloat(carData?.bookNowTokenPrice?.toString().replace(/[₹,\s]/g, '') || '3999');
     } else {
-      return parseFloat(carData?.tokenprice?.replace(/[₹,\s]/g, '') || '199');
+      return parseFloat(carData?.tokenprice?.toString().replace(/[₹,\s]/g, '') || '199');
     }
   }
 

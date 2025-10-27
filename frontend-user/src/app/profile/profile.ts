@@ -1500,7 +1500,7 @@ export class Profile implements OnInit {
   }
 
   // Format price with commas
-  formatPrice(price: string | number | undefined): string {
+  formatPrice(price: number | string | undefined): string {
     if (!price) return 'N/A';
     
     // Convert to string and remove any existing commas and currency symbols
@@ -1510,7 +1510,9 @@ export class Profile implements OnInit {
     if (isNaN(priceNum)) return 'N/A';
     
     // Format with commas using Indian number system
-    return priceNum.toLocaleString('en-IN');
+    return Math.abs(priceNum).toLocaleString('en-IN', {
+      maximumFractionDigits: 0
+    });
   }
 
   // Submit shared member form

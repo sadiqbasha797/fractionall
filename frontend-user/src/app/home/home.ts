@@ -487,7 +487,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
             .map((featuredCar: FeaturedCar) => ({
               id: featuredCar.carId._id,
               image: featuredCar.carId.images && featuredCar.carId.images.length > 0 ? featuredCar.carId.images[0] : '/car-1.jpg',
-              tokenPrice: featuredCar.carId.tokenprice ? featuredCar.carId.tokenprice.toLocaleString() : '0',
+              tokenPrice: featuredCar.carId.tokenprice ? Math.abs(featuredCar.carId.tokenprice).toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '0',
               name: featuredCar.carId.carname || 'Unknown',
               brand: featuredCar.carId.brandname || 'Unknown',
               fuel: this.getFuelType(featuredCar.carId.milege || ''),
@@ -528,7 +528,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
                 .map((car: any) => ({
                   id: car._id,
                   image: car.images && car.images.length > 0 ? car.images[0] : '/car-1.jpg',
-                  tokenPrice: car.tokenprice ? car.tokenprice.toLocaleString() : '0',
+                  tokenPrice: car.tokenprice ? Math.abs(car.tokenprice).toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '0',
                   name: car.carname || 'Unknown',
                   brand: car.brandname || 'Unknown',
                   fuel: this.getFuelType(car.milege || ''),
@@ -996,9 +996,22 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   formatPrice(price: number | string): string {
     if (typeof price === 'number') {
-      return price.toLocaleString('en-IN');
+      // Handle negative numbers and ensure proper formatting
+      return Math.abs(price).toLocaleString('en-IN', {
+        maximumFractionDigits: 0
+      });
     }
-    return price.toString();
+    
+    if (typeof price === 'string') {
+      const num = parseFloat(price);
+      if (!isNaN(num)) {
+        return Math.abs(num).toLocaleString('en-IN', {
+          maximumFractionDigits: 0
+        });
+      }
+    }
+    
+    return String(price);
   }
 
 }
