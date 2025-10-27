@@ -991,6 +991,16 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  /**
+   * Format price with commas for better readability
+   */
+  formatPrice(price: number | string): string {
+    if (typeof price === 'number') {
+      return price.toLocaleString('en-IN');
+    }
+    return price.toString();
+  }
+
 }
 
 

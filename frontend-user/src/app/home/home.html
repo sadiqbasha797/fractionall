@@ -187,7 +187,7 @@
                         <div *ngIf="car.tokensAvailable === 0 && car.ticketsAvailable === 0"
                           class="text-xs bg-red-600 text-white rounded-full px-2 py-0.5">Sold Out</div>
                         <div *ngIf="car.fractionPrice" class="flex items-center gap-2">
-                          <div class="text-blue-400 font-semibold text-base">₹{{ car.fractionPrice }}<span class="text-gray-400 text-sm font-normal">/per share</span></div>
+                          <div class="text-blue-400 font-semibold text-base">₹{{ formatPrice(car.fractionPrice) }}<span class="text-gray-400 text-sm font-normal">/per share</span></div>
                           <button 
                             (click)="showPricingInfo($event)"
                             class="w-4 h-4 rounded-full bg-gray-600 hover:bg-gray-500 flex items-center justify-center transition-colors group relative"

@@ -951,14 +951,14 @@ export class Cars implements OnInit, AfterViewInit {
   }
 
   // Format price with commas
-  formatPrice(price: string | number | undefined): string {
-    if (!price) return 'N/A';
+ formatPrice(price: number | string | undefined): string {
+    if (!price) return '0';
     
     // Convert to string and remove any existing commas and currency symbols
     const priceStr = price.toString().replace(/[₹,\s]/g, '');
     const priceNum = parseFloat(priceStr);
     
-    if (isNaN(priceNum)) return 'N/A';
+    if (isNaN(priceNum)) return '0';
     
     // Format with commas using Indian number system
     return priceNum.toLocaleString('en-IN');
