@@ -16,27 +16,57 @@ const logger = require('../utils/logger');
 const createHeroContent = async (req, res) => {
   try {
     const { heroText, subText } = req.body;
-    let bgImage = req.body.bgImage; // Default to provided URL
+    let bgImage1 = req.body.bgImage1 || '';
+    let bgImage2 = req.body.bgImage2 || '';
+    let bgImage3 = req.body.bgImage3 || '';
 
-    // Handle image upload if file is provided
-    if (req.file) {
-      try {
-        const result = await cloudinary.uploader.upload(req.file.path);
-        bgImage = result.secure_url;
-        // Delete the temporary file
-        fs.unlinkSync(req.file.path);
-      } catch (uploadError) {
-        logger(`Error uploading image to Cloudinary: ${uploadError.message}`);
-        return res.status(500).json({
-          status: 'failed',
-          body: {},
-          message: 'Error uploading image'
-        });
+    // Handle image uploads if files are provided
+    if (req.files && req.files.bgImage1) {
+      const bgImage1File = Array.isArray(req.files.bgImage1) ? req.files.bgImage1[0] : req.files.bgImage1;
+      if (bgImage1File) {
+        try {
+          const result1 = await cloudinary.uploader.upload(bgImage1File.path);
+          bgImage1 = result1.secure_url;
+          fs.unlinkSync(bgImage1File.path);
+        } catch (uploadError) {
+          logger(`Error uploading bgImage1 to Cloudinary: ${uploadError.message}`);
+          return res.status(500).json({ status: 'failed', body: {}, message: 'Error uploading bgImage1' });
+        }
+      }
+    }
+
+    if (req.files && req.files.bgImage2) {
+      const bgImage2File = Array.isArray(req.files.bgImage2) ? req.files.bgImage2[0] : req.files.bgImage2;
+      if (bgImage2File) {
+        try {
+          const result2 = await cloudinary.uploader.upload(bgImage2File.path);
+          bgImage2 = result2.secure_url;
+          fs.unlinkSync(bgImage2File.path);
+        } catch (uploadError) {
+          logger(`Error uploading bgImage2 to Cloudinary: ${uploadError.message}`);
+          return res.status(500).json({ status: 'failed', body: {}, message: 'Error uploading bgImage2' });
+        }
+      }
+    }
+
+    if (req.files && req.files.bgImage3) {
+      const bgImage3File = Array.isArray(req.files.bgImage3) ? req.files.bgImage3[0] : req.files.bgImage3;
+      if (bgImage3File) {
+        try {
+          const result3 = await cloudinary.uploader.upload(bgImage3File.path);
+          bgImage3 = result3.secure_url;
+          fs.unlinkSync(bgImage3File.path);
+        } catch (uploadError) {
+          logger(`Error uploading bgImage3 to Cloudinary: ${uploadError.message}`);
+          return res.status(500).json({ status: 'failed', body: {}, message: 'Error uploading bgImage3' });
+        }
       }
     }
 
     const heroContent = new HeroContent({ 
-      bgImage, 
+      bgImage1,
+      bgImage2,
+      bgImage3,
       heroText, 
       subText, 
       createdBy: req.user.id 
@@ -106,37 +136,70 @@ const getHeroContentById = async (req, res) => {
 const updateHeroContent = async (req, res) => {
   try {
     const { heroText, subText } = req.body;
-    let bgImage = req.body.bgImage; // Default to provided URL
-
-    // Handle image upload if file is provided
-    if (req.file) {
-      try {
-        const result = await cloudinary.uploader.upload(req.file.path);
-        bgImage = result.secure_url;
-        // Delete the temporary file
-        fs.unlinkSync(req.file.path);
-      } catch (uploadError) {
-        logger(`Error uploading image to Cloudinary: ${uploadError.message}`);
-        return res.status(500).json({
-          status: 'failed',
-          body: {},
-          message: 'Error uploading image'
-        });
-      }
-    }
-
-    const updatedHeroContent = await HeroContent.findByIdAndUpdate(
-      req.params.id,
-      { bgImage, heroText, subText },
-      { new: true }
-    ).populate('createdBy', 'name email');
-    if (!updatedHeroContent) {
+    const existing = await HeroContent.findById(req.params.id);
+    
+    if (!existing) {
       return res.status(404).json({
         status: 'failed',
         body: {},
         message: 'Hero content not found'
       });
     }
+
+    // Start with existing values, then override with provided URLs or uploads
+    let bgImage1 = typeof req.body.bgImage1 === 'string' ? req.body.bgImage1 : existing.bgImage1 || '';
+    let bgImage2 = typeof req.body.bgImage2 === 'string' ? req.body.bgImage2 : existing.bgImage2 || '';
+    let bgImage3 = typeof req.body.bgImage3 === 'string' ? req.body.bgImage3 : existing.bgImage3 || '';
+
+    // Handle image uploads if files are provided
+    if (req.files && req.files.bgImage1) {
+      const bgImage1File = Array.isArray(req.files.bgImage1) ? req.files.bgImage1[0] : req.files.bgImage1;
+      if (bgImage1File) {
+        try {
+          const result1 = await cloudinary.uploader.upload(bgImage1File.path);
+          bgImage1 = result1.secure_url;
+          fs.unlinkSync(bgImage1File.path);
+        } catch (uploadError) {
+          logger(`Error uploading bgImage1 to Cloudinary: ${uploadError.message}`);
+          return res.status(500).json({ status: 'failed', body: {}, message: 'Error uploading bgImage1' });
+        }
+      }
+    }
+
+    if (req.files && req.files.bgImage2) {
+      const bgImage2File = Array.isArray(req.files.bgImage2) ? req.files.bgImage2[0] : req.files.bgImage2;
+      if (bgImage2File) {
+        try {
+          const result2 = await cloudinary.uploader.upload(bgImage2File.path);
+          bgImage2 = result2.secure_url;
+          fs.unlinkSync(bgImage2File.path);
+        } catch (uploadError) {
+          logger(`Error uploading bgImage2 to Cloudinary: ${uploadError.message}`);
+          return res.status(500).json({ status: 'failed', body: {}, message: 'Error uploading bgImage2' });
+        }
+      }
+    }
+
+    if (req.files && req.files.bgImage3) {
+      const bgImage3File = Array.isArray(req.files.bgImage3) ? req.files.bgImage3[0] : req.files.bgImage3;
+      if (bgImage3File) {
+        try {
+          const result3 = await cloudinary.uploader.upload(bgImage3File.path);
+          bgImage3 = result3.secure_url;
+          fs.unlinkSync(bgImage3File.path);
+        } catch (uploadError) {
+          logger(`Error uploading bgImage3 to Cloudinary: ${uploadError.message}`);
+          return res.status(500).json({ status: 'failed', body: {}, message: 'Error uploading bgImage3' });
+        }
+      }
+    }
+
+    const updatedHeroContent = await HeroContent.findByIdAndUpdate(
+      req.params.id,
+      { bgImage1, bgImage2, bgImage3, heroText, subText },
+      { new: true }
+    ).populate('createdBy', 'name email');
+    
     res.json({
       status: 'success',
       body: { heroContent: updatedHeroContent },

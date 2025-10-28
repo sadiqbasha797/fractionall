@@ -49,7 +49,18 @@ const UserSchema = new mongoose.Schema({
     email: { type: String }
   },
   statusChangedAt: { type: Date },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  // Email notification preferences
+  emailNotifications: {
+    enabled: { type: Boolean, default: true },
+    tokenPurchase: { type: Boolean, default: true },
+    bookNowToken: { type: Boolean, default: true },
+    amcPayment: { type: Boolean, default: true },
+    booking: { type: Boolean, default: true },
+    kyc: { type: Boolean, default: true },
+    refund: { type: Boolean, default: true },
+    sharedMember: { type: Boolean, default: true }
+  }
 });
 
 // Add indexes for better query performance

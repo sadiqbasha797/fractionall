@@ -1,7 +1,13 @@
 const mongoose = require('mongoose');
 
 const heroContentSchema = new mongoose.Schema({
-    bgImage: {
+    bgImage1: {
+        type: String
+    },
+    bgImage2: {
+        type: String
+    },
+    bgImage3: {
         type: String
     },
     heroText: {

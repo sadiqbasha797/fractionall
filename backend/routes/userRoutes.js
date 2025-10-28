@@ -41,4 +41,8 @@ router.get('/:userId/status-history', userController.getUserStatusHistory);
 router.get('/stats/suspensions', userController.getSuspensionStats);
 router.get('/:userId/permissions', userController.checkUserPermissions);
 
+// Email notification preferences routes
+router.get('/email-notifications/preferences', userController.getEmailNotificationPreferences);
+router.put('/email-notifications/preferences', userController.updateEmailNotificationPreferences);
+
 module.exports = router;

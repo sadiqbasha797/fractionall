@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(cors({
   origin: [
     'http://localhost:4200', // Angular default port for development
-    'http://localhost:59459', // Additional development port
+    'http://localhost:3200', // Additional development port
     'https://fraction.projexino.com', // Production frontend URL
     'https://app.projexino.com', // Production frontend URL
     'https://www.fractioncar.com', // Production frontend URL

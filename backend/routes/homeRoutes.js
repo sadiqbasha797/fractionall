@@ -35,7 +35,7 @@ router.use(authMiddleware(['admin', 'superadmin']));
 // ==================== HERO CONTENT ROUTES ====================
 
 // Create a new Hero Content
-router.post('/hero-content', upload.single('bgImage'), homeController.createHeroContent);
+router.post('/hero-content', upload.fields([{ name: 'bgImage1', maxCount: 1 }, { name: 'bgImage2', maxCount: 1 }, { name: 'bgImage3', maxCount: 1 }]), homeController.createHeroContent);
 
 // Get all Hero Content
 router.get('/hero-content', homeController.getHeroContent);
@@ -44,7 +44,7 @@ router.get('/hero-content', homeController.getHeroContent);
 router.get('/hero-content/:id', homeController.getHeroContentById);
 
 // Update Hero Content by ID
-router.put('/hero-content/:id', upload.single('bgImage'), homeController.updateHeroContent);
+router.put('/hero-content/:id', upload.fields([{ name: 'bgImage1', maxCount: 1 }, { name: 'bgImage2', maxCount: 1 }, { name: 'bgImage3', maxCount: 1 }]), homeController.updateHeroContent);
 
 // Delete Hero Content by ID
 router.delete('/hero-content/:id', homeController.deleteHeroContent);

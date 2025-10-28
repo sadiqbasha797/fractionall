@@ -4,6 +4,28 @@ const nodemailer = require('nodemailer');
 const { createTransporter } = require('../config/mail');
 const logger = require('./logger');
 
+// Helper function to check if user has email notifications enabled
+const shouldSendEmail = (userDetails, notificationType) => {
+  // If user doesn't have emailNotifications object, send email (backward compatibility)
+  if (!userDetails.emailNotifications) {
+    return true;
+  }
+  
+  // Check if email notifications are globally enabled for the user
+  if (userDetails.emailNotifications.enabled === false) {
+    logger(`Email notifications disabled for user ${userDetails.email}`);
+    return false;
+  }
+  
+  // Check specific notification type if provided
+  if (notificationType && userDetails.emailNotifications[notificationType] === false) {
+    logger(`${notificationType} notifications disabled for user ${userDetails.email}`);
+    return false;
+  }
+  
+  return true;
+};
+
 // Helper function to read and process email templates
 const readTemplate = (templateName) => {
   try {
@@ -107,6 +129,10 @@ const sendContactFormEmail = async (to, subject, htmlContent, textContent = null
 // Welcome email for new user registration
 const sendWelcomeEmail = async (userDetails) => {
   try {
+    if (!shouldSendEmail(userDetails)) {
+      return { success: true, skipped: true, message: 'Email notifications disabled for user' };
+    }
+    
     const template = readTemplate('welcome');
     
     const templateData = {
@@ -136,6 +162,10 @@ const sendWelcomeEmail = async (userDetails) => {
 // KYC approval email
 const sendKycApprovedEmail = async (userDetails) => {
   try {
+    if (!shouldSendEmail(userDetails, 'kyc')) {
+      return { success: true, skipped: true, message: 'KYC notifications disabled for user' };
+    }
+    
     const template = readTemplate('kyc-approved');
     
     const templateData = {
@@ -167,6 +197,10 @@ const sendKycApprovedEmail = async (userDetails) => {
 // KYC rejection email
 const sendKycRejectedEmail = async (userDetails, rejectionComments) => {
   try {
+    if (!shouldSendEmail(userDetails, 'kyc')) {
+      return { success: true, skipped: true, message: 'KYC notifications disabled for user' };
+    }
+    
     const template = readTemplate('kyc-rejected');
     
     const templateData = {
@@ -198,6 +232,10 @@ const sendKycRejectedEmail = async (userDetails, rejectionComments) => {
 // KYC reminder email
 const sendKycReminderEmail = async (userDetails, daysSinceRegistration) => {
   try {
+    if (!shouldSendEmail(userDetails, 'kyc')) {
+      return { success: true, skipped: true, message: 'KYC notifications disabled for user' };
+    }
+    
     const template = readTemplate('kyc-reminder');
     
     const templateData = {
@@ -308,6 +346,10 @@ const sendPasswordResetEmailWithCode = async (userDetails, resetCode) => {
 // Token purchase confirmation email
 const sendTokenPurchaseConfirmationEmail = async (userDetails, tokenDetails, carDetails) => {
   try {
+    if (!shouldSendEmail(userDetails, 'tokenPurchase')) {
+      return { success: true, skipped: true, message: 'Token purchase notifications disabled for user' };
+    }
+    
     const template = readTemplate('token-purchase-confirmation');
     
     // Map car fields safely from schema
@@ -357,6 +399,10 @@ const sendTokenPurchaseConfirmationEmail = async (userDetails, tokenDetails, car
 // Book now token purchase confirmation email
 const sendBookNowTokenPurchaseConfirmationEmail = async (userDetails, tokenDetails, carDetails) => {
   try {
+    if (!shouldSendEmail(userDetails, 'bookNowToken')) {
+      return { success: true, skipped: true, message: 'Book now token notifications disabled for user' };
+    }
+    
     const template = readTemplate('booknow-token-purchase-confirmation');
     
     // Map car fields safely from schema
@@ -406,6 +452,10 @@ const sendBookNowTokenPurchaseConfirmationEmail = async (userDetails, tokenDetai
 // AMC payment confirmation email
 const sendAMCPaymentConfirmationEmail = async (userDetails, amcDetails, carDetails) => {
   try {
+    if (!shouldSendEmail(userDetails, 'amcPayment')) {
+      return { success: true, skipped: true, message: 'AMC payment notifications disabled for user' };
+    }
+    
     const template = readTemplate('amc-payment-confirmation');
     
     // Calculate total amount from all AMC years
@@ -612,6 +662,10 @@ const sendSuperAdminAMCPaymentNotification = async (userDetails, amcDetails, car
 // Booking confirmation email for user
 const sendBookingConfirmationEmail = async (userDetails, bookingDetails, carDetails) => {
   try {
+    if (!shouldSendEmail(userDetails, 'booking')) {
+      return { success: true, skipped: true, message: 'Booking notifications disabled for user' };
+    }
+    
     const template = readTemplate('booking-confirmation-user');
     
     // Calculate duration
@@ -739,6 +793,10 @@ const sendSuperAdminBookingNotification = async (userDetails, bookingDetails, ca
 // Send refund initiated notification
 const sendRefundInitiated = async (to, data) => {
   try {
+    if (data.userDetails && !shouldSendEmail(data.userDetails, 'refund')) {
+      return { success: true, skipped: true, message: 'Refund notifications disabled for user' };
+    }
+    
     const template = readTemplate('refund-initiated');
     const htmlContent = replacePlaceholders(template, data);
     
@@ -756,6 +814,10 @@ const sendRefundInitiated = async (to, data) => {
 // Send refund processed notification
 const sendRefundProcessed = async (to, data) => {
   try {
+    if (data.userDetails && !shouldSendEmail(data.userDetails, 'refund')) {
+      return { success: true, skipped: true, message: 'Refund notifications disabled for user' };
+    }
+    
     const template = readTemplate('refund-processed');
     const htmlContent = replacePlaceholders(template, data);
     
@@ -773,6 +835,10 @@ const sendRefundProcessed = async (to, data) => {
 // Send refund successful notification
 const sendRefundSuccessful = async (to, data) => {
   try {
+    if (data.userDetails && !shouldSendEmail(data.userDetails, 'refund')) {
+      return { success: true, skipped: true, message: 'Refund notifications disabled for user' };
+    }
+    
     const template = readTemplate('refund-successful');
     const htmlContent = replacePlaceholders(template, data);
     
@@ -873,6 +939,10 @@ const sendSharedMemberSubmissionNotification = async (adminDetails, sharedMember
 // Shared Member approved notification for user
 const sendSharedMemberApprovedNotification = async (userDetails, sharedMemberDetails, approvedByDetails) => {
   try {
+    if (!shouldSendEmail(userDetails, 'sharedMember')) {
+      return { success: true, skipped: true, message: 'Shared member notifications disabled for user' };
+    }
+    
     const template = readTemplate('shared-member-approved-notification');
     
     const templateData = {
@@ -907,6 +977,10 @@ const sendSharedMemberApprovedNotification = async (userDetails, sharedMemberDet
 // Shared Member rejected notification for user
 const sendSharedMemberRejectedNotification = async (userDetails, sharedMemberDetails, rejectedByDetails, rejectionComments) => {
   try {
+    if (!shouldSendEmail(userDetails, 'sharedMember')) {
+      return { success: true, skipped: true, message: 'Shared member notifications disabled for user' };
+    }
+    
     const template = readTemplate('shared-member-rejected-notification');
     
     const templateData = {

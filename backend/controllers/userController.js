@@ -831,6 +831,96 @@ const checkUserPermissions = async (req, res) => {
   }
 };
 
+// Get email notification preferences
+const getEmailNotificationPreferences = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('emailNotifications');
+    if (!user) {
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'User not found'
+      });
+    }
+
+    // Return default preferences if not set
+    const preferences = user.emailNotifications || {
+      enabled: true,
+      tokenPurchase: true,
+      bookNowToken: true,
+      amcPayment: true,
+      booking: true,
+      kyc: true,
+      refund: true,
+      sharedMember: true
+    };
+
+    res.json({
+      status: 'success',
+      body: { emailNotifications: preferences },
+      message: 'Email notification preferences retrieved successfully'
+    });
+  } catch (error) {
+    logger(`Error in getEmailNotificationPreferences: ${error.message}`);
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Update email notification preferences
+const updateEmailNotificationPreferences = async (req, res) => {
+  try {
+    const { enabled, tokenPurchase, bookNowToken, amcPayment, booking, kyc, refund, sharedMember } = req.body;
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        status: 'failed',
+        body: {},
+        message: 'User not found'
+      });
+    }
+
+    // Initialize emailNotifications if it doesn't exist
+    if (!user.emailNotifications) {
+      user.emailNotifications = {};
+    }
+
+    // Update only provided fields
+    if (typeof enabled === 'boolean') user.emailNotifications.enabled = enabled;
+    if (typeof tokenPurchase === 'boolean') user.emailNotifications.tokenPurchase = tokenPurchase;
+    if (typeof bookNowToken === 'boolean') user.emailNotifications.bookNowToken = bookNowToken;
+    if (typeof amcPayment === 'boolean') user.emailNotifications.amcPayment = amcPayment;
+    if (typeof booking === 'boolean') user.emailNotifications.booking = booking;
+    if (typeof kyc === 'boolean') user.emailNotifications.kyc = kyc;
+    if (typeof refund === 'boolean') user.emailNotifications.refund = refund;
+    if (typeof sharedMember === 'boolean') user.emailNotifications.sharedMember = sharedMember;
+
+    // Mark the nested object as modified so Mongoose saves it
+    user.markModified('emailNotifications');
+    
+    await user.save();
+
+    logger(`Email notification preferences updated for user ${user.email}`);
+
+    res.json({
+      status: 'success',
+      body: { emailNotifications: user.emailNotifications },
+      message: 'Email notification preferences updated successfully'
+    });
+  } catch (error) {
+    logger(`Error in updateEmailNotificationPreferences: ${error.message}`);
+    res.status(500).json({
+      status: 'failed',
+      body: {},
+      message: 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -846,5 +936,7 @@ module.exports = {
   getUsersByStatus,
   getUserStatusHistory,
   getSuspensionStats,
-  checkUserPermissions
+  checkUserPermissions,
+  getEmailNotificationPreferences,
+  updateEmailNotificationPreferences
 };
