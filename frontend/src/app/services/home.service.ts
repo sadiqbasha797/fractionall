@@ -6,7 +6,9 @@ import { ConfigService } from './config.service';
 // Define interfaces for our data models
 export interface HeroContent {
   _id?: string;
-  bgImage?: string;
+  bgImage1?: string;
+  bgImage2?: string;
+  bgImage3?: string;
   heroText?: string;
   subText?: string;
   createdBy?: {

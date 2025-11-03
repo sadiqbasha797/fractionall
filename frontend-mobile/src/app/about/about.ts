@@ -20,9 +20,6 @@ export class About implements OnInit, AfterViewInit, OnDestroy {
   // Simple Steps
   simpleSteps = signal<SimpleStep[]>([]);
   
-  // Simple Steps Toggle State
-  expandedSteps = signal<Set<number>>(new Set());
-  
 
   constructor(
     private router: Router,
@@ -174,22 +171,4 @@ export class About implements OnInit, AfterViewInit, OnDestroy {
 
 
 
-  // Toggle step expansion
-  toggleStep(index: number): void {
-    const currentExpanded = this.expandedSteps();
-    const newExpanded = new Set(currentExpanded);
-    
-    if (newExpanded.has(index)) {
-      newExpanded.delete(index);
-    } else {
-      newExpanded.add(index);
-    }
-    
-    this.expandedSteps.set(newExpanded);
-  }
-
-  // Check if step is expanded
-  isStepExpanded(index: number): boolean {
-    return this.expandedSteps().has(index);
-  }
 }

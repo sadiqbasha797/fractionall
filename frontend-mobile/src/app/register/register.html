@@ -208,18 +208,32 @@
                   ✓ Auto-filled
                 </span>
               </label>
-              <input
-                id="location"
-                name="location"
-                type="text"
-                required
-                [(ngModel)]="registerData.location"
-                [readonly]="isPincodeLoading"
-                class="form-input appearance-none relative block w-full px-4 py-3 border border-black placeholder-gray-500 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 transition-all duration-300"
-              style="background-color: white;"
-                [class.bg-gray-200]="isPincodeLoading"
-                placeholder="Enter location"
-              />
+              <div class="relative">
+                <input
+                  id="location"
+                  name="location"
+                  type="text"
+                  required
+                  [(ngModel)]="registerData.location"
+                  (ngModelChange)="onLocationInputChange($event)"
+                  [readonly]="isPincodeLoading"
+                  class="form-input appearance-none relative block w-full px-4 py-3 border border-black placeholder-gray-500 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 transition-all duration-300"
+                  style="background-color: white;"
+                  [class.bg-gray-200]="isPincodeLoading"
+                  placeholder="Enter location"
+                />
+                <!-- Suggestions dropdown -->
+                <div *ngIf="!isPincodeLoading && locationSuggestions.length > 0" class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow">
+                  <button
+                    type="button"
+                    *ngFor="let s of locationSuggestions"
+                    (click)="selectLocationSuggestion(s)"
+                    class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-800 border-b last:border-b-0"
+                  >
+                    {{ s.name }}<span *ngIf="s.state" class="text-gray-500">, {{ s.state }}</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -143,28 +143,86 @@
               </div>
               
               
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Background Image 1 -->
               <div>
-                <label for="bgImageUrl" class="block text-sm font-medium text-gray-300 mb-2">Background Image URL</label>
+                  <label for="bgImage1Url" class="block text-sm font-medium text-gray-300 mb-2">Background Image 1 URL</label>
                 <input 
                   type="url" 
-                  id="bgImageUrl" 
-                  [(ngModel)]="heroForm.bgImage" 
-                  name="bgImageUrl"
+                    id="bgImage1Url" 
+                    [(ngModel)]="heroForm.bgImage1" 
+                    name="bgImage1"
                   placeholder="https://example.com/image.jpg"
                   class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all duration-200">
               </div>
               
+                <!-- Background Image 2 -->
               <div>
-                <label for="heroImageFile" class="block text-sm font-medium text-gray-300 mb-2">Or Upload Background Image</label>
+                  <label for="bgImage2Url" class="block text-sm font-medium text-gray-300 mb-2">Background Image 2 URL</label>
+                  <input 
+                    type="url" 
+                    id="bgImage2Url" 
+                    [(ngModel)]="heroForm.bgImage2" 
+                    name="bgImage2"
+                    placeholder="https://example.com/image.jpg"
+                    class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all duration-200">
+                </div>
+                
+                <!-- Background Image 3 -->
+                <div>
+                  <label for="bgImage3Url" class="block text-sm font-medium text-gray-300 mb-2">Background Image 3 URL</label>
+                  <input 
+                    type="url" 
+                    id="bgImage3Url" 
+                    [(ngModel)]="heroForm.bgImage3" 
+                    name="bgImage3"
+                    placeholder="https://example.com/image.jpg"
+                    class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all duration-200">
+                </div>
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Upload Background Image 1 -->
+                <div>
+                  <label for="heroImageFile1" class="block text-sm font-medium text-gray-300 mb-2">Or Upload Image 1</label>
                 <input 
                   type="file" 
-                  id="heroImageFile" 
-                  (change)="onHeroImageSelected($event)"
+                    id="heroImageFile1" 
+                    (change)="onHeroImageSelected($event, 1)"
                   accept="image/*"
                   class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all duration-200">
-                <small *ngIf="selectedHeroImage" class="text-green-400 text-xs mt-1 block">
-                  Selected: {{ selectedHeroImage.name }}
+                  <small *ngIf="selectedHeroImage1" class="text-green-400 text-xs mt-1 block">
+                    Selected: {{ selectedHeroImage1.name }}
                 </small>
+                </div>
+                
+                <!-- Upload Background Image 2 -->
+                <div>
+                  <label for="heroImageFile2" class="block text-sm font-medium text-gray-300 mb-2">Or Upload Image 2</label>
+                  <input 
+                    type="file" 
+                    id="heroImageFile2" 
+                    (change)="onHeroImageSelected($event, 2)"
+                    accept="image/*"
+                    class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all duration-200">
+                  <small *ngIf="selectedHeroImage2" class="text-green-400 text-xs mt-1 block">
+                    Selected: {{ selectedHeroImage2.name }}
+                  </small>
+                </div>
+                
+                <!-- Upload Background Image 3 -->
+                <div>
+                  <label for="heroImageFile3" class="block text-sm font-medium text-gray-300 mb-2">Or Upload Image 3</label>
+                  <input 
+                    type="file" 
+                    id="heroImageFile3" 
+                    (change)="onHeroImageSelected($event, 3)"
+                    accept="image/*"
+                    class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all duration-200">
+                  <small *ngIf="selectedHeroImage3" class="text-green-400 text-xs mt-1 block">
+                    Selected: {{ selectedHeroImage3.name }}
+                  </small>
+                </div>
               </div>
               
               <div class="flex flex-col sm:flex-row gap-3 pt-4">
@@ -223,15 +281,86 @@
                       class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all duration-200 resize-vertical"></textarea>
                   </div>
                   
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Background Image 1 URL -->
                   <div>
-                    <label for="bgImageUrl" class="block text-sm font-medium text-gray-300 mb-2">Background Image URL</label>
+                      <label for="bgImage1UrlEdit" class="block text-sm font-medium text-gray-300 mb-2">Image 1 URL</label>
                     <input 
                       type="url" 
-                      id="bgImageUrl" 
-                      [(ngModel)]="heroForm.bgImage" 
-                      name="bgImage"
-                      placeholder="Enter background image URL"
+                        id="bgImage1UrlEdit" 
+                        [(ngModel)]="heroForm.bgImage1" 
+                        name="bgImage1"
+                        placeholder="Image 1 URL"
                       class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all duration-200">
+                    </div>
+                    
+                    <!-- Background Image 2 URL -->
+                    <div>
+                      <label for="bgImage2UrlEdit" class="block text-sm font-medium text-gray-300 mb-2">Image 2 URL</label>
+                      <input 
+                        type="url" 
+                        id="bgImage2UrlEdit" 
+                        [(ngModel)]="heroForm.bgImage2" 
+                        name="bgImage2"
+                        placeholder="Image 2 URL"
+                        class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all duration-200">
+                    </div>
+                    
+                    <!-- Background Image 3 URL -->
+                    <div>
+                      <label for="bgImage3UrlEdit" class="block text-sm font-medium text-gray-300 mb-2">Image 3 URL</label>
+                      <input 
+                        type="url" 
+                        id="bgImage3UrlEdit" 
+                        [(ngModel)]="heroForm.bgImage3" 
+                        name="bgImage3"
+                        placeholder="Image 3 URL"
+                        class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all duration-200">
+                    </div>
+                  </div>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Upload Image 1 -->
+                    <div>
+                      <label for="heroImageFile1Edit" class="block text-sm font-medium text-gray-300 mb-2">Or Upload Image 1</label>
+                      <input 
+                        type="file" 
+                        id="heroImageFile1Edit" 
+                        (change)="onHeroImageSelected($event, 1)"
+                        accept="image/*"
+                        class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all duration-200">
+                      <small *ngIf="selectedHeroImage1" class="text-green-400 text-xs mt-1 block">
+                        Selected: {{ selectedHeroImage1.name }}
+                      </small>
+                    </div>
+                    
+                    <!-- Upload Image 2 -->
+                    <div>
+                      <label for="heroImageFile2Edit" class="block text-sm font-medium text-gray-300 mb-2">Or Upload Image 2</label>
+                      <input 
+                        type="file" 
+                        id="heroImageFile2Edit" 
+                        (change)="onHeroImageSelected($event, 2)"
+                        accept="image/*"
+                        class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all duration-200">
+                      <small *ngIf="selectedHeroImage2" class="text-green-400 text-xs mt-1 block">
+                        Selected: {{ selectedHeroImage2.name }}
+                      </small>
+                    </div>
+                    
+                    <!-- Upload Image 3 -->
+                    <div>
+                      <label for="heroImageFile3Edit" class="block text-sm font-medium text-gray-300 mb-2">Or Upload Image 3</label>
+                      <input 
+                        type="file" 
+                        id="heroImageFile3Edit" 
+                        (change)="onHeroImageSelected($event, 3)"
+                        accept="image/*"
+                        class="w-full px-3 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all duration-200">
+                      <small *ngIf="selectedHeroImage3" class="text-green-400 text-xs mt-1 block">
+                        Selected: {{ selectedHeroImage3.name }}
+                      </small>
+                    </div>
                   </div>
                   
                   <div class="flex flex-col sm:flex-row gap-3 pt-4">
@@ -254,10 +383,7 @@
               </div>
 
               <!-- Hero Content Display -->
-              <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <div *ngIf="hero.bgImage" class="flex-shrink-0 w-full sm:w-20 h-32 sm:h-20 rounded-lg overflow-hidden bg-gray-800">
-                  <img [src]="hero.bgImage" [alt]="hero.heroText" class="w-full h-full object-cover" loading="lazy">
-                </div>
+              <div class="flex flex-col gap-3">
                 <div class="flex-1 min-w-0">
                   <h4 class="text-base sm:text-lg font-semibold text-white mb-1">{{ hero.heroText }}</h4>
                   <p class="text-sm sm:text-base text-gray-300 mb-2">{{ hero.subText }}</p>
@@ -266,7 +392,21 @@
                     <span *ngIf="hero.createdAt">{{ hero.createdAt | date:'short' }}</span>
                   </div>
                 </div>
-                <div class="flex gap-2 self-start sm:self-center">
+                
+                <!-- Display all three background images -->
+                <div *ngIf="hero.bgImage1 || hero.bgImage2 || hero.bgImage3" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+                  <div *ngIf="hero.bgImage1" class="flex-shrink-0 w-full h-32 rounded-lg overflow-hidden bg-gray-800">
+                    <img [src]="hero.bgImage1" [alt]="'Image 1 for ' + hero.heroText" class="w-full h-full object-cover" loading="lazy">
+                  </div>
+                  <div *ngIf="hero.bgImage2" class="flex-shrink-0 w-full h-32 rounded-lg overflow-hidden bg-gray-800">
+                    <img [src]="hero.bgImage2" [alt]="'Image 2 for ' + hero.heroText" class="w-full h-full object-cover" loading="lazy">
+                  </div>
+                  <div *ngIf="hero.bgImage3" class="flex-shrink-0 w-full h-32 rounded-lg overflow-hidden bg-gray-800">
+                    <img [src]="hero.bgImage3" [alt]="'Image 3 for ' + hero.heroText" class="w-full h-full object-cover" loading="lazy">
+                  </div>
+                </div>
+                
+                <div class="flex gap-2 justify-end mt-3">
                   <button 
                     (click)="editHero(hero)" 
                     [disabled]="editingHeroId !== null"

@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { BookingService, Booking as BookingServiceType } from '../services/booking.service';
 import { TicketService, Ticket } from '../services/ticket.service';
 import { AuthService } from '../services/auth.service';
@@ -128,7 +129,8 @@ export class Bookings implements OnInit {
     private ticketService: TicketService,
     public authService: AuthService,
     private blockedDateService: BlockedDateService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public router: Router
   ) {
     // Effect to handle reactive updates for zoneless change detection
     effect(() => {
@@ -141,13 +143,13 @@ export class Bookings implements OnInit {
     const userData = this.authService.getUserData();
     const token = this.authService.getToken();
     this.currentUserId.set(userData?.id || '');
-    
+
     // Check if user is logged in
     if (!this.isUserAuthenticated()) {
       this.initialLoading.set(false);
       return;
     }
-    
+
     // Use setTimeout to ensure proper initialization in zoneless mode
     setTimeout(() => {
       this.loadUserCars();
@@ -161,14 +163,14 @@ export class Bookings implements OnInit {
   private updateCalendar(): void {
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth();
-    
+
     // Debug: Log current blocked dates
     console.log('Current blocked dates in updateCalendar:', this.blockedDates());
-    
+
     // Update month display
-    this.currentMonthDisplay = new Intl.DateTimeFormat('en-US', { 
-      month: 'long', 
-      year: 'numeric' 
+    this.currentMonthDisplay = new Intl.DateTimeFormat('en-US', {
+      month: 'long',
+      year: 'numeric'
     }).format(this.currentDate);
 
     // Get first day of the month and number of days
@@ -197,26 +199,26 @@ export class Bookings implements OnInit {
     for (let day = 1; day <= daysInMonth; day++) {
       const currentDate = new Date(year, month, day);
       const dateString = this.formatDateForComparison(currentDate);
-      
+
       // Check if date is booked by current user or others
       const isBookedByUser = this.bookingService.isBookedByCurrentUser(this.carBookings(), currentDate, this.currentUserId());
       const isBookedByOthers = this.bookingService.isBookedByOthers(this.carBookings(), currentDate, this.currentUserId());
       const isBooked = isBookedByUser || isBookedByOthers;
-      
+
       // Check if date is blocked
       const blockedDateInfo = this.blockedDateService.getBlockedDateInfo(this.blockedDates(), currentDate);
       const isBlocked = !!blockedDateInfo;
-      
+
       // Debug logging for blocked dates
       if (isBlocked) {
         console.log(`Date ${dateString} is blocked:`, blockedDateInfo);
       }
-      
+
       // Check if date is in the past
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const isPastDate = currentDate < today;
-      
+
       this.calendarDays.push({
         number: day,
         isEmpty: false,
@@ -230,52 +232,52 @@ export class Bookings implements OnInit {
         date: currentDate
       });
     }
-    
+
     // Trigger change detection for zoneless mode
     this.cdr.detectChanges();
   }
 
   private isFirstOrLastInBookedRange(dateString: string): boolean {
     if (!this.bookedDates.has(dateString)) return false;
-    
+
     const date = new Date(dateString);
     const prevDay = new Date(date);
     prevDay.setDate(date.getDate() - 1);
     const nextDay = new Date(date);
     nextDay.setDate(date.getDate() + 1);
-    
+
     const prevDateString = this.formatDateForComparison(prevDay);
     const nextDateString = this.formatDateForComparison(nextDay);
-    
+
     const hasPrev = this.bookedDates.has(prevDateString);
     const hasNext = this.bookedDates.has(nextDateString);
-    
+
     return !hasPrev || !hasNext;
   }
 
   private updateBookingsList(): void {
     const bookings = this.bookings();
     const statusFilter = this.statusFilter();
-    
+
     const filtered = bookings.filter(booking => {
       // Apply status filter
       if (statusFilter === 'previous' && booking.status !== 'Completed') return false;
       if (statusFilter === 'upcoming' && booking.status !== 'Upcoming') return false;
-      
+
       // Apply date filter
       if (this.dateFilter.from) {
         const fromDate = new Date(this.dateFilter.from);
         if (booking.fromDate < fromDate) return false;
       }
-      
+
       if (this.dateFilter.to) {
         const toDate = new Date(this.dateFilter.to);
         if (booking.toDate > toDate) return false;
       }
-      
+
       return true;
     });
-    
+
     this.filteredBookings.set(filtered);
   }
 
@@ -284,17 +286,17 @@ export class Bookings implements OnInit {
     if (typeof document === 'undefined') {
       return;
     }
-    
+
     // This would be called after view init in a real Angular app
     setTimeout(() => {
       const dateInputs = document.querySelectorAll('input[type="date"]');
       dateInputs.forEach((input: Element) => {
         const dateInput = input as HTMLInputElement;
-        
+
         const openPicker = () => {
           if (typeof (dateInput as any).showPicker === 'function') {
-            try { 
-              (dateInput as any).showPicker(); 
+            try {
+              (dateInput as any).showPicker();
             } catch (e) {
               console.warn('showPicker not supported');
             }
@@ -346,7 +348,7 @@ export class Bookings implements OnInit {
       const bookingFrom = new Date(booking.fromDate);
       const bookingTo = new Date(booking.toDate);
       const bookingYear = bookingFrom.getFullYear();
-      
+
       // Check if booking is for the same car and in the current year
       if (bookingYear !== currentYear || !booking.carName.includes(selectedCarData.carid.carname)) {
         return false;
@@ -370,7 +372,7 @@ export class Bookings implements OnInit {
   // Event handlers
   async onBookingSubmit(event: Event): Promise<void> {
     event.preventDefault();
-    
+
     if (!this.bookingForm.fromDate || !this.bookingForm.toDate || !this.bookingForm.selectedCar) {
       alert('Please fill in all required fields');
       return;
@@ -382,22 +384,22 @@ export class Bookings implements OnInit {
     // Validate dates are not in the past
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
-    
+
     const fromDate = new Date(this.bookingForm.fromDate);
     const toDate = new Date(this.bookingForm.toDate);
-    
+
     if (fromDate < today) {
       alert('From date cannot be in the past. Please select today or a future date.');
       this.bookingSubmissionLoading.set(false);
       return;
     }
-    
+
     if (toDate < today) {
       alert('To date cannot be in the past. Please select today or a future date.');
       this.bookingSubmissionLoading.set(false);
       return;
     }
-    
+
     if (fromDate > toDate) {
       alert('From date cannot be after To date. Please select valid date range.');
       this.bookingSubmissionLoading.set(false);
@@ -414,11 +416,11 @@ export class Bookings implements OnInit {
 
     // Check for blocked dates
     const blockedDatesInRange = this.blockedDateService.hasBlockedDatesInRange(
-      this.blockedDates(), 
-      fromDate, 
+      this.blockedDates(),
+      fromDate,
       toDate
     );
-    
+
     if (blockedDatesInRange.length > 0) {
       const blockedDateInfo = blockedDatesInRange[0];
       const reason = blockedDateInfo.reason || 'Maintenance';
@@ -497,34 +499,34 @@ export class Bookings implements OnInit {
       }
       return;
     }
-    
+
     if (day.isBlocked) {
       const reason = day.blockedReason || 'Maintenance';
       alert(`This date is blocked due to ${reason.toLowerCase()}. Please select a different date.`);
       return;
     }
-    
+
     const selectedDate = day.date;
     if (selectedDate) {
       // Check if the selected date is in the past
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       if (selectedDate < today) {
         alert('Cannot select past dates. Please select today or a future date.');
         return;
       }
-      
+
       const dateString = this.formatDateForComparison(selectedDate);
-      
+
       // If no from date is selected, set it
       if (!this.bookingForm.fromDate) {
         this.bookingForm.fromDate = dateString;
-      } 
+      }
       // If from date is selected but no to date, set to date
       else if (!this.bookingForm.toDate) {
         this.bookingForm.toDate = dateString;
-      } 
+      }
       // If both are selected, start over with new from date
       else {
         this.bookingForm.fromDate = dateString;
@@ -578,13 +580,13 @@ export class Bookings implements OnInit {
       next: (response: any) => {
         if (response.status === 'success' && response.body.tickets) {
           // Filter only active tickets
-          const filteredTickets = response.body.tickets.filter((ticket: Ticket) => 
-            ticket.ticketstatus === 'active' && 
+          const filteredTickets = response.body.tickets.filter((ticket: Ticket) =>
+            ticket.ticketstatus === 'active' &&
             new Date(ticket.ticketexpiry) > new Date()
           );
-          
+
           this.userCars.set(filteredTickets);
-          
+
           // Don't automatically select first car - let user choose
           // This ensures the dropdown shows "Choose a car" by default
         }
@@ -610,7 +612,7 @@ export class Bookings implements OnInit {
             const fromDate = new Date(booking.bookingFrom);
             const toDate = new Date(booking.bookingTo);
             const now = new Date();
-            
+
             return {
               id: booking._id,
               carName: booking.carid?.carname || 'Unknown Car',
@@ -620,7 +622,7 @@ export class Bookings implements OnInit {
               toDate: toDate
             };
           });
-          
+
           this.bookings.set(bookingsData);
           // Update filtered bookings
           this.updateBookingsList();
@@ -645,10 +647,10 @@ export class Bookings implements OnInit {
     }
 
     this.loadingBlockedDates.set(true);
-    
+
     console.log('Loading blocked dates for car:', this.selectedCarForAvailability());
     console.log('Available user cars:', this.userCars().map(car => ({ id: car.carid._id, name: car.carid.carname, brand: car.carid.brandname })));
-    
+
     // Load blocked dates for the selected car
     this.blockedDateService.getCarBlockedDates(this.selectedCarForAvailability()).subscribe({
       next: (response) => {
@@ -675,7 +677,7 @@ export class Bookings implements OnInit {
   private loadCarBookings(): void {
     const selectedCar = this.selectedCarForAvailability();
     if (!selectedCar) return;
-    
+
     this.loading.set(true);
     this.bookingService.getCarBookings(selectedCar).subscribe({
       next: (response: any) => {
@@ -695,7 +697,7 @@ export class Bookings implements OnInit {
   onCarSelectionChange(carId: string): void {
     console.log('onCarSelectionChange called with carId:', carId);
     this.selectedCarForAvailability.set(carId);
-    
+
     // Only load bookings and blocked dates if a car is actually selected
     if (carId) {
       this.loadCarBookings();
@@ -792,14 +794,14 @@ export class Bookings implements OnInit {
     return this.bookings().some(booking => {
       const bookingFrom = new Date(booking.fromDate);
       const bookingTo = new Date(booking.toDate);
-      
+
       // Check if booking is for the same car and overlaps with the new booking period
       // and the existing booking hasn't completed yet
-      return booking.carName.includes(selectedCarData.carid.carname) && 
-             bookingTo >= today && 
-             ((fromDate >= bookingFrom && fromDate <= bookingTo) ||
-              (toDate >= bookingFrom && toDate <= bookingTo) ||
-              (fromDate <= bookingFrom && toDate >= bookingTo));
+      return booking.carName.includes(selectedCarData.carid.carname) &&
+        bookingTo >= today &&
+        ((fromDate >= bookingFrom && fromDate <= bookingTo) ||
+          (toDate >= bookingFrom && toDate <= bookingTo) ||
+          (fromDate <= bookingFrom && toDate >= bookingTo));
     });
   }
 
@@ -819,7 +821,7 @@ export class Bookings implements OnInit {
       const bookingFrom = new Date(booking.fromDate);
       const bookingTo = new Date(booking.toDate);
       const bookingYear = bookingFrom.getFullYear();
-      
+
       // Check if booking is for the same car and in the current year
       if (bookingYear !== currentYear || !booking.carName.includes(selectedCarData.carid.carname)) {
         return false;
@@ -859,7 +861,7 @@ export class Bookings implements OnInit {
     const bookingFrom = new Date(booking.fromDate);
     const oneDayBefore = new Date(bookingFrom);
     oneDayBefore.setDate(oneDayBefore.getDate() - 1);
-    
+
     return today < oneDayBefore;
   }
 
@@ -886,6 +888,58 @@ export class Bookings implements OnInit {
           alert('Failed to cancel booking. Please try again.');
         }
       });
+    }
+  }
+
+  // Navigate to cars page to browse and purchase shares
+  navigateToCars(): void {
+    this.router.navigate(['/cars']);
+  }
+
+  // Navigate to login page
+  navigateToLogin(): void {
+    this.router.navigate(['/login']);
+  }
+
+  // Get CSS classes for calendar days
+  getCalendarDayClasses(day: CalendarDay): string {
+    if (day.isEmpty) {
+      return '';
+    }
+
+    let classes = 'hover:bg-gray-100 ';
+
+    if (day.isBlocked) {
+      classes += 'bg-yellow-200 text-yellow-800 cursor-not-allowed ';
+    } else if (day.isBookedByUser) {
+      classes += 'bg-blue-500 text-white ';
+    } else if (day.isBookedByOthers) {
+      classes += 'bg-red-500 text-white cursor-not-allowed ';
+    } else if (day.isAvailable) {
+      classes += 'bg-green-100 text-green-800 hover:bg-green-200 ';
+    } else {
+      classes += 'bg-gray-200 text-gray-500 cursor-not-allowed ';
+    }
+
+    return classes;
+  }
+
+  // Get title/tooltip for calendar days
+  getCalendarDayTitle(day: CalendarDay): string {
+    if (day.isEmpty) {
+      return '';
+    }
+
+    if (day.isBlocked) {
+      return `Blocked: ${day.blockedReason || 'Maintenance'}`;
+    } else if (day.isBookedByUser) {
+      return 'Booked by you';
+    } else if (day.isBookedByOthers) {
+      return 'Booked by another user';
+    } else if (day.isAvailable) {
+      return 'Available for booking';
+    } else {
+      return 'Not available';
     }
   }
 }

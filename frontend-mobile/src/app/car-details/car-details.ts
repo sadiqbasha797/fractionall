@@ -146,6 +146,8 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   protected showBookNowModal = signal<boolean>(false);
   protected showWaitlistModal = signal<boolean>(false);
   protected showAMCModal = signal<boolean>(false);
+  protected showComparisonModal = signal<boolean>(false);
+  protected showInterestedModal = signal<boolean>(false);
 
 
   // Description toggle properties
@@ -224,6 +226,13 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
           this.carData.set(response.body.car);
           this.totalSlides.set(this.carData().images?.length || 1);
           this.loading.set(false);
+          // Ensure carousel starts after images are rendered
+          if (isPlatformBrowser(this.platformId)) {
+            setTimeout(() => {
+              this.initializeCarousel();
+              this.updateCarousel();
+            }, 0);
+          }
           
           // Track car view for retargeting
           this.trackCarView();
@@ -426,17 +435,25 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   // Carousel methods
   initializeCarousel() {
     const carouselContainer = document.querySelector('.carousel-container') as HTMLElement;
-    if (carouselContainer) {
-      carouselContainer.style.transition = 'transform 0.5s ease-in-out';
-      
-      // Auto-advance carousel every 3 seconds
-      this.carouselInterval = setInterval(() => {
-        this.moveCarousel(1);
-      }, 3000);
+    if (!carouselContainer) return;
 
-      // Keep position correct on resize
-      window.addEventListener('resize', () => this.updateCarousel());
+    // Make idempotent: clear any previous interval before starting
+    if (this.carouselInterval) {
+      clearInterval(this.carouselInterval);
+      this.carouselInterval = null;
     }
+
+    carouselContainer.style.transition = 'transform 0.5s ease-in-out';
+
+    // Auto-advance carousel every 3 seconds
+    this.carouselInterval = setInterval(() => {
+      // If only one slide, skip advancing
+      if ((this.totalSlides() || 1) <= 1) return;
+      this.moveCarousel(1);
+    }, 3000);
+
+    // Keep position correct on resize
+    window.addEventListener('resize', () => this.updateCarousel());
   }
 
   updateCarousel() {
@@ -875,6 +892,17 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  // Navigate back to previous page
+  goBack() {
+    // Use browser's back navigation
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      window.history.back();
+    } else {
+      // Fallback to cars page if no history
+      this.router.navigate(['/cars']);
+    }
+  }
+
   // Method to handle successful authentication return
   onAuthSuccess() {
     this.closeLoginModal();
@@ -1305,6 +1333,8 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
 
   // New modal methods
   openFractionDetailsModal() {
+    // Close all other modals first
+    this.closeAllModals();
     this.showFractionDetailsModal.set(true);
   }
 
@@ -1313,6 +1343,8 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   }
 
   openBookNowModal() {
+    // Close all other modals first
+    this.closeAllModals();
     this.showBookNowModal.set(true);
   }
 
@@ -1321,6 +1353,8 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   }
 
   openWaitlistModal() {
+    // Close all other modals first
+    this.closeAllModals();
     this.showWaitlistModal.set(true);
   }
 
@@ -1329,10 +1363,126 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
   }
 
   openAMCModal() {
+    // Close all other modals first
+    this.closeAllModals();
     this.showAMCModal.set(true);
   }
 
   closeAMCModal() {
     this.showAMCModal.set(false);
+  }
+
+  openComparisonModal() {
+    // Close all other modals first
+    this.closeAllModals();
+    this.showComparisonModal.set(true);
+  }
+
+  closeComparisonModal() {
+    this.showComparisonModal.set(false);
+  }
+
+  // Helper method to close all modals
+  private closeAllModals() {
+    this.showSpecsModal.set(false);
+    this.showFeaturesModal.set(false);
+    this.showLocationModal.set(false);
+    this.showFractionDetailsModal.set(false);
+    this.showBookNowModal.set(false);
+    this.showWaitlistModal.set(false);
+    this.showAMCModal.set(false);
+    this.showComparisonModal.set(false);
+    this.showInterestedModal.set(false);
+  }
+
+  // I'm Interested modal methods
+  openInterestedModal() {
+    this.closeAllModals();
+    this.showInterestedModal.set(true);
+  }
+
+  closeInterestedModal() {
+    this.showInterestedModal.set(false);
+  }
+
+  // Check if Book Now is disabled
+  isBookNowDisabled(): boolean {
+    return this.hasReachedBookNowLimit() || this.hasBookNowToken();
+  }
+
+  // Check if Waitlist is disabled
+  isWaitlistDisabled(): boolean {
+    return this.hasReachedWaitlistLimit() || this.hasWaitlistToken();
+  }
+
+  // Handle user selection from I'm Interested modal
+  handleInterestedOption(type: 'book-now' | 'waitlist') {
+    this.closeInterestedModal();
+    
+    if (type === 'book-now') {
+      this.openBookNowModal();
+    } else {
+      this.openWaitlistModal();
+    }
+  }
+
+  // Get description for Book Now option
+  getBookNowDescription(): string {
+    const carData = this.carData();
+    if (carData?.bookNowTokenAvailable === 0) {
+      return 'All Book Now tokens have been sold out.';
+    }
+    return `Reserve this car now! ${12 - (carData?.bookNowTokenAvailable ?? 12)}/12 have booked tokens.`;
+  }
+
+  // Get description for Waitlist option
+  getWaitlistDescription(): string {
+    const carData = this.carData();
+    if (carData?.tokensavailble === 0) {
+      return 'Waitlist is full. Book Now is now available!';
+    }
+    return `Get priority access. ${(carData?.tokensavailble ?? 20)} tokens remaining.`;
+  }
+
+  // Get reason why Book Now is unavailable
+  getBookNowUnavailableReason(): string {
+    if (this.hasBookNowToken()) {
+      return 'You already have a Book Now token for this car.';
+    }
+    
+    const carData = this.carData();
+    if (carData?.tokensavailble > 0) {
+      return 'Book Now is not available yet. Please join the waitlist first.';
+    }
+    
+    const totalTokens = this.totalBookNowTokens() + this.totalWaitlistTokens();
+    if (totalTokens >= this.maxTotalTokens) {
+      return `You have reached the maximum limit of ${this.maxTotalTokens} tokens total.`;
+    }
+    
+    if (carData?.bookNowTokenAvailable === 0) {
+      return 'All Book Now tokens have been sold out.';
+    }
+    
+    return 'Book Now is currently unavailable.';
+  }
+
+  // Get reason why Waitlist is unavailable
+  getWaitlistUnavailableReason(): string {
+    if (this.hasWaitlistToken()) {
+      return 'You have already joined the waitlist for this car.';
+    }
+    
+    const carData = this.carData();
+    if (carData?.tokensavailble === 0) {
+      return 'Waitlist is full. Book Now is now available!';
+    }
+    
+    const totalTokens = this.totalBookNowTokens() + this.totalWaitlistTokens();
+    if (totalTokens >= this.maxTotalTokens) {
+      return `You have reached the maximum limit of ${this.maxTotalTokens} tokens total.`;
+    }
+    
+    return 'Waitlist is currently unavailable.';
   }
 }

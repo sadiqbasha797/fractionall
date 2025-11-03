@@ -2,12 +2,13 @@ import { AfterViewInit, Component, ElementRef, OnDestroy, Renderer2, ViewChild, 
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { HomePublicService, HeroContent, SimpleStep, FeaturedCar, Brand, SimpleStepsVideo } from '../services/home-public.service';
 import { FaqPublicService, FAQ, FAQCategory } from '../services/faq-public.service';
 import { CarPublicService } from '../services/car-public.service';
 import { AnimationService } from '../services/animation.service';
 import { ScrollNavigationService } from '../services/scroll-navigation.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -21,12 +22,33 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private observer: IntersectionObserver | null = null;
   private isBrowser = false;
   private destroyRef = inject(DestroyRef);
+  private routeParamsSubscription?: Subscription;
   @ViewChild('carouselTrack', { static: false }) private carouselTrack?: ElementRef<HTMLDivElement>;
   @ViewChild('brandsCarouselTrack', { static: false }) private brandsCarouselTrack?: ElementRef<HTMLDivElement>;
   @ViewChild('timelineRef', { static: false }) private timelineRef?: ElementRef<HTMLDivElement>;
 
   // Dynamic content - converted to signals
   heroContent = signal<HeroContent | null>(null);
+  // Hero rotation state and helpers
+  currentHeroImageIndex = signal<number>(0);
+  getHeroImages(): string[] {
+    const hero = this.heroContent();
+    const images: string[] = [];
+    if (hero?.bgImage1) images.push(hero.bgImage1);
+    if (hero?.bgImage2) images.push(hero.bgImage2);
+    if (hero?.bgImage3) images.push(hero.bgImage3);
+    return images;
+  }
+  getSelectedHeroImage(): string {
+    const images = this.getHeroImages();
+    if (images.length === 0) return './herocar.jpg';
+    const index = this.currentHeroImageIndex() % images.length;
+    return images[index];
+  }
+  getHeroBackgroundCss(): string {
+    const url = this.getSelectedHeroImage();
+    return `linear-gradient(rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.6) 100%), url(${url})`;
+  }
   faqs = signal<FAQ[]>([]);
   faqCategories = signal<FAQCategory[]>([]);
   faqsByCategory = signal<{ [key: string]: FAQ[] }>({});
@@ -39,26 +61,26 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   simpleStepsVideosLoading = signal<boolean>(true);
   brands = signal<Brand[]>([]);
   brandsLoading = signal<boolean>(true);
-  
+
   // Brands view more functionality
   visibleBrands = computed(() => this.brands().slice(0, 4));
   remainingBrands = computed(() => this.brands().slice(4));
   showBrandsModal = signal<boolean>(false);
-  
+
   // Modal states
   showSimpleStepsModal = signal<boolean>(false);
   showWhyChooseModal = signal<boolean>(false);
   showTrustSecurityModal = signal<boolean>(false);
   showCoowningVsRentalModal = signal<boolean>(false);
   showFAQsModal = signal<boolean>(false);
-  
+
   // Simple steps expand/collapse state
   isSimpleStepsExpanded = signal<boolean>(false);
-  
+
   // Simple steps carousel state
   simpleStepsCurrentIndex = signal<number>(0);
   simpleStepsVisibleCount = signal<number>(1);
-  
+
   // Section toggle states for mobile
   isWhyChooseFractionExpanded = signal<boolean>(false);
   isTrustSecurityExpanded = signal<boolean>(false);
@@ -70,39 +92,44 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   featuredCars = signal<FeaturedCar[]>([]);
   currentIndex = signal<number>(0);
   visibleCount = signal<number>(3);
-  
+
   // Brands carousel state
   brandsCurrentIndex = signal<number>(0);
   brandsVisibleCount = signal<number>(4);
-  
+
   // Auto-scroll functionality
   private autoScrollInterval: any = null;
   private isAutoScrollPaused = signal<boolean>(false);
   private autoScrollDelay = 3000; // 3 seconds
-  
+  // Hero auto-rotation
+  private heroAutoScrollInterval: any = null;
+  private heroAutoScrollDelay = 3000; // 3 seconds
+
   // Brands auto-scroll functionality
   private brandsAutoScrollInterval: any = null;
   private isBrandsAutoScrollPaused = signal<boolean>(false);
   private brandsAutoScrollDelay = 4000; // 4 seconds
-  
+
   // Simple steps auto-scroll functionality
   private simpleStepsAutoScrollInterval: any = null;
   private isSimpleStepsAutoScrollPaused = signal<boolean>(false);
   private simpleStepsAutoScrollDelay = 3000; // 3 seconds
-  
+
+  // Hero rotation (duplicate removed)
+
   // Touch/swipe functionality
   private touchStartX = 0;
   private touchStartY = 0;
   private touchEndX = 0;
   private touchEndY = 0;
-  
+
   // Brands touch/swipe functionality
   private brandsTouchStartX = 0;
   private brandsTouchStartY = 0;
   private brandsTouchEndX = 0;
   private brandsTouchEndY = 0;
   private minSwipeDistance = 50;
-  
+
   // Simple steps touch/swipe functionality
   private simpleStepsTouchStartX = 0;
   private simpleStepsTouchStartY = 0;
@@ -119,11 +146,12 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     private carService: CarPublicService,
     private animationService: AnimationService,
     private router: Router,
+    @Inject(ActivatedRoute) private route: ActivatedRoute,
     private sanitizer: DomSanitizer,
     private scrollNavigationService: ScrollNavigationService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    
+
     // Effect to handle data loading and ensure proper change detection
     // Use DestroyRef to properly manage effect lifecycle
     const effectRef = effect(() => {
@@ -134,7 +162,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
         }, 100);
       }
     });
-    
+
     // Register effect cleanup with component destruction
     this.destroyRef.onDestroy(() => {
       effectRef.destroy();
@@ -144,14 +172,14 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Method to sanitize URLs for iframe src
   sanitizeUrl(url: string): SafeResourceUrl {
     if (!url) return this.sanitizer.bypassSecurityTrustResourceUrl('');
-    
+
     let processedUrl = url;
-    
+
     // Handle YouTube URLs to ensure proper controls and no autoplay
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
       // Extract video ID and create a proper embed URL
       let videoId = '';
-      
+
       if (url.includes('youtube.com/watch?v=')) {
         videoId = url.split('v=')[1]?.split('&')[0];
       } else if (url.includes('youtu.be/')) {
@@ -159,23 +187,23 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       } else if (url.includes('youtube.com/embed/')) {
         videoId = url.split('/embed/')[1]?.split('?')[0];
       }
-      
+
       if (videoId) {
         // Create proper YouTube embed URL with controls and no autoplay
         processedUrl = `https://www.youtube.com/embed/${videoId}?controls=1&autoplay=0&rel=0&modestbranding=1&playsinline=1`;
       }
     }
-    
+
     return this.sanitizer.bypassSecurityTrustResourceUrl(processedUrl);
   }
 
   // Method to get YouTube thumbnail URL with fallback
   getYouTubeThumbnail(videoUrl: string): string {
     if (!videoUrl) return '';
-    
+
     // Extract video ID for thumbnail
     let videoId = '';
-    
+
     if (videoUrl.includes('youtube.com/watch?v=')) {
       videoId = videoUrl.split('v=')[1]?.split('&')[0];
     } else if (videoUrl.includes('youtu.be/')) {
@@ -183,12 +211,12 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     } else if (videoUrl.includes('youtube.com/embed/')) {
       videoId = videoUrl.split('/embed/')[1]?.split('?')[0];
     }
-    
+
     if (videoId) {
       // Try high quality first, fallback to medium quality if not available
       return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
     }
-    
+
     return '';
   }
 
@@ -196,7 +224,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   onThumbnailError(event: any, videoUrl: string): void {
     const img = event.target as HTMLImageElement;
     const videoId = this.extractVideoId(videoUrl);
-    
+
     if (videoId) {
       // Try different thumbnail qualities as fallback
       const fallbackUrls = [
@@ -204,7 +232,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
         `https://img.youtube.com/vi/${videoId}/default.jpg`,   // Default quality
         `https://img.youtube.com/vi/${videoId}/0.jpg`         // First frame
       ];
-      
+
       let currentIndex = 0;
       const tryNextFallback = () => {
         if (currentIndex < fallbackUrls.length) {
@@ -215,7 +243,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
           img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDMyMCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTgwIiBmaWxsPSIjMzc0MTUxIi8+CjxwYXRoIGQ9Ik0xNDAgODBMMTYwIDEwMEwxNDAgMTIwTDEyMCAxMDBMMTQwIDgwWiIgZmlsbD0iI0VGNjY2NiIvPgo8L3N2Zz4K';
         }
       };
-      
+
       img.onerror = tryNextFallback;
     }
   }
@@ -223,7 +251,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Helper method to extract video ID
   private extractVideoId(videoUrl: string): string {
     if (!videoUrl) return '';
-    
+
     if (videoUrl.includes('youtube.com/watch?v=')) {
       return videoUrl.split('v=')[1]?.split('&')[0] || '';
     } else if (videoUrl.includes('youtu.be/')) {
@@ -231,24 +259,24 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     } else if (videoUrl.includes('youtube.com/embed/')) {
       return videoUrl.split('/embed/')[1]?.split('?')[0] || '';
     }
-    
+
     return '';
   }
 
   // Method to redirect to YouTube video
   redirectToYouTube(videoUrl: string): void {
     if (!videoUrl) return;
-    
+
     // Convert embed URL to watch URL if needed
     let watchUrl = videoUrl;
-    
+
     if (videoUrl.includes('youtube.com/embed/')) {
       const videoId = videoUrl.split('/embed/')[1]?.split('?')[0];
       if (videoId) {
         watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
       }
     }
-    
+
     // Open YouTube video in new tab
     if (this.isBrowser) {
       window.open(watchUrl, '_blank', 'noopener,noreferrer');
@@ -262,26 +290,84 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadSimpleStepsVideos();
     this.loadFeaturedCars();
     this.loadBrands();
+
+    // Open FAQs modal if requested via query param
+    if (this.isBrowser) {
+      // Listen for custom event as fallback
+      window.addEventListener('openFaqModal', () => {
+        console.log('Custom openFaqModal event received');
+        this.openFAQsModal();
+      });
+
+      // Use a longer timeout to ensure the component is fully initialized
+      setTimeout(() => {
+        const params = this.route.snapshot.queryParamMap;
+        if (params.get('openFaqs') === '1') {
+          console.log('Query param openFaqs found, opening modal');
+          // Ensure FAQs are loaded before opening modal
+          if (this.faqs().length > 0 || !this.loading()) {
+            console.log('FAQs loaded, opening modal immediately');
+            this.openFAQsModal();
+          } else {
+            console.log('FAQs still loading, waiting...');
+            // If FAQs are still loading, wait for them
+            const checkFaqs = () => {
+              if (this.faqs().length > 0 || !this.loading()) {
+                console.log('FAQs loaded after waiting, opening modal');
+                this.openFAQsModal();
+              } else {
+                setTimeout(checkFaqs, 100);
+              }
+            };
+            checkFaqs();
+          }
+
+          // Clean up the query param without reloading
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { openFaqs: null, timestamp: null },
+            queryParamsHandling: 'merge'
+          });
+        }
+      }, 500); // Increased timeout to ensure proper initialization
+    }
+
+    // Also listen for route parameter changes (for when already on home page)
+    this.routeParamsSubscription = this.route.queryParams.subscribe(params => {
+      if (params['openFaqs'] === '1' && this.isBrowser) {
+        console.log('Route params changed, openFaqs detected');
+        setTimeout(() => {
+          this.openFAQsModal();
+        }, 100);
+      }
+    });
   }
 
   loadHeroContent(): void {
     // Ensure hero content starts as null to show skeleton
     this.heroContent.set(null);
-    
+
     this.homeService.getPublicHeroContent().subscribe({
       next: (response) => {
         if (response.status === 'success' && response.body.heroContent.length > 0) {
           this.heroContent.set(response.body.heroContent[0]); // Use the first hero content
+          const count = this.getHeroImages().length;
+          this.currentHeroImageIndex.set(0);
+          this.setupHeroAutoScroll(count);
         } else {
           // If no hero content from API, set a default
           this.heroContent.set({
             _id: 'default-hero',
             heroText: 'Own Your Dream Car at Just 8.33% Cost',
             subText: 'India\'s first fractional car ownership platform',
-            bgImage: './herocar.jpg',
+            bgImage1: './herocar.jpg',
+            bgImage2: '',
+            bgImage3: '',
             createdBy: null,
             createdAt: new Date().toISOString()
           });
+          this.currentHeroImageIndex.set(0);
+          this.setupHeroAutoScroll(1);
         }
       },
       error: (error) => {
@@ -291,12 +377,35 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
           _id: 'default-hero',
           heroText: 'Own Your Dream Car at Just 8.33% Cost',
           subText: 'India\'s first fractional car ownership platform',
-          bgImage: './herocar.jpg',
+          bgImage1: './herocar.jpg',
+          bgImage2: '',
+          bgImage3: '',
           createdBy: null,
           createdAt: new Date().toISOString()
         });
+        this.currentHeroImageIndex.set(0);
+        this.setupHeroAutoScroll(1);
       }
     });
+  }
+
+  private setupHeroAutoScroll(imageCount: number): void {
+    this.clearHeroAutoScroll();
+    if (!this.isBrowser) return;
+    if (imageCount <= 1) return;
+    this.heroAutoScrollInterval = setInterval(() => {
+      const images = this.getHeroImages();
+      if (images.length > 1) {
+        this.currentHeroImageIndex.update(v => (v + 1) % images.length);
+      }
+    }, this.heroAutoScrollDelay);
+  }
+
+  private clearHeroAutoScroll(): void {
+    if (this.heroAutoScrollInterval) {
+      clearInterval(this.heroAutoScrollInterval);
+      this.heroAutoScrollInterval = null;
+    }
   }
 
   loadFAQs(): void {
@@ -314,7 +423,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       // Handle Categories
       if (categoryResponse?.status === 'success') {
         this.faqCategories.set(categoryResponse.body.categories);
-        
+
         // Set the first active category as default if no active category is set
         if (!this.activeFaqCategory()) {
           const firstActiveCategory = categoryResponse.body.categories.find(cat => cat.isActive);
@@ -348,7 +457,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
               createdAt: new Date().toISOString()
             },
             {
-              _id: 'default-2', 
+              _id: 'default-2',
               stepTitle: 'Purchase Your Share',
               stepName: 'Buy your share through secure payment options. Each car is divided into 12 equal shares, making luxury car ownership accessible and affordable.',
               createdBy: null,
@@ -383,7 +492,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
           },
           {
             _id: 'default-2',
-            stepTitle: 'Purchase Your Share', 
+            stepTitle: 'Purchase Your Share',
             stepName: 'Buy your share through secure payment options. Each car is divided into 12 equal shares, making luxury car ownership accessible and affordable.',
             createdBy: null,
             createdAt: new Date().toISOString()
@@ -556,15 +665,15 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
               tokensAvailable: featuredCar.carId.tokensavailble || 0,
               bookNowTokenAvailable: featuredCar.carId.bookNowTokenAvailable || 0,
               bookNowTokenPrice: featuredCar.carId.bookNowTokenPrice || 0,
-            price: featuredCar.carId.price || 0,
-            fractionPrice: featuredCar.carId.fractionprice || 0,
-            isFeatured: true
-          }));
-          
+              price: featuredCar.carId.price || 0,
+              fractionPrice: featuredCar.carId.fractionprice || 0,
+              isFeatured: true
+            }));
+
           this.cars.set(transformedCars);
           this.featuredCars.set(response.body.featuredCars);
           this.carsLoading.set(false);
-          
+
           // Restart auto-scroll after cars are loaded
           setTimeout(() => {
             this.startAutoScroll();
@@ -574,7 +683,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       error: (error) => {
         console.error('Error loading featured cars:', error);
         this.carsLoading.set(false);
-        
+
         // Fallback to regular cars if featured cars API fails
         this.carService.getPublicCars().subscribe({
           next: (response) => {
@@ -601,7 +710,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
                   fractionPrice: car.fractionprice || 0,
                   isFeatured: false
                 })));
-              
+
               setTimeout(() => {
                 this.startAutoScroll();
               }, 500);
@@ -615,7 +724,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
               { image: '/car-2.jpg', tokenPrice: '2,905', name: 'M4', brand: 'BMW', fuel: 'Petrol', seats: 4, color: 'Black', ticketsAvailable: 3, totalTickets: 20, isFeatured: false },
               { image: '/car-3.jpg', tokenPrice: '4,565', name: 'C-Class', brand: 'Mercedes-Benz', fuel: 'Diesel', seats: 5, color: 'Silver', ticketsAvailable: 7, totalTickets: 20, isFeatured: false }
             ]);
-            
+
             setTimeout(() => {
               this.startAutoScroll();
             }, 500);
@@ -670,7 +779,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Get FAQ subtitle based on question content
   getFaqSubtitle(question: string): string {
     const lowerQuestion = question.toLowerCase();
-    
+
     if (lowerQuestion.includes('what is') || lowerQuestion.includes('what\'s')) {
       return 'Learn about our innovative car ownership model';
     } else if (lowerQuestion.includes('how does') || lowerQuestion.includes('how to')) {
@@ -688,7 +797,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     } else if (lowerQuestion.includes('time') || lowerQuestion.includes('when') || lowerQuestion.includes('duration')) {
       return 'Flexible timing and scheduling options';
     }
-    
+
     return 'Get answers to your questions';
   }
 
@@ -703,10 +812,10 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Initialize Angular animations
     this.initAngularAnimations();
-    
+
     // Register scroll sections for navigation highlighting
     this.registerScrollSections();
-    
+
     // Start auto-scroll after a short delay
     setTimeout(() => {
       this.startAutoScroll();
@@ -727,7 +836,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.isBrowser) return;
     this.updateVisibleCount();
     this.updateBrandsVisibleCount();
-    
+
     // clamp currentIndex to valid range after change
     const totalCards = this.cars().length;
     if (totalCards >= 2) {
@@ -751,11 +860,11 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private updateVisibleCount() {
-  if (!this.isBrowser) return;
-  const w = window.innerWidth;
-  if (w >= 1200) this.visibleCount.set(3);
-  else if (w >= 768) this.visibleCount.set(2);
-  else this.visibleCount.set(1);
+    if (!this.isBrowser) return;
+    const w = window.innerWidth;
+    if (w >= 1200) this.visibleCount.set(3);
+    else if (w >= 768) this.visibleCount.set(2);
+    else this.visibleCount.set(1);
   }
 
   private updateBrandsVisibleCount() {
@@ -767,10 +876,10 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   prev() {
     const totalCards = this.cars().length;
     if (totalCards < 2) return;
-    
+
     const maxIndex = Math.max(0, totalCards - this.visibleCount());
     const prevIndex = this.currentIndex() - 1;
-    
+
     // If we're at the beginning, loop to the end
     if (prevIndex < 0) {
       this.currentIndex.set(maxIndex);
@@ -782,10 +891,10 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   next() {
     const totalCards = this.cars().length;
     if (totalCards < 2) return;
-    
+
     const maxIndex = Math.max(0, totalCards - this.visibleCount());
     const nextIndex = this.currentIndex() + 1;
-    
+
     // If we've reached the end, loop back to the beginning
     if (nextIndex > maxIndex) {
       this.currentIndex.set(0);
@@ -798,10 +907,10 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   prevBrands() {
     const totalBrands = this.brands().length;
     if (totalBrands < 2) return;
-    
+
     const maxIndex = Math.max(0, totalBrands - this.brandsVisibleCount());
     const prevIndex = this.brandsCurrentIndex() - 1;
-    
+
     // If we're at the beginning, loop to the end
     if (prevIndex < 0) {
       this.brandsCurrentIndex.set(maxIndex);
@@ -813,10 +922,10 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   nextBrands() {
     const totalBrands = this.brands().length;
     if (totalBrands < 2) return;
-    
+
     const maxIndex = Math.max(0, totalBrands - this.brandsVisibleCount());
     const nextIndex = this.brandsCurrentIndex() + 1;
-    
+
     // If we've reached the end, loop back to the beginning
     if (nextIndex > maxIndex) {
       this.brandsCurrentIndex.set(0);
@@ -863,19 +972,19 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   prevSimpleSteps() {
     const totalSteps = this.simpleSteps().length;
     if (totalSteps < 2) return;
-    
+
     // Pause auto-scroll when user manually navigates
     this.pauseSimpleStepsAutoScroll();
-    
+
     const maxIndex = Math.max(0, totalSteps - this.simpleStepsVisibleCount());
     const prevIndex = this.simpleStepsCurrentIndex() - 1;
-    
+
     if (prevIndex < 0) {
       this.simpleStepsCurrentIndex.set(maxIndex);
     } else {
       this.simpleStepsCurrentIndex.set(prevIndex);
     }
-    
+
     // Resume auto-scroll after a delay
     setTimeout(() => {
       this.resumeSimpleStepsAutoScroll();
@@ -885,19 +994,19 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   nextSimpleSteps() {
     const totalSteps = this.simpleSteps().length;
     if (totalSteps < 2) return;
-    
+
     // Pause auto-scroll when user manually navigates
     this.pauseSimpleStepsAutoScroll();
-    
+
     const maxIndex = Math.max(0, totalSteps - this.simpleStepsVisibleCount());
     const nextIndex = this.simpleStepsCurrentIndex() + 1;
-    
+
     if (nextIndex > maxIndex) {
       this.simpleStepsCurrentIndex.set(0);
     } else {
       this.simpleStepsCurrentIndex.set(nextIndex);
     }
-    
+
     // Resume auto-scroll after a delay
     setTimeout(() => {
       this.resumeSimpleStepsAutoScroll();
@@ -950,9 +1059,9 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Auto-scroll functionality
   private startAutoScroll(): void {
     if (!this.isBrowser || this.cars().length < 2) return;
-    
+
     this.stopAutoScroll(); // Clear any existing interval
-    
+
     this.autoScrollInterval = setInterval(() => {
       if (!this.isAutoScrollPaused() && this.cars().length >= 2) {
         this.next();
@@ -970,9 +1079,9 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Brands auto-scroll functionality
   private startBrandsAutoScroll(): void {
     if (!this.isBrowser || this.brands().length < 2) return;
-    
+
     this.stopBrandsAutoScroll(); // Clear any existing interval
-    
+
     this.brandsAutoScrollInterval = setInterval(() => {
       if (!this.isBrandsAutoScrollPaused() && this.brands().length >= 2) {
         this.nextBrands();
@@ -1007,9 +1116,9 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Simple steps auto-scroll functionality
   private startSimpleStepsAutoScroll(): void {
     if (!this.isBrowser || this.simpleSteps().length < 2) return;
-    
+
     this.stopSimpleStepsAutoScroll(); // Clear any existing interval
-    
+
     this.simpleStepsAutoScrollInterval = setInterval(() => {
       if (!this.isSimpleStepsAutoScrollPaused() && this.simpleSteps().length >= 2) {
         this.nextSimpleSteps();
@@ -1035,7 +1144,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Touch/swipe functionality
   onTouchStart(event: TouchEvent): void {
     if (!this.isBrowser) return;
-    
+
     this.touchStartX = event.touches[0].clientX;
     this.touchStartY = event.touches[0].clientY;
     this.pauseAutoScroll();
@@ -1043,17 +1152,17 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onTouchMove(event: TouchEvent): void {
     if (!this.isBrowser) return;
-    
+
     // Prevent default scrolling behavior
     event.preventDefault();
   }
 
   onTouchEnd(event: TouchEvent): void {
     if (!this.isBrowser) return;
-    
+
     this.touchEndX = event.changedTouches[0].clientX;
     this.touchEndY = event.changedTouches[0].clientY;
-    
+
     this.handleSwipe();
     this.resumeAutoScroll();
   }
@@ -1061,7 +1170,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private handleSwipe(): void {
     const deltaX = this.touchEndX - this.touchStartX;
     const deltaY = this.touchEndY - this.touchStartY;
-    
+
     // Check if it's a horizontal swipe (not vertical scroll)
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > this.minSwipeDistance) {
       if (deltaX > 0) {
@@ -1077,7 +1186,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Brands touch/swipe functionality
   onBrandsTouchStart(event: TouchEvent): void {
     if (!this.isBrowser) return;
-    
+
     this.brandsTouchStartX = event.touches[0].clientX;
     this.brandsTouchStartY = event.touches[0].clientY;
     this.pauseBrandsAutoScroll();
@@ -1085,17 +1194,17 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onBrandsTouchMove(event: TouchEvent): void {
     if (!this.isBrowser) return;
-    
+
     // Prevent default scrolling behavior
     event.preventDefault();
   }
 
   onBrandsTouchEnd(event: TouchEvent): void {
     if (!this.isBrowser) return;
-    
+
     this.brandsTouchEndX = event.changedTouches[0].clientX;
     this.brandsTouchEndY = event.changedTouches[0].clientY;
-    
+
     this.handleBrandsSwipe();
     this.resumeBrandsAutoScroll();
   }
@@ -1103,7 +1212,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private handleBrandsSwipe(): void {
     const deltaX = this.brandsTouchEndX - this.brandsTouchStartX;
     const deltaY = this.brandsTouchEndY - this.brandsTouchStartY;
-    
+
     // Check if it's a horizontal swipe (not vertical scroll)
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > this.minSwipeDistance) {
       if (deltaX > 0) {
@@ -1119,7 +1228,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Simple steps touch/swipe functionality
   onSimpleStepsTouchStart(event: TouchEvent): void {
     if (!this.isBrowser) return;
-    
+
     this.simpleStepsTouchStartX = event.touches[0].clientX;
     this.simpleStepsTouchStartY = event.touches[0].clientY;
     this.pauseSimpleStepsAutoScroll();
@@ -1127,17 +1236,17 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onSimpleStepsTouchMove(event: TouchEvent): void {
     if (!this.isBrowser) return;
-    
+
     // Prevent default scrolling behavior
     event.preventDefault();
   }
 
   onSimpleStepsTouchEnd(event: TouchEvent): void {
     if (!this.isBrowser) return;
-    
+
     this.simpleStepsTouchEndX = event.changedTouches[0].clientX;
     this.simpleStepsTouchEndY = event.changedTouches[0].clientY;
-    
+
     this.handleSimpleStepsSwipe();
     this.resumeSimpleStepsAutoScroll();
   }
@@ -1145,7 +1254,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private handleSimpleStepsSwipe(): void {
     const deltaX = this.simpleStepsTouchEndX - this.simpleStepsTouchStartX;
     const deltaY = this.simpleStepsTouchEndY - this.simpleStepsTouchStartY;
-    
+
     // Check if it's a horizontal swipe (not vertical scroll)
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > this.minSwipeDistance) {
       if (deltaX > 0) {
@@ -1173,79 +1282,79 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private updateTimelineHeight(): void {
     if (!this.isBrowser || !this.timelineRef) return;
     const timelineEl = this.timelineRef.nativeElement;
-    
+
     // Force a reflow to ensure DOM is updated
     timelineEl.offsetHeight;
-    
+
     // Check if we're on mobile using window width (more reliable than CSS detection)
     const isMobile = window.innerWidth < 768;
-    
+
     // Get the current expansion state
     const isExpanded = this.isSimpleStepsExpanded();
-    
+
     // Find all visible timeline items - specifically check for collapsed state classes
     const items = Array.from(timelineEl.querySelectorAll<HTMLElement>('.timeline-item'))
       .filter(el => {
         // Check if element has collapsed classes (these indicate hidden expandable steps)
-        const hasCollapsedClasses = el.classList.contains('opacity-0') || 
-                                   el.classList.contains('max-h-0') || 
-                                   el.classList.contains('overflow-hidden');
-        
+        const hasCollapsedClasses = el.classList.contains('opacity-0') ||
+          el.classList.contains('max-h-0') ||
+          el.classList.contains('overflow-hidden');
+
         // If it has collapsed classes, it's hidden
         if (hasCollapsedClasses) return false;
-        
+
         // Additional checks for other hidden states
         const rect = el.getBoundingClientRect();
         const computedStyle = window.getComputedStyle(el);
-        return rect.height > 0 && 
-               computedStyle.display !== 'none' && 
-               computedStyle.visibility !== 'hidden' &&
-               computedStyle.opacity !== '0';
+        return rect.height > 0 &&
+          computedStyle.display !== 'none' &&
+          computedStyle.visibility !== 'hidden' &&
+          computedStyle.opacity !== '0';
       });
-    
+
     if (items.length === 0) {
       timelineEl.style.setProperty('--timeline-height', '100%');
       return;
     }
-    
+
     // If not expanded, only consider the first 5 steps (getVisibleSteps)
     const visibleItems = isExpanded ? items : items.slice(0, 5);
     const lastItem = visibleItems[visibleItems.length - 1];
-    
+
     if (!lastItem) {
       timelineEl.style.setProperty('--timeline-height', '100%');
       return;
     }
-    
+
     const icon = lastItem.querySelector<HTMLElement>('.timeline-icon');
     const iconHalf = icon ? Math.round(icon.clientHeight / 2) : 16;
     const timelineTop = timelineEl.getBoundingClientRect().top + window.scrollY;
     const lastCenterY = lastItem.getBoundingClientRect().top + window.scrollY + iconHalf;
     const heightPx = Math.max(0, Math.round(lastCenterY - timelineTop));
-    
+
     // Calculate final height based on expansion state and device type
     let finalHeight = heightPx + iconHalf;
-    
+
     if (isMobile) {
       // On mobile, ensure the line stops exactly at the last visible item
       const lastItemBottom = lastItem.getBoundingClientRect().bottom + window.scrollY;
       const timelineBottom = timelineEl.getBoundingClientRect().bottom + window.scrollY;
-      
+
       // Use the bottom of the last item as the stopping point
       const bottomBasedHeight = Math.max(0, lastItemBottom - timelineTop);
       finalHeight = Math.max(finalHeight, bottomBasedHeight);
-      
+
       // Add a small buffer but don't let it extend too far
       finalHeight = Math.min(finalHeight + 10, bottomBasedHeight + 20);
     }
-    
+
     timelineEl.style.setProperty('--timeline-height', finalHeight + 'px');
   }
 
   // Get color code for color display
   getColorCode(colorName: string): string {
     if (!colorName) return '#6b7280'; // Default gray
-    
+
     const colorMap: { [key: string]: string } = {
       'red': '#ef4444',
       'blue': '#3b82f6',
@@ -1266,7 +1375,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       'beige': '#f5f5dc',
       'cream': '#f5f5dc'
     };
-    
+
     return colorMap[colorName.toLowerCase()] || '#6b7280';
   }
 
@@ -1275,14 +1384,26 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.observer.disconnect();
       this.observer = null;
     }
-    
+
     // Clean up auto-scroll intervals
     this.stopAutoScroll();
     this.stopBrandsAutoScroll();
     this.stopSimpleStepsAutoScroll();
-    
+    this.clearHeroAutoScroll();
+
     // Unregister scroll sections
     this.scrollNavigationService.unregisterSections();
+
+    // Clean up event listeners and subscriptions
+    if (this.isBrowser) {
+      window.removeEventListener('openFaqModal', () => {
+        this.openFAQsModal();
+      });
+    }
+
+    if (this.routeParamsSubscription) {
+      this.routeParamsSubscription.unsubscribe();
+    }
   }
 
   /**
@@ -1361,8 +1482,43 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   openFAQsModal(): void {
-    this.showFAQsModal.set(true);
-    document.body.style.overflow = 'hidden';
+    console.log('openFAQsModal called, isBrowser:', this.isBrowser, 'showFAQsModal:', this.showFAQsModal());
+
+    // Ensure we're in browser environment
+    if (!this.isBrowser) return;
+
+    // Prevent multiple calls
+    if (this.showFAQsModal()) {
+      console.log('Modal already open, skipping');
+      return;
+    }
+
+    // Force change detection and DOM update
+    setTimeout(() => {
+      console.log('Setting showFAQsModal to true');
+      this.showFAQsModal.set(true);
+      document.body.style.overflow = 'hidden';
+
+      // Trigger change detection to ensure modal is rendered
+      if (this.destroyRef) {
+        // Force a change detection cycle
+        setTimeout(() => {
+          // Additional check to ensure modal is visible
+          const modalElement = document.querySelector('[data-faq-modal]');
+          if (!modalElement && this.showFAQsModal()) {
+            console.warn('FAQ modal element not found, retrying...');
+            // Retry opening the modal
+            setTimeout(() => {
+              if (!this.showFAQsModal()) {
+                this.showFAQsModal.set(true);
+              }
+            }, 100);
+          } else if (modalElement) {
+            console.log('FAQ modal element found successfully');
+          }
+        }, 50);
+      }
+    }, 0);
   }
 
   closeFAQsModal(): void {

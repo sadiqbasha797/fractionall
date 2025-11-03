@@ -1,13 +1,15 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ChangeDetectorRef, Inject, PLATFORM_ID, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 import { NotificationService } from '../services/notification.service';
 import { ScrollNavigationService } from '../services/scroll-navigation.service';
 import { LocationSuggestionsService, LocationSuggestion } from '../services/location-suggestions.service';
+import { CarPublicService } from '../services/car-public.service';
 import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-navbar',
@@ -24,6 +26,7 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
   private authSubscription?: Subscription;
   private scrollSubscription?: Subscription;
   private notificationSubscription?: Subscription;
+  private routerSubscription?: Subscription;
   activeScrollSection = '';
   unreadCount = 0;
 
@@ -40,18 +43,30 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private notificationService: NotificationService,
     private locationSuggestionsService: LocationSuggestionsService,
+    private carPublicService: CarPublicService,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  ) { }
 
   ngOnInit() {
     // Check initial auth state
     this.checkAuthState();
-    
-    // Listen for route changes to update auth state
-    this.router.events.subscribe(() => {
-      // Use setTimeout to avoid ExpressionChangedAfterItHasBeenCheckedError
+
+    // Listen for route changes to update auth state and check location
+    this.routerSubscription = this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event) => {
+      const navEvent = event as NavigationEnd;
+      // Update auth state
       setTimeout(() => this.checkAuthState(), 0);
+      
+      // Check if navigated to cars page without location
+      if (navEvent.url.includes('/cars')) {
+        setTimeout(() => this.checkAndOpenLocationPopup(), 300);
+      }
     });
+
+    // Check if we're on cars page and no location is set - auto open location popup
+    this.checkAndOpenLocationPopup();
 
     // Subscribe to scroll navigation service for active section updates
     this.scrollSubscription = this.scrollNavigationService.activeSection$.subscribe(
@@ -84,6 +99,9 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.notificationSubscription) {
       this.notificationSubscription.unsubscribe();
     }
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
+    }
   }
 
   checkAuthState() {
@@ -108,16 +126,16 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  openMenu() { 
-    this.menuOpen = true; 
+  openMenu() {
+    this.menuOpen = true;
   }
-  
-  closeMenu() { 
-    this.menuOpen = false; 
+
+  closeMenu() {
+    this.menuOpen = false;
   }
-  
-  toggleMenu() { 
-    this.menuOpen = !this.menuOpen; 
+
+  toggleMenu() {
+    this.menuOpen = !this.menuOpen;
   }
 
   navigateToLogin() {
@@ -138,17 +156,30 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
 
   scrollToFAQ() {
     this.closeMenu();
-    
-    // Check if we're already on the home page
-    if (this.router.url === '/home') {
-      // If already on home page, scroll directly to FAQ section
-      this.scrollToFAQSection();
-    } else {
-      // Navigate to home page first, then scroll to FAQ section
-      this.router.navigate(['/home']).then(() => {
-        this.scrollToFAQSection();
-      });
-    }
+
+    console.log('FAQ button clicked, current URL:', this.router.url);
+
+    // Always navigate to home with a flag to open FAQs modal
+    // Use replaceUrl: false to ensure navigation happens even if already on home
+    this.router.navigate(['/home'], {
+      queryParams: { openFaqs: '1', timestamp: Date.now() }, // Add timestamp to force navigation
+      queryParamsHandling: 'merge'
+    }).then((success) => {
+      console.log('Navigation to home completed:', success);
+
+      // Additional fallback: if we're already on home, try to trigger the modal directly
+      if (this.router.url.includes('/home')) {
+        setTimeout(() => {
+          // Emit a custom event that the home component can listen to
+          if (typeof window !== 'undefined') {
+            console.log('Dispatching custom openFaqModal event');
+            window.dispatchEvent(new CustomEvent('openFaqModal'));
+          }
+        }, 100);
+      }
+    }).catch((error) => {
+      console.error('Navigation error:', error);
+    });
   }
 
   private scrollToFAQSection() {
@@ -159,15 +190,15 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
         // Get navbar height to offset the scroll position
         const navbar = document.querySelector('nav');
         const navbarHeight = navbar ? navbar.offsetHeight : 0;
-        
+
         // Check if we're on mobile for additional offset
         const isMobile = window.innerWidth < 768;
         const mobileOffset = isMobile ? 40 : 20; // More offset on mobile
-        
+
         // Calculate the position to scroll to (accounting for navbar height and device type)
         const elementPosition = faqElement.getBoundingClientRect().top + window.pageYOffset;
         const offsetPosition = elementPosition - navbarHeight - mobileOffset;
-        
+
         window.scrollTo({
           top: offsetPosition,
           behavior: 'smooth'
@@ -177,7 +208,7 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
         setTimeout(scrollToElement, 100);
       }
     };
-    
+
     // Start scrolling after a short delay to ensure page is loaded
     setTimeout(scrollToElement, 200);
   }
@@ -245,12 +276,12 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
     if (route === '/home') {
       return this.router.url === '/home' && this.activeScrollSection !== 'faq';
     }
-    
+
     // For FAQ, check if we're in FAQ section
     if (route === 'faq') {
       return this.activeScrollSection === 'faq';
     }
-    
+
     // For other routes, use routerLinkActive
     return this.router.url === route;
   }
@@ -264,11 +295,11 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event) {
     if (!this.profileDropdownOpen) return;
-    
+
     const target = event.target as HTMLElement;
     const dropdown = document.querySelector('.profile-dropdown');
     const button = document.querySelector('.profile-button');
-    
+
     if (!dropdown?.contains(target) && !button?.contains(target)) {
       this.closeProfileDropdown();
     }
@@ -276,11 +307,10 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Location popup methods
   toggleLocationPopup() {
-    // Disabled - location search is now handled on the cars page
-    // this.isLocationPopupOpen.set(!this.isLocationPopupOpen());
-    // if (this.isLocationPopupOpen()) {
-    //   this.loadLocationSuggestions();
-    // }
+    this.isLocationPopupOpen.set(!this.isLocationPopupOpen());
+    if (this.isLocationPopupOpen()) {
+      this.loadLocationSuggestions();
+    }
   }
 
   closeLocationPopup() {
@@ -306,62 +336,62 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private searchLocations(query: string) {
     if (query.length < 3) return;
-    
+
     this.isLocationLoading.set(true);
     // For now, we'll create mock suggestions since the service methods don't exist
     const mockSuggestions: LocationSuggestion[] = [
-      { 
-        display_name: 'Mumbai, Maharashtra, India', 
-        name: 'Mumbai', 
-        state: 'Maharashtra', 
-        country: 'India', 
-        lat: '19.0760', 
-        lon: '72.8777', 
-        type: 'city', 
-        isSelected: false 
+      {
+        display_name: 'Mumbai, Maharashtra, India',
+        name: 'Mumbai',
+        state: 'Maharashtra',
+        country: 'India',
+        lat: '19.0760',
+        lon: '72.8777',
+        type: 'city',
+        isSelected: false
       },
-      { 
-        display_name: 'Delhi, India', 
-        name: 'Delhi', 
-        state: 'Delhi', 
-        country: 'India', 
-        lat: '28.7041', 
-        lon: '77.1025', 
-        type: 'city', 
-        isSelected: false 
+      {
+        display_name: 'Delhi, India',
+        name: 'Delhi',
+        state: 'Delhi',
+        country: 'India',
+        lat: '28.7041',
+        lon: '77.1025',
+        type: 'city',
+        isSelected: false
       },
-      { 
-        display_name: 'Bangalore, Karnataka, India', 
-        name: 'Bangalore', 
-        state: 'Karnataka', 
-        country: 'India', 
-        lat: '12.9716', 
-        lon: '77.5946', 
-        type: 'city', 
-        isSelected: false 
+      {
+        display_name: 'Bangalore, Karnataka, India',
+        name: 'Bangalore',
+        state: 'Karnataka',
+        country: 'India',
+        lat: '12.9716',
+        lon: '77.5946',
+        type: 'city',
+        isSelected: false
       },
-      { 
-        display_name: 'Hyderabad, Telangana, India', 
-        name: 'Hyderabad', 
-        state: 'Telangana', 
-        country: 'India', 
-        lat: '17.3850', 
-        lon: '78.4867', 
-        type: 'city', 
-        isSelected: false 
+      {
+        display_name: 'Hyderabad, Telangana, India',
+        name: 'Hyderabad',
+        state: 'Telangana',
+        country: 'India',
+        lat: '17.3850',
+        lon: '78.4867',
+        type: 'city',
+        isSelected: false
       },
-      { 
-        display_name: 'Chennai, Tamil Nadu, India', 
-        name: 'Chennai', 
-        state: 'Tamil Nadu', 
-        country: 'India', 
-        lat: '13.0827', 
-        lon: '80.2707', 
-        type: 'city', 
-        isSelected: false 
+      {
+        display_name: 'Chennai, Tamil Nadu, India',
+        name: 'Chennai',
+        state: 'Tamil Nadu',
+        country: 'India',
+        lat: '13.0827',
+        lon: '80.2707',
+        type: 'city',
+        isSelected: false
       }
     ].filter(s => s.name.toLowerCase().includes(query.toLowerCase()));
-    
+
     setTimeout(() => {
       this.locationSuggestions.set(mockSuggestions);
       this.isLocationLoading.set(false);
@@ -370,118 +400,143 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadLocationSuggestions() {
-    // Load popular cities
-    const popularCities: LocationSuggestion[] = [
-      { 
-        display_name: 'Mumbai, Maharashtra, India', 
-        name: 'Mumbai', 
-        state: 'Maharashtra', 
-        country: 'India', 
-        lat: '19.0760', 
-        lon: '72.8777', 
-        type: 'city', 
-        isSelected: false 
-      },
-      { 
-        display_name: 'Delhi, India', 
-        name: 'Delhi', 
-        state: 'Delhi', 
-        country: 'India', 
-        lat: '28.7041', 
-        lon: '77.1025', 
-        type: 'city', 
-        isSelected: false 
-      },
-      { 
-        display_name: 'Bangalore, Karnataka, India', 
-        name: 'Bangalore', 
-        state: 'Karnataka', 
-        country: 'India', 
-        lat: '12.9716', 
-        lon: '77.5946', 
-        type: 'city', 
-        isSelected: false 
-      },
-      { 
-        display_name: 'Hyderabad, Telangana, India', 
-        name: 'Hyderabad', 
-        state: 'Telangana', 
-        country: 'India', 
-        lat: '17.3850', 
-        lon: '78.4867', 
-        type: 'city', 
-        isSelected: false 
-      },
-      { 
-        display_name: 'Chennai, Tamil Nadu, India', 
-        name: 'Chennai', 
-        state: 'Tamil Nadu', 
-        country: 'India', 
-        lat: '13.0827', 
-        lon: '80.2707', 
-        type: 'city', 
-        isSelected: false 
-      },
-      { 
-        display_name: 'Kolkata, West Bengal, India', 
-        name: 'Kolkata', 
-        state: 'West Bengal', 
-        country: 'India', 
-        lat: '22.5726', 
-        lon: '88.3639', 
-        type: 'city', 
-        isSelected: false 
-      },
-      { 
-        display_name: 'Pune, Maharashtra, India', 
-        name: 'Pune', 
-        state: 'Maharashtra', 
-        country: 'India', 
-        lat: '18.5204', 
-        lon: '73.8567', 
-        type: 'city', 
-        isSelected: false 
-      },
-      { 
-        display_name: 'Ahmedabad, Gujarat, India', 
-        name: 'Ahmedabad', 
-        state: 'Gujarat', 
-        country: 'India', 
-        lat: '23.0225', 
-        lon: '72.5714', 
-        type: 'city', 
-        isSelected: false 
-      }
-    ];
-    
-    this.locationSuggestions.set(popularCities);
-    this.cdr.detectChanges();
-  }
+    // Fetch cities from cars in database
+    this.isLocationLoading.set(true);
 
-  selectLocation(suggestion: LocationSuggestion) {
-    // Update user location in the system
-    this.updateUserLocation(suggestion.name);
-    this.closeLocationPopup();
-    
-    // Navigate to cars page with location filter
-    this.router.navigate(['/cars'], { 
-      queryParams: { 
-        location: suggestion.name,
-        state: suggestion.state 
-      } 
+    this.carPublicService.getPublicCars().subscribe({
+      next: (res: any) => {
+        const carsData = (res && res.body && res.body.cars) ? res.body.cars : (Array.isArray(res) ? res : []);
+
+        // Extract unique cities from cars
+        const citiesSet = new Set<string>();
+        const citiesWithState: { [key: string]: string } = {};
+
+        carsData.forEach((car: any) => {
+          if (car.location && car.location.trim()) {
+            const cityName = car.location.trim();
+            citiesSet.add(cityName);
+            // Store state if available (you might need to add state field to car model)
+            if (car.state) {
+              citiesWithState[cityName] = car.state;
+            }
+          }
+        });
+
+        // Convert to LocationSuggestion array and sort alphabetically
+        const citySuggestions: LocationSuggestion[] = Array.from(citiesSet)
+          .sort((a, b) => a.localeCompare(b))
+          .map(city => ({
+            display_name: citiesWithState[city] ? `${city}, ${citiesWithState[city]}` : city,
+            name: city,
+            state: citiesWithState[city] || '',
+            country: 'India',
+            lat: '',
+            lon: '',
+            type: 'city',
+            isSelected: false
+          }));
+
+        this.locationSuggestions.set(citySuggestions);
+        this.isLocationLoading.set(false);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error loading cities from database:', error);
+        // Fallback to empty array on error
+        this.locationSuggestions.set([]);
+        this.isLocationLoading.set(false);
+        this.cdr.detectChanges();
+      }
     });
   }
 
+  selectLocation(suggestion: LocationSuggestion) {
+    // Store location in session storage
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('selectedLocation', suggestion.name);
+      if (suggestion.state) {
+        sessionStorage.setItem('selectedState', suggestion.state);
+      }
+    }
+
+    // Update user location in the system
+    this.updateUserLocation(suggestion.name);
+    this.closeLocationPopup();
+
+    // Navigate to cars page with location filter
+    // If already on cars page, reload with new location
+    if (this.router.url.includes('/cars')) {
+      // Already on cars page - navigate with location parameter to trigger reload
+      this.router.navigate(['/cars'], {
+        queryParams: {
+          location: suggestion.name,
+          state: suggestion.state || '',
+          timestamp: Date.now() // Force navigation even if on same route
+        },
+        queryParamsHandling: 'merge'
+      }).then(() => {
+        // Force page reload to apply location filter
+        window.location.reload();
+      });
+    } else {
+      // Navigate to cars page with location filter
+      this.router.navigate(['/cars'], {
+        queryParams: {
+          location: suggestion.name,
+          state: suggestion.state || ''
+        }
+      });
+    }
+  }
+
   private updateUserLocation(location: string) {
-    // Here you would typically update the user's location via API
-    // For now, we'll just update the local userData
+    // Update location in session storage for persistence
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('selectedLocation', location);
+    }
+
+    // Update local userData if available
     if (this.userData) {
       this.userData.location = location;
       this.authService.setUserData(this.userData);
     }
   }
 
+  // Get selected location from session storage
+  getSelectedLocation(): string {
+    if (typeof sessionStorage === 'undefined') {
+      return '';
+    }
+    const location = sessionStorage.getItem('selectedLocation');
+    return location || '';
+  }
+
   allLocationSuggestions(): LocationSuggestion[] {
     return this.locationSuggestions();
+  }
+
+  // Check if location is set and auto-open popup on cars page if not set
+  private checkAndOpenLocationPopup() {
+    if (typeof sessionStorage === 'undefined') {
+      return;
+    }
+
+    // Only check if we're on the cars page
+    if (!this.router.url.includes('/cars')) {
+      return;
+    }
+
+    // Check if location is not set
+    const savedLocation = sessionStorage.getItem('selectedLocation');
+    if (!savedLocation) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        if (!this.isLocationPopupOpen()) {
+          this.isLocationPopupOpen.set(true);
+          this.loadLocationSuggestions();
+          this.cdr.detectChanges();
+        }
+      }, 500);
+    }
   }
 }

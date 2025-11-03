@@ -237,7 +237,6 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
       // Use authenticated endpoint for retargeting (even if user not fully verified)
       this.carService.trackCarViewWithRetargeting(this.carId()).subscribe({
         next: (response) => {
-          console.log('Car view tracked with retargeting:', response);
         },
         error: (error) => {
           console.error('Error tracking car view with retargeting:', error);
@@ -258,7 +257,6 @@ export class CarDetails implements OnInit, OnDestroy, AfterViewInit {
 
     this.carService.trackCarView(this.carId()).subscribe({
       next: (response) => {
-        console.log('Anonymous car view tracked:', response);
       },
       error: (error) => {
         console.error('Error tracking anonymous car view:', error);

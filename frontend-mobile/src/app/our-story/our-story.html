@@ -1,189 +1,309 @@
-<div class="px-4 md:px-8 flex flex-1 justify-center py-5 min-h-screen pb-20" style="background-color: #f5f5f5;">
+<div class="px-3 md:px-6 flex flex-1 justify-center py-4 min-h-screen pb-28 mb-6" style="background-color: #f5f5f5;">
   <div class="layout-content-container flex flex-col w-full max-w-[1600px] mx-auto">
     <div class="@container">
-      <div class="@[480px]:p-4">
-        <!-- Hero Section - Desktop Only -->
-        <div class="relative min-h-[300px] sm:min-h-[400px] md:min-h-[480px] flex items-center justify-center text-center mb-12 md:mb-16 overflow-hidden rounded-2xl hidden lg:flex" data-animation="fade-up">
-          <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('https://www.rolls-roycemotorcarsranchomirage.com/blogs/1361/wp-content/uploads/2018/09/Rolls-Royce-Feature-.jpg');"></div>
-          <!-- Strong gradient overlay for text readability -->
-          <div class="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-black/70"></div>
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/60"></div>
-          
-          <!-- Content -->
-          <div class="relative z-10 max-w-4xl mx-auto px-6">
-            <h1 class="text-4xl md:text-6xl font-black leading-tight tracking-[-0.033em] text-white mb-6 drop-shadow-2xl" data-animation="fade-up" style="text-shadow: 0 0 20px rgba(0,0,0,0.8), 0 4px 8px rgba(0,0,0,0.6);">
+      <div class="@[480px]:p-2">
+        <!-- Hero Section -->
+        <div class="flex items-center justify-center text-center mb-6" data-animation="fade-up">
+          <div class="max-w-2xl mx-auto px-2">
+            <h1 class="text-2xl md:text-3xl font-bold leading-tight text-gray-900 mb-3">
               Our Story
             </h1>
-            <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto leading-relaxed font-light drop-shadow-lg" data-animation="fade-up" data-delay="100" style="text-shadow: 0 0 15px rgba(0,0,0,0.7), 0 2px 4px rgba(0,0,0,0.5);">
+            <p class="text-sm md:text-base text-gray-700 leading-relaxed">
               The Beginning of Fraction Car — where "Sharing is Gearing"
             </p>
-            <button (click)="scrollToSection('story-content')" class="btn-outline-white px-8 py-4 text-lg font-bold rounded-xl transform hover:scale-105 transition-all duration-300 backdrop-blur-sm bg-white/10 border-white/80 shadow-2xl hidden" data-animation="fade-up" data-delay="200">
-              Read Our Story
-            </button>
           </div>
         </div>
 
-        <!-- Hero Section - Mobile/Tablet Only -->
-        <div class="flex lg:hidden items-center justify-center text-center mb-8 md:mb-12" data-animation="fade-up">
-          <div class="max-w-4xl mx-auto px-6">
-            <h1 class="text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em] text-black mb-6" data-animation="fade-up">
-              Our Story
-            </h1>
-            <p class="text-lg md:text-xl text-black mb-8 max-w-3xl mx-auto leading-relaxed font-light" data-animation="fade-up" data-delay="100">
-              The Beginning of Fraction Car — where "Sharing is Gearing"
-            </p>
-            <button (click)="scrollToSection('story-content')" class="px-8 py-4 text-lg font-bold rounded-xl transform hover:scale-105 transition-all duration-300 bg-blue-600 text-white border border-blue-600 shadow-lg hidden" data-animation="fade-up" data-delay="200">
-              Read Our Story
-            </button>
+        <!-- Introduction Card -->
+        <div class="bg-white rounded-xl p-4 mb-4 shadow-sm border border-gray-200" data-animation="fade-up">
+          <p class="text-xs text-gray-700 leading-relaxed mb-2">
+            Our journey began with a simple yet powerful question:
+          </p>
+          <blockquote class="text-xs md:text-sm font-semibold text-gray-900 italic border-l-3 border-blue-500 pl-3 my-3">
+            "What if car ownership could be smarter, more flexible, and more accessible for everyone?"
+          </blockquote>
+          <p class="text-xs text-gray-700 leading-relaxed">
+            At Fraction Car, we envisioned a new way forward — one where ownership is not a burden but a shared experience.
+          </p>
+        </div>
+
+        <!-- Story Cards Section -->
+        <div class="space-y-4">
+          <!-- The Vision Card -->
+          <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:border-blue-400 transition-all" data-animation="fade-up" data-delay="100">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <h3 class="text-base font-semibold text-gray-900 mb-1">The Vision</h3>
+                <p class="text-xs text-gray-600 leading-relaxed mb-3">
+                  Redefining car ownership through innovative fractional ownership...
+                </p>
+                <button (click)="openVisionModal()" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                  Read More →
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Philosophy Card -->
+          <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:border-blue-400 transition-all" data-animation="fade-up" data-delay="200">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <h3 class="text-base font-semibold text-gray-900 mb-1">Our Philosophy</h3>
+                <p class="text-xs text-gray-600 leading-relaxed mb-3">
+                  "Sharing is Gearing" — the core of who we are...
+                </p>
+                <button (click)="openPhilosophyModal()" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                  Read More →
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Why Fraction Car Card -->
+          <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:border-blue-400 transition-all" data-animation="fade-up" data-delay="300">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <h3 class="text-base font-semibold text-gray-900 mb-1">Why Fraction Car Matters</h3>
+                <p class="text-xs text-gray-600 leading-relaxed mb-3">
+                  Experience premium cars at a fraction of the cost...
+                </p>
+                <button (click)="openWhyModal()" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                  Read More →
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Road Ahead Card -->
+          <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:border-blue-400 transition-all" data-animation="fade-up" data-delay="400">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 bg-orange-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <h3 class="text-base font-semibold text-gray-900 mb-1">The Road Ahead</h3>
+                <p class="text-xs text-gray-600 leading-relaxed mb-3">
+                  Join us on our journey toward a smarter, more sustainable future...
+                </p>
+                <button (click)="openAheadModal()" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                  Read More →
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Founder Card -->
+          <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:border-blue-400 transition-all" data-animation="fade-up" data-delay="500">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <h3 class="text-base font-semibold text-gray-900 mb-1">Message from Our Founder</h3>
+                <p class="text-xs text-gray-600 leading-relaxed mb-3">
+                  Hear from our founder about the vision...
+                </p>
+                <button (click)="openFounderModal()" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                  Read More →
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Main Content -->
-        <div id="story-content" class="max-w-4xl mx-auto space-y-12">
-          
-          <!-- Introduction -->
-          <div class="prose prose-invert max-w-none px-2 sm:px-0" data-animation="fade-up" data-delay="100">
-            <p class="text-lg text-black leading-relaxed">
-              Our journey began with a simple yet powerful question:
-            </p>
-            <blockquote class="text-lg sm:text-xl font-semibold text-black italic border-l-4 border-blue-500 pl-3 sm:pl-6 my-4 sm:my-6 ml-2 sm:ml-0">
-              "What if car ownership could be smarter, more flexible, and more accessible for everyone?"
-            </blockquote>
-            <p class="text-lg text-black leading-relaxed">
-              For many, owning a car is a lifelong dream. But that dream often comes with challenges — high upfront costs, ongoing maintenance, and the frustration of underutilized vehicles.
-            </p>
-            <p class="text-lg text-black leading-relaxed">
-              At Fraction Car, we envisioned a new way forward — one where ownership is not a burden but a shared experience.
-            </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Vision Modal -->
+<div *ngIf="visionModal()" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" (click)="closeVisionModal()">
+  <div class="rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden bg-white" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 p-4 border-b border-gray-200">
+      <div class="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <h2 class="text-lg font-bold text-gray-900">The Vision</h2>
+      </div>
+      <button (click)="closeVisionModal()" class="text-gray-500 hover:text-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="p-4 overflow-y-auto max-h-[calc(90vh-100px)]">
+      <p class="text-sm text-gray-700 leading-relaxed mb-3">
+        Fraction Car was founded with a mission to redefine mobility. Our innovative fractional ownership model enables individuals to co-own vehicles, share usage, and split expenses transparently.
+      </p>
+      <p class="text-sm text-gray-700 leading-relaxed mb-3">
+        It's more than just sharing a car — it's about making premium car ownership affordable, sustainable, and community-driven.
+      </p>
+      <p class="text-sm font-semibold text-blue-600">
+        We're turning the dream of owning a luxury or performance car into an achievable reality for everyone.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Philosophy Modal -->
+<div *ngIf="philosophyModal()" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" (click)="closePhilosophyModal()">
+  <div class="rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden bg-white" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 p-4 border-b border-gray-200">
+      <div class="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <h2 class="text-lg font-bold text-gray-900">Our Philosophy</h2>
+      </div>
+      <button (click)="closePhilosophyModal()" class="text-gray-500 hover:text-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="p-4 overflow-y-auto max-h-[calc(90vh-100px)]">
+      <p class="text-sm font-semibold text-green-600 mb-3">"Sharing is Gearing"</p>
+      <p class="text-sm text-gray-700 leading-relaxed mb-3">
+        isn't just a tagline — it's the core of who we are. It reflects our belief that collaboration, technology, and smart access are the future of ownership.
+      </p>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        By sharing resources intelligently, we're not just changing how people own cars — we're building a community of responsible, connected, and forward-thinking car enthusiasts.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Why Fraction Car Modal -->
+<div *ngIf="whyModal()" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" (click)="closeWhyModal()">
+  <div class="rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden bg-white" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 p-4 border-b border-gray-200">
+      <div class="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <h2 class="text-lg font-bold text-gray-900">Why Fraction Car Matters</h2>
+      </div>
+      <button (click)="closeWhyModal()" class="text-gray-500 hover:text-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="p-4 overflow-y-auto max-h-[calc(90vh-100px)] space-y-3">
+      <div class="bg-blue-50 rounded-lg p-3">
+        <h3 class="text-sm font-semibold text-gray-900 mb-1">Affordable Access</h3>
+        <p class="text-xs text-gray-700">Experience premium cars at a fraction of the cost.</p>
+      </div>
+      <div class="bg-green-50 rounded-lg p-3">
+        <h3 class="text-sm font-semibold text-gray-900 mb-1">Smart Usage</h3>
+        <p class="text-xs text-gray-700">Reduce underutilization through time-shared access.</p>
+      </div>
+      <div class="bg-purple-50 rounded-lg p-3">
+        <h3 class="text-sm font-semibold text-gray-900 mb-1">Transparent Ownership</h3>
+        <p class="text-xs text-gray-700">Co-own vehicles with clear agreements and digital management.</p>
+      </div>
+      <div class="bg-emerald-50 rounded-lg p-3">
+        <h3 class="text-sm font-semibold text-gray-900 mb-1">Sustainability</h3>
+        <p class="text-xs text-gray-700">Promote reduced vehicle production and smarter urban mobility.</p>
+      </div>
+      <p class="text-xs font-semibold text-gray-900 mt-3">
+        With Fraction Car, you don't just drive — you belong to a movement shaping the future of shared mobility.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Road Ahead Modal -->
+<div *ngIf="aheadModal()" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" (click)="closeAheadModal()">
+  <div class="rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden bg-white" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 p-4 border-b border-gray-200">
+      <div class="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <h2 class="text-lg font-bold text-gray-900">The Road Ahead</h2>
+      </div>
+      <button (click)="closeAheadModal()" class="text-gray-500 hover:text-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="p-4 overflow-y-auto max-h-[calc(90vh-100px)]">
+      <p class="text-sm text-gray-700 leading-relaxed mb-3">
+        As we launch this exciting journey, we extend our heartfelt gratitude to everyone who has supported and believed in our vision.
+      </p>
+      <p class="text-sm text-gray-700 leading-relaxed mb-3">
+        The road ahead is full of innovation, collaboration, and limitless possibilities.
+      </p>
+      <p class="text-sm font-semibold text-orange-600 text-center">
+        We invite you to join the new era of shared mobility — where ownership meets community, and dreams meet the road.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Founder Modal -->
+<div *ngIf="founderModal()" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" (click)="closeFounderModal()">
+  <div class="rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden bg-white" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 p-4 border-b border-gray-200">
+      <div class="w-8 h-8 bg-indigo-500/20 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <h2 class="text-lg font-bold text-gray-900">Message from Our Founder</h2>
+      </div>
+      <button (click)="closeFounderModal()" class="text-gray-500 hover:text-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="p-4 overflow-y-auto max-h-[calc(90vh-100px)]">
+      <div class="text-center mb-4">
+        <blockquote class="text-sm italic text-gray-700 mb-4">
+          "At Fraction Car, we believe that ownership should empower, not limit. Through shared innovation, we're driving toward a smarter, more sustainable future."
+        </blockquote>
+        <div class="flex items-center justify-center gap-3">
+          <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+            <span class="text-white font-bold text-lg">Y</span>
           </div>
-
-          <!-- The Vision Section -->
-          <div class="bg-white/80 rounded-2xl p-8 border border-gray-300/50 hover:border-blue-500 transition-all duration-300" data-animation="fade-up" data-delay="200">
-            <h2 class="text-2xl sm:text-3xl font-bold text-black mb-6">The Vision: Redefining Car Ownership</h2>
-            <p class="text-lg text-black leading-relaxed mb-4">
-              Fraction Car was founded with a mission to redefine mobility.
-            </p>
-            <p class="text-lg text-black leading-relaxed mb-4">
-              Our innovative fractional ownership model enables individuals to co-own vehicles, share usage, and split expenses transparently.
-            </p>
-            <p class="text-lg text-black leading-relaxed">
-              It's more than just sharing a car — it's about making premium car ownership affordable, sustainable, and community-driven.
-            </p>
-            <p class="text-lg font-semibold text-blue-600 mt-4">
-              We're turning the dream of owning a luxury or performance car into an achievable reality for everyone.
-            </p>
+          <div class="text-left">
+            <p class="text-sm font-semibold text-gray-900">Yeshaswi</p>
+            <p class="text-xs text-gray-600">Founder & Managing Partner, Fraction Car LLP</p>
           </div>
-
-          <!-- Philosophy Section -->
-          <div class="text-center" data-animation="fade-up" data-delay="300">
-            <h2 class="text-2xl sm:text-3xl font-bold text-black mb-6">Our Philosophy: "Sharing is Gearing"</h2>
-            <div class="bg-white/80 rounded-2xl p-8 border border-gray-300/50 hover:border-blue-500 transition-all duration-300">
-              <p class="text-xl font-semibold text-blue-600 mb-4">"Sharing is Gearing"</p>
-              <p class="text-lg text-black leading-relaxed mb-4">
-                isn't just a tagline — it's the core of who we are.
-              </p>
-              <p class="text-lg text-black leading-relaxed">
-                It reflects our belief that collaboration, technology, and smart access are the future of ownership.
-              </p>
-              <p class="text-lg text-black leading-relaxed mt-4">
-                By sharing resources intelligently, we're not just changing how people own cars — we're building a community of responsible, connected, and forward-thinking car enthusiasts.
-              </p>
-            </div>
-          </div>
-
-          <!-- Why Fraction Car Matters -->
-          <div data-animation="fade-up" data-delay="400">
-            <h2 class="text-2xl sm:text-3xl font-bold text-black mb-8 text-center">Why Fraction Car Matters</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="bg-white/80 rounded-xl p-6 border border-gray-300/50 hover:border-blue-500 transition-all duration-300">
-                <div class="flex items-center mb-4">
-                  <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mr-4">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-semibold text-black">Affordable Access</h3>
-                </div>
-                <p class="text-black">Experience premium cars at a fraction of the cost.</p>
-              </div>
-
-              <div class="bg-white/80 rounded-xl p-6 border border-gray-300/50 hover:border-blue-500 transition-all duration-300">
-                <div class="flex items-center mb-4">
-                  <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mr-4">
-                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-semibold text-black">Smart Usage</h3>
-                </div>
-                <p class="text-black">Reduce underutilization through time-shared access.</p>
-              </div>
-
-              <div class="bg-white/80 rounded-xl p-6 border border-gray-300/50 hover:border-blue-500 transition-all duration-300">
-                <div class="flex items-center mb-4">
-                  <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mr-4">
-                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-semibold text-black">Transparent Ownership</h3>
-                </div>
-                <p class="text-black">Co-own vehicles with clear agreements and digital management.</p>
-              </div>
-
-              <div class="bg-white/80 rounded-xl p-6 border border-gray-300/50 hover:border-blue-500 transition-all duration-300">
-                <div class="flex items-center mb-4">
-                  <div class="w-12 h-12 bg-emerald-500/20 rounded-lg flex items-center justify-center mr-4">
-                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-semibold text-black">Sustainability</h3>
-                </div>
-                <p class="text-black">Promote reduced vehicle production and smarter urban mobility.</p>
-              </div>
-            </div>
-            <div class="text-center mt-8">
-              <p class="text-xl font-semibold text-black">
-                With Fraction Car, you don't just drive — you belong to a movement shaping the future of shared mobility.
-              </p>
-            </div>
-          </div>
-
-          <!-- The Road Ahead -->
-          <div class="bg-white/80 rounded-2xl p-8 border border-gray-300/50 hover:border-blue-500 transition-all duration-300" data-animation="fade-up" data-delay="500">
-            <h2 class="text-2xl sm:text-3xl font-bold text-black mb-6 text-center">The Road Ahead</h2>
-            <p class="text-lg text-black leading-relaxed mb-4">
-              As we launch this exciting journey, we extend our heartfelt gratitude to everyone who has supported and believed in our vision.
-            </p>
-            <p class="text-lg text-black leading-relaxed mb-4">
-              The road ahead is full of innovation, collaboration, and limitless possibilities.
-            </p>
-            <p class="text-lg font-semibold text-blue-600 text-center">
-              We invite you to join the new era of shared mobility — where ownership meets community, and dreams meet the road.
-            </p>
-          </div>
-
-          <!-- Message from Founder -->
-          <div class="bg-white/80 rounded-2xl p-8 border border-gray-300/50 hover:border-blue-500 transition-all duration-300" data-animation="fade-up" data-delay="600">
-            <h2 class="text-2xl sm:text-3xl font-bold text-black mb-6 text-center">Message from Our Founder</h2>
-            <div class="text-center">
-              <blockquote class="text-lg sm:text-xl italic text-black mb-6 px-2 sm:px-0">
-                "At Fraction Car, we believe that ownership should empower, not limit.
-                Through shared innovation, we're driving toward a smarter, more sustainable future."
-              </blockquote>
-              <div class="flex items-center justify-center">
-                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mr-4">
-                  <span class="text-white font-bold text-xl">Y</span>
-                </div>
-                <div class="text-left">
-                  <p class="text-black font-semibold text-lg">Yeshaswi</p>
-                  <p class="text-black">Founder & Managing Partner, Fraction Car LLP</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>

@@ -577,7 +577,6 @@ export class Cars implements OnInit, AfterViewInit {
       const menuEl = this.elementRef.nativeElement.querySelector(`#${menu}`);
       
       if (!btn || !menuEl) {
-        console.log(`Dropdown elements not found: ${button}, ${menu}`);
         return;
       }
       
@@ -653,7 +652,6 @@ export class Cars implements OnInit, AfterViewInit {
       });
     });
     
-    console.log(`Found ${foundElements} dropdown elements`);
     if (foundElements > 0) {
       this.dropdownsInitialized = true;
     }
@@ -1119,7 +1117,15 @@ export class Cars implements OnInit, AfterViewInit {
 
   // Location search functionality methods
   onLocationSearchSubmit(): void {
-    if (this.locationSearchQuery().trim()) {
+    const query = this.locationSearchQuery().trim();
+    
+    // Check if the query is a pincode
+    if (this.isPincode(query)) {
+      // Don't allow pincode searches - show an error or just return
+      return;
+    }
+    
+    if (query) {
       this.isLocationSearchActive.set(true);
       this.locationSearchType.set('location');
       this.currentPage.set(1); // Reset to first page when searching
@@ -1131,7 +1137,7 @@ export class Cars implements OnInit, AfterViewInit {
       this.router.navigate([], {
         relativeTo: this.route,
         queryParams: {
-          locationSearch: this.locationSearchQuery().trim(),
+          locationSearch: query,
           locationType: this.locationSearchType()
         },
         queryParamsHandling: 'merge'
@@ -1206,8 +1212,12 @@ export class Cars implements OnInit, AfterViewInit {
       this.isLocationDropdownOpen.set(true);
     }
     
-    // Trigger location suggestions search if query is long enough
-    if (value && value.trim().length >= 1) { // Reduced from 2 to 1 for better responsiveness
+    // Check if the input is a pincode - if so, don't trigger location suggestions
+    if (this.isPincode(value.trim())) {
+      // Don't show suggestions for pincode input
+      this.locationSuggestions.set([]);
+      this.isLocationLoading.set(false);
+    } else if (value && value.trim().length >= 1) { // Reduced from 2 to 1 for better responsiveness
       this.isLocationLoading.set(true);
       this.locationSuggestionsService.search(value);
     } else {
@@ -1298,10 +1308,10 @@ export class Cars implements OnInit, AfterViewInit {
     });
   }
 
-  private isPincode(query: string): boolean {
-    // Check if the query is a 6-digit pincode
-    return /^\d{6}$/.test(query);
-  }
+   private isPincode(query: string): boolean {
+     // Check if the query is a 6-digit pincode
+     return /^\d{6}$/.test(query);
+   }
 
   getSearchDisplayText(): string {
     if (!this.isSearchActive() || !this.searchQuery()) {
@@ -1323,7 +1333,6 @@ export class Cars implements OnInit, AfterViewInit {
     this.carService.trackCarView(carId).subscribe({
       next: (res: any) => {
         // View tracked successfully
-        console.log('Car view tracked:', res);
       },
       error: (error) => {
         console.error('Error tracking car view:', error);

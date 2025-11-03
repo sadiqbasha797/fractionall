@@ -6,7 +6,7 @@
       <img *ngIf="getProfileImageUrl()" [src]="getProfileImageUrl()" [alt]="user().name || 'Profile Image'"
         (error)="onImageError($event)" />
       <div *ngIf="!getProfileImageUrl()" class="cover-photo-placeholder"
-        style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 4rem; font-weight: bold; width: 100%; height: 100%;">
+        style="background: linear-gradient(135deg, #3b82f6 0 0%, #1d4ed8 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 4rem; font-weight: bold; width: 100%; height: 100%;">
         {{ getUserInitials() }}
       </div>
       <div class="cover-overlay">
@@ -48,685 +48,151 @@
     <p>Loading profile...</p>
   </div>
 
-  <!-- Section Navigation Buttons -->
-  <div class="section-navigation" *ngIf="!loading()">
-    <button *ngFor="let section of profileSections" (click)="setActiveSection(section.id)"
-      [class.active]="activeSection() === section.id" class="section-btn">
-      <span class="section-label">{{ section.label }}</span>
-    </button>
-  </div>
-
-  <!-- Section Content -->
-  <div class="section-content" *ngIf="!loading()">
-
-    <!-- Profile Info Section -->
-    <div *ngIf="activeSection() === 'profile'" class="section-panel">
-      <div class="section-header">
-        <h2 class="section-title">Profile Information</h2>
-        <div class="header-actions">
-          <button class="edit-btn" (click)="toggleEditMode()" *ngIf="!isEditingProfile()">
-            <svg class="edit-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <!-- Profile Cards Section -->
+  <div class="profile-cards-section" *ngIf="!loading()">
+    <div class="profile-cards-grid">
+      <!-- Profile Info Card -->
+      <div (click)="openProfileModal()" class="profile-card profile-card-blue">
+        <div class="flex items-center gap-4 mb-4">
+          <div
+            class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
+            <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-gray-800 text-lg font-bold">Profile Info</h3>
+            <p class="text-gray-600 text-sm">Manage your details</p>
+          </div>
+        </div>
+        <p class="text-gray-700 text-sm">View and update your personal information</p>
+      </div>
+
+      <!-- KYC Card -->
+      <div (click)="openKycModal()" class="profile-card profile-card-yellow">
+        <div class="flex items-center gap-4 mb-4">
+          <div
+            class="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center group-hover:bg-yellow-500/30 transition-colors">
+            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
               </path>
             </svg>
-            Edit Profile
-          </button>
+          </div>
+          <div>
+            <h3 class="text-gray-800 text-lg font-bold">KYC</h3>
+            <p class="text-gray-600 text-sm">Verification status</p>
+          </div>
         </div>
-        <div class="edit-actions" *ngIf="isEditingProfile()">
-          <button class="cancel-btn" (click)="cancelEdit()">Cancel</button>
-          <button class="save-btn" (click)="saveProfile()" [disabled]="editSubmitting()">
-            <span *ngIf="editSubmitting()">Saving...</span>
-            <span *ngIf="!editSubmitting()">Save</span>
-          </button>
-        </div>
+        <p class="text-gray-700 text-sm">Complete your KYC verification process</p>
       </div>
 
-      <!-- Alert Messages -->
-      <div *ngIf="editErrorMessage()" class="alert-error">{{ editErrorMessage() }}</div>
-      <div *ngIf="editSuccessMessage()" class="alert-success">{{ editSuccessMessage() }}</div>
-
-      <div class="profile-info-grid">
-        <!-- Personal Information -->
-        <div class="info-section">
-          <h3 class="info-section-title">Personal Information</h3>
-          <div class="info-row">
-            <label class="info-label">Full Name</label>
-            <div class="info-value-container">
-              <input *ngIf="isEditingProfile()" type="text" class="info-input" [ngModel]="editForm().name"
-                (ngModelChange)="updateEditFormName($event)" placeholder="Enter your full name">
-              <span *ngIf="!isEditingProfile()" class="info-value">{{ user().name || 'Not provided' }}</span>
-            </div>
+      <!-- Shares Card -->
+      <div (click)="openSharesModal()" class="profile-card profile-card-green">
+        <div class="flex items-center gap-4 mb-4">
+          <div
+            class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center group-hover:bg-green-500/30 transition-colors">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+              </path>
+            </svg>
           </div>
-
-          <div class="info-row">
-            <label class="info-label">Email Address</label>
-            <div class="info-value-container">
-              <input *ngIf="isEditingProfile()" type="email" class="info-input" [ngModel]="editForm().email"
-                (ngModelChange)="updateEditFormEmail($event)" placeholder="Enter your email">
-              <span *ngIf="!isEditingProfile()" class="info-value">{{ user().email || 'Not provided' }}</span>
-              <div *ngIf="isEditingProfile()" class="info-help">Changing email requires verification</div>
-            </div>
-          </div>
-
-          <div class="info-row">
-            <label class="info-label">Mobile Number</label>
-            <div class="info-value-container">
-              <input *ngIf="isEditingProfile()" type="tel" class="info-input" [ngModel]="editForm().phone"
-                (ngModelChange)="updateEditFormPhone($event)" placeholder="Enter mobile number">
-              <span *ngIf="!isEditingProfile()" class="info-value">{{ user().phone || 'Not provided' }}</span>
-            </div>
-          </div>
-
-          <div class="info-row">
-            <label class="info-label">Date of Birth</label>
-            <div class="info-value-container">
-              <input *ngIf="isEditingProfile()" type="date" class="info-input" [ngModel]="editForm().dateofbirth"
-                (ngModelChange)="updateEditFormDateOfBirth($event)">
-              <span *ngIf="!isEditingProfile()" class="info-value">{{ formatDate(user().dateofbirth) }}</span>
-            </div>
+          <div>
+            <h3 class="text-gray-800 text-lg font-bold">Shares</h3>
+            <p class="text-gray-600 text-sm">Your investments</p>
           </div>
         </div>
-
-        <!-- Location Information -->
-        <div class="info-section">
-          <h3 class="info-section-title">Location Information</h3>
-          <div class="info-row">
-            <label class="info-label">Location</label>
-            <div class="info-value-container">
-              <input *ngIf="isEditingProfile()" type="text" class="info-input" [ngModel]="editForm().location"
-                (ngModelChange)="updateEditFormLocation($event)" placeholder="City, State">
-              <span *ngIf="!isEditingProfile()" class="info-value">{{ user().location || 'Not provided' }}</span>
-            </div>
-          </div>
-
-          <div class="info-row">
-            <label class="info-label">Pincode</label>
-            <div class="info-value-container">
-              <input *ngIf="isEditingProfile()" type="text" class="info-input" [ngModel]="editForm().pincode"
-                (ngModelChange)="updateEditFormPincode($event)" placeholder="Enter pincode" maxlength="6">
-              <span *ngIf="!isEditingProfile()" class="info-value">{{ user().pincode || 'Not provided' }}</span>
-            </div>
-          </div>
-
-          <div class="info-row">
-            <label class="info-label">Address</label>
-            <div class="info-value-container">
-              <textarea *ngIf="isEditingProfile()" class="info-input info-textarea" [ngModel]="editForm().address"
-                (ngModelChange)="updateEditFormAddress($event)" placeholder="Enter your full address"
-                rows="3"></textarea>
-              <span *ngIf="!isEditingProfile()" class="info-value">{{ user().address || 'Not provided' }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Account Information -->
-        <div class="info-section">
-          <h3 class="info-section-title">Account Information</h3>
-          <div class="info-row">
-            <label class="info-label">Member Since</label>
-            <div class="info-value-container">
-              <span class="info-value">{{ formatDate(user().createdAt) }}</span>
-            </div>
-          </div>
-
-          <div class="info-row">
-            <label class="info-label">Password</label>
-            <div class="info-value-container">
-              <span class="info-value">••••••••</span>
-            </div>
-            <div class="password-actions">
-              <button class="change-password-btn" (click)="openChangePasswordModal()">Change Password</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- KYC Section -->
-    <div *ngIf="activeSection() === 'kyc'" class="section-panel">
-      <div class="section-header">
-        <h2 class="section-title">KYC Status</h2>
-        <div class="kyc-status" [class]="getKycStatusClass()">
-          <svg class="status-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
-            <path d="M12 9v4"></path>
-            <path d="M12 17h.01"></path>
-          </svg>
-          <span>{{ getKycStatusDisplay() }}</span>
+        <div class="flex items-center justify-between">
+          <p class="text-gray-700 text-sm">View your car shares and ownership</p>
+          <span class="profile-card-count" *ngIf="tickets().length > 0">{{ tickets().length }}</span>
         </div>
       </div>
 
-      <p class="kyc-description">Please submit the required documents to get your account verified and access all
-        features.</p>
-
-      <button class="submit-docs-btn" (click)="openDocModal()"
-        *ngIf="user().kycStatus === 'pending' || user().kycStatus === 'rejected'">
-        <span *ngIf="user().kycStatus === 'pending'">Submit Documents</span>
-        <span *ngIf="user().kycStatus === 'rejected'">Resubmit Documents</span>
-      </button>
-
-      <!-- Show rejection reason if KYC is rejected -->
-      <div *ngIf="user().kycStatus === 'rejected'" class="kyc-rejection-info">
-        <div class="rejection-notice">
-          <svg class="warning-icon" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd"
-              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-              clip-rule="evenodd"></path>
-          </svg>
-          <div class="rejection-content">
-            <span class="rejection-title">Your KYC documents were rejected.</span>
-            <div *ngIf="getRejectionComments().length > 0" class="rejection-comments">
-              <div *ngFor="let comment of getRejectionComments()" class="rejection-comment">
-                <p class="comment-text">{{ comment.comment }}</p>
-                <span class="comment-date">{{ formatDate(comment.date) }}</span>
-              </div>
-            </div>
-            <p class="rejection-action">Please upload new documents to resubmit your KYC.</p>
+      <!-- Waitlist Card -->
+      <div (click)="openWaitlistModal()" class="profile-card profile-card-purple">
+        <div class="flex items-center gap-4 mb-4">
+          <div
+            class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-gray-800 text-lg font-bold">Waitlist</h3>
+            <p class="text-gray-600 text-sm">Pending requests</p>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Shares Section -->
-    <div *ngIf="activeSection() === 'shares'" class="section-panel">
-      <div class="section-header">
-        <h2 class="section-title">My Shares</h2>
-        <span class="section-count">{{ tickets().length }} shares</span>
-      </div>
-
-      <!-- Loading state -->
-      <div *ngIf="ticketsLoading()" class="loading-spinner">
-        <div class="spinner"></div>
-        <p>Loading shares...</p>
-      </div>
-
-      <!-- Error state -->
-      <div *ngIf="ticketsError() && !ticketsLoading()" class="error-message">
-        {{ ticketsError() }}
-      </div>
-
-      <!-- No shares state -->
-      <div *ngIf="!ticketsLoading() && !ticketsError() && tickets().length === 0" class="empty-state">
-        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-          </path>
-        </svg>
-        <h3>No shares found</h3>
-        <p>You haven't purchased any shares yet.</p>
-      </div>
-
-      <!-- Shares list -->
-      <div class="shares-list" *ngIf="!ticketsLoading() && !ticketsError() && tickets().length > 0">
-        <div *ngFor="let ticket of tickets()" class="share-item-flipkart"
-          [class.expired]="ticket.ticketstatus === 'expired'" (click)="toggleShareExpansion(ticket._id!)">
-          <div class="share-item-content">
-            <div class="share-image-small" *ngIf="ticket.carid">
-              <img
-                [src]="ticket.carid.images && ticket.carid.images.length > 0 ? ticket.carid.images[0] : 'public/car.png'"
-                [alt]="ticket.carid.carname" />
-            </div>
-            <div class="share-info-compact">
-              <div class="share-header-compact">
-                <span class="share-type-compact">SHARE #{{ ticket.ticketcustomid }}</span>
-                <span class="share-status-compact" [class.active]="ticket.ticketstatus === 'active'"
-                  [class.expired]="ticket.ticketstatus === 'expired'">
-                  {{ ticket.ticketstatus | titlecase }}
-                </span>
-              </div>
-              <h3 class="share-title-compact" *ngIf="ticket.carid">{{ ticket.carid.carname }}</h3>
-              <p class="share-subtitle-compact" *ngIf="ticket.carid">{{ ticket.carid.brandname }} - {{
-                ticket.carid.color }}</p>
-              <div class="share-price-compact">
-                <span class="price-label">Total: ₹{{ ticket.ticketprice }}</span>
-                <span class="price-paid">Paid: ₹{{ ticket.pricepaid }}</span>
-                <span class="price-pending" *ngIf="ticket.pendingamount > 0">Pending: ₹{{ ticket.pendingamount }}</span>
-              </div>
-            </div>
-            <div class="share-expand-icon">
-              <svg [class.rotated]="isShareExpanded(ticket._id!)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </div>
-          </div>
-
-          <!-- Expanded Details -->
-          <div class="share-details-expanded" *ngIf="isShareExpanded(ticket._id!)">
-            <div class="share-details-section">
-              <h4 class="details-title">Share Details</h4>
-              <div class="details-grid">
-                <div class="detail-row">
-                  <span class="detail-label">Share ID:</span>
-                  <span class="detail-value">#{{ ticket.ticketcustomid }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Status:</span>
-                  <span class="detail-value"
-                    [class]="ticket.ticketstatus === 'active' ? 'status-active' : 'status-expired'">
-                    {{ ticket.ticketstatus | titlecase }}
-                  </span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Total Price:</span>
-                  <span class="detail-value">₹{{ ticket.ticketprice }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Amount Paid:</span>
-                  <span class="detail-value">₹{{ ticket.pricepaid }}</span>
-                </div>
-                <div class="detail-row" *ngIf="ticket.pendingamount > 0">
-                  <span class="detail-label">Pending Amount:</span>
-                  <span class="detail-value">₹{{ ticket.pendingamount }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Expires:</span>
-                  <span class="detail-value">{{ formatDate(ticket.ticketexpiry) }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Purchased:</span>
-                  <span class="detail-value">{{ formatDate(ticket.ticketbroughtdate) }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="flex items-center justify-between">
+          <p class="text-gray-700 text-sm">Track your waitlist positions</p>
+          <span class="profile-card-count" *ngIf="tokens().length > 0">{{ tokens().length }}</span>
         </div>
       </div>
-    </div>
 
-    <!-- Waitlist Section -->
-    <div *ngIf="activeSection() === 'waitlist'" class="section-panel">
-      <div class="section-header">
-        <h2 class="section-title">My Waitlist</h2>
-        <span class="section-count">{{ tokens().length }} items</span>
-      </div>
-
-      <!-- Loading state -->
-      <div *ngIf="tokensLoading()" class="loading-spinner">
-        <div class="spinner"></div>
-        <p>Loading waitlist...</p>
-      </div>
-
-      <!-- Error state -->
-      <div *ngIf="tokensError() && !tokensLoading()" class="error-message">
-        {{ tokensError() }}
-      </div>
-
-      <!-- No waitlist state -->
-      <div *ngIf="!tokensLoading() && !tokensError() && tokens().length === 0" class="empty-state">
-        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        <h3>No waitlist items</h3>
-        <p>You haven't joined any waitlist yet.</p>
-      </div>
-
-      <!-- Waitlist list -->
-      <div class="waitlist-list" *ngIf="!tokensLoading() && !tokensError() && tokens().length > 0">
-        <div *ngFor="let token of tokens()" class="waitlist-item-flipkart" [class.expired]="token.status === 'expired'"
-          (click)="toggleWaitlistExpansion(token._id!)">
-          <div class="waitlist-item-content">
-            <div class="waitlist-image-small" *ngIf="token.carid">
-              <img
-                [src]="token.carid.images && token.carid.images.length > 0 ? token.carid.images[0] : 'public/car.png'"
-                [alt]="token.carid.carname" />
-            </div>
-            <div class="waitlist-info-compact">
-              <div class="waitlist-header-compact">
-                <span class="waitlist-type-compact">WAITLIST #{{ token.customtokenid }}</span>
-                <span class="waitlist-status-compact" [class.active]="token.status === 'active'"
-                  [class.expired]="token.status === 'expired'"
-                  [class.refund_processed]="token.status === 'refund_processed'"
-                  [class.refund_pending]="token.status === 'refund_pending'"
-                  [class.refund_completed]="token.status === 'refund_completed'"
-                  [class.refund_failed]="token.status === 'refund_failed'"
-                  [class.refund_initiated]="token.status === 'refund_initiated'">
-                  {{ getStatusDisplay(token.status) }}
-                </span>
-              </div>
-              <h3 class="waitlist-title-compact" *ngIf="token.carid">{{ token.carid.carname }}</h3>
-              <p class="waitlist-subtitle-compact" *ngIf="token.carid">{{ token.carid.brandname }} - {{
-                token.carid.color }}</p>
-              <div class="waitlist-price-compact">
-                <span class="price-label">Amount Paid: ₹{{ token.amountpaid }}</span>
-              </div>
-            </div>
-            <div class="waitlist-expand-icon">
-              <svg [class.rotated]="isWaitlistExpanded(token._id!)" fill="none" stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </div>
+      <!-- Book Now Card -->
+      <div (click)="openBookNowModal()" class="profile-card profile-card-orange">
+        <div class="flex items-center gap-4 mb-4">
+          <div
+            class="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center group-hover:bg-orange-500/30 transition-colors">
+            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z">
+              </path>
+            </svg>
           </div>
-
-          <!-- Expanded Details -->
-          <div class="waitlist-details-expanded" *ngIf="isWaitlistExpanded(token._id!)">
-            <div class="waitlist-details-section">
-              <h4 class="details-title">Waitlist Details</h4>
-              <div class="details-grid">
-                <div class="detail-row">
-                  <span class="detail-label">Token ID:</span>
-                  <span class="detail-value">#{{ token.customtokenid }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Status:</span>
-                  <span class="detail-value" [class]="token.status === 'active' ? 'status-active' : 'status-expired'">
-                    {{ token.status | titlecase }}
-                  </span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Amount Paid:</span>
-                  <span class="detail-value">₹{{ token.amountpaid }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Expires:</span>
-                  <span class="detail-value">{{ formatDate(token.expirydate) }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Purchased:</span>
-                  <span class="detail-value">{{ formatDate(token.date) }}</span>
-                </div>
-              </div>
-              <div class="waitlist-actions" *ngIf="token.status === 'active'">
-                <button (click)="cancelToken(token)" class="cancel-btn">
-                  Cancel Token
-                </button>
-              </div>
-            </div>
+          <div>
+            <h3 class="text-gray-800 text-lg font-bold">Book Now</h3>
+            <p class="text-gray-600 text-sm">Instant bookings</p>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Book Now Tokens Section -->
-    <div *ngIf="activeSection() === 'booknow'" class="section-panel">
-      <div class="section-header">
-        <h2 class="section-title">Book Now Tokens</h2>
-        <span class="section-count">{{ bookNowTokens().length }} tokens</span>
-      </div>
-
-      <!-- Loading state -->
-      <div *ngIf="bookNowTokensLoading()" class="loading-spinner">
-        <div class="spinner"></div>
-        <p>Loading book now tokens...</p>
-      </div>
-
-      <!-- Error state -->
-      <div *ngIf="bookNowTokensError() && !bookNowTokensLoading()" class="error-message">
-        {{ bookNowTokensError() }}
-      </div>
-
-      <!-- No book now tokens state -->
-      <div *ngIf="!bookNowTokensLoading() && !bookNowTokensError() && bookNowTokens().length === 0" class="empty-state">
-        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z">
-          </path>
-        </svg>
-        <h3>No book now tokens</h3>
-        <p>You haven't purchased any book now tokens yet.</p>
-      </div>
-
-      <!-- Book now tokens list -->
-      <div class="booknow-list" *ngIf="!bookNowTokensLoading() && !bookNowTokensError() && bookNowTokens().length > 0">
-        <div *ngFor="let bookNowToken of bookNowTokens()" class="booknow-item-flipkart"
-          [class.expired]="bookNowToken.status === 'expired'" (click)="toggleBookNowExpansion(bookNowToken._id!)">
-          <div class="booknow-item-content">
-            <div class="booknow-image-small" *ngIf="bookNowToken.carid">
-              <img
-                [src]="bookNowToken.carid.images && bookNowToken.carid.images.length > 0 ? bookNowToken.carid.images[0] : 'public/car.png'"
-                [alt]="bookNowToken.carid.carname" />
-            </div>
-            <div class="booknow-info-compact">
-              <div class="booknow-header-compact">
-                <span class="booknow-type-compact">BOOK NOW TOKEN #{{ bookNowToken.customtokenid }}</span>
-                <span class="booknow-status-compact" [class.active]="bookNowToken.status === 'active'"
-                  [class.expired]="bookNowToken.status === 'expired'"
-                  [class.refund_processed]="bookNowToken.status === 'refund_processed'"
-                  [class.refund_pending]="bookNowToken.status === 'refund_pending'"
-                  [class.refund_completed]="bookNowToken.status === 'refund_completed'"
-                  [class.refund_failed]="bookNowToken.status === 'refund_failed'"
-                  [class.refund_initiated]="bookNowToken.status === 'refund_initiated'">
-                  {{ getStatusDisplay(bookNowToken.status) }}
-                </span>
-              </div>
-              <h3 class="booknow-title-compact" *ngIf="bookNowToken.carid">{{ bookNowToken.carid.carname }}</h3>
-              <p class="booknow-subtitle-compact" *ngIf="bookNowToken.carid">{{ bookNowToken.carid.brandname }} - {{
-                bookNowToken.carid.color }}</p>
-              <div class="booknow-price-compact">
-                <span class="price-label">Amount Paid: ₹{{ bookNowToken.amountpaid }}</span>
-              </div>
-            </div>
-            <div class="booknow-expand-icon">
-              <svg [class.rotated]="isBookNowExpanded(bookNowToken._id!)" fill="none" stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </div>
-          </div>
-
-          <!-- Expanded Details -->
-          <div class="booknow-details-expanded" *ngIf="isBookNowExpanded(bookNowToken._id!)">
-            <div class="booknow-details-section">
-              <h4 class="details-title">Book Now Token Details</h4>
-              <div class="details-grid">
-                <div class="detail-row">
-                  <span class="detail-label">Token ID:</span>
-                  <span class="detail-value">#{{ bookNowToken.customtokenid }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Status:</span>
-                  <span class="detail-value"
-                    [class]="bookNowToken.status === 'active' ? 'status-active' : 'status-expired'">
-                    {{ bookNowToken.status | titlecase }}
-                  </span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Amount Paid:</span>
-                  <span class="detail-value">₹{{ bookNowToken.amountpaid }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Expires:</span>
-                  <span class="detail-value">{{ formatDate(bookNowToken.expirydate) }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Purchased:</span>
-                  <span class="detail-value">{{ formatDate(bookNowToken.date) }}</span>
-                </div>
-              </div>
-              <div class="booknow-actions" *ngIf="bookNowToken.status === 'active'">
-                <button (click)="cancelBookNowToken(bookNowToken)" class="cancel-btn">
-                  Cancel Token
-                </button>
-              </div>
-            </div>
-          </div>
+        <div class="flex items-center justify-between">
+          <p class="text-gray-700 text-sm">Quick car booking options</p>
+          <span class="profile-card-count" *ngIf="bookNowTokens().length > 0">{{ bookNowTokens().length }}</span>
         </div>
       </div>
-    </div>
 
-    <!-- AMC Section -->
-    <div *ngIf="activeSection() === 'amc'" class="section-panel">
-      <div class="section-header">
-        <h2 class="section-title">AMC Records</h2>
-        <span class="section-count">{{ amcs().length }} records</span>
-      </div>
-
-      <!-- Loading state -->
-      <div *ngIf="amcsLoading()" class="loading-spinner">
-        <div class="spinner"></div>
-        <p>Loading AMC records...</p>
-      </div>
-
-      <!-- Error state -->
-      <div *ngIf="amcsError() && !amcsLoading()" class="error-message">
-        {{ amcsError() }}
-      </div>
-
-      <!-- No AMC state -->
-      <div *ngIf="!amcsLoading() && !amcsError() && amcs().length === 0" class="empty-state">
-        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-          </path>
-        </svg>
-        <h3>No AMC records</h3>
-        <p>You don't have any AMC contracts yet.</p>
-      </div>
-
-      <!-- AMC list -->
-      <div class="amc-list" *ngIf="!amcsLoading() && !amcsError() && amcs().length > 0">
-        <div *ngFor="let amc of amcs()" class="amc-item-flipkart" (click)="toggleAMCExpansion(amc._id!)">
-          <div class="amc-item-content">
-            <div class="amc-image-small">
-              <img [src]="amc.carid.images && amc.carid.images[0] || 'public/car.png'" [alt]="amc.carid.carname" />
-            </div>
-            <div class="amc-info-compact">
-              <div class="amc-header-compact">
-                <span class="amc-type-compact">AMC #{{ amc._id?.slice(-8) }}</span>
-                <span class="amc-status-compact" [class.active]="getAMCStatus(amc) === 'active'"
-                  [class.pending]="getAMCStatus(amc) === 'pending'">
-                  {{ getAMCStatus(amc) | titlecase }}
-                </span>
-              </div>
-              <h3 class="amc-title-compact">{{ amc.carid.carname }}</h3>
-              <p class="amc-subtitle-compact">{{ amc.carid.brandname }} - {{ amc.carid.color }}</p>
-              <p class="amc-ticket-compact">Ticket: #{{ amc.ticketid.ticketcustomid }}</p>
-              <div class="amc-price-compact">
-                <span class="price-label">Total: ₹{{ getTotalAMCAmount(amc) }}</span>
-                <span class="price-paid">Paid: ₹{{ getPaidAMCAmount(amc) }}</span>
-                <span class="price-pending">Pending: ₹{{ getPendingAMCAmount(amc) }}</span>
-              </div>
-            </div>
-            <div class="amc-expand-icon">
-              <svg [class.rotated]="isAMCExpanded(amc._id!)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </div>
+      <!-- AMC's Card -->
+      <div (click)="openAmcModal()" class="profile-card profile-card-red">
+        <div class="flex items-center gap-4 mb-4">
+          <div
+            class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center group-hover:bg-red-500/30 transition-colors">
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+              </path>
+            </svg>
           </div>
-
-          <!-- Expanded Details -->
-          <div class="amc-details-expanded" *ngIf="isAMCExpanded(amc._id!)">
-            <div class="amc-details-section">
-              <h4 class="details-title">AMC Payment History</h4>
-              <div class="amc-next-due" *ngIf="getNextDueAMC(amc)">
-                <div class="next-due-info">
-                  <span class="next-due-label">Next Due:</span>
-                  <span class="next-due-amount">₹{{ getNextDueAMC(amc).amount }}</span>
-                  <span class="next-due-date" *ngIf="getNextDueAMC(amc).duedate">by {{
-                    formatDate(getNextDueAMC(amc).duedate) }}</span>
-                </div>
-              </div>
-
-              <div class="amc-records">
-                <div *ngFor="let amount of amc.amcamount; let i = index" class="amc-record" [class.paid]="amount.paid"
-                  [class.overdue]="isAMCAmountOverdue(amount)">
-                  <div class="amc-record-header">
-                    <div class="amc-year">
-                      <span class="year-label">Year {{ amount.year }}</span>
-                      <span class="amount">₹{{ amount.amount }}</span>
-                    </div>
-                    <div class="amc-status">
-                      <span class="status-badge" [class.paid]="amount.paid" [class.pending]="!amount.paid">
-                        {{ amount.paid ? 'Paid' : 'Pending' }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div class="amc-record-details">
-                    <div class="amc-due-date" *ngIf="amount.duedate">
-                      <span class="detail-label">Due Date:</span>
-                      <span class="detail-value">{{ formatDate(amount.duedate) }}</span>
-                    </div>
-                    <div class="amc-paid-date" *ngIf="amount.paiddate">
-                      <span class="detail-label">Paid Date:</span>
-                      <span class="detail-value">{{ formatDate(amount.paiddate) }}</span>
-                    </div>
-                    <div class="amc-penalty" *ngIf="amount.penality > 0">
-                      <span class="detail-label">Penalty:</span>
-                      <span class="detail-value penalty">₹{{ amount.penality }}</span>
-                    </div>
-
-                    <!-- Payment Button -->
-                    <div class="amc-payment-section" *ngIf="!amount.paid">
-                      <div class="test-mode-notice">
-                        <small class="text-yellow-400">💳 Test Mode - Pay ₹1 (Actual: ₹{{ amount.amount }})</small>
-                      </div>
-                      <button class="amc-pay-btn" (click)="initiateAMCPayment(amc, i)"
-                        [disabled]="isAMCPaymentLoading() || !razorpayKey()" [class.loading]="isAMCPaymentLoading()">
-                        <span *ngIf="isAMCPaymentLoading()">Processing...</span>
-                        <span *ngIf="!isAMCPaymentLoading()">Pay ₹1 (Test Mode)</span>
-                      </button>
-                      <div class="test-amount-notice">
-                        <small class="text-blue-400">ℹ️ Test payment of ₹1 will mark this AMC as paid</small>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div>
+            <h3 class="text-gray-800 text-lg font-bold">AMC's</h3>
+            <p class="text-gray-600 text-sm">Maintenance contracts</p>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Recent Bookings Section -->
-    <div *ngIf="activeSection() === 'bookings'" class="section-panel">
-      <div class="section-header">
-        <h2 class="section-title">Recent Bookings</h2>
-        <span class="section-count">{{ bookings().length }} bookings</span>
+        <div class="flex items-center justify-between">
+          <p class="text-gray-700 text-sm">Annual maintenance contracts</p>
+          <span class="profile-card-count" *ngIf="amcs().length > 0">{{ amcs().length }}</span>
+        </div>
       </div>
 
-      <!-- Loading state -->
-      <div *ngIf="bookingsLoading()" class="loading-spinner">
-        <div class="spinner"></div>
-        <p>Loading bookings...</p>
-      </div>
-
-      <!-- Error state -->
-      <div *ngIf="bookingsError() && !bookingsLoading()" class="error-message">
-        {{ bookingsError() }}
-      </div>
-
-      <!-- No bookings state -->
-      <div *ngIf="!bookingsLoading() && !bookingsError() && bookings().length === 0" class="empty-state">
-        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-        </svg>
-        <h3>No bookings found</h3>
-        <p>You haven't made any bookings yet.</p>
-        <button class="book-now-btn" (click)="navigateToBookings()">
-          Book Now
-        </button>
-      </div>
-
-      <!-- Bookings grid -->
-      <div class="bookings-grid" *ngIf="!bookingsLoading() && !bookingsError() && bookings().length > 0">
-        <div *ngFor="let booking of bookings()" class="booking-item">
-          <div class="booking-content">
-            <div class="booking-header">
-              <span class="booking-id">Booking #{{ booking._id }}</span>
-              <span class="booking-status" [class]="getBookingStatusClass(booking.status)">
-                {{ booking.status | titlecase }}
-              </span>
-            </div>
-            <div class="booking-details">
-              <div class="detail-item">
-                <span class="detail-label">Start Date:</span>
-                <span class="detail-value">{{ formatDate(booking.bookingFrom) }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">End Date:</span>
-                <span class="detail-value">{{ formatDate(booking.bookingTo) }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Car Price:</span>
-                <span class="detail-value">₹{{ booking.carid.price }}</span>
-              </div>
-            </div>
+      <!-- Bookings Card -->
+      <div (click)="openBookingsModal()" class="profile-card profile-card-indigo">
+        <div class="flex items-center gap-4 mb-4">
+          <div
+            class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500/30 transition-colors">
+            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
           </div>
+          <div>
+            <h3 class="text-gray-800 text-lg font-bold">Bookings</h3>
+            <p class="text-gray-600 text-sm">Your reservations</p>
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <p class="text-gray-700 text-sm">Manage your car bookings</p>
+          <span class="profile-card-count" *ngIf="bookings().length > 0">{{ bookings().length }}</span>
         </div>
       </div>
     </div>
@@ -790,6 +256,793 @@
           Submit Documents
         </button>
       </form>
+    </div>
+  </div>
+
+  <!-- Profile Info Modal -->
+  <div *ngIf="showProfileModal()" class="modal-overlay" (click)="closeProfileModal()">
+    <div class="modal-content-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Profile Information</h3>
+        <button class="modal-close-btn" (click)="closeProfileModal()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="section-header">
+          <div class="header-actions">
+            <button class="edit-btn" (click)="toggleEditMode()" *ngIf="!isEditingProfile()">
+              <svg class="edit-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                </path>
+              </svg>
+              Edit Profile
+            </button>
+          </div>
+          <div class="edit-actions" *ngIf="isEditingProfile()">
+            <button class="cancel-btn" (click)="cancelEdit()">Cancel</button>
+            <button class="save-btn" (click)="saveProfile()" [disabled]="editSubmitting()">
+              <span *ngIf="editSubmitting()">Saving...</span>
+              <span *ngIf="!editSubmitting()">Save</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Alert Messages -->
+        <div *ngIf="editErrorMessage()" class="alert-error">{{ editErrorMessage() }}</div>
+        <div *ngIf="editSuccessMessage()" class="alert-success">{{ editSuccessMessage() }}</div>
+
+        <div class="profile-info-grid">
+          <!-- Personal Information -->
+          <div class="info-section">
+            <h3 class="info-section-title">Personal Information</h3>
+            <div class="info-row">
+              <label class="info-label">Full Name</label>
+              <div class="info-value-container">
+                <input *ngIf="isEditingProfile()" type="text" class="info-input" [ngModel]="editForm().name"
+                  (ngModelChange)="updateEditFormName($event)" placeholder="Enter your full name">
+                <span *ngIf="!isEditingProfile()" class="info-value">{{ user().name || 'Not provided' }}</span>
+              </div>
+            </div>
+
+            <div class="info-row">
+              <label class="info-label">Email Address</label>
+              <div class="info-value-container">
+                <input *ngIf="isEditingProfile()" type="email" class="info-input" [ngModel]="editForm().email"
+                  (ngModelChange)="updateEditFormEmail($event)" placeholder="Enter your email">
+                <span *ngIf="!isEditingProfile()" class="info-value">{{ user().email || 'Not provided' }}</span>
+                <div *ngIf="isEditingProfile()" class="info-help">Changing email requires verification</div>
+              </div>
+            </div>
+
+            <div class="info-row">
+              <label class="info-label">Mobile Number</label>
+              <div class="info-value-container">
+                <input *ngIf="isEditingProfile()" type="tel" class="info-input" [ngModel]="editForm().phone"
+                  (ngModelChange)="updateEditFormPhone($event)" placeholder="Enter mobile number">
+                <span *ngIf="!isEditingProfile()" class="info-value">{{ user().phone || 'Not provided' }}</span>
+              </div>
+            </div>
+
+            <div class="info-row">
+              <label class="info-label">Date of Birth</label>
+              <div class="info-value-container">
+                <input *ngIf="isEditingProfile()" type="date" class="info-input" [ngModel]="editForm().dateofbirth"
+                  (ngModelChange)="updateEditFormDateOfBirth($event)">
+                <span *ngIf="!isEditingProfile()" class="info-value">{{ formatDate(user().dateofbirth) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Location Information -->
+          <div class="info-section">
+            <h3 class="info-section-title">Location Information</h3>
+            <div class="info-row">
+              <label class="info-label">Location</label>
+              <div class="info-value-container">
+                <input *ngIf="isEditingProfile()" type="text" class="info-input" [ngModel]="editForm().location"
+                  (ngModelChange)="updateEditFormLocation($event)" placeholder="City, State">
+                <span *ngIf="!isEditingProfile()" class="info-value">{{ user().location || 'Not provided' }}</span>
+              </div>
+            </div>
+
+            <div class="info-row">
+              <label class="info-label">Pincode</label>
+              <div class="info-value-container">
+                <input *ngIf="isEditingProfile()" type="text" class="info-input" [ngModel]="editForm().pincode"
+                  (ngModelChange)="updateEditFormPincode($event)" placeholder="Enter pincode" maxlength="6">
+                <span *ngIf="!isEditingProfile()" class="info-value">{{ user().pincode || 'Not provided' }}</span>
+              </div>
+            </div>
+
+            <div class="info-row">
+              <label class="info-label">Address</label>
+              <div class="info-value-container">
+                <textarea *ngIf="isEditingProfile()" class="info-input info-textarea" [ngModel]="editForm().address"
+                  (ngModelChange)="updateEditFormAddress($event)" placeholder="Enter your full address"
+                  rows="3"></textarea>
+                <span *ngIf="!isEditingProfile()" class="info-value">{{ user().address || 'Not provided' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Account Information -->
+          <div class="info-section">
+            <h3 class="info-section-title">Account Information</h3>
+            <div class="info-row">
+              <label class="info-label">Member Since</label>
+              <div class="info-value-container">
+                <span class="info-value">{{ formatDate(user().createdAt) }}</span>
+              </div>
+            </div>
+
+            <div class="info-row">
+              <label class="info-label">Password</label>
+              <div class="info-value-container">
+                <span class="info-value">••••••••</span>
+              </div>
+              <div class="password-actions">
+                <button class="change-password-btn" (click)="openChangePasswordModal()">Change Password</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KYC Modal -->
+  <div *ngIf="showKycModal()" class="modal-overlay" (click)="closeKycModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">KYC Status</h3>
+        <button class="modal-close-btn" (click)="closeKycModal()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="kyc-status" [class]="getKycStatusClass()">
+          <svg class="status-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+            <path d="M12 9v4"></path>
+            <path d="M12 17h.01"></path>
+          </svg>
+          <span>{{ getKycStatusDisplay() }}</span>
+        </div>
+
+        <!-- Show message for pending/rejected status -->
+        <p class="kyc-description" *ngIf="user().kycStatus === 'pending' || user().kycStatus === 'rejected'">
+          Please submit the required documents to get your account verified and access all features.
+        </p>
+
+        <!-- Show submitted documents for approved status -->
+        <div *ngIf="user().kycStatus === 'approved'" class="kyc-approved-info">
+          <div class="kyc-docs-section" *ngIf="user().kycDocs && user().kycDocs.length > 0">
+            <h4 class="kyc-section-title">Submitted Documents</h4>
+            <div class="kyc-docs-list">
+              <div *ngFor="let doc of user().kycDocs; let i = index" class="kyc-doc-item">
+                <svg class="doc-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                  </path>
+                </svg>
+                <span class="doc-name">Document {{ i + 1 }}</span>
+                <a [href]="doc" target="_blank" class="doc-view-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                    </path>
+                  </svg>
+                  View
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="submit-docs-btn" (click)="openDocModal()"
+          *ngIf="user().kycStatus === 'pending' || user().kycStatus === 'rejected'">
+          <span *ngIf="user().kycStatus === 'pending'">Submit Documents</span>
+          <span *ngIf="user().kycStatus === 'rejected'">Resubmit Documents</span>
+        </button>
+
+        <!-- Show rejection reason if KYC is rejected -->
+        <div *ngIf="user().kycStatus === 'rejected'" class="kyc-rejection-info">
+          <div class="rejection-notice">
+            <svg class="warning-icon" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd"
+                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"></path>
+            </svg>
+            <div class="rejection-content">
+              <span class="rejection-title">Your KYC documents were rejected.</span>
+              <div *ngIf="getRejectionComments().length > 0" class="rejection-comments">
+                <div *ngFor="let comment of getRejectionComments()" class="rejection-comment">
+                  <p class="comment-text">{{ comment.comment }}</p>
+                  <span class="comment-date">{{ formatDate(comment.date) }}</span>
+                </div>
+              </div>
+              <p class="rejection-action">Please upload new documents to resubmit your KYC.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shares Modal -->
+  <div *ngIf="showSharesModal()" class="modal-overlay" (click)="closeSharesModal()">
+    <div class="modal-content-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">My Shares</h3>
+        <button class="modal-close-btn" (click)="closeSharesModal()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="section-header">
+          <span class="section-count">{{ tickets().length }} shares</span>
+        </div>
+
+        <!-- Loading state -->
+        <div *ngIf="ticketsLoading()" class="loading-spinner">
+          <div class="spinner"></div>
+          <p>Loading shares...</p>
+        </div>
+
+        <!-- Error state -->
+        <div *ngIf="ticketsError() && !ticketsLoading()" class="error-message">
+          {{ ticketsError() }}
+        </div>
+
+        <!-- No shares state -->
+        <div *ngIf="!ticketsLoading() && !ticketsError() && tickets().length === 0" class="empty-state">
+          <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+            </path>
+          </svg>
+          <h3>No shares found</h3>
+          <p>You haven't purchased any shares yet.</p>
+        </div>
+
+        <!-- Shares list -->
+        <div class="shares-list" *ngIf="!ticketsLoading() && !ticketsError() && tickets().length > 0">
+          <div *ngFor="let ticket of tickets()" class="share-item-flipkart"
+            [class.expired]="ticket.ticketstatus === 'expired'" (click)="toggleShareExpansion(ticket._id!)">
+            <div class="share-item-content">
+              <div class="share-image-small" *ngIf="ticket.carid">
+                <img
+                  [src]="ticket.carid.images && ticket.carid.images.length > 0 ? ticket.carid.images[0] : 'public/car.png'"
+                  [alt]="ticket.carid.carname" />
+              </div>
+              <div class="share-info-compact">
+                <div class="share-header-compact">
+                  <span class="share-type-compact">SHARE #{{ ticket.ticketcustomid }}</span>
+                  <span class="share-status-compact" [class.active]="ticket.ticketstatus === 'active'"
+                    [class.expired]="ticket.ticketstatus === 'expired'">
+                    {{ ticket.ticketstatus | titlecase }}
+                  </span>
+                </div>
+                <h3 class="share-title-compact" *ngIf="ticket.carid">{{ ticket.carid.carname }}</h3>
+                <p class="share-subtitle-compact" *ngIf="ticket.carid">{{ ticket.carid.brandname }} - {{
+                  ticket.carid.color }}</p>
+                <div class="share-price-compact">
+                  <span class="price-label">Total: ₹{{ ticket.ticketprice }}</span>
+                  <span class="price-paid">Paid: ₹{{ ticket.pricepaid }}</span>
+                  <span class="price-pending" *ngIf="ticket.pendingamount > 0">Pending: ₹{{ ticket.pendingamount
+                    }}</span>
+                </div>
+              </div>
+              <div class="share-expand-icon">
+                <svg [class.rotated]="isShareExpanded(ticket._id!)" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Expanded Details -->
+            <div class="share-details-expanded" *ngIf="isShareExpanded(ticket._id!)">
+              <div class="share-details-section">
+                <h4 class="details-title">Share Details</h4>
+                <div class="details-grid">
+                  <div class="detail-row">
+                    <span class="detail-label">Share ID:</span>
+                    <span class="detail-value">#{{ ticket.ticketcustomid }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value"
+                      [class]="ticket.ticketstatus === 'active' ? 'status-active' : 'status-expired'">
+                      {{ ticket.ticketstatus | titlecase }}
+                    </span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Total Price:</span>
+                    <span class="detail-value">₹{{ ticket.ticketprice }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Amount Paid:</span>
+                    <span class="detail-value">₹{{ ticket.pricepaid }}</span>
+                  </div>
+                  <div class="detail-row" *ngIf="ticket.pendingamount > 0">
+                    <span class="detail-label">Pending Amount:</span>
+                    <span class="detail-value">₹{{ ticket.pendingamount }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Expires:</span>
+                    <span class="detail-value">{{ formatDate(ticket.ticketexpiry) }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Purchased:</span>
+                    <span class="detail-value">{{ formatDate(ticket.ticketbroughtdate) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Waitlist Modal -->
+  <div *ngIf="showWaitlistModal()" class="modal-overlay" (click)="closeWaitlistModal()">
+    <div class="modal-content-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">My Waitlist</h3>
+        <button class="modal-close-btn" (click)="closeWaitlistModal()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="section-header">
+          <span class="section-count">{{ tokens().length }} items</span>
+        </div>
+
+        <!-- Loading state -->
+        <div *ngIf="tokensLoading()" class="loading-spinner">
+          <div class="spinner"></div>
+          <p>Loading waitlist...</p>
+        </div>
+
+        <!-- Error state -->
+        <div *ngIf="tokensError() && !tokensLoading()" class="error-message">
+          {{ tokensError() }}
+        </div>
+
+        <!-- No waitlist state -->
+        <div *ngIf="!tokensLoading() && !tokensError() && tokens().length === 0" class="empty-state">
+          <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <h3>No waitlist items</h3>
+          <p>You haven't joined any waitlist yet.</p>
+        </div>
+
+        <!-- Waitlist list -->
+        <div class="waitlist-list" *ngIf="!tokensLoading() && !tokensError() && tokens().length > 0">
+          <div *ngFor="let token of tokens()" class="waitlist-item-flipkart"
+            [class.expired]="token.status === 'expired'" (click)="toggleWaitlistExpansion(token._id!)">
+            <div class="waitlist-item-content">
+              <div class="waitlist-image-small" *ngIf="token.carid">
+                <img
+                  [src]="token.carid.images && token.carid.images.length > 0 ? token.carid.images[0] : 'public/car.png'"
+                  [alt]="token.carid.carname" />
+              </div>
+              <div class="waitlist-info-compact">
+                <div class="waitlist-header-compact">
+                  <span class="waitlist-type-compact">WAITLIST #{{ token.customtokenid }}</span>
+                  <span class="waitlist-status-compact" [class.active]="token.status === 'active'"
+                    [class.expired]="token.status === 'expired'"
+                    [class.refund_processed]="token.status === 'refund_processed'"
+                    [class.refund_pending]="token.status === 'refund_pending'"
+                    [class.refund_completed]="token.status === 'refund_completed'"
+                    [class.refund_failed]="token.status === 'refund_failed'"
+                    [class.refund_initiated]="token.status === 'refund_initiated'">
+                    {{ getStatusDisplay(token.status) }}
+                  </span>
+                </div>
+                <h3 class="waitlist-title-compact" *ngIf="token.carid">{{ token.carid.carname }}</h3>
+                <p class="waitlist-subtitle-compact" *ngIf="token.carid">{{ token.carid.brandname }} - {{
+                  token.carid.color }}</p>
+                <div class="waitlist-price-compact">
+                  <span class="price-label">Amount Paid: ₹{{ token.amountpaid }}</span>
+                </div>
+              </div>
+              <div class="waitlist-expand-icon">
+                <svg [class.rotated]="isWaitlistExpanded(token._id!)" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Expanded Details -->
+            <div class="waitlist-details-expanded" *ngIf="isWaitlistExpanded(token._id!)">
+              <div class="waitlist-details-section">
+                <h4 class="details-title">Waitlist Details</h4>
+                <div class="details-grid">
+                  <div class="detail-row">
+                    <span class="detail-label">Token ID:</span>
+                    <span class="detail-value">#{{ token.customtokenid }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value" [class]="token.status === 'active' ? 'status-active' : 'status-expired'">
+                      {{ token.status | titlecase }}
+                    </span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Amount Paid:</span>
+                    <span class="detail-value">₹{{ token.amountpaid }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Expires:</span>
+                    <span class="detail-value">{{ formatDate(token.expirydate) }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Purchased:</span>
+                    <span class="detail-value">{{ formatDate(token.date) }}</span>
+                  </div>
+                </div>
+                <div class="waitlist-actions" *ngIf="token.status === 'active'">
+                  <button (click)="cancelToken(token)" class="cancel-btn">
+                    Cancel Token
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Book Now Tokens Modal -->
+  <div *ngIf="showBookNowModal()" class="modal-overlay" (click)="closeBookNowModal()">
+    <div class="modal-content-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Book Now Tokens</h3>
+        <button class="modal-close-btn" (click)="closeBookNowModal()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="section-header">
+          <span class="section-count">{{ bookNowTokens().length }} tokens</span>
+        </div>
+
+        <!-- Loading state -->
+        <div *ngIf="bookNowTokensLoading()" class="loading-spinner">
+          <div class="spinner"></div>
+          <p>Loading book now tokens...</p>
+        </div>
+
+        <!-- Error state -->
+        <div *ngIf="bookNowTokensError() && !bookNowTokensLoading()" class="error-message">
+          {{ bookNowTokensError() }}
+        </div>
+
+        <!-- No book now tokens state -->
+        <div *ngIf="!bookNowTokensLoading() && !bookNowTokensError() && bookNowTokens().length === 0"
+          class="empty-state">
+          <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z">
+            </path>
+          </svg>
+          <h3>No book now tokens</h3>
+          <p>You haven't purchased any book now tokens yet.</p>
+        </div>
+
+        <!-- Book now tokens list -->
+        <div class="booknow-list"
+          *ngIf="!bookNowTokensLoading() && !bookNowTokensError() && bookNowTokens().length > 0">
+          <div *ngFor="let bookNowToken of bookNowTokens()" class="booknow-item-flipkart"
+            [class.expired]="bookNowToken.status === 'expired'" (click)="toggleBookNowExpansion(bookNowToken._id!)">
+            <div class="booknow-item-content">
+              <div class="booknow-image-small" *ngIf="bookNowToken.carid">
+                <img
+                  [src]="bookNowToken.carid.images && bookNowToken.carid.images.length > 0 ? bookNowToken.carid.images[0] : 'public/car.png'"
+                  [alt]="bookNowToken.carid.carname" />
+              </div>
+              <div class="booknow-info-compact">
+                <div class="booknow-header-compact">
+                  <span class="booknow-type-compact">BOOK NOW TOKEN #{{ bookNowToken.customtokenid }}</span>
+                  <span class="booknow-status-compact" [class.active]="bookNowToken.status === 'active'"
+                    [class.expired]="bookNowToken.status === 'expired'"
+                    [class.refund_processed]="bookNowToken.status === 'refund_processed'"
+                    [class.refund_pending]="bookNowToken.status === 'refund_pending'"
+                    [class.refund_completed]="bookNowToken.status === 'refund_completed'"
+                    [class.refund_failed]="bookNowToken.status === 'refund_failed'"
+                    [class.refund_initiated]="bookNowToken.status === 'refund_initiated'">
+                    {{ getStatusDisplay(bookNowToken.status) }}
+                  </span>
+                </div>
+                <h3 class="booknow-title-compact" *ngIf="bookNowToken.carid">{{ bookNowToken.carid.carname }}</h3>
+                <p class="booknow-subtitle-compact" *ngIf="bookNowToken.carid">{{ bookNowToken.carid.brandname }} - {{
+                  bookNowToken.carid.color }}</p>
+                <div class="booknow-price-compact">
+                  <span class="price-label">Amount Paid: ₹{{ bookNowToken.amountpaid }}</span>
+                </div>
+              </div>
+              <div class="booknow-expand-icon">
+                <svg [class.rotated]="isBookNowExpanded(bookNowToken._id!)" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Expanded Details -->
+            <div class="booknow-details-expanded" *ngIf="isBookNowExpanded(bookNowToken._id!)">
+              <div class="booknow-details-section">
+                <h4 class="details-title">Book Now Token Details</h4>
+                <div class="details-grid">
+                  <div class="detail-row">
+                    <span class="detail-label">Token ID:</span>
+                    <span class="detail-value">#{{ bookNowToken.customtokenid }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value"
+                      [class]="bookNowToken.status === 'active' ? 'status-active' : 'status-expired'">
+                      {{ bookNowToken.status | titlecase }}
+                    </span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Amount Paid:</span>
+                    <span class="detail-value">₹{{ bookNowToken.amountpaid }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Expires:</span>
+                    <span class="detail-value">{{ formatDate(bookNowToken.expirydate) }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Purchased:</span>
+                    <span class="detail-value">{{ formatDate(bookNowToken.date) }}</span>
+                  </div>
+                </div>
+                <div class="booknow-actions" *ngIf="bookNowToken.status === 'active'">
+                  <button (click)="cancelBookNowToken(bookNowToken)" class="cancel-btn">
+                    Cancel Token
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AMC Modal -->
+  <div *ngIf="showAmcModal()" class="modal-overlay" (click)="closeAmcModal()">
+    <div class="modal-content-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">AMC Records</h3>
+        <button class="modal-close-btn" (click)="closeAmcModal()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="section-header">
+          <span class="section-count">{{ amcs().length }} records</span>
+        </div>
+
+        <!-- Loading state -->
+        <div *ngIf="amcsLoading()" class="loading-spinner">
+          <div class="spinner"></div>
+          <p>Loading AMC records...</p>
+        </div>
+
+        <!-- Error state -->
+        <div *ngIf="amcsError() && !amcsLoading()" class="error-message">
+          {{ amcsError() }}
+        </div>
+
+        <!-- No AMC state -->
+        <div *ngIf="!amcsLoading() && !amcsError() && amcs().length === 0" class="empty-state">
+          <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+            </path>
+          </svg>
+          <h3>No AMC records</h3>
+          <p>You don't have any AMC contracts yet.</p>
+        </div>
+
+        <!-- AMC list -->
+        <div class="amc-list" *ngIf="!amcsLoading() && !amcsError() && amcs().length > 0">
+          <div *ngFor="let amc of amcs()" class="amc-item-flipkart" (click)="toggleAMCExpansion(amc._id!)">
+            <div class="amc-item-content">
+              <div class="amc-image-small">
+                <img [src]="amc.carid.images && amc.carid.images[0] || 'public/car.png'" [alt]="amc.carid.carname" />
+              </div>
+              <div class="amc-info-compact">
+                <div class="amc-header-compact">
+                  <span class="amc-type-compact">AMC #{{ amc._id?.slice(-8) }}</span>
+                  <span class="amc-status-compact" [class.active]="getAMCStatus(amc) === 'active'"
+                    [class.pending]="getAMCStatus(amc) === 'pending'">
+                    {{ getAMCStatus(amc) | titlecase }}
+                  </span>
+                </div>
+                <h3 class="amc-title-compact">{{ amc.carid.carname }}</h3>
+                <p class="amc-subtitle-compact">{{ amc.carid.brandname }} - {{ amc.carid.color }}</p>
+                <p class="amc-ticket-compact">Ticket: #{{ amc.ticketid.ticketcustomid }}</p>
+                <div class="amc-price-compact">
+                  <span class="price-label">Total: ₹{{ getTotalAMCAmount(amc) }}</span>
+                  <span class="price-paid">Paid: ₹{{ getPaidAMCAmount(amc) }}</span>
+                  <span class="price-pending">Pending: ₹{{ getPendingAMCAmount(amc) }}</span>
+                </div>
+              </div>
+              <div class="amc-expand-icon">
+                <svg [class.rotated]="isAMCExpanded(amc._id!)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Expanded Details -->
+            <div class="amc-details-expanded" *ngIf="isAMCExpanded(amc._id!)">
+              <div class="amc-details-section">
+                <h4 class="details-title">AMC Payment History</h4>
+                <div class="amc-next-due" *ngIf="getNextDueAMC(amc)">
+                  <div class="next-due-info">
+                    <span class="next-due-label">Next Due:</span>
+                    <span class="next-due-amount">₹{{ getNextDueAMC(amc).amount }}</span>
+                    <span class="next-due-date" *ngIf="getNextDueAMC(amc).duedate">by {{
+                      formatDate(getNextDueAMC(amc).duedate) }}</span>
+                  </div>
+                </div>
+
+                <div class="amc-records">
+                  <div *ngFor="let amount of amc.amcamount; let i = index" class="amc-record" [class.paid]="amount.paid"
+                    [class.overdue]="isAMCAmountOverdue(amount)">
+                    <div class="amc-record-header">
+                      <div class="amc-year">
+                        <span class="year-label">Year {{ amount.year }}</span>
+                        <span class="amount">₹{{ amount.amount }}</span>
+                      </div>
+                      <div class="amc-status">
+                        <span class="status-badge" [class.paid]="amount.paid" [class.pending]="!amount.paid">
+                          {{ amount.paid ? 'Paid' : 'Pending' }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="amc-record-details">
+                      <div class="amc-due-date" *ngIf="amount.duedate">
+                        <span class="detail-label">Due Date:</span>
+                        <span class="detail-value">{{ formatDate(amount.duedate) }}</span>
+                      </div>
+                      <div class="amc-paid-date" *ngIf="amount.paiddate">
+                        <span class="detail-label">Paid Date:</span>
+                        <span class="detail-value">{{ formatDate(amount.paiddate) }}</span>
+                      </div>
+                      <div class="amc-penalty" *ngIf="amount.penality > 0">
+                        <span class="detail-label">Penalty:</span>
+                        <span class="detail-value penalty">₹{{ amount.penality }}</span>
+                      </div>
+
+                      <!-- Payment Button -->
+                      <div class="amc-payment-section" *ngIf="!amount.paid">
+                        <div class="test-mode-notice">
+                          <small class="text-yellow-400">💳 Test Mode - Pay ₹1 (Actual: ₹{{ amount.amount }})</small>
+                        </div>
+                        <button class="amc-pay-btn" (click)="initiateAMCPayment(amc, i)"
+                          [disabled]="isAMCPaymentLoading() || !razorpayKey()" [class.loading]="isAMCPaymentLoading()">
+                          <span *ngIf="isAMCPaymentLoading()">Processing...</span>
+                          <span *ngIf="!isAMCPaymentLoading()">Pay ₹1 (Test Mode)</span>
+                        </button>
+                        <div class="test-amount-notice">
+                          <small class="text-blue-400">ℹ️ Test payment of ₹1 will mark this AMC as paid</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bookings Modal -->
+  <div *ngIf="showBookingsModal()" class="modal-overlay" (click)="closeBookingsModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Recent Bookings</h3>
+        <button class="modal-close-btn" (click)="closeBookingsModal()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="section-header">
+          <span class="section-count">{{ bookings().length }} bookings</span>
+        </div>
+
+        <!-- Loading state -->
+        <div *ngIf="bookingsLoading()" class="loading-spinner">
+          <div class="spinner"></div>
+          <p>Loading bookings...</p>
+        </div>
+
+        <!-- Error state -->
+        <div *ngIf="bookingsError() && !bookingsLoading()" class="error-message">
+          {{ bookingsError() }}
+        </div>
+
+        <!-- No bookings state -->
+        <div *ngIf="!bookingsLoading() && !bookingsError() && bookings().length === 0" class="empty-state">
+          <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <h3>No bookings found</h3>
+          <p>You haven't made any bookings yet.</p>
+          <button class="book-now-btn" (click)="navigateToBookings()">
+            Book Now
+          </button>
+        </div>
+
+        <!-- Bookings grid -->
+        <div class="bookings-grid" *ngIf="!bookingsLoading() && !bookingsError() && bookings().length > 0">
+          <div *ngFor="let booking of bookings()" class="booking-item">
+            <div class="booking-content">
+              <div class="booking-header">
+                <span class="booking-id">Booking #{{ booking._id }}</span>
+                <span class="booking-status" [class]="getBookingStatusClass(booking.status)">
+                  {{ booking.status | titlecase }}
+                </span>
+              </div>
+              <div class="booking-details">
+                <div class="detail-item">
+                  <span class="detail-label">Start Date:</span>
+                  <span class="detail-value">{{ formatDate(booking.bookingFrom) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">End Date:</span>
+                  <span class="detail-value">{{ formatDate(booking.bookingTo) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Car Price:</span>
+                  <span class="detail-value">₹{{ booking.carid.price }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -942,7 +1195,8 @@
   <!-- Verify Email Modal, AMC Payment Success Modal, etc. -->
 
   <!-- Bottom Logout Button -->
-  <div class="bottom-logout-container" *ngIf="!loading()">
+  <div class="bottom-logout-container"
+    *ngIf="!loading() && !showProfileModal() && !showKycModal() && !showSharesModal() && !showWaitlistModal() && !showBookNowModal() && !showAmcModal() && !showBookingsModal()">
     <button class="bottom-logout-btn" (click)="logout()">
       <svg class="logout-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -952,5 +1206,72 @@
     </button>
   </div>
 
+  <!-- Image Cropper Modal -->
+  <div *ngIf="showImageCropperModal()" class="modal-overlay" (click)="closeImageCropperModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Crop Profile Picture</h3>
+        <button class="modal-close-btn" (click)="closeImageCropperModal()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
 
+      <div class="modal-body" style="padding: 20px;">
+        <!-- Cropper Container -->
+        <div style="position: relative; width: 100%; max-width: 400px; margin: 0 auto 20px;">
+          <div
+            style="position: relative; width: 100%; padding-bottom: 100%; background: #f3f4f6; border-radius: 50%; overflow: hidden;">
+            <div
+              style="position: absolute; inset: 0; border-radius: 50%; overflow: hidden; cursor: move; touch-action: none;">
+              <img [src]="selectedImageUrl()" alt="Crop preview" (load)="onCropperImageLoad($event)"
+                (mousedown)="onDragStart($event)" (mousemove)="onDragMove($event)" (mouseup)="onDragEnd($event)"
+                (mouseleave)="onDragEnd($event)" (touchstart)="onDragStart($event)" (touchmove)="onDragMove($event)"
+                (touchend)="onDragEnd($event)"
+                style="position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; object-fit: cover; transform: translate(calc(-50% + {{ cropperPosition().x }}px), calc(-50% + {{ cropperPosition().y }}px)) scale({{ cropperScale() }}); transform-origin: center center; user-select: none; -webkit-user-drag: none; border-radius: 50%;">
+            </div>
+
+            <!-- Circular overlay border -->
+            <div
+              style="position: absolute; inset: 0; border: 3px solid #fff; border-radius: 50%; pointer-events: none; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);">
+            </div>
+          </div>
+
+          <!-- Helper text -->
+          <p style="text-align: center; margin-top: 12px; color: #6b7280; font-size: 13px;">
+            Drag to reposition • Pinch or use slider to zoom
+          </p>
+        </div>
+
+        <!-- Zoom Control -->
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 8px; color: #374151; font-size: 14px; font-weight: 500;">
+            Zoom
+          </label>
+          <input type="range" min="1" max="3" step="0.1" [value]="cropperScale()"
+            (input)="updateCropperScale(+$any($event.target).value)"
+            style="width: 100%; height: 6px; border-radius: 3px; background: #e5e7eb; outline: none; -webkit-appearance: none;">
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button (click)="closeImageCropperModal()"
+            style="padding: 10px 20px; background: #e5e7eb; color: #374151; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; transition: background 0.2s;"
+            onmouseover="this.style.background='#d1d5db'" onmouseout="this.style.background='#e5e7eb'">
+            Cancel
+          </button>
+          <button (click)="cropAndUploadImage()" [disabled]="uploadingImage()"
+            style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; transition: background 0.2s;"
+            [style.opacity]="uploadingImage() ? '0.6' : '1'"
+            [style.cursor]="uploadingImage() ? 'not-allowed' : 'pointer'"
+            onmouseover="if(!this.disabled) this.style.background='#2563eb'"
+            onmouseout="this.style.background='#3b82f6'">
+            <span *ngIf="!uploadingImage()">Upload</span>
+            <span *ngIf="uploadingImage()">Uploading...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

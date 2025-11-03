@@ -1568,8 +1568,6 @@ export class Profile implements OnInit {
       userid: form.userid || undefined
     };
 
-    console.log('Creating shared member with data:', formData);
-
     this.sharedMemberService.createSharedMember(formData).subscribe({
       next: (response) => {
         if (response && response.status === 'success') {

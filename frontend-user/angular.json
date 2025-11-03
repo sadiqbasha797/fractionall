@@ -57,8 +57,6 @@
               "./css/owl.theme.default.min.css"
             ],
             "scripts": [
-              "./js/jquery.min.js",
-              "./js/owl.carousel.min.js",
               "./js/mobile-menu.js"
             ],
             "server": "src/main.server.ts",
@@ -152,8 +150,6 @@
               "./css/owl.theme.default.min.css"
             ],
             "scripts": [
-              "./js/jquery.min.js",
-              "./js/owl.carousel.min.js",
               "./js/mobile-menu.js"
             ]
           }

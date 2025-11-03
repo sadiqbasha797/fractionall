@@ -26,11 +26,12 @@ export class Contracts implements OnInit {
 
   // Filter and search properties
   searchTerm: string = '';
-  createdByFilter: string = 'all';
-  documentsFilter: string = 'all';
   userFilter: string = 'all';
   carFilter: string = 'all';
-  priceRangeFilter: string = 'all';
+  ticketFilter: string = 'all';
+  documentsFilter: string = 'all';
+  createdByFilter: string = 'all';
+  dateFilter: string = 'all';
   uniqueUsers: string[] = [];
   uniqueCars: string[] = [];
   showFilters = false;
@@ -244,6 +245,9 @@ export class Contracts implements OnInit {
         this.loadCars(),
         this.loadTickets()
       ]);
+      // Extract unique values after loading data
+      this.extractUniqueUsers();
+      this.extractUniqueCars();
     } catch (error) {
       console.error('Error loading initial data:', error);
       this.showErrorDialog('Failed to load contracts data');
@@ -334,10 +338,6 @@ export class Contracts implements OnInit {
     this.applyFilters();
   }
 
-  onDocumentsFilterChange(): void {
-    this.applyFilters();
-  }
-
   onUserFilterChange(): void {
     this.applyFilters();
   }
@@ -346,7 +346,15 @@ export class Contracts implements OnInit {
     this.applyFilters();
   }
 
-  onPriceRangeFilterChange(): void {
+  onTicketFilterChange(): void {
+    this.applyFilters();
+  }
+
+  onDocumentsFilterChange(): void {
+    this.applyFilters();
+  }
+
+  onDateFilterChange(): void {
     this.applyFilters();
   }
 
@@ -354,40 +362,70 @@ export class Contracts implements OnInit {
     this.showFilters = !this.showFilters;
   }
 
+  extractUniqueUsers(): void {
+    this.uniqueUsers = [...new Set(this.users.map(user => user.name).filter(name => name))];
+  }
+
+  extractUniqueCars(): void {
+    this.uniqueCars = [...new Set(this.cars.map(car => car.carname).filter(name => name))];
+  }
+
+  isToday(date: Date): boolean {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
+  }
+
+  isThisWeek(date: Date): boolean {
+    const today = new Date();
+    const firstDayOfWeek = new Date(today);
+    firstDayOfWeek.setDate(today.getDate() - today.getDay());
+    const lastDayOfWeek = new Date(firstDayOfWeek);
+    lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+    return date >= firstDayOfWeek && date <= lastDayOfWeek;
+  }
+
+  isThisMonth(date: Date): boolean {
+    const today = new Date();
+    return date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
+  }
+
+  isThisYear(date: Date): boolean {
+    const today = new Date();
+    return date.getFullYear() === today.getFullYear();
+  }
+
   applyFilters(): void {
     this.filteredContracts = this.contracts.filter(contract => {
-      const matchesSearch = !this.searchTerm || 
+      const matchesSearch = !this.searchTerm ||
         this.getUserName(contract.userid).toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         this.getCarName(contract.carid).toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         this.getTicketId(contract.ticketid).toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         (contract._id && contract._id.toLowerCase().includes(this.searchTerm.toLowerCase()));
-      
-      const matchesCreatedBy = this.createdByFilter === 'all' || contract.createdByModel === this.createdByFilter;
-      
-      const matchesDocuments = this.documentsFilter === 'all' || 
-        (this.documentsFilter === 'with-docs' && contract.contract_docs && contract.contract_docs.length > 0) ||
-        (this.documentsFilter === 'without-docs' && (!contract.contract_docs || contract.contract_docs.length === 0));
-      
-      // User filter
+
       const matchesUser = this.userFilter === 'all' || 
-        this.getUserName(contract.userid) === this.userFilter;
+        (typeof contract.userid === 'string' ? contract.userid === this.userFilter : contract.userid._id === this.userFilter);
 
-      // Car filter
       const matchesCar = this.carFilter === 'all' || 
-        this.getCarName(contract.carid) === this.carFilter;
+        (typeof contract.carid === 'string' ? contract.carid === this.carFilter : contract.carid._id === this.carFilter);
 
-      // Price range filter
-      const ticketPrice = this.getTicketPrice(contract.ticketid);
-      const matchesPriceRange = this.priceRangeFilter === 'all' ||
-        (this.priceRangeFilter === '0-50000' && ticketPrice >= 0 && ticketPrice <= 50000) ||
-        (this.priceRangeFilter === '50000-100000' && ticketPrice > 50000 && ticketPrice <= 100000) ||
-        (this.priceRangeFilter === '100000-200000' && ticketPrice > 100000 && ticketPrice <= 200000) ||
-        (this.priceRangeFilter === '200000+' && ticketPrice > 200000);
+      const matchesTicket = this.ticketFilter === 'all' || 
+        (typeof contract.ticketid === 'string' ? contract.ticketid === this.ticketFilter : contract.ticketid._id === this.ticketFilter);
 
-      return matchesSearch && matchesCreatedBy && matchesDocuments && 
-             matchesUser && matchesCar && matchesPriceRange;
+      const matchesDocuments = this.documentsFilter === 'all' ||
+        (this.documentsFilter === 'with-docs' && contract.contract_docs && contract.contract_docs.length > 0) ||
+        (this.documentsFilter === 'no-docs' && (!contract.contract_docs || contract.contract_docs.length === 0));
+
+      const matchesCreatedBy = this.createdByFilter === 'all' || contract.createdByModel === this.createdByFilter;
+
+      const matchesDate = this.dateFilter === 'all' || this.matchesDateFilter(contract);
+
+      return matchesSearch && matchesUser && matchesCar && matchesTicket && 
+             matchesDocuments && matchesCreatedBy && matchesDate;
     });
-    
+
     // Update pagination
     this.totalPages = Math.ceil(this.filteredContracts.length / this.itemsPerPage);
     if (this.currentPage > this.totalPages) {
@@ -419,10 +457,34 @@ export class Contracts implements OnInit {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
+  matchesDateFilter(contract: Contract): boolean {
+    if (this.dateFilter === 'all') return true;
+    
+    const contractDate = new Date(contract.createdat || contract.createdAt || '');
+    if (isNaN(contractDate.getTime())) return false;
+
+    switch (this.dateFilter) {
+      case 'today':
+        return this.isToday(contractDate);
+      case 'this-week':
+        return this.isThisWeek(contractDate);
+      case 'this-month':
+        return this.isThisMonth(contractDate);
+      case 'this-year':
+        return this.isThisYear(contractDate);
+      default:
+        return true;
+    }
+  }
+
   clearFilters(): void {
     this.searchTerm = '';
-    this.createdByFilter = 'all';
+    this.userFilter = 'all';
+    this.carFilter = 'all';
+    this.ticketFilter = 'all';
     this.documentsFilter = 'all';
+    this.createdByFilter = 'all';
+    this.dateFilter = 'all';
     this.currentPage = 1;
     this.applyFilters();
   }

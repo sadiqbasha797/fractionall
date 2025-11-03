@@ -239,10 +239,29 @@
     <link rel="stylesheet" href="css/owl.carousel.min.css">
     <link rel="stylesheet" href="css/owl.theme.default.min.css">
     
-    <!-- Add Owl Carousel JS -->
-    <script src="js/jquery.min.js"></script>
-    <script src="js/owl.carousel.min.js"></script>
-    <script src="js/mobile-menu.js"></script>
+    <!-- Add jQuery from CDN (required for Owl Carousel) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <!-- Load Owl Carousel after jQuery -->
+    <script>
+      (function() {
+        function loadOwlCarousel() {
+          if (typeof $ !== 'undefined' && typeof $.fn !== 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'js/owl.carousel.min.js';
+            script.onerror = function() { console.error('Failed to load owl.carousel.min.js'); };
+            document.head.appendChild(script);
+          } else {
+            setTimeout(loadOwlCarousel, 50);
+          }
+        }
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', loadOwlCarousel);
+        } else {
+          loadOwlCarousel();
+        }
+      })();
+    </script>
+    <!-- Note: mobile-menu.js is loaded via angular.json scripts array -->
     
     <!-- Add Razorpay Checkout Script -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>

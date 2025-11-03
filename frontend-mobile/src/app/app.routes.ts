@@ -10,6 +10,7 @@ import { About } from './about/about';
 import { ContactUs } from './contact-us/contact-us';
 import { NotificationsComponent } from './notifications/notifications.component';
 import { OurStoryComponent } from './our-story/our-story';
+import { SettingsComponent } from './settings/settings';
 import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -27,6 +28,7 @@ export const routes: Routes = [
   { path: 'about', component: About, canActivate: [AuthGuard] },
   { path: 'our-story', component: OurStoryComponent, canActivate: [AuthGuard] },
   { path: 'contact-us', component: ContactUs, canActivate: [AuthGuard] },
+  { path: 'settings', component: SettingsComponent, canActivate: [AuthGuard] },
   
   // Default redirect to login
   { path: '', redirectTo: '/login', pathMatch: 'full' },

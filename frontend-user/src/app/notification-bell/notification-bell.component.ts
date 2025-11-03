@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { NotificationService, Notification } from '../services/notification.service';
@@ -23,7 +23,8 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
   constructor(
     private notificationService: NotificationService,
     public authService: AuthService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -50,13 +51,20 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
       this.notificationService.notifications$.subscribe(notifications => {
         this.notifications = (notifications || []).slice(0, 5); // Show only latest 5, handle undefined
         this.loading = false; // Ensure loading is false when data arrives
+        // Use setTimeout to defer change detection to next tick
+        setTimeout(() => this.cdr.markForCheck(), 0);
       })
     );
 
     // Subscribe to unread count
     this.subscriptions.push(
       this.notificationService.unreadCount$.subscribe(count => {
-        this.unreadCount = count || 0; // Handle undefined
+        const newCount = count || 0;
+        if (this.unreadCount !== newCount) {
+          this.unreadCount = newCount;
+          // Use setTimeout to defer change detection to next tick
+          setTimeout(() => this.cdr.markForCheck(), 0);
+        }
       })
     );
 
@@ -91,11 +99,15 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
           this.unreadCount = unreadCount;
           this.loading = false;
           clearTimeout(loadingTimeout); // Clear timeout on success
+          // Use setTimeout to defer change detection to next tick
+          setTimeout(() => this.cdr.markForCheck(), 0);
         },
         error: (error) => {
           console.error('Error loading notifications:', error);
           this.loading = false;
           clearTimeout(loadingTimeout); // Clear timeout on error
+          // Use setTimeout to defer change detection to next tick
+          setTimeout(() => this.cdr.markForCheck(), 0);
         }
       })
     );
@@ -123,6 +135,8 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
           notification.isRead = true;
           notification.readAt = new Date();
           this.unreadCount = Math.max(0, this.unreadCount - 1);
+          // Use setTimeout to defer change detection to next tick
+          setTimeout(() => this.cdr.markForCheck(), 0);
         },
         error: (error) => {
           console.error('Error marking notification as read:', error);
@@ -140,6 +154,8 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
             notification.readAt = new Date();
           });
           this.unreadCount = 0;
+          // Use setTimeout to defer change detection to next tick
+          setTimeout(() => this.cdr.markForCheck(), 0);
         },
         error: (error) => {
           console.error('Error marking all notifications as read:', error);

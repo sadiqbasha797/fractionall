@@ -55,23 +55,15 @@
                 <div *ngFor="let step of simpleSteps(); let i = index" 
                      class="simple-step-card mb-4" 
                      data-animation="fade-up" [attr.data-delay]="(i + 1) * 100">
-                  <div class="step-header flex items-center gap-4 cursor-pointer" (click)="toggleStep(i)">
+                  <div class="step-header flex items-center gap-4">
                     <div class="step-number">
                       <span>{{ i + 1 }}</span>
                     </div>
                     <div class="flex-1">
                       <h3 class="step-title">{{ step.stepTitle }}</h3>
                     </div>
-                    <div class="step-toggle-icon">
-                      <svg class="w-5 h-5 transition-transform duration-300" 
-                           [class.rotate-180]="isStepExpanded(i)"
-                           fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                      </svg>
-                    </div>
                   </div>
-                  <div class="step-content" 
-                       [class.expanded]="isStepExpanded(i)">
+                  <div class="step-content">
                     <p class="step-description">{{ step.stepName }}</p>
                   </div>
                 </div>

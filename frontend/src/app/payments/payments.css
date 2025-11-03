@@ -660,6 +660,31 @@ thead tr {
   box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
 }
 
+/* Collapsible refunds section */
+.refunds-section {
+  transition: all 0.3s ease-in-out;
+}
+
+.refunds-section.collapsed {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.refunds-section.expanded {
+  max-height: 1000px;
+  opacity: 1;
+}
+
+/* Toggle button animation */
+.toggle-icon {
+  transition: transform 0.3s ease-in-out;
+}
+
+.toggle-icon.rotated {
+  transform: rotate(180deg);
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .modal-content {

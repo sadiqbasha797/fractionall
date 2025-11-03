@@ -26,6 +26,36 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Dynamic content - converted to signals
   heroContent = signal<HeroContent | null>(null);
+  // Hero background rotation state
+  currentHeroImageIndex = signal<number>(0);
+  heroImages = computed<string[]>(() => {
+    const hero = this.heroContent();
+    const images: string[] = [];
+    if (hero?.bgImage1) images.push(hero.bgImage1);
+    if (hero?.bgImage2) images.push(hero.bgImage2);
+    if (hero?.bgImage3) images.push(hero.bgImage3);
+    return images;
+  });
+  selectedHeroImage = computed<string>(() => {
+    const images = this.heroImages();
+    if (images.length === 0) {
+      return './herocar.jpg';
+    }
+    const index = this.currentHeroImageIndex() % images.length;
+    return images[index];
+  });
+
+  // Build full background css for template binding
+  heroBackgroundCss = computed<string>(() => {
+    const url = this.selectedHeroImage();
+    return `linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url(${url})`;
+  });
+
+  // Template-friendly method to avoid signal callable issues in some environments
+  getHeroBackgroundCss(): string {
+    const url = this.selectedHeroImage();
+    return `linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url(${url})`;
+  }
   faqs = signal<FAQ[]>([]);
   faqCategories = signal<FAQCategory[]>([]);
   faqsByCategory = signal<{ [key: string]: FAQ[] }>({});
@@ -46,6 +76,23 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   
   // Simple steps expand/collapse state
   isSimpleStepsExpanded = signal<boolean>(false);
+  
+  // Cached sanitized video URLs to prevent iframe reloading
+  sanitizedVideo1 = computed<SafeResourceUrl>(() => {
+    const videos = this.simpleStepsVideos();
+    if (videos.length > 0 && videos[0]?.video1) {
+      return this.getSanitizedUrl(videos[0].video1);
+    }
+    return this.sanitizer.bypassSecurityTrustResourceUrl('');
+  });
+  
+  sanitizedVideo2 = computed<SafeResourceUrl>(() => {
+    const videos = this.simpleStepsVideos();
+    if (videos.length > 0 && videos[0]?.video2) {
+      return this.getSanitizedUrl(videos[0].video2);
+    }
+    return this.sanitizer.bypassSecurityTrustResourceUrl('');
+  });
 
   // Dynamic carousel state - converted to signals
   cars = signal<any[]>([]);
@@ -57,6 +104,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private autoScrollInterval: any = null;
   private isAutoScrollPaused = signal<boolean>(false);
   private autoScrollDelay = 3000; // 3 seconds
+  private heroAutoScrollInterval: any = null;
+  private heroAutoScrollDelay = 3000; // 3 seconds
   
   // Touch/swipe functionality
   private touchStartX = 0;
@@ -97,8 +146,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  // Method to sanitize URLs for iframe src
-  sanitizeUrl(url: string): SafeResourceUrl {
+  // Internal method to process URL (not creating new SafeResourceUrl unless needed)
+  private getSanitizedUrl(url: string): SafeResourceUrl {
     if (!url) return this.sanitizer.bypassSecurityTrustResourceUrl('');
     
     let processedUrl = url;
@@ -123,6 +172,11 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     
     return this.sanitizer.bypassSecurityTrustResourceUrl(processedUrl);
+  }
+
+  // Method to sanitize URLs for iframe src (kept for backward compatibility, but prefer using computed signals)
+  sanitizeUrl(url: string): SafeResourceUrl {
+    return this.getSanitizedUrl(url);
   }
 
   // Method to get YouTube thumbnail URL with fallback
@@ -218,6 +272,10 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadSimpleStepsVideos();
     this.loadFeaturedCars();
     this.loadBrands();
+
+    if (this.isBrowser) {
+      this.destroyRef.onDestroy(() => this.clearHeroAutoScroll());
+    }
   }
 
   loadHeroContent(): void {
@@ -228,16 +286,24 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (response) => {
         if (response.status === 'success' && response.body.heroContent.length > 0) {
           this.heroContent.set(response.body.heroContent[0]); // Use the first hero content
+          // Start hero rotation based on available images
+          const count = this.heroImages().length;
+          this.currentHeroImageIndex.set(0);
+          this.setupHeroAutoScroll(count);
         } else {
           // If no hero content from API, set a default
           this.heroContent.set({
             _id: 'default-hero',
             heroText: 'Own Your Dream Car at Just 8.33% Cost',
             subText: 'India\'s first fractional car ownership platform',
-            bgImage: './herocar.jpg',
+            bgImage1: './herocar.jpg',
+            bgImage2: '',
+            bgImage3: '',
             createdBy: null,
             createdAt: new Date().toISOString()
           });
+          this.currentHeroImageIndex.set(0);
+          this.setupHeroAutoScroll(1);
         }
       },
       error: (error) => {
@@ -247,12 +313,35 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
           _id: 'default-hero',
           heroText: 'Own Your Dream Car at Just 8.33% Cost',
           subText: 'India\'s first fractional car ownership platform',
-          bgImage: './herocar.jpg',
+          bgImage1: './herocar.jpg',
+          bgImage2: '',
+          bgImage3: '',
           createdBy: null,
           createdAt: new Date().toISOString()
         });
+        this.currentHeroImageIndex.set(0);
+        this.setupHeroAutoScroll(1);
       }
     });
+  }
+
+  private setupHeroAutoScroll(imageCount: number): void {
+    this.clearHeroAutoScroll();
+    if (!this.isBrowser) return;
+    if (imageCount <= 1) return; // No rotation needed
+    this.heroAutoScrollInterval = setInterval(() => {
+      const images = this.heroImages();
+      if (images.length > 1) {
+        this.currentHeroImageIndex.update(v => (v + 1) % images.length);
+      }
+    }, this.heroAutoScrollDelay);
+  }
+
+  private clearHeroAutoScroll(): void {
+    if (this.heroAutoScrollInterval) {
+      clearInterval(this.heroAutoScrollInterval);
+      this.heroAutoScrollInterval = null;
+    }
   }
 
   loadFAQs(): void {
@@ -952,6 +1041,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     
     // Clean up auto-scroll interval
     this.stopAutoScroll();
+    this.clearHeroAutoScroll();
     
     // Unregister scroll sections
     this.scrollNavigationService.unregisterSections();

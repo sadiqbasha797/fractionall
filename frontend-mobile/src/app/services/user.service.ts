@@ -85,4 +85,13 @@ export class UserService {
     
     return this.http.post<any>(`${environment.apiUrl}/kyc/upload-document`, formData, { headers });
   }
+
+  // Email notification preferences
+  getEmailNotificationPreferences(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/email-notifications/preferences`, { headers: this.getAuthHeaders() });
+  }
+
+  updateEmailNotificationPreferences(preferences: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/email-notifications/preferences`, preferences, { headers: this.getAuthHeaders() });
+  }
 }

@@ -66,6 +66,7 @@ export class Payments implements OnInit {
   showRefundModal = false;
   showRefundDetailsModal = false;
   showRefundsListModal = false;
+  showRefundsSection = true; // Default to expanded
 
   // Refund form
   refundForm: RefundRequest = {
@@ -217,6 +218,11 @@ export class Payments implements OnInit {
   // Toggle filters visibility
   toggleFilters(): void {
     this.showFilters = !this.showFilters;
+  }
+
+  // Toggle refunds section visibility
+  toggleRefundsSection(): void {
+    this.showRefundsSection = !this.showRefundsSection;
   }
 
   // Extract unique values for filters

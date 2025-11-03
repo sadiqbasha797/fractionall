@@ -57,9 +57,8 @@ export class Users implements OnInit {
   phoneFilter = signal('all');
   
   // Pagination
-  currentPage = 1;
+  currentPage = signal(1);
   itemsPerPage = 10;
-  totalPages = 0;
   
   // Modal states
   showDetailsModal = signal(false);
@@ -227,17 +226,17 @@ export class Users implements OnInit {
       );
     }
     
-    // Update pagination when filters change
-    this.currentPage = 1;
-    this.totalPages = Math.ceil(usersArray.length / this.itemsPerPage);
-    
     return usersArray;
+  });
+
+  totalPages = computed(() => {
+    return Math.ceil(this.filteredKycUsers().length / this.itemsPerPage);
   });
 
   // Paginated users for display
   paginatedUsers = computed(() => {
     const filtered = this.filteredKycUsers();
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const startIndex = (this.currentPage() - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
     return filtered.slice(startIndex, endIndex);
   });
@@ -470,22 +469,27 @@ export class Users implements OnInit {
   }
   
   onSearchChange() {
+    this.currentPage.set(1);
     this.filteredUsers.set(this.filteredKycUsers());
   }
 
   onKycStatusFilterChange() {
+    this.currentPage.set(1);
     this.filteredUsers.set(this.filteredKycUsers());
   }
 
   onDateRangeFilterChange() {
+    this.currentPage.set(1);
     this.filteredUsers.set(this.filteredKycUsers());
   }
 
   onUserStatusFilterChange() {
+    this.currentPage.set(1);
     this.filteredUsers.set(this.filteredKycUsers());
   }
 
   onLocationFilterChange() {
+    this.currentPage.set(1);
     this.filteredUsers.set(this.filteredKycUsers());
   }
 
@@ -498,24 +502,29 @@ export class Users implements OnInit {
   }
 
   onEmailFilterChange() {
+    this.currentPage.set(1);
     this.filteredUsers.set(this.filteredKycUsers());
   }
 
   onPhoneFilterChange() {
+    this.currentPage.set(1);
     this.filteredUsers.set(this.filteredKycUsers());
   }
   
   // Pagination methods
   goToPage(page: number) {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
+    const total = this.totalPages();
+    if (page >= 1 && page <= total) {
+      this.currentPage.set(page);
     }
   }
 
   getPageNumbers(): number[] {
     const maxVisible = 5;
-    let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
-    let end = Math.min(this.totalPages, start + maxVisible - 1);
+    const total = this.totalPages();
+    const current = this.currentPage();
+    let start = Math.max(1, current - Math.floor(maxVisible / 2));
+    let end = Math.min(total, start + maxVisible - 1);
     
     if (end - start + 1 < maxVisible) {
       start = Math.max(1, end - maxVisible + 1);
@@ -540,7 +549,7 @@ export class Users implements OnInit {
     this.locationFilter.set('all');
     this.emailFilter.set('all');
     this.phoneFilter.set('all');
-    this.currentPage = 1;
+    this.currentPage.set(1);
     this.onSearchChange();
   }
   

@@ -371,16 +371,16 @@
         <div class="flex items-center justify-between border-t border-gray-700 bg-gray-900 px-6 py-4">
           <div class="flex items-center space-x-2 text-sm text-gray-300">
             <span>Showing</span>
-            <span class="font-medium text-gray-100">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
+            <span class="font-medium text-gray-100">{{ (currentPage() - 1) * itemsPerPage + 1 }}</span>
             <span>to</span>
-            <span class="font-medium text-gray-100">{{ getMin(currentPage * itemsPerPage, filteredKycUsers().length) }}</span>
+            <span class="font-medium text-gray-100">{{ getMin(currentPage() * itemsPerPage, filteredKycUsers().length) }}</span>
             <span>of</span>
             <span class="font-medium text-gray-100">{{ filteredKycUsers().length }}</span>
             <span>users</span>
           </div>
           <div class="flex items-center space-x-2">
-            <button [disabled]="currentPage === 1" 
-                    (click)="goToPage(currentPage - 1)"
+            <button [disabled]="currentPage() === 1" 
+                    (click)="goToPage(currentPage() - 1)"
                     class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150">
               Previous
             </button>
@@ -389,13 +389,13 @@
             <div class="flex items-center space-x-1">
               <button *ngFor="let page of getPageNumbers()" 
                       (click)="goToPage(page)" 
-                      [class]="'px-3 py-2 rounded-lg text-sm font-medium transition ' + (page === currentPage ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 border border-gray-700')">
+                      [class]="'px-3 py-2 rounded-lg text-sm font-medium transition ' + (page === currentPage() ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 border border-gray-700')">
                 {{ page }}
               </button>
             </div>
             
-            <button [disabled]="currentPage === totalPages || totalPages === 0" 
-                    (click)="goToPage(currentPage + 1)"
+            <button [disabled]="currentPage() === totalPages() || totalPages() === 0" 
+                    (click)="goToPage(currentPage() + 1)"
                     class="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150">
               Next
             </button>

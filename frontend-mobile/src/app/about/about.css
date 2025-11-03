@@ -245,27 +245,9 @@
   transform: translateX(4px);
 }
 
-.step-toggle-icon {
-  color: #6b7280;
-  transition: all 0.3s ease;
-}
-
-.step-toggle-icon:hover {
-  color: #374151;
-}
-
 /* Step content styling */
 .step-content {
-  overflow: hidden;
-  transition: all 0.3s ease;
-  max-height: 0;
-  opacity: 0;
-  margin-top: 0;
-  padding-top: 0;
-}
-
-.step-content.expanded {
-  max-height: 200px;
+  max-height: none;
   opacity: 1;
   margin-top: 1rem;
   padding-top: 0;
@@ -357,14 +339,5 @@
   
   .step-description {
     font-size: 0.8rem;
-  }
-  
-  .step-content.expanded {
-    max-height: 120px;
-  }
-  
-  .step-toggle-icon {
-    width: 1rem;
-    height: 1rem;
   }
 }

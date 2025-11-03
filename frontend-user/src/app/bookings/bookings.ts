@@ -168,9 +168,6 @@ export class Bookings implements OnInit, AfterViewInit {
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth();
     
-    // Debug: Log current blocked dates
-    console.log('Current blocked dates in updateCalendar:', this.blockedDates());
-    
     // Update month display
     this.currentMonthDisplay = new Intl.DateTimeFormat('en-US', { 
       month: 'long', 
@@ -212,11 +209,6 @@ export class Bookings implements OnInit, AfterViewInit {
       // Check if date is blocked
       const blockedDateInfo = this.blockedDateService.getBlockedDateInfo(this.blockedDates(), currentDate);
       const isBlocked = !!blockedDateInfo;
-      
-      // Debug logging for blocked dates
-      if (isBlocked) {
-        console.log(`Date ${dateString} is blocked:`, blockedDateInfo);
-      }
       
       // Check if date is in the past
       const today = new Date();
@@ -346,7 +338,6 @@ export class Bookings implements OnInit, AfterViewInit {
       const menuEl = this.elementRef.nativeElement.querySelector(`#${menu}`);
       
       if (!btn || !menuEl) {
-        console.log(`Dropdown elements not found: ${button}, ${menu}`);
         return;
       }
       
@@ -414,8 +405,6 @@ export class Bookings implements OnInit, AfterViewInit {
         });
       });
     });
-    
-    console.log(`Found ${foundElements} dropdown elements`);
   }
 
   // Real-time validation when form fields change
@@ -767,18 +756,12 @@ export class Bookings implements OnInit, AfterViewInit {
 
     this.loadingBlockedDates.set(true);
     
-    console.log('Loading blocked dates for car:', this.selectedCarForAvailability());
-    console.log('Available user cars:', this.userCars().map(car => ({ id: car.carid._id, name: car.carid.carname, brand: car.carid.brandname })));
-    
     // Load blocked dates for the selected car
     this.blockedDateService.getCarBlockedDates(this.selectedCarForAvailability()).subscribe({
       next: (response) => {
-        console.log('Blocked dates API response:', response);
         if (response.status === 'success' && response.body.blockedDates) {
-          console.log('Setting blocked dates:', response.body.blockedDates);
           this.blockedDates.set(response.body.blockedDates);
         } else {
-          console.log('No blocked dates found or API error');
           this.blockedDates.set([]);
         }
         this.loadingBlockedDates.set(false);
@@ -814,7 +797,6 @@ export class Bookings implements OnInit, AfterViewInit {
 
   // Handle car selection change
   onCarSelectionChange(carId: string): void {
-    console.log('onCarSelectionChange called with carId:', carId);
     this.selectedCarForAvailability.set(carId);
     
     // Only load bookings and blocked dates if a car is actually selected

@@ -1,257 +1,312 @@
-# Most Browsed Cars - Migration Guide
+# Email Notification Preferences - Migration Guide
 
-## Overview
+## 🎯 Purpose
 
-This guide explains how to migrate your existing database to support the Most Browsed Cars feature. The migration adds a `viewCount` field to all existing cars in your database.
+This guide helps you migrate existing users to support the new email notification preferences feature.
 
-## Quick Start
+## ⚠️ Why Migration is Needed
 
-### 1. Basic Migration (Production)
+The email notification preferences feature adds a new `emailNotifications` field to the User model. Existing users in the database don't have this field, so we need to add it with default values (all notifications enabled).
+
+## 📋 Pre-Migration Checklist
+
+Before running the migration:
+
+- [ ] **Backup your database** (highly recommended!)
+- [ ] **Test on development/staging first**
+- [ ] **Stop the backend server** (to avoid conflicts)
+- [ ] **Verify MongoDB is running**
+- [ ] **Check .env file has correct MONGO_URI**
+- [ ] **Review the migration scripts**
+
+## 🚀 Migration Steps
+
+### Step 1: Backup Database
+
+**MongoDB Backup:**
+```bash
+# Backup entire database
+mongodump --uri="YOUR_MONGO_URI" --out=./backup-$(date +%Y%m%d)
+
+# Or backup just users collection
+mongodump --uri="YOUR_MONGO_URI" --collection=users --out=./backup-users
+```
+
+### Step 2: Verify Current State
+
+Check how many users need migration:
+
 ```bash
 cd backend
-npm run migrate:add-viewcount
+node migrations/verify-email-notifications.js
 ```
 
-### 2. Add Sample Data (Testing/Demo)
+**Expected Output:**
+```
+✅ MongoDB connected successfully
+🔍 Verifying email notification preferences status...
+
+📊 Total users in database: 150
+📊 Email Notification Preferences Status:
+✅ Users with preferences: 0 (0.00%)
+❌ Users without preferences: 150 (100.00%)
+```
+
+### Step 3: Run Migration
+
+Add email preferences to all existing users:
+
 ```bash
-cd backend
-npm run migrate:add-sample-views
+node migrations/add-email-notifications-to-users.js
 ```
 
-### 3. Using the Migration Runner
+**Expected Output:**
+```
+✅ MongoDB connected successfully
+🔄 Starting migration: Add email notification preferences to users...
+
+📊 Found 150 users without email notification preferences
+📦 Processing batch 1 (100 users)...
+   ✓ Updated 10 users...
+   ✓ Updated 20 users...
+   ✓ Updated 30 users...
+   ...
+   ✓ Updated 100 users...
+
+📦 Processing batch 2 (50 users)...
+   ✓ Updated 110 users...
+   ...
+   ✓ Updated 150 users...
+
+============================================================
+📊 Migration Summary:
+============================================================
+✅ Successfully updated: 150 users
+❌ Failed to update: 0 users
+📈 Total processed: 150 users
+============================================================
+
+🔍 Verifying migration...
+✅ Verification successful! All users now have email notification preferences.
+
+📋 Sample of updated users:
+
+1. John Doe (john@example.com)
+   Email Notifications: {
+     enabled: true,
+     tokenPurchase: true,
+     bookNowToken: true,
+     amcPayment: true,
+     booking: true,
+     kyc: true,
+     refund: true,
+     sharedMember: true
+   }
+
+✅ Migration completed successfully!
+```
+
+### Step 4: Verify Migration Success
+
+Confirm all users have been migrated:
+
 ```bash
-cd backend
-npm run migrate help
-npm run migrate add-viewcount
-npm run migrate add-sample-views
+node migrations/verify-email-notifications.js
 ```
 
-## Migration Scripts
+**Expected Output:**
+```
+📊 Total users in database: 150
+📊 Email Notification Preferences Status:
+✅ Users with preferences: 150 (100.00%)
+❌ Users without preferences: 0 (0.00%)
 
-### 📋 Available Scripts
-
-| Script | Purpose | Safety | When to Use |
-|--------|---------|--------|-------------|
-| `migrate-add-viewcount.js` | Adds viewCount field to all cars | ✅ Safe | Production deployment |
-| `migrate-add-sample-views.js` | Adds random view counts for testing | ✅ Safe | Testing/demo |
-| `migrate-remove-viewcount.js` | Removes viewCount field (rollback) | ⚠️ Destructive | Rollback only |
-
-### 🚀 Running Migrations
-
-#### Option 1: Using npm scripts (Recommended)
-```bash
-# Add viewCount field to all cars
-npm run migrate:add-viewcount
-
-# Add sample view counts for testing
-npm run migrate:add-sample-views
-
-# Remove viewCount field (rollback)
-npm run migrate:remove-viewcount
+✅ STATUS: All users have email notification preferences!
+✅ Migration is complete and successful.
 ```
 
-#### Option 2: Direct execution
-```bash
-# Add viewCount field
-node scripts/migrate-add-viewcount.js
+### Step 5: Test the Feature
 
-# Add sample view counts
-node scripts/migrate-add-sample-views.js
-
-# Remove viewCount field
-node scripts/migrate-remove-viewcount.js
-```
-
-#### Option 3: Using migration runner
-```bash
-# Show help
-npm run migrate help
-
-# List available migrations
-npm run migrate list
-
-# Run specific migration
-npm run migrate add-viewcount
-npm run migrate add-sample-views
-npm run migrate remove-viewcount
-```
-
-## Migration Workflows
-
-### 🏭 Production Deployment
-
-1. **Deploy the code** with the new viewCount field
-2. **Run the basic migration**:
+1. **Start the backend:**
    ```bash
-   npm run migrate:add-viewcount
+   npm start
    ```
-3. **Verify the migration**:
-   - Check that all cars have viewCount field
-   - Verify the most browsed cars API works
-4. **Start tracking** real user views
 
-### 🧪 Testing/Demo Setup
-
-1. **Run the basic migration**:
+2. **Test API endpoints:**
    ```bash
-   npm run migrate:add-viewcount
+   # Get preferences
+   curl -X GET http://localhost:3000/api/users/email-notifications/preferences \
+     -H "Authorization: Bearer YOUR_TOKEN"
    ```
-2. **Add sample data**:
-   ```bash
-   npm run migrate:add-sample-views
-   ```
-3. **Test the feature** with realistic data
 
-### 🔄 Rollback Process
+3. **Test in mobile app:**
+   - Login to the app
+   - Open hamburger menu
+   - Tap "Settings"
+   - Verify preferences load correctly
+   - Toggle some options
+   - Save and verify changes persist
 
-1. **Run the rollback migration**:
-   ```bash
-   npm run migrate:remove-viewcount
-   ```
-2. **Revert the code** to previous version
+## 🔄 Rollback (If Needed)
 
-## Environment Setup
-
-### Required Environment Variables
-
-Make sure these are set in your `.env` file:
+If something goes wrong and you need to undo the migration:
 
 ```bash
-MONGODB_URI=mongodb://localhost:27017/fraction
-# or your production MongoDB connection string
+node migrations/rollback-email-notifications.js
 ```
 
-### Database Requirements
+**You will be asked to confirm:**
+```
+⚠️  WARNING: This will remove email notification preferences from ALL users!
+⚠️  This action cannot be undone easily.
 
-- MongoDB database with existing cars collection
-- Network access to the database
-- Read/write permissions on the cars collection
+Are you sure you want to proceed? (yes/no):
+```
 
-## Migration Details
+Type `yes` to proceed.
 
-### What the Migration Does
+**Then restore from backup if needed:**
+```bash
+mongorestore --uri="YOUR_MONGO_URI" ./backup-20241215
+```
 
-#### `migrate-add-viewcount.js`:
-- Finds all cars without `viewCount` field
-- Adds `viewCount: 0` to all existing cars
-- Provides detailed logging and statistics
-- Safe to run multiple times
+## 📊 What Gets Added
 
-#### `migrate-add-sample-views.js`:
-- Ensures all cars have `viewCount` field
-- Adds random view counts (5-200) to cars with 0 views
-- Provides statistics about view distribution
-- Safe to run multiple times
+Each user will get this new field:
 
-#### `migrate-remove-viewcount.js`:
-- Removes `viewCount` field from all cars
-- **WARNING**: Permanently deletes all view count data
-- Use only for rollback purposes
-
-### Database Changes
-
-The migration adds this field to your Car model:
 ```javascript
-viewCount: {
-  type: Number,
-  default: 0,
-  required: false
+emailNotifications: {
+  enabled: true,           // Master toggle
+  tokenPurchase: true,     // Token purchase confirmations
+  bookNowToken: true,      // Book now token confirmations
+  amcPayment: true,        // AMC payment confirmations
+  booking: true,           // Booking confirmations
+  kyc: true,              // KYC updates and reminders
+  refund: true,           // Refund notifications
+  sharedMember: true      // Shared member updates
 }
 ```
 
-## Verification
+All values default to `true` to maintain current behavior (all emails enabled).
 
-### After Running Migration
+## 🐛 Troubleshooting
 
-1. **Check the logs** for success messages
-2. **Verify in database**:
-   ```javascript
-   // In MongoDB shell or compass
-   db.cars.findOne({}, {carname: 1, viewCount: 1})
-   ```
-3. **Test the API**:
-   ```bash
-   curl http://localhost:3000/api/cars/public/most-browsed
-   ```
+### Issue: "MongoDB connection error"
+**Solution:**
+```bash
+# Check if MongoDB is running
+mongosh
 
-### Expected Results
+# Verify MONGO_URI in .env
+cat .env | grep MONGO_URI
 
-- All cars should have `viewCount` field
-- Most browsed cars API should return cars sorted by view count
-- Frontend should display most browsed cars section
-
-## Troubleshooting
-
-### Common Issues
-
-#### ❌ Connection Error
+# Test connection
+node -e "require('mongoose').connect(process.env.MONGO_URI).then(() => console.log('Connected')).catch(e => console.error(e))"
 ```
-Error: connect ECONNREFUSED 127.0.0.1:27017
-```
-**Solution**: Check your `MONGODB_URI` and ensure MongoDB is running
 
-#### ❌ No Cars Found
-```
-No cars found in database. Migration not needed.
-```
-**Solution**: This is normal if your database is empty
+### Issue: "Some users failed to update"
+**Solution:**
+- Check the error messages in the migration output
+- Run the migration again (it only updates users without preferences)
+- Manually inspect problematic user documents
 
-#### ❌ Permission Denied
-```
-Error: not authorized on fraction to execute command
-```
-**Solution**: Check your database user permissions
+### Issue: "Migration is slow"
+**Solution:**
+- This is normal for large databases
+- The script processes in batches of 100
+- Don't interrupt the process
+- Consider running during off-peak hours
 
-#### ❌ Migration Partially Failed
-```
-Some cars still don't have viewCount field
-```
-**Solution**: Run the migration again - it's safe to run multiple times
+### Issue: "Verification shows users without preferences after migration"
+**Solution:**
+- Run the migration script again
+- Check MongoDB logs for errors
+- Verify database permissions
 
-### Debug Steps
+## 📈 Performance
 
-1. **Check environment variables**:
-   ```bash
-   echo $MONGODB_URI
-   ```
+### Expected Duration
+- **Small database** (<1,000 users): ~10-30 seconds
+- **Medium database** (1,000-10,000 users): ~1-5 minutes
+- **Large database** (>10,000 users): ~5-30 minutes
 
-2. **Test database connection**:
-   ```bash
-   node -e "require('mongoose').connect(process.env.MONGODB_URI).then(() => console.log('Connected')).catch(console.error)"
-   ```
+### Resource Usage
+- **Memory**: Minimal (batch processing)
+- **CPU**: Low to moderate
+- **Network**: Depends on database location
+- **Disk I/O**: Moderate
 
-3. **Check migration logs** for specific error messages
-
-4. **Verify database state**:
-   ```javascript
-   // Count cars with/without viewCount
-   db.cars.countDocuments({viewCount: {$exists: true}})
-   db.cars.countDocuments({viewCount: {$exists: false}})
-   ```
-
-## Safety Notes
-
-- ✅ **Safe migrations**: `add-viewcount`, `add-sample-views`
-- ⚠️ **Destructive migration**: `remove-viewcount` (permanently deletes data)
-- 🔒 **Always backup** your database before running migrations in production
-- 🧪 **Test migrations** in a development environment first
-- 🔄 **Idempotent**: Safe to run migrations multiple times
-
-## Support
-
-If you encounter issues:
-
-1. **Check the migration logs** for specific error messages
-2. **Verify your database connection** and permissions
-3. **Ensure you're running** the migration from the correct directory
-4. **Check that all required** environment variables are set
-5. **Test in development** environment first
-
-## Next Steps
+## ✅ Post-Migration Checklist
 
 After successful migration:
 
-1. **Deploy the frontend** with the most browsed cars feature
-2. **Monitor the API** for view tracking
-3. **Check the most browsed cars** section in the frontend
-4. **Verify view counts** are being tracked correctly
+- [ ] **Verify all users have preferences** (run verify script)
+- [ ] **Test API endpoints** (GET and PUT)
+- [ ] **Test mobile app Settings page**
+- [ ] **Check application logs** for errors
+- [ ] **Monitor email sending** for issues
+- [ ] **Inform users** about new feature
+- [ ] **Update documentation** if needed
+- [ ] **Delete backup** after confirming everything works
+
+## 📝 Migration Log Template
+
+Keep a record of your migration:
+
+```
+Migration Date: _______________
+Database: _______________
+Total Users Before: _______________
+Users Migrated: _______________
+Errors: _______________
+Duration: _______________
+Performed By: _______________
+Verified By: _______________
+Notes: _______________
+```
+
+## 🔐 Security Considerations
+
+- Migration scripts require database access
+- Use secure connection strings
+- Don't commit .env files with credentials
+- Run migrations from secure environments
+- Backup before making changes
+- Verify changes before deploying to production
+
+## 📞 Support
+
+If you encounter issues:
+
+1. **Check this guide** for troubleshooting steps
+2. **Review migration script output** for error messages
+3. **Check MongoDB logs** for database errors
+4. **Verify .env configuration** is correct
+5. **Test on development database** first
+6. **Contact development team** if issues persist
+
+## 📚 Related Documentation
+
+- **Migration Scripts:** `backend/migrations/README.md`
+- **Feature Documentation:** `docs/EMAIL_NOTIFICATION_PREFERENCES.md`
+- **API Reference:** `docs/EMAIL_PREFERENCES_API_QUICK_REFERENCE.md`
+- **Mobile Frontend:** `frontend-mobile/EMAIL_PREFERENCES_MOBILE_README.md`
+
+## 🎉 Success Criteria
+
+Migration is successful when:
+
+✅ All users have `emailNotifications` field
+✅ All preferences are set to `true` by default
+✅ Verification script shows 100% coverage
+✅ API endpoints work correctly
+✅ Mobile app Settings page loads preferences
+✅ Users can save preference changes
+✅ Email service respects user preferences
+✅ No errors in application logs
+
+---
+
+**Version:** 1.0.0
+**Last Updated:** December 2024
+**Maintainer:** Fraction Development Team

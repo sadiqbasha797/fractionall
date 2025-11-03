@@ -34,6 +34,7 @@ export class Profile implements OnInit {
     profileimage: '',
     verified: false,
     kycStatus: 'pending',
+    kycDocs: [],
     rejected_comments: [],
     governmentid: {
       aadharid: '',
@@ -143,6 +144,15 @@ export class Profile implements OnInit {
     }
   ];
 
+  // Modal states for each section
+  protected showProfileModal = signal<boolean>(false);
+  protected showKycModal = signal<boolean>(false);
+  protected showSharesModal = signal<boolean>(false);
+  protected showWaitlistModal = signal<boolean>(false);
+  protected showBookNowModal = signal<boolean>(false);
+  protected showAmcModal = signal<boolean>(false);
+  protected showBookingsModal = signal<boolean>(false);
+
   // KYC form data
   protected kycForm = signal({
     aadharId: '',
@@ -187,7 +197,7 @@ export class Profile implements OnInit {
   protected passwordErrorMessage = signal<string>('');
   protected passwordSuccessMessage = signal<string>('');
   protected resetForm = signal({ code: '', newPassword: '' });
-  
+
   // Change password form state
   protected changePasswordSubmitting = signal<boolean>(false);
   protected changePasswordErrorMessage = signal<string>('');
@@ -198,6 +208,16 @@ export class Profile implements OnInit {
   protected uploadingImage = signal<boolean>(false);
   protected imageUploadError = signal<string>('');
   protected imageUploadSuccess = signal<string>('');
+
+  // Image cropper state
+  protected showImageCropperModal = signal<boolean>(false);
+  protected selectedImageFile = signal<File | null>(null);
+  protected selectedImageUrl = signal<string>('');
+  protected cropperScale = signal<number>(1);
+  protected cropperPosition = signal<{ x: number; y: number }>({ x: 0, y: 0 });
+  private isDragging = false;
+  private dragStart = { x: 0, y: 0 };
+  private imageSize = { width: 0, height: 0 };
 
   // AMC Payment state
   protected razorpayKey = signal<string>('');
@@ -236,7 +256,7 @@ export class Profile implements OnInit {
       const amcsData = this.amcs();
       const bookingsData = this.bookings();
       const contractDocumentsData = this.contractDocuments();
-      
+
       // Trigger change detection immediately when any data changes
       if (isPlatformBrowser(this.platformId)) {
         this.cdr.detectChanges();
@@ -254,7 +274,7 @@ export class Profile implements OnInit {
   loadUserProfile() {
     this.loading.set(true);
     this.error.set('');
-    
+
     // First try to get from localStorage if available
     const storedUser = this.authService.getUserData();
     if (storedUser) {
@@ -291,7 +311,7 @@ export class Profile implements OnInit {
       error: (error) => {
         this.loading.set(false);
         console.error('Error loading profile:', error);
-        
+
         if (error.status === 401) {
           this.error.set('Authentication failed. Please login again.');
           // Clear invalid token and user data
@@ -302,7 +322,7 @@ export class Profile implements OnInit {
         } else {
           this.error.set('Failed to load profile data. Please try again later.');
         }
-        
+
         // If API fails but we have stored data, use that
         if (!this.user().name && storedUser) {
           this.user.set({ ...this.user(), ...storedUser });
@@ -311,7 +331,7 @@ export class Profile implements OnInit {
     });
   }
 
-    loadUserTickets() {
+  loadUserTickets() {
     // Check if user is authenticated before making the request
     const token = this.authService.getToken();
     if (!token) {
@@ -325,7 +345,7 @@ export class Profile implements OnInit {
     this.ticketService.getUserTickets().subscribe({
       next: (response) => {
         this.ticketsLoading.set(false);
-        
+
         if (response && response.body && response.body.tickets) {
           this.tickets.set(response.body.tickets);
           this.updateSectionCounts();
@@ -334,7 +354,7 @@ export class Profile implements OnInit {
       error: (error) => {
         this.ticketsLoading.set(false);
         console.error('Error loading tickets:', error);
-        
+
         if (error.status === 401) {
           this.ticketsError.set('Authentication failed. Please login again.');
           // Clear invalid token and user data
@@ -363,7 +383,7 @@ export class Profile implements OnInit {
     this.tokenService.getUserTokens().subscribe({
       next: (response) => {
         this.tokensLoading.set(false);
-        
+
         if (response && response.body && response.body.tokens) {
           this.tokens.set(response.body.tokens);
           this.updateSectionCounts();
@@ -372,7 +392,7 @@ export class Profile implements OnInit {
       error: (error) => {
         this.tokensLoading.set(false);
         console.error('Error loading tokens:', error);
-        
+
         if (error.status === 401) {
           this.tokensError.set('Authentication failed. Please login again.');
           // Clear invalid token and user data
@@ -401,7 +421,7 @@ export class Profile implements OnInit {
     this.bookNowTokenService.getUserBookNowTokens().subscribe({
       next: (response) => {
         this.bookNowTokensLoading.set(false);
-        
+
         if (response && response.body && response.body.bookNowTokens) {
           this.bookNowTokens.set(response.body.bookNowTokens);
           this.updateSectionCounts();
@@ -410,7 +430,7 @@ export class Profile implements OnInit {
       error: (error) => {
         this.bookNowTokensLoading.set(false);
         console.error('Error loading book now tokens:', error);
-        
+
         if (error.status === 401) {
           this.bookNowTokensError.set('Authentication failed. Please login again.');
           // Clear invalid token and user data
@@ -439,7 +459,7 @@ export class Profile implements OnInit {
     this.amcService.getUserAMCs().subscribe({
       next: (response) => {
         this.amcsLoading.set(false);
-        
+
         if (response && response.body && response.body.amcs) {
           this.amcs.set(response.body.amcs);
           this.updateSectionCounts();
@@ -448,7 +468,7 @@ export class Profile implements OnInit {
       error: (error) => {
         this.amcsLoading.set(false);
         console.error('Error loading AMCs:', error);
-        
+
         if (error.status === 401) {
           this.amcsError.set('Authentication failed. Please login again.');
           // Clear invalid token and user data
@@ -477,7 +497,7 @@ export class Profile implements OnInit {
     this.bookingService.getUserBookings().subscribe({
       next: (response) => {
         this.bookingsLoading.set(false);
-        
+
         if (response && response.body && response.body.bookings) {
           this.bookings.set(response.body.bookings);
           this.generateCalendar();
@@ -487,7 +507,7 @@ export class Profile implements OnInit {
       error: (error) => {
         this.bookingsLoading.set(false);
         console.error('Error loading bookings:', error);
-        
+
         if (error.status === 401) {
           this.bookingsError.set('Authentication failed. Please login again.');
           // Clear invalid token and user data
@@ -502,14 +522,71 @@ export class Profile implements OnInit {
     });
   }
 
+  // Modal methods
+  openProfileModal() {
+    this.showProfileModal.set(true);
+  }
+
+  closeProfileModal() {
+    this.showProfileModal.set(false);
+  }
+
+  openKycModal() {
+    this.showKycModal.set(true);
+  }
+
+  closeKycModal() {
+    this.showKycModal.set(false);
+  }
+
+  openSharesModal() {
+    this.showSharesModal.set(true);
+  }
+
+  closeSharesModal() {
+    this.showSharesModal.set(false);
+  }
+
+  openWaitlistModal() {
+    this.showWaitlistModal.set(true);
+  }
+
+  closeWaitlistModal() {
+    this.showWaitlistModal.set(false);
+  }
+
+  openBookNowModal() {
+    this.showBookNowModal.set(true);
+  }
+
+  closeBookNowModal() {
+    this.showBookNowModal.set(false);
+  }
+
+  openAmcModal() {
+    this.showAmcModal.set(true);
+  }
+
+  closeAmcModal() {
+    this.showAmcModal.set(false);
+  }
+
+  openBookingsModal() {
+    this.showBookingsModal.set(true);
+  }
+
+  closeBookingsModal() {
+    this.showBookingsModal.set(false);
+  }
+
   // Helper method to format date
   formatDate(dateString: string | Date): string {
     if (!dateString) return 'Not provided';
-    
+
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return 'Invalid date';
-      
+
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
@@ -543,7 +620,7 @@ export class Profile implements OnInit {
   getNextDueAMC(amc: AMC): any {
     const unpaidAmounts = amc.amcamount.filter(amount => !amount.paid);
     if (unpaidAmounts.length === 0) return null;
-    
+
     // Sort by due date and return the earliest
     return unpaidAmounts.sort((a, b) => {
       const dateA = a.duedate ? new Date(a.duedate) : new Date();
@@ -580,7 +657,7 @@ export class Profile implements OnInit {
   // Helper method to format government ID
   formatGovernmentId(idType: string, idValue: string): string {
     if (!idValue) return 'Not provided';
-    
+
     // Mask sensitive information for display
     if (idType === 'aadharid' && idValue.length >= 4) {
       return `****-****-${idValue.slice(-4)}`;
@@ -591,7 +668,7 @@ export class Profile implements OnInit {
     if (idType === 'licenseid' && idValue.length >= 4) {
       return `${idValue.slice(0, 2)}****${idValue.slice(-2)}`;
     }
-    
+
     return idValue;
   }
 
@@ -697,7 +774,7 @@ export class Profile implements OnInit {
         if (uploadResponse && uploadResponse.status === 'success' && uploadResponse.body?.documentUrl) {
           // Use the actual uploaded document URL
           const kycDocs = [uploadResponse.body.documentUrl];
-          
+
           // Submit KYC documents with the real URL
           this.userService.submitKyc({ kycDocs }).subscribe({
             next: (response) => {
@@ -730,26 +807,26 @@ export class Profile implements OnInit {
   generateCalendar() {
     const year = this.currentMonth().getFullYear();
     const month = this.currentMonth().getMonth();
-    
+
     // Get first day of month and number of days
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
-    
+
     const calendarDays: any[] = [];
-    
+
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < startingDayOfWeek; i++) {
       calendarDays.push({ day: '', isEmpty: true });
     }
-    
+
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
       const dayBookings = this.bookingService.hasBookingsOnDate(this.bookings(), date);
       const bookingStatus = this.bookingService.getBookingStatusForDate(this.bookings(), date);
-      
+
       calendarDays.push({
         day: day,
         date: date,
@@ -759,7 +836,7 @@ export class Profile implements OnInit {
         isToday: this.isToday(date)
       });
     }
-    
+
     this.calendarDays.set(calendarDays);
   }
 
@@ -794,19 +871,19 @@ export class Profile implements OnInit {
   // Get CSS class for calendar day based on booking status
   getCalendarDayClass(day: any): string {
     if (day.isEmpty) return 'calendar-day empty';
-    
+
     let classes = 'calendar-day';
-    
+
     if (day.isToday) {
       classes += ' today';
     }
-    
+
     if (day.bookingStatus === 'accepted') {
       classes += ' booking-accepted';
     } else if (day.bookingStatus === 'rejected') {
       classes += ' booking-rejected';
     }
-    
+
     return classes;
   }
 
@@ -815,13 +892,13 @@ export class Profile implements OnInit {
     if (day.isEmpty || !day.bookings || day.bookings.length === 0) {
       return '';
     }
-    
+
     const bookingTexts = day.bookings.map((booking: Booking) => {
       const carName = booking.carid?.carname || 'Unknown Car';
       const status = booking.status === 'accepted' ? '✓' : '✗';
       return `${status} ${carName}`;
     });
-    
+
     return bookingTexts.join('\n');
   }
 
@@ -1016,93 +1093,93 @@ export class Profile implements OnInit {
 
   // =============== Form Update Helper Methods ===============
   public updateKycAadharId(value: string) {
-    this.kycForm.set({...this.kycForm(), aadharId: value});
+    this.kycForm.set({ ...this.kycForm(), aadharId: value });
   }
 
   public updateKycPanId(value: string) {
-    this.kycForm.set({...this.kycForm(), panId: value});
+    this.kycForm.set({ ...this.kycForm(), panId: value });
   }
 
   public updateEditFormName(value: string) {
-    this.editForm.set({...this.editForm(), name: value});
+    this.editForm.set({ ...this.editForm(), name: value });
   }
 
   public updateEditFormEmail(value: string) {
-    this.editForm.set({...this.editForm(), email: value});
+    this.editForm.set({ ...this.editForm(), email: value });
   }
 
   public updateEditFormPhone(value: string) {
-    this.editForm.set({...this.editForm(), phone: value});
+    this.editForm.set({ ...this.editForm(), phone: value });
   }
 
   public updateEditFormDateOfBirth(value: string) {
-    this.editForm.set({...this.editForm(), dateofbirth: value});
+    this.editForm.set({ ...this.editForm(), dateofbirth: value });
   }
 
   public updateEditFormLocation(value: string) {
-    this.editForm.set({...this.editForm(), location: value});
+    this.editForm.set({ ...this.editForm(), location: value });
   }
 
   public updateEditFormPincode(value: string) {
-    this.editForm.set({...this.editForm(), pincode: value});
+    this.editForm.set({ ...this.editForm(), pincode: value });
   }
 
   public updateEditFormAddress(value: string) {
-    this.editForm.set({...this.editForm(), address: value});
+    this.editForm.set({ ...this.editForm(), address: value });
   }
 
   public updateVerifyFormEmail(value: string) {
-    this.verifyForm.set({...this.verifyForm(), email: value});
+    this.verifyForm.set({ ...this.verifyForm(), email: value });
   }
 
   public updateVerifyFormCode(value: string) {
-    this.verifyForm.set({...this.verifyForm(), code: value});
+    this.verifyForm.set({ ...this.verifyForm(), code: value });
   }
 
   public updateResetFormCode(value: string) {
-    this.resetForm.set({...this.resetForm(), code: value});
+    this.resetForm.set({ ...this.resetForm(), code: value });
   }
 
   public updateResetFormPassword(value: string) {
-    this.resetForm.set({...this.resetForm(), newPassword: value});
+    this.resetForm.set({ ...this.resetForm(), newPassword: value });
   }
 
   // =============== Change Password Methods ===============
   public updateChangePasswordCurrentPassword(value: string) {
-    this.changePasswordForm.set({...this.changePasswordForm(), currentPassword: value});
+    this.changePasswordForm.set({ ...this.changePasswordForm(), currentPassword: value });
   }
 
   public updateChangePasswordNewPassword(value: string) {
-    this.changePasswordForm.set({...this.changePasswordForm(), newPassword: value});
+    this.changePasswordForm.set({ ...this.changePasswordForm(), newPassword: value });
   }
 
   public updateChangePasswordConfirmPassword(value: string) {
-    this.changePasswordForm.set({...this.changePasswordForm(), confirmPassword: value});
+    this.changePasswordForm.set({ ...this.changePasswordForm(), confirmPassword: value });
   }
 
   public onChangePassword() {
     this.changePasswordErrorMessage.set('');
     this.changePasswordSuccessMessage.set('');
-    
+
     const form = this.changePasswordForm();
-    
+
     if (!form.currentPassword || !form.newPassword || !form.confirmPassword) {
       this.changePasswordErrorMessage.set('All fields are required.');
       return;
     }
-    
+
     if (form.newPassword !== form.confirmPassword) {
       this.changePasswordErrorMessage.set('New passwords do not match.');
       return;
     }
-    
+
     if (form.newPassword.length < 6) {
       this.changePasswordErrorMessage.set('New password must be at least 6 characters long.');
       return;
     }
-    
+
     this.changePasswordSubmitting.set(true);
-    
+
     // Here you would call your auth service to change the password
     // For now, we'll simulate the API call
     setTimeout(() => {
@@ -1122,11 +1199,11 @@ export class Profile implements OnInit {
     fileInput.type = 'file';
     fileInput.accept = 'image/*';
     fileInput.style.display = 'none';
-    
+
     fileInput.onchange = (event: any) => {
       this.onImageSelect(event);
     };
-    
+
     // Trigger the file dialog
     document.body.appendChild(fileInput);
     fileInput.click();
@@ -1157,8 +1234,147 @@ export class Profile implements OnInit {
       return;
     }
 
-    // Upload the image
-    this.uploadProfileImage(file);
+    // Open image cropper modal
+    this.selectedImageFile.set(file);
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      this.selectedImageUrl.set(e.target.result);
+      this.showImageCropperModal.set(true);
+      this.cropperScale.set(1);
+      this.cropperPosition.set({ x: 0, y: 0 });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Close image cropper modal
+  closeImageCropperModal() {
+    this.showImageCropperModal.set(false);
+    this.selectedImageFile.set(null);
+    this.selectedImageUrl.set('');
+    this.cropperScale.set(1);
+    this.cropperPosition.set({ x: 0, y: 0 });
+    this.isDragging = false;
+  }
+
+  // Update cropper scale (zoom)
+  updateCropperScale(scale: number) {
+    this.cropperScale.set(Math.max(1, Math.min(3, scale)));
+  }
+
+  // Start dragging
+  onDragStart(event: MouseEvent | TouchEvent) {
+    this.isDragging = true;
+    const clientX = event instanceof MouseEvent ? event.clientX : event.touches[0].clientX;
+    const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
+    this.dragStart = {
+      x: clientX - this.cropperPosition().x,
+      y: clientY - this.cropperPosition().y
+    };
+    event.preventDefault();
+  }
+
+  // Handle dragging
+  onDragMove(event: MouseEvent | TouchEvent) {
+    if (!this.isDragging) return;
+
+    const clientX = event instanceof MouseEvent ? event.clientX : event.touches[0].clientX;
+    const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
+
+    const newX = clientX - this.dragStart.x;
+    const newY = clientY - this.dragStart.y;
+
+    // Calculate boundaries based on scale
+    const scale = this.cropperScale();
+    const maxOffset = (this.imageSize.width * (scale - 1)) / 2;
+
+    // Constrain position within boundaries
+    const constrainedX = Math.max(-maxOffset, Math.min(maxOffset, newX));
+    const constrainedY = Math.max(-maxOffset, Math.min(maxOffset, newY));
+
+    this.cropperPosition.set({ x: constrainedX, y: constrainedY });
+    event.preventDefault();
+  }
+
+  // Stop dragging
+  onDragEnd(event: MouseEvent | TouchEvent) {
+    this.isDragging = false;
+    event.preventDefault();
+  }
+
+  // Set image size when loaded
+  onCropperImageLoad(event: any) {
+    const img = event.target;
+    this.imageSize = { width: img.naturalWidth, height: img.naturalHeight };
+  }
+
+  // Crop and upload image
+  cropAndUploadImage() {
+    if (!this.selectedImageUrl()) return;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const img = new Image();
+    img.onload = () => {
+      // Set canvas size to 400x400 (profile image size)
+      const size = 400;
+      canvas.width = size;
+      canvas.height = size;
+
+      // Calculate dimensions for cropping
+      const scale = this.cropperScale();
+      const pos = this.cropperPosition();
+
+      // Draw circular clipped image
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+
+      // Calculate the size of the square that fits in the circle
+      const minDimension = Math.min(img.width, img.height);
+
+      // Calculate position offsets based on drag position
+      // Convert drag position from screen coordinates to image coordinates
+      const offsetX = -pos.x * (minDimension / size) / scale;
+      const offsetY = -pos.y * (minDimension / size) / scale;
+
+      // Calculate source position (center of image + offset)
+      const sourceX = (img.width - minDimension) / 2 + offsetX;
+      const sourceY = (img.height - minDimension) / 2 + offsetY;
+
+      // Calculate source size based on scale
+      const sourceSize = minDimension / scale;
+
+      // Draw scaled and positioned image
+      ctx.drawImage(
+        img,
+        sourceX,
+        sourceY,
+        sourceSize,
+        sourceSize,
+        0,
+        0,
+        size,
+        size
+      );
+      ctx.restore();
+
+      // Convert canvas to blob and upload
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const croppedFile = new File([blob], this.selectedImageFile()?.name || 'profile.jpg', {
+            type: 'image/jpeg',
+            lastModified: Date.now()
+          });
+          this.closeImageCropperModal();
+          this.uploadProfileImage(croppedFile);
+        }
+      }, 'image/jpeg', 0.9);
+    };
+    img.src = this.selectedImageUrl();
   }
 
   private uploadProfileImage(file: File) {
@@ -1175,7 +1391,7 @@ export class Profile implements OnInit {
           this.user.set(updatedUser);
           this.authService.setUserData(updatedUser);
           this.imageUploadSuccess.set('Profile image updated successfully!');
-          
+
           // Clear success message after 3 seconds
           setTimeout(() => {
             this.imageUploadSuccess.set('');
@@ -1220,7 +1436,7 @@ export class Profile implements OnInit {
     // For test mode, use a fixed small amount instead of the actual amount
     const testAmount = 100; // ₹1 for testing
     const actualAmount = amcAmount.amount;
-    
+
 
     this.selectedAMC.set(amc);
     this.selectedAMCYear.set(yearIndex);
@@ -1310,7 +1526,7 @@ export class Profile implements OnInit {
   updateAMCPaymentStatus() {
     const amc = this.selectedAMC();
     const yearIndex = this.selectedAMCYear();
-    
+
     if (!amc || yearIndex === -1) {
       this.amcPaymentError.set('Invalid AMC data. Please try again.');
       this.isAMCPaymentLoading.set(false);
@@ -1318,8 +1534,8 @@ export class Profile implements OnInit {
     }
 
     const currentDate = new Date().toISOString();
-    
-    
+
+
     this.paymentService.updateAMCPaymentStatus(amc._id!, yearIndex, true, currentDate).subscribe({
       next: (response) => {
         this.isAMCPaymentLoading.set(false);
@@ -1341,13 +1557,13 @@ export class Profile implements OnInit {
           error: error.error,
           message: error.message
         });
-        
+
         // Still show success modal but with a warning
         this.updateLocalAMCData(amc._id!, yearIndex, true, currentDate);
         this.amcPaymentSuccess.set(true);
         this.showAMCPaymentModal.set(true);
         this.isAMCPaymentLoading.set(false);
-        
+
         // Show a warning message
         setTimeout(() => {
           this.amcPaymentError.set('Payment successful! AMC status updated locally. Please refresh the page to see the updated status.');
@@ -1359,13 +1575,13 @@ export class Profile implements OnInit {
   updateLocalAMCData(amcId: string, yearIndex: number, paid: boolean, paiddate: string) {
     const amcs = this.amcs();
     const amcIndex = amcs.findIndex(amc => amc._id === amcId);
-    
+
     if (amcIndex !== -1 && amcs[amcIndex].amcamount[yearIndex]) {
       const updatedAmcs = [...amcs];
       updatedAmcs[amcIndex] = {
         ...updatedAmcs[amcIndex],
-        amcamount: updatedAmcs[amcIndex].amcamount.map((amount, index) => 
-          index === yearIndex 
+        amcamount: updatedAmcs[amcIndex].amcamount.map((amount, index) =>
+          index === yearIndex
             ? { ...amount, paid, paiddate }
             : amount
         )
@@ -1410,7 +1626,7 @@ export class Profile implements OnInit {
     this.contractService.getUserContractDocuments().subscribe({
       next: (response) => {
         this.contractDocumentsLoading.set(false);
-        
+
         if (response && response.body && response.body.contracts) {
           this.contractDocuments.set(response.body.contracts);
         }
@@ -1418,7 +1634,7 @@ export class Profile implements OnInit {
       error: (error) => {
         this.contractDocumentsLoading.set(false);
         console.error('Error loading contract documents:', error);
-        
+
         if (error.status === 401) {
           this.contractDocumentsError.set('Authentication failed. Please login again.');
           // Clear invalid token and user data
@@ -1450,7 +1666,7 @@ export class Profile implements OnInit {
   // Get contract documents for a specific ticket
   getContractDocumentsForTicket(ticketId: string | undefined): ContractDocument[] {
     if (!ticketId) return [];
-    return this.contractDocuments().filter(contract => 
+    return this.contractDocuments().filter(contract =>
       contract.ticketid && contract.ticketid._id === ticketId
     );
   }
@@ -1562,7 +1778,7 @@ export class Profile implements OnInit {
   getAMCStatus(amc: any): string {
     const totalAmount = this.getTotalAMCAmount(amc);
     const paidAmount = this.getPaidAMCAmount(amc);
-    
+
     if (paidAmount >= totalAmount) {
       return 'active';
     } else {
@@ -1601,7 +1817,7 @@ export class Profile implements OnInit {
       error: (error) => {
         this.sharedMembersLoading.set(false);
         console.error('Error loading shared members:', error);
-        
+
         if (error.status === 401) {
           this.sharedMembersError.set('Authentication failed. Please login again.');
         } else if (error.status === 403) {
@@ -1672,7 +1888,7 @@ export class Profile implements OnInit {
   // Handle file selection for shared member
   onSharedMemberFileSelect(event: any) {
     const files = Array.from(event.target.files) as File[];
-    
+
     // Validate file types
     const validFiles = files.filter(file => {
       if (file.type !== 'application/pdf') {
@@ -1724,7 +1940,7 @@ export class Profile implements OnInit {
   // Submit shared member form
   onSubmitSharedMember() {
     const form = this.sharedMemberForm();
-    
+
     // Validate required fields
     if (!form.name || !form.email || !form.mobileNumber || !form.aadharNumber || !form.panNumber) {
       this.sharedMemberErrorMessage.set('All fields are required');
@@ -1780,7 +1996,7 @@ export class Profile implements OnInit {
       next: (response) => {
         if (response && response.status === 'success') {
           const sharedMemberId = response.body.sharedMember._id;
-          
+
           // Upload KYC documents if any files are selected
           if (this.sharedMemberFiles().length > 0) {
             this.uploadSharedMemberDocuments(sharedMemberId);
@@ -1802,7 +2018,7 @@ export class Profile implements OnInit {
       error: (error) => {
         this.sharedMemberSubmitting.set(false);
         console.error('Error creating shared member:', error);
-        
+
         if (error.error && error.error.message) {
           // Show the specific error message from backend
           if (error.error.message.includes('already exists')) {
@@ -1840,7 +2056,7 @@ export class Profile implements OnInit {
       },
       error: (error) => {
         console.error('Error deleting shared member:', error);
-        
+
         if (error.error && error.error.message) {
           alert(error.error.message);
         } else if (error.status === 401) {
@@ -1893,9 +2109,9 @@ export class Profile implements OnInit {
     let errorCount = 0;
 
     files.forEach((file, index) => {
-      const documentType = index === 0 ? 'aadhar_front' : 
-                          index === 1 ? 'pan_card' : 'other';
-      
+      const documentType = index === 0 ? 'aadhar_front' :
+        index === 1 ? 'pan_card' : 'other';
+
       this.sharedMemberService.uploadKycDocument(sharedMemberId, documentType, file).subscribe({
         next: (response) => {
           uploadCount++;
@@ -1904,11 +2120,11 @@ export class Profile implements OnInit {
           } else {
             errorCount++;
           }
-          
+
           // Check if all uploads are complete
           if (uploadCount === files.length) {
             this.sharedMemberSubmitting.set(false);
-            
+
             if (successCount === files.length) {
               this.sharedMemberSuccessMessage.set(`Shared member created successfully with ${successCount} document(s) uploaded! They will be notified once approved.`);
             } else if (successCount > 0) {
@@ -1916,7 +2132,7 @@ export class Profile implements OnInit {
             } else {
               this.sharedMemberErrorMessage.set('Shared member created but document upload failed. Please try uploading documents again later.');
             }
-            
+
             // Reload shared members
             this.loadUserSharedMembers();
             // Close modal after 3 seconds
@@ -1928,17 +2144,17 @@ export class Profile implements OnInit {
         error: (error) => {
           uploadCount++;
           errorCount++;
-          
+
           // Check if all uploads are complete
           if (uploadCount === files.length) {
             this.sharedMemberSubmitting.set(false);
-            
+
             if (successCount > 0) {
               this.sharedMemberSuccessMessage.set(`Shared member created successfully! ${successCount} document(s) uploaded, ${errorCount} failed. They will be notified once approved.`);
             } else {
               this.sharedMemberErrorMessage.set('Shared member created but document upload failed. Please try uploading documents again later.');
             }
-            
+
             // Reload shared members
             this.loadUserSharedMembers();
             // Close modal after 3 seconds
@@ -1954,7 +2170,7 @@ export class Profile implements OnInit {
   // Cancel token method
   cancelToken(token: any) {
     const reason = prompt('Please provide a reason for cancellation (optional):');
-    
+
     if (reason !== null) { // User didn't cancel the prompt
       this.tokenService.cancelToken(token._id, reason).subscribe({
         next: (response) => {
@@ -1977,7 +2193,7 @@ export class Profile implements OnInit {
   // Cancel book now token method
   cancelBookNowToken(bookNowToken: any) {
     const reason = prompt('Please provide a reason for cancellation (optional):');
-    
+
     if (reason !== null) { // User didn't cancel the prompt
       this.bookNowTokenService.cancelBookNowToken(bookNowToken._id, reason).subscribe({
         next: (response) => {
@@ -2043,7 +2259,7 @@ export class Profile implements OnInit {
   }
 
   // =============== Profile Image Helper Methods ===============
-  
+
   // Get profile image URL or return null for fallback
   getProfileImageUrl(): string | null {
     const profileImage = this.user().profileimage;

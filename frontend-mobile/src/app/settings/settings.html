@@ -1,0 +1,165 @@
+<div class="settings-container min-h-screen bg-gray-50 pb-20">
+  <!-- Header -->
+  <div class="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
+    <div class="flex items-center justify-between p-4">
+      <button 
+        (click)="goBack()"
+        class="p-2 rounded-full hover:bg-gray-100 transition-colors"
+      >
+        <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </button>
+      <h1 class="text-xl font-semibold text-gray-800">Settings</h1>
+      <div class="w-10"></div> <!-- Spacer for centering -->
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex items-center justify-center py-20">
+    <div class="text-center">
+      <svg class="animate-spin h-10 w-10 text-blue-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p class="text-gray-600">Loading preferences...</p>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!loading" class="max-w-2xl mx-auto p-4">
+    <!-- Email Notifications Section -->
+    <div class="bg-white rounded-lg shadow-sm mb-4">
+      <div class="p-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+          <span>📧</span>
+          Email Notifications
+        </h2>
+        <p class="text-sm text-gray-600 mt-1">Choose which email notifications you want to receive</p>
+      </div>
+
+      <!-- Master Toggle -->
+      <div class="p-4 border-b border-gray-200 bg-blue-50">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <h3 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+              <span>🔔</span>
+              Enable Email Notifications
+            </h3>
+            <p class="text-sm text-gray-600 mt-1">Master switch to enable or disable all email notifications</p>
+          </div>
+          <label class="toggle-switch ml-4">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="preferences.enabled"
+              (change)="onMasterToggleChange()"
+            />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Info Message when disabled -->
+      <div *ngIf="!preferences.enabled" class="p-4 bg-yellow-50 border-b border-yellow-200">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+          </svg>
+          <div>
+            <p class="text-sm font-medium text-yellow-800">All email notifications are disabled</p>
+            <p class="text-xs text-yellow-700 mt-1">Enable the master switch above to customize individual notification types</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Individual Notification Types -->
+      <div class="divide-y divide-gray-200" [class.opacity-50]="!preferences.enabled">
+        <div 
+          *ngFor="let type of notificationTypes" 
+          class="p-4 transition-colors"
+          [class.bg-gray-50]="!preferences.enabled"
+        >
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1">
+              <h4 class="text-base font-medium text-gray-800 flex items-center gap-2">
+                <span>{{ type.icon }}</span>
+                {{ type.label }}
+              </h4>
+              <p class="text-sm text-gray-600 mt-1">{{ type.description }}</p>
+            </div>
+            <label class="toggle-switch flex-shrink-0">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="preferences[type.key]"
+                [disabled]="!preferences.enabled"
+              />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Button -->
+    <div class="sticky bottom-20 bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+      <button 
+        (click)="savePreferences()"
+        [disabled]="saving"
+        class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      >
+        <svg *ngIf="saving" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>{{ saving ? 'Saving...' : 'Save Preferences' }}</span>
+      </button>
+    </div>
+
+    <!-- Message Display -->
+    <div 
+      *ngIf="message" 
+      class="fixed top-20 left-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300"
+      [class.bg-green-50]="messageType === 'success'"
+      [class.border-green-200]="messageType === 'success'"
+      [class.bg-red-50]="messageType === 'error'"
+      [class.border-red-200]="messageType === 'error'"
+      [class.border]="true"
+    >
+      <div class="flex items-start gap-3">
+        <svg 
+          *ngIf="messageType === 'success'" 
+          class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" 
+          fill="currentColor" 
+          viewBox="0 0 20 20"
+        >
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+        </svg>
+        <svg 
+          *ngIf="messageType === 'error'" 
+          class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" 
+          fill="currentColor" 
+          viewBox="0 0 20 20"
+        >
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+        </svg>
+        <div class="flex-1">
+          <p 
+            class="text-sm font-medium"
+            [class.text-green-800]="messageType === 'success'"
+            [class.text-red-800]="messageType === 'error'"
+          >
+            {{ message }}
+          </p>
+        </div>
+        <button 
+          (click)="message = ''"
+          class="text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

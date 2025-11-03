@@ -79,4 +79,9 @@ export class CarService {
     return this.http.delete<CarResponse>(`${this.baseUrl}/${id}`);
   }
 
+  // Bulk upload cars from Excel/CSV file
+  bulkUploadCars(file: FormData): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/bulk-upload`, file);
+  }
+
 }

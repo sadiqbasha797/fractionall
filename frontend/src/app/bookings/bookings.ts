@@ -15,6 +15,8 @@ interface FilterOptions {
   searchTerm: string;
   sortBy: string;
   sortOrder: 'asc' | 'desc';
+  car: string;
+  bookingPeriod: string;
 }
 
 @Component({
@@ -39,7 +41,9 @@ export class Bookings implements OnInit {
     dateRange: 'all',
     searchTerm: '',
     sortBy: 'createdAt',
-    sortOrder: 'desc'
+    sortOrder: 'desc',
+    car: 'all',
+    bookingPeriod: 'all'
   };
   
   // Pagination
@@ -77,6 +81,9 @@ export class Bookings implements OnInit {
   // Calendar view
   showCalendarView = false;
   currentDate = new Date();
+
+  // Table filters
+  showFilters = false;
   
   // Blocked dates
   showBlockedDatesDialog = false;
@@ -344,46 +351,82 @@ export class Bookings implements OnInit {
   
   applyFilters() {
     let filtered = [...this.bookings];
-    
+
+    // Car filter
+    if (this.filters.car !== 'all') {
+      filtered = filtered.filter(booking => {
+        const carId = typeof booking.carid === 'object' ? booking.carid._id : booking.carid;
+        return carId === this.filters.car;
+      });
+    }
+
+    // Booking Period filter
+    if (this.filters.bookingPeriod !== 'all') {
+      const now = new Date();
+      const filterDate = new Date();
+
+      switch (this.filters.bookingPeriod) {
+        case 'today':
+          filterDate.setHours(0, 0, 0, 0);
+          filtered = filtered.filter(booking =>
+            new Date(booking.bookingFrom).toDateString() === now.toDateString() ||
+            new Date(booking.bookingTo).toDateString() === now.toDateString()
+          );
+          break;
+        case 'week':
+          filterDate.setDate(now.getDate() + 7);
+          filtered = filtered.filter(booking =>
+            new Date(booking.bookingFrom) <= filterDate || new Date(booking.bookingTo) <= filterDate
+          );
+          break;
+        case 'month':
+          filterDate.setMonth(now.getMonth() + 1);
+          filtered = filtered.filter(booking =>
+            new Date(booking.bookingFrom) <= filterDate || new Date(booking.bookingTo) <= filterDate
+          );
+          break;
+      }
+    }
+
     // Status filter
     if (this.filters.status !== 'all') {
       filtered = filtered.filter(booking => booking.status === this.filters.status);
     }
-    
-    // Date range filter
+
+    // Date range filter (created date)
     if (this.filters.dateRange !== 'all') {
       const now = new Date();
       const filterDate = new Date();
-      
+
       switch (this.filters.dateRange) {
         case 'today':
           filterDate.setHours(0, 0, 0, 0);
-          filtered = filtered.filter(booking => 
+          filtered = filtered.filter(booking =>
             new Date(booking.createdAt!).toDateString() === now.toDateString()
           );
           break;
         case 'week':
           filterDate.setDate(now.getDate() - 7);
-          filtered = filtered.filter(booking => 
+          filtered = filtered.filter(booking =>
             new Date(booking.createdAt!) >= filterDate
           );
           break;
         case 'month':
           filterDate.setMonth(now.getMonth() - 1);
-          filtered = filtered.filter(booking => 
+          filtered = filtered.filter(booking =>
             new Date(booking.createdAt!) >= filterDate
           );
           break;
       }
     }
-    
+
     // Search filter
     if (this.filters.searchTerm) {
       const searchTerm = this.filters.searchTerm.toLowerCase();
       filtered = filtered.filter(booking => {
         const user = typeof booking.userid === 'object' ? booking.userid : null;
         const car = typeof booking.carid === 'object' ? booking.carid : null;
-        
+
         return (
           user?.name?.toLowerCase().includes(searchTerm) ||
           user?.email?.toLowerCase().includes(searchTerm) ||
@@ -393,12 +436,12 @@ export class Bookings implements OnInit {
         );
       });
     }
-    
+
     // Sort
     filtered.sort((a, b) => {
       let aValue: any;
       let bValue: any;
-      
+
       switch (this.filters.sortBy) {
         case 'createdAt':
           aValue = new Date(a.createdAt!);
@@ -424,12 +467,12 @@ export class Bookings implements OnInit {
           aValue = a.createdAt;
           bValue = b.createdAt;
       }
-      
+
       if (aValue < bValue) return this.filters.sortOrder === 'asc' ? -1 : 1;
       if (aValue > bValue) return this.filters.sortOrder === 'asc' ? 1 : -1;
       return 0;
     });
-    
+
     this.filteredBookings = filtered;
     this.updatePagination();
   }
@@ -650,9 +693,15 @@ export class Bookings implements OnInit {
       dateRange: 'all',
       searchTerm: '',
       sortBy: 'createdAt',
-      sortOrder: 'desc'
+      sortOrder: 'desc',
+      car: 'all',
+      bookingPeriod: 'all'
     };
     this.onFilterChange();
+  }
+
+  toggleFilters() {
+    this.showFilters = !this.showFilters;
   }
   
   onImageError(event: Event) {

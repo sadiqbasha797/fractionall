@@ -28,6 +28,9 @@ export class ContactForms implements OnInit {
   // Filters
   statusFilter = '';
   searchQuery = '';
+  subjectFilter = '';
+  dateFilter = 'all';
+  showFilters = false;
   
   // Selected contact form for details
   selectedContactForm: ContactForm | null = null;
@@ -40,6 +43,15 @@ export class ContactForms implements OnInit {
   // Reply form
   replySubject = '';
   replyMessage = '';
+
+  // Bulk selection and reply
+  selectAll = false;
+  selectedContactForms: ContactForm[] = [];
+  showBulkReplyModal = false;
+  bulkReplySubject = '';
+  bulkReplyMessage = '';
+  isSendingBulkReply = false;
+  successMessage = '';
 
   constructor(private contactService: ContactService) {}
 
@@ -56,17 +68,25 @@ export class ContactForms implements OnInit {
       page: this.currentPage,
       limit: this.itemsPerPage,
       ...(this.statusFilter && { status: this.statusFilter }),
-      ...(this.searchQuery && { search: this.searchQuery })
+      ...(this.searchQuery && { search: this.searchQuery }),
+      ...(this.subjectFilter && { subject: this.subjectFilter }),
+      ...(this.dateFilter && this.dateFilter !== 'all' && { dateFilter: this.dateFilter })
     };
 
     this.contactService.getAllContactForms(params).subscribe({
       next: (response) => {
-        this.contactForms = response.body.contactForms;
+        this.contactForms = response.body.contactForms.map(form => ({
+          ...form,
+          selected: false // Initialize selected property
+        }));
         this.totalItems = response.body.pagination.totalItems;
         this.totalPages = response.body.pagination.totalPages;
         this.totalContactForms = response.body.pagination.totalItems;
         this.loading = false;
         this.isLoading = false;
+        
+        // Clear any existing selection when loading new data
+        this.clearSelection();
       },
       error: (error) => {
         this.error = error.error?.message || 'Failed to load contact forms';
@@ -195,7 +215,13 @@ export class ContactForms implements OnInit {
   clearFilters() {
     this.statusFilter = '';
     this.searchQuery = '';
+    this.subjectFilter = '';
+    this.dateFilter = 'all';
     this.onFilterChange();
+  }
+
+  toggleFilters() {
+    this.showFilters = !this.showFilters;
   }
 
   markAsRead(contactFormId: string) {
@@ -258,4 +284,115 @@ export class ContactForms implements OnInit {
 
   // Add Math property for template access
   Math = Math;
+
+  // Bulk selection methods
+  toggleSelectAll() {
+    this.contactForms.forEach(form => {
+      form.selected = this.selectAll;
+    });
+    this.updateSelectedContactForms();
+  }
+
+  onContactFormSelect() {
+    this.updateSelectedContactForms();
+    this.updateSelectAllState();
+  }
+
+  updateSelectedContactForms() {
+    this.selectedContactForms = this.contactForms.filter(form => form.selected);
+  }
+
+  updateSelectAllState() {
+    const totalForms = this.contactForms.length;
+    const selectedForms = this.contactForms.filter(form => form.selected).length;
+    this.selectAll = totalForms > 0 && selectedForms === totalForms;
+  }
+
+  clearSelection() {
+    this.contactForms.forEach(form => {
+      form.selected = false;
+    });
+    this.selectAll = false;
+    this.selectedContactForms = [];
+  }
+
+  // Bulk reply methods
+  openBulkReplyModal() {
+    if (this.selectedContactForms.length === 0) {
+      return;
+    }
+    this.bulkReplySubject = '';
+    this.bulkReplyMessage = '';
+    this.showBulkReplyModal = true;
+  }
+
+  closeBulkReplyModal() {
+    this.showBulkReplyModal = false;
+    this.bulkReplySubject = '';
+    this.bulkReplyMessage = '';
+    this.isSendingBulkReply = false;
+  }
+
+  sendBulkReply() {
+    if (!this.bulkReplyMessage.trim() || this.selectedContactForms.length === 0) {
+      return;
+    }
+
+    this.isSendingBulkReply = true;
+    const contactFormIds = this.selectedContactForms.map(form => form._id);
+
+    const bulkReplyData = {
+      contactFormIds,
+      subject: this.bulkReplySubject.trim() || 'Re: Your Inquiry',
+      message: this.bulkReplyMessage.trim()
+    };
+
+    this.contactService.sendBulkReply(bulkReplyData).subscribe({
+      next: (response) => {
+        this.isSendingBulkReply = false;
+        
+        // Show success message
+        const successCount = response.body.successful;
+        const failCount = response.body.failed;
+        
+        if (successCount > 0) {
+          // Reload contact forms to reflect status changes
+          this.loadContactForms();
+          
+          // Clear selection
+          this.clearSelection();
+          
+          // Close modal
+          this.closeBulkReplyModal();
+          
+          // Show success message
+          this.error = ''; // Clear any existing errors
+          this.successMessage = `Bulk reply sent successfully to ${successCount} contact form${successCount > 1 ? 's' : ''}!`;
+          console.log(`Bulk reply sent successfully to ${successCount} contact forms`);
+          
+          // Clear success message after 5 seconds
+          setTimeout(() => {
+            this.successMessage = '';
+          }, 5000);
+        }
+        
+        if (failCount > 0) {
+          console.error(`Failed to send bulk reply to ${failCount} contact forms:`, response.body.errors);
+          this.error = `Bulk reply completed with ${failCount} failures. Check console for details.`;
+        }
+      },
+      error: (error) => {
+        this.isSendingBulkReply = false;
+        this.error = error.error?.message || 'Failed to send bulk reply';
+        console.error('Bulk reply error:', error);
+        
+        // Show user-friendly error message
+        if (error.status === 0) {
+          this.error = 'Unable to connect to server. Please check your connection and try again.';
+        } else if (error.status === 500) {
+          this.error = 'Server error occurred. Please try again later.';
+        }
+      }
+    });
+  }
 }

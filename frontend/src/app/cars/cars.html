@@ -46,6 +46,22 @@
           <span>Clear</span>
         </button>
 
+        <button (click)="downloadTemplate()"
+          class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-purple-600/50 hover:bg-purple-700/50 border border-purple-600/50 rounded-lg text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-purple-500/50 h-10"
+          title="Download template" aria-label="Download template">
+          <i class="fas fa-file-download text-sm"></i>
+          <span>Template</span>
+        </button>
+
+        <button (click)="triggerBulkUpload()" [disabled]="isBulkUploading"
+          class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-orange-600/50 hover:bg-orange-700/50 border border-orange-600/50 rounded-lg text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-orange-500/50 h-10 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Bulk upload cars" aria-label="Bulk upload cars">
+          <i class="fas fa-upload text-sm" [class.animate-spin]="isBulkUploading"></i>
+          <span>Bulk Upload</span>
+        </button>
+
+        <input type="file" id="bulkUploadFile" accept=".xlsx,.xls,.csv" class="hidden" (change)="onBulkUploadFileSelected($event)" #bulkUploadInput>
+
         <button (click)="exportData()"
           class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-lg text-gray-300 hover:text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:border-gray-500/50 h-10"
           title="Export data" aria-label="Export data">
@@ -188,7 +204,7 @@
                     <div class="ml-4">
                       <div class="text-sm font-medium text-gray-100">{{ car.carname }}</div>
                       <div class="text-xs text-gray-300">{{ car.color }}</div>
-                      <div class="text-xs text-gray-400" *ngIf="car.location">{{ car.location }}, {{ car.pincode }}
+                      <div class="text-xs text-gray-400" *ngIf="car.location">{{ car.location }}
                       </div>
                     </div>
                   </div>
@@ -368,42 +384,104 @@
               [ngModel]="newCar.features.join(', ')" name="features" (ngModelChange)="updateFeatures($event)">
           </div>
 
-          <div class="space-y-2">
-            <label class="block text-gray-300 text-sm font-medium" for="pincode">
-              Pincode
+          <!-- City Selection (For both Create and Edit Mode) -->
+          <div class="sm:col-span-2 lg:col-span-3 space-y-2">
+            <label class="block text-gray-300 text-sm font-medium">
+              <span *ngIf="!isEditMode">Select Cities (Car will be created for each selected city)</span>
+              <span *ngIf="isEditMode">Select City Location</span>
+              <span class="text-gray-400 text-xs ml-2">({{ selectedCities.length }} selected)</span>
             </label>
-            <input
-              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+            <div class="bg-gray-700/50 border border-gray-600 rounded-lg p-4 max-h-64 overflow-y-auto">
+              <!-- Search Bar -->
+              <div class="mb-3 pb-3 border-b border-gray-600">
+                <div class="relative">
+                  <input
+                    type="text"
+                    [(ngModel)]="citySearchTerm"
+                    (ngModelChange)="onCitySearchChange()"
+                    placeholder="Search cities..."
+                    class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 pl-10 text-white placeholder-gray-400
                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-              id="pincode" type="text" placeholder="Enter 6-digit pincode" [(ngModel)]="newCar.pincode" name="pincode"
-              (ngModelChange)="onPincodeChange()" maxlength="6">
-            <div *ngIf="pincodeError" class="text-red-400 text-sm mt-1">
-              {{ pincodeError }}
+                    name="citySearch">
+                  <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                </div>
+                <p *ngIf="citySearchTerm && filteredCities.length === 0" class="text-xs text-gray-400 mt-2 text-center">
+                  No cities found matching "{{ citySearchTerm }}"
+                </p>
+              </div>
+              
+              <div class="flex items-center justify-between mb-3 pb-3 border-b border-gray-600">
+                <div class="flex gap-2">
+                  <button type="button" (click)="selectAllCities()"
+                    class="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">
+                    Select All
+                  </button>
+                  <button type="button" (click)="deselectAllCities()"
+                    class="px-3 py-1.5 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200">
+                    Deselect All
+                  </button>
+                </div>
+                <span class="text-xs text-gray-400">{{ selectedCities.length }} cities selected</span>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                <label *ngFor="let city of filteredCities"
+                  class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-600 cursor-pointer transition-colors duration-150"
+                  [class.bg-blue-900/30]="isCitySelected(city)"
+                  [class.border-blue-500]="isCitySelected(city)"
+                  [class.border]="isCitySelected(city)">
+                  <input type="checkbox" [checked]="isCitySelected(city)" (change)="toggleCity(city)"
+                    class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2">
+                  <span class="text-sm text-gray-300">{{ city }}</span>
+                </label>
+              </div>
             </div>
-          </div>
-
-          <div class="space-y-2">
-            <label class="block text-gray-300 text-sm font-medium" for="location">
-              Location
-              <span *ngIf="newCar.location && !isPincodeLoading" class="text-green-400 text-xs ml-2">
-                ✓ Auto-filled
-              </span>
-            </label>
-            <input
-              class="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
+            
+            <!-- Manual City Input -->
+            <div class="mt-4 space-y-2">
+              <label class="block text-gray-300 text-sm font-medium">
+                Add City Not in List
+              </label>
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  [(ngModel)]="manualCityInput"
+                  (keydown)="onManualCityKeyPress($event)"
+                  placeholder="Enter city name (e.g., New City)"
+                  class="flex-1 bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400
                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-              id="location" type="text" placeholder="Enter location" [(ngModel)]="newCar.location" name="location"
-              [readonly]="isPincodeLoading" [class.bg-gray-600]="isPincodeLoading">
-            <div *ngIf="isPincodeLoading" class="text-blue-400 text-sm mt-1 flex items-center">
-              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none"
-                viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                </path>
-              </svg>
-              Fetching location...
+                  name="manualCity">
+                <button type="button" (click)="addManualCity()"
+                  class="px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200">
+                  <i class="fas fa-plus mr-1"></i> Add
+                </button>
+              </div>
+              
+              <!-- Display manually added cities -->
+              <div *ngIf="hasManualCities()" class="mt-3">
+                <p class="text-xs text-gray-400 mb-2">Manually Added Cities:</p>
+                <div class="flex flex-wrap gap-2">
+                  <ng-container *ngFor="let city of selectedCities">
+                    <span *ngIf="isManualCity(city)"
+                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm bg-green-900/30 text-green-300 border border-green-500">
+                      {{ city }}
+                      <button type="button" (click)="removeManualCity(city)"
+                        class="ml-1 text-green-400 hover:text-red-400 transition-colors">
+                        <i class="fas fa-times text-xs"></i>
+                      </button>
+                    </span>
+                  </ng-container>
+                </div>
+              </div>
             </div>
+            
+            <p class="text-xs text-gray-400 mt-2" *ngIf="!isEditMode">
+              <i class="fas fa-info-circle mr-1"></i>
+              The car will be created separately for each selected city with the same details.
+            </p>
+            <p class="text-xs text-gray-400 mt-2" *ngIf="isEditMode">
+              <i class="fas fa-info-circle mr-1"></i>
+              Select the city location for this car. You can choose from the list or add a custom city.
+            </p>
           </div>
 
           <div class="space-y-2">
@@ -809,10 +887,6 @@
               <div>
                 <p class="text-sm text-gray-400">Location</p>
                 <p class="font-medium text-white">{{ selectedCar.location || 'N/A' }}</p>
-              </div>
-              <div>
-                <p class="text-sm text-gray-400">Pincode</p>
-                <p class="font-medium text-white">{{ selectedCar.pincode || 'N/A' }}</p>
               </div>
             </div>
             <div *ngIf="selectedCar.features && selectedCar.features.length > 0">

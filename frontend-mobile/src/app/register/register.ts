@@ -33,6 +33,11 @@ export class Register implements OnInit, OnDestroy {
   pincodeError = '';
   private pincodeTimeout: any;
 
+  // Location suggestions state
+  locationQuery = '';
+  isLocationLoading = false;
+  locationSuggestions: Array<{ name: string; state?: string }> = [];
+
   constructor(
     private authService: AuthService,
     private pincodeService: PincodeService,
@@ -243,6 +248,43 @@ export class Register implements OnInit, OnDestroy {
         });
       }, 500); // 500ms debounce
     }
+  }
+
+  // Location suggestions handlers
+  onLocationInputChange(query: string) {
+    this.locationQuery = query;
+    // Basic guard
+    if (!query || query.trim().length < 2) {
+      this.locationSuggestions = [];
+      return;
+    }
+
+    this.isLocationLoading = true;
+    // Mock popular Indian cities filter similar to navbar
+    const cities = [
+      { name: 'Mumbai', state: 'Maharashtra' },
+      { name: 'Delhi', state: 'Delhi' },
+      { name: 'Bangalore', state: 'Karnataka' },
+      { name: 'Hyderabad', state: 'Telangana' },
+      { name: 'Chennai', state: 'Tamil Nadu' },
+      { name: 'Kolkata', state: 'West Bengal' },
+      { name: 'Pune', state: 'Maharashtra' },
+      { name: 'Ahmedabad', state: 'Gujarat' }
+    ];
+
+    const q = query.toLowerCase();
+    const results = cities.filter(c => c.name.toLowerCase().includes(q) || (c.state && c.state.toLowerCase().includes(q)));
+
+    setTimeout(() => {
+      this.locationSuggestions = results;
+      this.isLocationLoading = false;
+    }, 200);
+  }
+
+  selectLocationSuggestion(suggestion: { name: string; state?: string }) {
+    this.registerData.location = suggestion.state ? `${suggestion.name}, ${suggestion.state}` : suggestion.name;
+    this.locationQuery = this.registerData.location;
+    this.locationSuggestions = [];
   }
 
   ngOnDestroy() {

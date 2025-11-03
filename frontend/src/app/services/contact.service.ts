@@ -34,6 +34,7 @@ export interface ContactForm {
   message: string;
   status: 'new' | 'read' | 'replied' | 'closed';
   priority: 'low' | 'medium' | 'high';
+  selected?: boolean; // Added for bulk selection
   adminNotes: Array<{
     note: string;
     addedBy: {
@@ -157,6 +158,53 @@ export class ContactService {
     message: string;
   }): Observable<{ status: string; body: { contactForm: ContactForm }; message: string }> {
     return this.http.post<{ status: string; body: { contactForm: ContactForm }; message: string }>(`${this.apiUrl}/contact/admin/${id}/reply`, replyData);
+  }
+
+  // Send bulk reply to multiple contact forms (admin only)
+  sendBulkReply(bulkReplyData: {
+    contactFormIds: string[];
+    subject: string;
+    message: string;
+  }): Observable<{ 
+    status: string; 
+    body: { 
+      totalProcessed: number;
+      successful: number;
+      failed: number;
+      results: Array<{
+        contactFormId: string;
+        email: string;
+        success: boolean;
+        emailSent: boolean;
+      }>;
+      errors: Array<{
+        contactFormId: string;
+        email: string;
+        error: string;
+      }>;
+    }; 
+    message: string 
+  }> {
+    return this.http.post<{ 
+      status: string; 
+      body: { 
+        totalProcessed: number;
+        successful: number;
+        failed: number;
+        results: Array<{
+          contactFormId: string;
+          email: string;
+          success: boolean;
+          emailSent: boolean;
+        }>;
+        errors: Array<{
+          contactFormId: string;
+          email: string;
+          error: string;
+        }>;
+      }; 
+      message: string 
+    }>(`${this.apiUrl}/contact/admin/bulk-reply`, bulkReplyData);
   }
 
   // Get contact form statistics (admin only)

@@ -4,7 +4,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { ExportService, ExportOptions } from '../services/export.service';
-import { PincodeService } from '../services/pincode.service';
 import { LoadingDialogComponent } from '../shared/loading-dialog/loading-dialog.component';
 
 @Component({
@@ -141,17 +140,33 @@ export class Cars implements OnInit, OnDestroy {
   // Loading state for refresh functionality
   isLoading: boolean = false;
 
-  // Pincode and location auto-fill properties
-  isPincodeLoading: boolean = false;
-  pincodeError: string = '';
-  pincodeTimeout: any;
+  // City selection properties
+  selectedCities: string[] = [];
+  manualCityInput: string = '';
+  citySearchTerm: string = '';
+  indianCities: string[] = [
+    // User-specified cities (prioritized at the top)
+    'Bangalore', 'Mysore', 'Mangalore', 'Visakhapatnam', 'Vijaywada', 'Chennai', 'Coimbatore', 
+    'Mumbai', 'Pune', 'Gurgaon', 'Delhi-NCR', 'Ahmedabad', 'Jaipur', 'Bhubaneswar', 
+    'Hyderabad', 'Surat', 'Kolkata', 'Cochin', 'Nagpur', 'Indore', 'Dehradun', 'Chandigarh',
+    // Additional cities
+    'Delhi', 'Noida', 'Lucknow', 'Kanpur', 'Thane', 'Bhopal', 'Patna', 'Vadodara', 'Ghaziabad',
+    'Ludhiana', 'Agra', 'Nashik', 'Faridabad', 'Meerut', 'Rajkot', 'Varanasi', 'Srinagar', 'Amritsar',
+    'Ranchi', 'Jodhpur', 'Raipur', 'Gwalior', 'Kota', 'Bareilly', 'Aurangabad', 'Jabalpur',
+    'Moradabad', 'Jamshedpur', 'Warangal', 'Guntur', 'Bhiwandi', 'Saharanpur', 'Gorakhpur', 'Bikaner',
+    'Amravati', 'Jalandhar', 'Tiruchirappalli', 'Bhavnagar', 'Karnal', 'Bathinda', 'Rourkela', 'Ratlam',
+    'Avadi', 'Dindigul', 'Karimnagar', 'Nizamabad', 'Parbhani', 'Tumkur', 'Bidar', 'Nagercoil', 'Kharagpur',
+    'Kanchipuram', 'Hassan', 'Erode', 'Thanjavur', 'Kollam', 'Shimla', 'Guwahati', 'Imphal', 'Aizawl',
+    'Agartala', 'Kohima', 'Gangtok', 'Panaji', 'Pondicherry', 'Daman', 'Silvassa', 'Kavali', 'Machilipatnam',
+    'Kakinada', 'Eluru', 'Ongole', 'Nellore', 'Tadepalligudem', 'Rajahmundry', 'Tenali', 'Udupi',
+    'Madurai', 'Thiruvananthapuram', 'Kozhikode', 'Belagavi', 'Hubli', 'Davangere'
+  ];
 
   private dialogElement: HTMLElement | null = null;
 
   constructor(
     private carService: CarService,
     private exportService: ExportService,
-    private pincodeService: PincodeService,
     private cdr: ChangeDetectorRef,
     private renderer: Renderer2
   ) { }
@@ -162,10 +177,7 @@ export class Cars implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Clean up timeout when component is destroyed
-    if (this.pincodeTimeout) {
-      clearTimeout(this.pincodeTimeout);
-    }
+    // Cleanup if needed
   }
 
   // Dialog methods - Render directly to body
@@ -566,6 +578,9 @@ export class Cars implements OnInit, OnDestroy {
       createdByModel: '',
       stopBookings: false
     };
+    this.selectedCities = []; // Reset selected cities
+    this.manualCityInput = ''; // Reset manual city input
+    this.citySearchTerm = ''; // Reset city search
     this.showCarModal = true;
     console.log('✅ Car modal opened');
   }
@@ -583,7 +598,107 @@ export class Cars implements OnInit, OnDestroy {
   closeModal(): void {
     this.showCarModal = false;
     this.selectedFiles = [];
+    this.selectedCities = []; // Reset selected cities
+    this.manualCityInput = ''; // Reset manual city input
+    this.citySearchTerm = ''; // Reset city search
     console.log('✅ Car modal closed');
+  }
+
+  toggleCity(city: string): void {
+    const index = this.selectedCities.indexOf(city);
+    if (index > -1) {
+      this.selectedCities.splice(index, 1);
+    } else {
+      // In edit mode, only allow one city selection
+      if (this.isEditMode) {
+        this.selectedCities = [city];
+      } else {
+        // In create mode, allow multiple cities
+        this.selectedCities.push(city);
+      }
+    }
+  }
+
+  isCitySelected(city: string): boolean {
+    return this.selectedCities.includes(city);
+  }
+
+  selectAllCities(): void {
+    // In edit mode, can't select all (only one city allowed)
+    if (this.isEditMode) {
+      if (this.filteredCities.length > 0) {
+        this.selectedCities = [this.filteredCities[0]];
+      }
+      return;
+    }
+    
+    // In create mode, select all filtered cities (add to existing selection)
+    const citiesToAdd = this.filteredCities.filter(city => !this.selectedCities.includes(city));
+    this.selectedCities = [...this.selectedCities, ...citiesToAdd];
+  }
+
+  deselectAllCities(): void {
+    this.selectedCities = [];
+  }
+
+  addManualCity(): void {
+    if (this.manualCityInput && this.manualCityInput.trim() !== '') {
+      const city = this.manualCityInput.trim();
+      // Check if city is already in the list or already selected
+      if (!this.indianCities.includes(city) && !this.selectedCities.includes(city)) {
+        // In edit mode, replace existing selection; in create mode, add to list
+        if (this.isEditMode) {
+          this.selectedCities = [city];
+        } else {
+          this.selectedCities.push(city);
+        }
+        this.manualCityInput = '';
+      } else if (this.selectedCities.includes(city)) {
+        // City already selected
+        this.showErrorDialog(`City "${city}" is already selected.`);
+      } else {
+        // City is in the predefined list, user should use checkbox
+        this.manualCityInput = '';
+        this.showErrorDialog(`City "${city}" is already in the list. Please select it from the checkboxes above.`);
+      }
+    }
+  }
+
+  removeManualCity(city: string): void {
+    const index = this.selectedCities.indexOf(city);
+    if (index > -1) {
+      this.selectedCities.splice(index, 1);
+    }
+  }
+
+  isManualCity(city: string): boolean {
+    return !this.indianCities.includes(city);
+  }
+
+  hasManualCities(): boolean {
+    return this.selectedCities.some(city => this.isManualCity(city));
+  }
+
+  get filteredCities(): string[] {
+    if (!this.citySearchTerm || this.citySearchTerm.trim() === '') {
+      return this.indianCities;
+    }
+    const searchTerm = this.citySearchTerm.toLowerCase().trim();
+    return this.indianCities.filter(city => 
+      city.toLowerCase().includes(searchTerm)
+    );
+  }
+
+  onCitySearchChange(): void {
+    // This method can be used for additional logic if needed
+    // Currently just used to trigger change detection
+  }
+
+  onManualCityKeyPress(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.addManualCity();
+    }
   }
 
   getTicketsProgress(car: Car): number {
@@ -623,9 +738,31 @@ export class Cars implements OnInit, OnDestroy {
       return;
     }
 
-    // Trim string values before creating form data
+    // For edit mode, check if at least one city is selected
+    if (this.isEditMode && this.currentCarId) {
+      if (this.selectedCities.length === 0) {
+        this.showErrorDialog('Please select at least one city location for the car.');
+        return;
+      }
+      // In edit mode, use the first selected city as the location
+      this.newCar.location = this.selectedCities[0];
+      this.updateSingleCar();
+      return;
+    }
+
+    // For create mode, check if multiple cities are selected
+    if (this.selectedCities.length === 0) {
+      this.showErrorDialog('Please select at least one city location for the car.');
+      return;
+    }
+
+    // Create cars for each selected city
+    this.createCarsForMultipleCities();
+  }
+
+  private updateSingleCar(): void {
     const trimmedCarData = { ...this.newCar };
-    const stringFields = ['carname', 'brandname', 'color', 'milege', 'location', 'pincode', 'description'];
+    const stringFields = ['carname', 'brandname', 'color', 'milege', 'location', 'description'];
 
     stringFields.forEach(field => {
       if (trimmedCarData[field as keyof Car] && typeof trimmedCarData[field as keyof Car] === 'string') {
@@ -633,11 +770,128 @@ export class Cars implements OnInit, OnDestroy {
       }
     });
 
+    const formData = this.createFormData(trimmedCarData);
+
+    this.showLoadingDialog = true;
+    this.loadingMessage = 'Updating car...';
+
+    this.carService.updateCar(this.currentCarId!, formData).subscribe({
+      next: (response) => {
+        this.showLoadingDialog = false;
+        if (response.status === 'success') {
+          this.getCars();
+          this.closeModal();
+          this.selectedFiles = [];
+          this.clearFileInput();
+          setTimeout(() => {
+            this.showSuccessDialog('Car updated successfully!');
+          }, 300);
+        } else {
+          this.showErrorDialog(`Failed to update car: ${response.message}`);
+        }
+      },
+      error: (err) => {
+        this.showLoadingDialog = false;
+        this.showErrorDialog(`Error updating car: ${err.message || 'Unknown error'}`);
+      }
+    });
+  }
+
+  private createCarsForMultipleCities(): void {
+    const totalCities = this.selectedCities.length;
+    let successCount = 0;
+    let failCount = 0;
+    const errors: string[] = [];
+
+    this.showLoadingDialog = true;
+    this.loadingMessage = `Creating cars... (0/${totalCities})`;
+
+    // Process cities sequentially to avoid overwhelming the server
+    const processNextCity = (index: number): void => {
+      if (index >= totalCities) {
+        // All cities processed
+        this.showLoadingDialog = false;
+        this.getCars();
+        this.closeModal();
+        this.selectedFiles = [];
+        this.clearFileInput();
+
+        let message = '';
+        if (successCount === totalCities) {
+          message = `Successfully created ${successCount} car${successCount > 1 ? 's' : ''} for ${successCount} location${successCount > 1 ? 's' : ''}!`;
+          setTimeout(() => {
+            this.showSuccessDialog(message);
+          }, 300);
+        } else if (successCount > 0) {
+          message = `Created ${successCount} car${successCount > 1 ? 's' : ''} successfully. ${failCount} failed.`;
+          if (errors.length > 0) {
+            message += '\n\nErrors:\n' + errors.slice(0, 5).join('\n');
+            if (errors.length > 5) {
+              message += `\n... and ${errors.length - 5} more errors.`;
+            }
+          }
+          setTimeout(() => {
+            this.showWarningDialog(message);
+          }, 300);
+        } else {
+          message = `Failed to create cars. Errors:\n${errors.slice(0, 5).join('\n')}`;
+          if (errors.length > 5) {
+            message += `\n... and ${errors.length - 5} more errors.`;
+          }
+          setTimeout(() => {
+            this.showErrorDialog(message);
+          }, 300);
+        }
+        return;
+      }
+
+      const city = this.selectedCities[index];
+      this.loadingMessage = `Creating car for ${city}... (${index + 1}/${totalCities})`;
+
+      // Create form data with the current city
+      const trimmedCarData = { ...this.newCar };
+      trimmedCarData.location = city; // Set the city as location
+      
+      // Trim string fields
+      const stringFields = ['carname', 'brandname', 'color', 'milege', 'description'];
+      stringFields.forEach(field => {
+        if (trimmedCarData[field as keyof Car] && typeof trimmedCarData[field as keyof Car] === 'string') {
+          (trimmedCarData as any)[field] = (trimmedCarData[field as keyof Car] as string).trim();
+        }
+      });
+
+      const formData = this.createFormData(trimmedCarData);
+
+      this.carService.createCar(formData).subscribe({
+        next: (response) => {
+          if (response.status === 'success') {
+            successCount++;
+          } else {
+            failCount++;
+            errors.push(`${city}: ${response.message}`);
+          }
+          // Process next city
+          processNextCity(index + 1);
+        },
+        error: (err) => {
+          failCount++;
+          errors.push(`${city}: ${err.message || 'Unknown error'}`);
+          // Process next city even if this one failed
+          processNextCity(index + 1);
+        }
+      });
+    };
+
+    // Start processing from the first city
+    processNextCity(0);
+  }
+
+  private createFormData(carData: Car): FormData {
     const formData = new FormData();
 
-    for (const key in trimmedCarData) {
-      if (Object.prototype.hasOwnProperty.call(trimmedCarData, key)) {
-        const value = (trimmedCarData as any)[key];
+    for (const key in carData) {
+      if (Object.prototype.hasOwnProperty.call(carData, key)) {
+        const value = (carData as any)[key];
         if (Array.isArray(value)) {
           // For features, ensure it's a comma-separated string if not empty
           if (key === 'features' && value.length > 0) {
@@ -664,54 +918,7 @@ export class Cars implements OnInit, OnDestroy {
       formData.append('images', file, file.name);
     });
 
-    this.showLoadingDialog = true;
-    this.loadingMessage = this.isEditMode ? 'Updating car...' : 'Creating car...';
-
-    if (this.isEditMode && this.currentCarId) {
-      this.carService.updateCar(this.currentCarId, formData).subscribe({
-        next: (response) => {
-          this.showLoadingDialog = false;
-          if (response.status === 'success') {
-            this.getCars(); // Refresh the list
-            this.closeModal();
-            this.selectedFiles = []; // Clear selected files
-            this.clearFileInput(); // Clear the file input
-            // Show success modal after loading dialog is hidden
-            setTimeout(() => {
-              this.showSuccessDialog('Car updated successfully!');
-            }, 300);
-          } else {
-            this.showErrorDialog(`Failed to update car: ${response.message}`);
-          }
-        },
-        error: (err) => {
-          this.showLoadingDialog = false;
-          this.showErrorDialog(`Error updating car: ${err.message || 'Unknown error'}`);
-        }
-      });
-    } else {
-      this.carService.createCar(formData).subscribe({
-        next: (response) => {
-          this.showLoadingDialog = false;
-          if (response.status === 'success') {
-            this.getCars(); // Refresh the list
-            this.closeModal();
-            this.selectedFiles = []; // Clear selected files
-            this.clearFileInput(); // Clear the file input
-            // Show success modal after loading dialog is hidden
-            setTimeout(() => {
-              this.showSuccessDialog('Car created successfully!');
-            }, 300);
-          } else {
-            this.showErrorDialog(`Failed to create car: ${response.message}`);
-          }
-        },
-        error: (err) => {
-          this.showLoadingDialog = false;
-          this.showErrorDialog(`Error creating car: ${err.message || 'Unknown error'}`);
-        }
-      });
-    }
+    return formData;
   }
 
   editCar(car: Car): void {
@@ -723,6 +930,20 @@ export class Cars implements OnInit, OnDestroy {
     if (this.newCar.tokensavailble === 0 && this.newCar.bookNowTokenAvailable === 0) {
       this.newCar.stopBookings = true;
     }
+
+    // Initialize selectedCities with the current car's location
+    this.selectedCities = [];
+    if (car.location && car.location.trim() !== '') {
+      // Check if location is in the predefined cities list
+      if (this.indianCities.includes(car.location)) {
+        this.selectedCities = [car.location];
+      } else {
+        // It's a custom city, add it to selectedCities
+        this.selectedCities = [car.location];
+      }
+    }
+    this.manualCityInput = '';
+    this.citySearchTerm = ''; // Reset city search
 
     this.showCarModal = true;
     console.log('✅ Edit car modal opened for:', car.carname);
@@ -774,6 +995,226 @@ export class Cars implements OnInit, OnDestroy {
   // Export functionality
   exportData() {
     this.exportToExcel();
+  }
+
+  downloadTemplate(): void {
+    // Create example car data for the template
+    const exampleCar = {
+      carname: 'Tesla Model 3',
+      brandname: 'Tesla',
+      color: 'Pearl White',
+      milege: '15 km/l',
+      seating: 5,
+      features: 'Autopilot, Sunroof, Leather Seats',
+      price: '4500000',
+      fractionprice: '375000',
+      tokenprice: '10000',
+      bookNowTokenPrice: '15000',
+      amcperticket: '5000',
+      totaltickets: '12',
+      ticketsavilble: '12',
+      tokensavailble: '20',
+      bookNowTokenAvailable: '12',
+      contractYears: '5',
+      location: 'Bangalore',
+      pincode: '560001',
+      status: 'active',
+      description: 'Electric sedan with advanced features'
+    };
+
+    // Prepare worksheet data with headers and example
+    const worksheetData = [
+      // Header row
+      [
+        'carname',
+        'brandname',
+        'color',
+        'milege',
+        'seating',
+        'features',
+        'price',
+        'fractionprice',
+        'tokenprice',
+        'bookNowTokenPrice',
+        'amcperticket',
+        'totaltickets',
+        'ticketsavilble',
+        'tokensavailble',
+        'bookNowTokenAvailable',
+        'contractYears',
+        'location',
+        'pincode',
+        'status',
+        'description'
+      ],
+      // Example data row
+      [
+        exampleCar.carname,
+        exampleCar.brandname,
+        exampleCar.color,
+        exampleCar.milege,
+        exampleCar.seating,
+        exampleCar.features,
+        exampleCar.price,
+        exampleCar.fractionprice,
+        exampleCar.tokenprice,
+        exampleCar.bookNowTokenPrice,
+        exampleCar.amcperticket,
+        exampleCar.totaltickets,
+        exampleCar.ticketsavilble,
+        exampleCar.tokensavailble,
+        exampleCar.bookNowTokenAvailable,
+        exampleCar.contractYears,
+        exampleCar.location,
+        exampleCar.pincode,
+        exampleCar.status,
+        exampleCar.description
+      ]
+    ];
+
+    // Import XLSX dynamically
+    import('xlsx').then((XLSX) => {
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+      // Set column widths
+      worksheet['!cols'] = [
+        { wch: 20 }, // carname
+        { wch: 15 }, // brandname
+        { wch: 15 }, // color
+        { wch: 15 }, // milege
+        { wch: 10 }, // seating
+        { wch: 40 }, // features
+        { wch: 15 }, // price
+        { wch: 15 }, // fractionprice
+        { wch: 15 }, // tokenprice
+        { wch: 18 }, // bookNowTokenPrice
+        { wch: 15 }, // amcperticket
+        { wch: 15 }, // totaltickets
+        { wch: 15 }, // ticketsavilble
+        { wch: 15 }, // tokensavailble
+        { wch: 20 }, // bookNowTokenAvailable
+        { wch: 15 }, // contractYears
+        { wch: 20 }, // location
+        { wch: 12 }, // pincode
+        { wch: 12 }, // status
+        { wch: 50 }  // description
+      ];
+
+      // Style the header row
+      const headerRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+      for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+        if (!worksheet[cellAddress]) continue;
+        worksheet[cellAddress].s = {
+          font: { bold: true, color: { rgb: 'FFFFFF' } },
+          fill: { fgColor: { rgb: '2980B9' } },
+          alignment: { horizontal: 'center' }
+        };
+      }
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Car Template');
+      XLSX.writeFile(workbook, 'car-bulk-upload-template.xlsx');
+      this.showSuccessDialog('Template downloaded successfully!');
+    });
+  }
+
+  onBulkUploadFileSelected(event: any): void {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    // Validate file type
+    const validExtensions = ['.xlsx', '.xls', '.csv'];
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+    
+    if (!validExtensions.includes(fileExtension)) {
+      this.showErrorDialog('Invalid file type. Please upload an Excel (.xlsx, .xls) or CSV (.csv) file.');
+      // Reset file input
+      const fileInput = document.getElementById('bulkUploadFile') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      return;
+    }
+
+    this.bulkUploadFile = file;
+    // Automatically trigger upload after file selection
+    this.uploadBulkCars();
+  }
+
+  bulkUploadFile: File | null = null;
+  isBulkUploading: boolean = false;
+
+  triggerBulkUpload(): void {
+    const fileInput = document.getElementById('bulkUploadFile') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
+  uploadBulkCars(): void {
+    if (!this.bulkUploadFile) {
+      this.showErrorDialog('Please select a file to upload.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', this.bulkUploadFile);
+
+    this.isBulkUploading = true;
+    this.showLoadingDialog = true;
+    this.loadingMessage = 'Uploading and processing cars...';
+
+    this.carService.bulkUploadCars(formData).subscribe({
+      next: (response) => {
+        this.isBulkUploading = false;
+        this.showLoadingDialog = false;
+        
+        if (response.status === 'success') {
+          const result = response.body;
+          let message = `Successfully created ${result.successCount} car(s).`;
+          
+          if (result.failedCount > 0) {
+            message += `\n\nFailed: ${result.failedCount} car(s).`;
+            if (result.errors && result.errors.length > 0) {
+              message += '\n\nErrors:\n' + result.errors.slice(0, 10).join('\n');
+              if (result.errors.length > 10) {
+                message += `\n... and ${result.errors.length - 10} more errors.`;
+              }
+            }
+            this.showWarningDialog(message);
+          } else {
+            this.showSuccessDialog(message);
+          }
+          
+          // Refresh cars list
+          this.getCars();
+          
+          // Reset file input
+          const fileInput = document.getElementById('bulkUploadFile') as HTMLInputElement;
+          if (fileInput) {
+            fileInput.value = '';
+          }
+          this.bulkUploadFile = null;
+        } else {
+          this.showErrorDialog(`Upload failed: ${response.message}`);
+        }
+      },
+      error: (err) => {
+        this.isBulkUploading = false;
+        this.showLoadingDialog = false;
+        this.showErrorDialog(`Error uploading file: ${err.message || 'Unknown error'}`);
+        
+        // Reset file input
+        const fileInput = document.getElementById('bulkUploadFile') as HTMLInputElement;
+        if (fileInput) {
+          fileInput.value = '';
+        }
+        this.bulkUploadFile = null;
+      }
+    });
   }
 
   exportToExcel() {
@@ -835,56 +1276,5 @@ export class Cars implements OnInit, OnDestroy {
     this.exportService.exportToExcel(options);
   }
 
-  onPincodeChange(): void {
-    this.pincodeError = '';
-
-    // Clear any existing timeout
-    if (this.pincodeTimeout) {
-      clearTimeout(this.pincodeTimeout);
-    }
-
-    // Clear location if pincode is not valid
-    if (this.newCar.pincode.length > 0 && this.newCar.pincode.length < 6) {
-      this.newCar.location = '';
-      this.pincodeError = 'Pincode must be 6 digits';
-      return;
-    }
-
-    if (this.newCar.pincode.length > 0 && !/^\d{6}$/.test(this.newCar.pincode)) {
-      this.newCar.location = '';
-      this.pincodeError = 'Please enter a valid 6-digit pincode';
-      return;
-    }
-
-    if (this.newCar.pincode.length === 0) {
-      this.newCar.location = '';
-      this.pincodeError = '';
-      return;
-    }
-
-    // Only fetch location if pincode is exactly 6 digits - with debounce
-    if (this.newCar.pincode.length === 6 && /^\d{6}$/.test(this.newCar.pincode)) {
-      this.pincodeTimeout = setTimeout(() => {
-        this.isPincodeLoading = true;
-
-        this.pincodeService.getFormattedLocation(this.newCar.pincode).subscribe({
-          next: (location) => {
-            this.isPincodeLoading = false;
-            if (location && location.trim() !== '') {
-              this.newCar.location = location;
-              this.pincodeError = '';
-            } else {
-              this.pincodeError = 'Invalid pincode. Please check and try again.';
-              this.newCar.location = '';
-            }
-          },
-          error: (error) => {
-            this.isPincodeLoading = false;
-            this.pincodeError = 'Unable to fetch location. Please enter manually.';
-          }
-        });
-      }, 500); // 500ms debounce
-    }
-  }
 
 }

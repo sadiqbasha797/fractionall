@@ -73,7 +73,9 @@ export class ManageContent implements OnInit {
   editingAboutId: string | null = null;
 
   // File inputs
-  selectedHeroImage: File | null = null;
+  selectedHeroImage1: File | null = null;
+  selectedHeroImage2: File | null = null;
+  selectedHeroImage3: File | null = null;
   selectedBrandLogo: File | null = null;
   selectedStepVideo1: File | null = null;
   selectedStepVideo2: File | null = null;
@@ -297,7 +299,9 @@ export class ManageContent implements OnInit {
     this.stepForm = {};
     this.stepVideoForm = {};
     this.faqForm = {};
-    this.selectedHeroImage = null;
+    this.selectedHeroImage1 = null;
+    this.selectedHeroImage2 = null;
+    this.selectedHeroImage3 = null;
     this.selectedBrandLogo = null;
     this.selectedStepVideo1 = null;
     this.selectedStepVideo2 = null;
@@ -516,11 +520,17 @@ export class ManageContent implements OnInit {
     });
   }
 
-  onHeroImageSelected(event: any): void {
+  onHeroImageSelected(event: any, imageNumber: 1 | 2 | 3): void {
     const file = event.target.files[0];
     if (file) {
       if (file.type.startsWith('image/')) {
-        this.selectedHeroImage = file;
+        if (imageNumber === 1) {
+          this.selectedHeroImage1 = file;
+        } else if (imageNumber === 2) {
+          this.selectedHeroImage2 = file;
+        } else if (imageNumber === 3) {
+          this.selectedHeroImage3 = file;
+        }
       } else {
         this.showErrorDialog('Please select a valid image file');
         event.target.value = '';
@@ -535,15 +545,31 @@ export class ManageContent implements OnInit {
     }
 
     const formData = new FormData();
-    formData.append('heroText', this.heroForm.heroText);
-    formData.append('subText', this.heroForm.subText);
+    formData.append('heroText', this.heroForm.heroText!);
+    formData.append('subText', this.heroForm.subText!);
 
-    if (this.heroForm.bgImage && !this.selectedHeroImage) {
-      formData.append('bgImage', this.heroForm.bgImage);
+    // Handle bgImage1
+    if (this.heroForm.bgImage1 && !this.selectedHeroImage1) {
+      formData.append('bgImage1', this.heroForm.bgImage1);
+    }
+    if (this.selectedHeroImage1) {
+      formData.append('bgImage1', this.selectedHeroImage1);
     }
 
-    if (this.selectedHeroImage) {
-      formData.append('bgImage', this.selectedHeroImage);
+    // Handle bgImage2
+    if (this.heroForm.bgImage2 && !this.selectedHeroImage2) {
+      formData.append('bgImage2', this.heroForm.bgImage2);
+    }
+    if (this.selectedHeroImage2) {
+      formData.append('bgImage2', this.selectedHeroImage2);
+    }
+
+    // Handle bgImage3
+    if (this.heroForm.bgImage3 && !this.selectedHeroImage3) {
+      formData.append('bgImage3', this.heroForm.bgImage3);
+    }
+    if (this.selectedHeroImage3) {
+      formData.append('bgImage3', this.selectedHeroImage3);
     }
 
     this.submitting = true;
@@ -573,7 +599,9 @@ export class ManageContent implements OnInit {
     this.editingHero = hero;
     this.editingHeroId = hero._id || null;
     this.heroForm = { ...hero };
-    this.selectedHeroImage = null;
+    this.selectedHeroImage1 = null;
+    this.selectedHeroImage2 = null;
+    this.selectedHeroImage3 = null;
     // Don't set showAddHeroForm = true when editing
   }
 
@@ -581,7 +609,9 @@ export class ManageContent implements OnInit {
     this.editingHero = null;
     this.editingHeroId = null;
     this.heroForm = {};
-    this.selectedHeroImage = null;
+    this.selectedHeroImage1 = null;
+    this.selectedHeroImage2 = null;
+    this.selectedHeroImage3 = null;
     this.showAddHeroForm = false;
   }
 

@@ -199,7 +199,17 @@
 /* Mobile: 1 card visible */
 @media (max-width: 767px) {
   .car-card { 
-    flex: 0 0 100%;
+    flex: 0 0 calc(100% - 0.5rem) !important;
+    min-width: 0;
+    margin-right: 0.5rem;
+  }
+  .carousel-track {
+    display: flex;
+    gap: 0;
+  }
+  .carousel-viewport {
+    overflow: hidden !important;
+    width: 100%;
   }
 }
 

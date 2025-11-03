@@ -17,7 +17,7 @@ import { LocationSuggestionsService, LocationSuggestion } from '../services/loca
 })
 export class Cars implements OnInit, AfterViewInit {
   private destroyRef = inject(DestroyRef);
-  
+
   // Convert to signals for proper reactivity with zoneless change detection
   protected allCars = signal<any[]>([]);
   protected currentPage = signal<number>(1);
@@ -27,7 +27,7 @@ export class Cars implements OnInit, AfterViewInit {
   protected searchQuery = signal<string>('');
   protected searchType = signal<string>('');
   protected isSearchActive = signal<boolean>(false);
-  
+
   // Location search functionality
   protected locationSearchQuery = signal<string>('');
   protected locationSearchType = signal<string>('');
@@ -35,55 +35,55 @@ export class Cars implements OnInit, AfterViewInit {
   protected isLocationDropdownOpen = signal<boolean>(false);
   protected locationSuggestions = signal<LocationSuggestion[]>([]);
   protected isLocationLoading = signal<boolean>(false);
-  
+
   // Location modal functionality
   protected isLocationModalOpen = signal<boolean>(false);
   protected locationModalQuery = signal<string>('');
   protected locationModalSuggestions = signal<LocationSuggestion[]>([]);
   protected isLocationModalLoading = signal<boolean>(false);
-  
+
   // Location filter for cars
   protected selectedLocation = signal<string>('');
   protected selectedState = signal<string>('');
-  
+
   // Filter popup options
-  protected   sortOptions = [
+  protected sortOptions = [
     'A-Z (Sort by Car Name)',
     'Newest Arrivals',
     'Top Selling',
     'Share Price (Low-High)',
     'Share Price (High-Low)'
   ];
-  
+
   protected filterOptions = [
     'Join Waitlist',
-    'Book Now', 
+    'Book Now',
     'Relevance'
   ];
-  
+
   // Mobile filter/sort popup
   protected isMobileFilterPopupOpen = signal<boolean>(false);
   protected isMobileSortPopupOpen = signal<boolean>(false);
-  
+
   // Computed filtered cities based on search query
   protected filteredCities = computed(() => {
     const query = this.locationSearchQuery().toLowerCase().trim();
     if (!query) {
       return this.indianCities;
     }
-    return this.indianCities.filter(city => 
+    return this.indianCities.filter(city =>
       city.toLowerCase().includes(query)
     ).sort((a, b) => {
       // Sort by relevance: exact matches first, then starts with, then contains
       const aLower = a.toLowerCase();
       const bLower = b.toLowerCase();
       const queryLower = query.toLowerCase();
-      
+
       if (aLower === queryLower) return -1;
       if (bLower === queryLower) return 1;
       if (aLower.startsWith(queryLower) && !bLower.startsWith(queryLower)) return -1;
       if (bLower.startsWith(queryLower) && !aLower.startsWith(queryLower)) return 1;
-      
+
       return a.localeCompare(b);
     });
   });
@@ -95,21 +95,21 @@ export class Cars implements OnInit, AfterViewInit {
     const apiSuggestions = this.locationSuggestions();
     const selectedLocation = this.locationSearchQuery().trim();
     const isLocationSelected = this.isLocationSearchActive() && selectedLocation;
-    
+
     // Create base suggestions array
     let suggestions: any[] = [];
-    
+
     // If a location is selected, show all cities (not filtered by query)
     if (isLocationSelected) {
       // Use all cities from the indianCities array, not filtered ones
-      suggestions = this.indianCities.map(city => ({ 
-        name: city, 
-        display_name: city, 
-        state: '', 
-        country: 'India', 
-        lat: '', 
-        lon: '', 
-        type: 'city' 
+      suggestions = this.indianCities.map(city => ({
+        name: city,
+        display_name: city,
+        state: '',
+        country: 'India',
+        lat: '',
+        lon: '',
+        type: 'city'
       }));
     } else if (!query) {
       suggestions = staticCities.map(city => ({ name: city, display_name: city, state: '', country: 'India', lat: '', lon: '', type: 'city' }));
@@ -117,47 +117,47 @@ export class Cars implements OnInit, AfterViewInit {
       // If we have API suggestions, prioritize them and add static cities that aren't already included
       if (apiSuggestions.length > 0) {
         const apiCityNames = apiSuggestions.map(s => s.name.toLowerCase());
-        const additionalStaticCities = staticCities.filter(city => 
+        const additionalStaticCities = staticCities.filter(city =>
           !apiCityNames.includes(city.toLowerCase())
         );
-        
+
         suggestions = [
           ...apiSuggestions,
-          ...additionalStaticCities.map(city => ({ 
-            name: city, 
-            display_name: city, 
-            state: '', 
-            country: 'India', 
-            lat: '', 
-            lon: '', 
-            type: 'city' 
+          ...additionalStaticCities.map(city => ({
+            name: city,
+            display_name: city,
+            state: '',
+            country: 'India',
+            lat: '',
+            lon: '',
+            type: 'city'
           }))
         ];
-        
+
         suggestions = this.sortSuggestionsByRelevance(suggestions, query);
       } else {
         // Fallback to static cities only
-        suggestions = staticCities.map(city => ({ 
-          name: city, 
-          display_name: city, 
-          state: '', 
-          country: 'India', 
-          lat: '', 
-          lon: '', 
-          type: 'city' 
+        suggestions = staticCities.map(city => ({
+          name: city,
+          display_name: city,
+          state: '',
+          country: 'India',
+          lat: '',
+          lon: '',
+          type: 'city'
         }));
       }
     }
-    
+
     // If there's a selected location, ensure it appears at the top
     if (isLocationSelected) {
       const selectedLocationLower = selectedLocation.toLowerCase();
-      
+
       // Remove the selected location from the suggestions if it exists
-      const filteredSuggestions = suggestions.filter(suggestion => 
+      const filteredSuggestions = suggestions.filter(suggestion =>
         suggestion.name.toLowerCase() !== selectedLocationLower
       );
-      
+
       // Add the selected location at the top with a special flag
       const selectedSuggestion = {
         name: selectedLocation,
@@ -169,11 +169,11 @@ export class Cars implements OnInit, AfterViewInit {
         type: 'city',
         isSelected: true
       };
-      
+
       // Combine selected location at top with remaining suggestions
       suggestions = [selectedSuggestion, ...filteredSuggestions];
     }
-    
+
     return suggestions.slice(0, 10);
   });
 
@@ -182,41 +182,41 @@ export class Cars implements OnInit, AfterViewInit {
    */
   private sortSuggestionsByRelevance(suggestions: any[], query: string): any[] {
     const queryLower = query.toLowerCase();
-    
+
     return suggestions.sort((a, b) => {
       const aName = a.name.toLowerCase();
       const bName = b.name.toLowerCase();
-      
+
       // Exact match gets highest priority
       if (aName === queryLower) return -1;
       if (bName === queryLower) return 1;
-      
+
       // Starts with query gets second priority
       const aStartsWith = aName.startsWith(queryLower);
       const bStartsWith = bName.startsWith(queryLower);
       if (aStartsWith && !bStartsWith) return -1;
       if (bStartsWith && !aStartsWith) return 1;
-      
+
       // Contains query gets third priority
       const aContains = aName.includes(queryLower);
       const bContains = bName.includes(queryLower);
       if (aContains && !bContains) return -1;
       if (bContains && !aContains) return 1;
-      
+
       // Shorter names get priority for same relevance
       if (aContains && bContains) {
         return aName.length - bName.length;
       }
-      
+
       // Alphabetical order as fallback
       return aName.localeCompare(bName);
     });
   }
-  
+
   // Indian cities list
   protected indianCities = [
     'Bangalore',
-    'Mysore', 
+    'Mysore',
     'Mangalore',
     'Visakhapatnam',
     'Vijaywada',
@@ -238,47 +238,47 @@ export class Cars implements OnInit, AfterViewInit {
     'Dehradun',
     'Chandigarh'
   ];
-  
+
   // Brand filter functionality
   brandFilter = signal<string>('');
   isBrandFilterActive = signal<boolean>(false);
-  
+
   // Most browsed cars functionality
   protected mostBrowsedCars = signal<any[]>([]);
   protected isLoadingMostBrowsed = signal<boolean>(false);
   protected showMostBrowsed = signal<boolean>(false);
-  
+
   protected isLoading = signal<boolean>(true);
   private dropdownsInitialized: boolean = false;
-  
+
   // Make Math available to template
   Math = Math;
 
   // Computed signals for derived data
   protected filteredCars = computed(() => {
     let cars = this.allCars();
-    
+
     // Apply brand filter first
     if (this.isBrandFilterActive() && this.brandFilter()) {
       cars = this.applyBrandFilter(cars, this.brandFilter());
     }
-    
+
     // Apply main search filter (by car name, brand, etc.)
     if (this.isSearchActive() && this.searchQuery()) {
       cars = this.applyMainSearchFilter(cars, this.searchQuery());
     }
-    
+
     // Apply location search filter
     if (this.isLocationSearchActive() && this.locationSearchQuery()) {
       cars = this.applyLocationSearchFilter(cars, this.locationSearchQuery(), this.locationSearchType());
     }
-    
+
     // Apply other filters
     cars = this.applyFilter(cars, this.currentFilter());
-    
+
     // Then apply sorting
     cars = this.applySort(cars, this.currentSort());
-    
+
     return cars;
   });
 
@@ -316,7 +316,7 @@ export class Cars implements OnInit, AfterViewInit {
     const effectRef = effect(() => {
       const carsData = this.cars();
       const isLoading = this.isLoading();
-      
+
       if (!isLoading && carsData.length > 0 && this.isBrowser()) {
         // Delay animation refresh to ensure DOM is updated
         setTimeout(() => {
@@ -324,7 +324,7 @@ export class Cars implements OnInit, AfterViewInit {
         }, 200);
       }
     });
-    
+
     // Register effect cleanup with component destruction
     this.destroyRef.onDestroy(() => {
       effectRef.destroy();
@@ -356,7 +356,21 @@ export class Cars implements OnInit, AfterViewInit {
         this.isLoading.set(false);
       }
     }, 10000);
-    
+
+    // Load location from session storage if available
+    if (typeof sessionStorage !== 'undefined') {
+      const savedLocation = sessionStorage.getItem('selectedLocation');
+      const savedState = sessionStorage.getItem('selectedState');
+      if (savedLocation) {
+        this.selectedLocation.set(savedLocation);
+        if (savedState) {
+          this.selectedState.set(savedState);
+        }
+        this.isLocationSearchActive.set(true);
+        this.locationSearchQuery.set(savedLocation);
+      }
+    }
+
     // Check for search parameters in URL
     this.route.queryParams.subscribe(params => {
       // Handle brand filter parameters
@@ -364,20 +378,20 @@ export class Cars implements OnInit, AfterViewInit {
         this.brandFilter.set(params['brand']);
         this.isBrandFilterActive.set(true);
       }
-      
+
       // Handle main search parameters
       if (params['search'] && params['type'] === 'main') {
         this.searchQuery.set(params['search']);
         this.isSearchActive.set(true);
       }
-      
+
       // Handle location search parameters
       if (params['locationSearch']) {
         this.locationSearchQuery.set(params['locationSearch']);
         this.locationSearchType.set(params['locationType'] || 'location');
         this.isLocationSearchActive.set(true);
       }
-      
+
       // Handle location filter from navbar
       if (params['location']) {
         this.selectedLocation.set(params['location']);
@@ -396,21 +410,11 @@ export class Cars implements OnInit, AfterViewInit {
         const activeCars = carsData.filter((car: any) => !car.stopBookings);
         this.allCars.set(activeCars);
         this.isLoading.set(false);
-        
-        // Show location modal if no location is selected
-        if (!this.isLocationSearchActive() && !this.selectedLocation()) {
-          this.isLocationModalOpen.set(true);
-        }
       },
       error: (error) => {
         console.error('Error loading cars:', error);
         this.allCars.set([]);
         this.isLoading.set(false);
-        
-        // Show location modal even on error if no location is selected
-        if (!this.isLocationSearchActive() && !this.selectedLocation()) {
-          this.isLocationModalOpen.set(true);
-        }
       }
     });
   }
@@ -430,7 +434,7 @@ export class Cars implements OnInit, AfterViewInit {
       setTimeout(() => this.initializeDropdowns(), 100);
       setTimeout(() => this.initializeDropdowns(), 500);
       setTimeout(() => this.initializeDropdowns(), 1000);
-      
+
       setTimeout(() => {
         this.initializeMobileMenu();
         this.initializePaginationLoader();
@@ -498,7 +502,7 @@ export class Cars implements OnInit, AfterViewInit {
     const pagination = document.getElementById('pagination');
     const loader = document.getElementById('pagination-loader');
     if (pagination && loader) {
-      pagination.addEventListener('click', function(e) {
+      pagination.addEventListener('click', function (e) {
         const target = (e.target as HTMLElement).closest('button');
         if (!target) return;
 
@@ -517,7 +521,7 @@ export class Cars implements OnInit, AfterViewInit {
     const mobilePagination = document.querySelector('.mobile-pagination');
     const mobileLoader = document.getElementById('pagination-loader-mobile');
     if (mobilePagination && mobileLoader) {
-      mobilePagination.addEventListener('click', function(e) {
+      mobilePagination.addEventListener('click', function (e) {
         const target = (e.target as HTMLElement).closest('button');
         if (!target) return;
 
@@ -535,7 +539,7 @@ export class Cars implements OnInit, AfterViewInit {
 
   private initializeDropdowns(): void {
     if (!this.isBrowser() || this.dropdownsInitialized) return;
-    
+
     const dropdowns = [
       { button: 'sort-dropdown', menu: 'sort-menu' },
       { button: 'filter-dropdown', menu: 'filter-menu' }
@@ -545,18 +549,18 @@ export class Cars implements OnInit, AfterViewInit {
     dropdowns.forEach(({ button, menu }) => {
       const btn = this.elementRef.nativeElement.querySelector(`#${button}`);
       const menuEl = this.elementRef.nativeElement.querySelector(`#${menu}`);
-      
+
       if (!btn || !menuEl) {
         return;
       }
-      
+
       foundElements++;
-      
+
       // Button click handler
       this.renderer.listen(btn, 'click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        
+
         // Close other dropdowns
         dropdowns.forEach(({ menu: m }) => {
           const el = this.elementRef.nativeElement.querySelector(`#${m}`);
@@ -564,7 +568,7 @@ export class Cars implements OnInit, AfterViewInit {
             this.renderer.addClass(el, 'hidden');
           }
         });
-        
+
         // Toggle current dropdown
         if (menuEl.classList.contains('hidden')) {
           this.renderer.removeClass(menuEl, 'hidden');
@@ -579,20 +583,20 @@ export class Cars implements OnInit, AfterViewInit {
         this.renderer.listen(link, 'click', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          
+
           const linkText = link.textContent?.trim() || '';
-          
+
           // Close all dropdowns
           dropdowns.forEach(({ menu: m }) => {
             const el = this.elementRef.nativeElement.querySelector(`#${m}`);
             if (el) this.renderer.addClass(el, 'hidden');
           });
-          
+
           // Update button label
           const label = btn.querySelector('p');
           if (label) label.textContent = linkText;
           btn.setAttribute('data-active', linkText);
-          
+
           // Apply filter or sort based on which dropdown
           if (menu === 'filter-menu') {
             this.onFilterChange(linkText);
@@ -602,7 +606,7 @@ export class Cars implements OnInit, AfterViewInit {
         });
       });
     });
-    
+
     if (foundElements === 2) {
       this.dropdownsInitialized = true;
     }
@@ -706,13 +710,13 @@ export class Cars implements OnInit, AfterViewInit {
     if (!brandName || !brandName.trim()) {
       return cars;
     }
-    
+
     const query = brandName.toLowerCase().trim();
     const filteredCars = cars.filter(car => {
       const carBrandName = (car.brandname || '').toLowerCase();
       return carBrandName.includes(query);
     });
-    
+
     return filteredCars;
   }
 
@@ -721,20 +725,20 @@ export class Cars implements OnInit, AfterViewInit {
     if (!searchQuery || !searchQuery.trim()) {
       return cars;
     }
-    
+
     const query = searchQuery.toLowerCase().trim();
     const filteredCars = cars.filter(car => {
       const carName = (car.carname || '').toLowerCase();
       const brandName = (car.brandname || '').toLowerCase();
       const fuel = (car.fuel || '').toLowerCase();
       const color = (car.color || '').toLowerCase();
-      
-      return carName.includes(query) || 
-             brandName.includes(query) || 
-             fuel.includes(query) || 
-             color.includes(query);
+
+      return carName.includes(query) ||
+        brandName.includes(query) ||
+        fuel.includes(query) ||
+        color.includes(query);
     });
-    
+
     return filteredCars;
   }
 
@@ -743,7 +747,7 @@ export class Cars implements OnInit, AfterViewInit {
     if (!searchQuery || !searchQuery.trim()) {
       return cars;
     }
-    
+
     const query = searchQuery.toLowerCase().trim();
     const filteredCars = cars.filter(car => {
       if (searchType === 'pincode') {
@@ -755,7 +759,7 @@ export class Cars implements OnInit, AfterViewInit {
         return location.includes(query);
       }
     });
-    
+
     return filteredCars;
   }
 
@@ -792,13 +796,13 @@ export class Cars implements OnInit, AfterViewInit {
       default:
         filteredCars = [...cars];
     }
-    
+
     return filteredCars;
   }
 
   applySort(cars: any[], sort: string): any[] {
     const sortedCars = [...cars];
-    
+
     let result: any[];
     switch (sort) {
       case 'A-Z (Sort by Car Name)':
@@ -830,7 +834,7 @@ export class Cars implements OnInit, AfterViewInit {
           return soldB - soldA; // Most sold first
         });
         break;
-        case 'Share Price (Low-High)':
+      case 'Share Price (Low-High)':
         result = sortedCars.sort((a, b) => {
           // Extract numeric value from price string, handling commas and other formatting
           const getNumericPrice = (price: any) => {
@@ -839,10 +843,10 @@ export class Cars implements OnInit, AfterViewInit {
             const numPrice = parseFloat(priceStr);
             return isNaN(numPrice) ? 0 : numPrice;
           };
-          
+
           const priceA = getNumericPrice(a.fractionprice || a.tokenprice || a.price);
           const priceB = getNumericPrice(b.fractionprice || b.tokenprice || b.price);
-          
+
           // Debug logging
           if (sortedCars.length <= 3) {
             console.log('Sorting Low-High:', {
@@ -854,11 +858,11 @@ export class Cars implements OnInit, AfterViewInit {
               numericB: priceB
             });
           }
-          
+
           return priceA - priceB; // Low to high
         });
         break;
-        case 'Share Price (High-Low)':
+      case 'Share Price (High-Low)':
         result = sortedCars.sort((a, b) => {
           // Extract numeric value from price string, handling commas and other formatting
           const getNumericPrice = (price: any) => {
@@ -867,7 +871,7 @@ export class Cars implements OnInit, AfterViewInit {
             const numPrice = parseFloat(priceStr);
             return isNaN(numPrice) ? 0 : numPrice;
           };
-          
+
           const priceA = getNumericPrice(a.fractionprice || a.tokenprice || a.price);
           const priceB = getNumericPrice(b.fractionprice || b.tokenprice || b.price);
           return priceB - priceA; // High to low
@@ -876,7 +880,7 @@ export class Cars implements OnInit, AfterViewInit {
       default:
         result = sortedCars;
     }
-    
+
     return result;
   }
 
@@ -892,7 +896,7 @@ export class Cars implements OnInit, AfterViewInit {
     this.currentSort.set(sort);
     this.currentPage.set(1); // Reset to first page when sort changes
     this.closeMobilePopups(); // Close popup after selection
-    
+
     // Debug: Log first few cars after sorting
     setTimeout(() => {
       const sortedCars = this.cars();
@@ -959,7 +963,7 @@ export class Cars implements OnInit, AfterViewInit {
   // Get color code for color display
   getColorCode(colorName: string): string {
     if (!colorName) return '#6b7280'; // Default gray
-    
+
     const colorMap: { [key: string]: string } = {
       'red': '#ef4444',
       'blue': '#3b82f6',
@@ -980,7 +984,7 @@ export class Cars implements OnInit, AfterViewInit {
       'beige': '#f5f5dc',
       'cream': '#f5f5dc'
     };
-    
+
     return colorMap[colorName.toLowerCase()] || '#6b7280';
   }
 
@@ -998,7 +1002,7 @@ export class Cars implements OnInit, AfterViewInit {
             // Scroll to element with offset to position it higher
             const elementPosition = availableCarsElement.offsetTop;
             const offsetPosition = elementPosition - 100; // 100px above the element
-            
+
             window.scrollTo({
               top: offsetPosition,
               behavior: 'smooth'
@@ -1043,7 +1047,7 @@ export class Cars implements OnInit, AfterViewInit {
     const maxVisiblePages = 5;
     const totalPages = this.totalPages();
     const currentPage = this.currentPage();
-    
+
     if (totalPages <= maxVisiblePages) {
       // Show all pages if total pages is less than or equal to max visible pages
       for (let i = 1; i <= totalPages; i++) {
@@ -1053,19 +1057,19 @@ export class Cars implements OnInit, AfterViewInit {
       // Show pages around current page
       let start = Math.max(1, currentPage - 2);
       let end = Math.min(totalPages, currentPage + 2);
-      
+
       // Adjust if we're at the beginning or end
       if (currentPage <= 3) {
         end = maxVisiblePages;
       } else if (currentPage >= totalPages - 2) {
         start = totalPages - maxVisiblePages + 1;
       }
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i);
       }
     }
-    
+
     return pages;
   }
 
@@ -1074,7 +1078,7 @@ export class Cars implements OnInit, AfterViewInit {
     const maxVisiblePages = 3; // Show fewer pages on mobile
     const totalPages = this.totalPages();
     const currentPage = this.currentPage();
-    
+
     if (totalPages <= maxVisiblePages) {
       // Show all pages if total pages is less than or equal to max visible pages
       for (let i = 1; i <= totalPages; i++) {
@@ -1084,19 +1088,19 @@ export class Cars implements OnInit, AfterViewInit {
       // Show pages around current page
       let start = Math.max(1, currentPage - 1);
       let end = Math.min(totalPages, currentPage + 1);
-      
+
       // Adjust if we're at the beginning or end
       if (currentPage <= 2) {
         end = maxVisiblePages;
       } else if (currentPage >= totalPages - 1) {
         start = totalPages - maxVisiblePages + 1;
       }
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i);
       }
     }
-    
+
     return pages;
   }
 
@@ -1105,7 +1109,7 @@ export class Cars implements OnInit, AfterViewInit {
     if (this.searchQuery().trim()) {
       this.isSearchActive.set(true);
       this.currentPage.set(1); // Reset to first page when searching
-      
+
       // Update URL with search parameters
       this.router.navigate([], {
         relativeTo: this.route,
@@ -1128,7 +1132,7 @@ export class Cars implements OnInit, AfterViewInit {
     this.searchQuery.set('');
     this.isSearchActive.set(false);
     this.currentPage.set(1); // Reset to first page when clearing search
-    
+
     // Remove search parameters from URL
     this.router.navigate([], {
       relativeTo: this.route,
@@ -1143,10 +1147,10 @@ export class Cars implements OnInit, AfterViewInit {
       this.isLocationSearchActive.set(true);
       this.locationSearchType.set(this.isPincode(this.locationSearchQuery().trim()) ? 'pincode' : 'location');
       this.currentPage.set(1); // Reset to first page when searching
-      
+
       // Close dropdown after search
       this.closeLocationDropdown();
-      
+
       // Update URL with location search parameters
       this.router.navigate([], {
         relativeTo: this.route,
@@ -1171,7 +1175,7 @@ export class Cars implements OnInit, AfterViewInit {
     this.locationSearchType.set('');
     this.locationSuggestions.set([]);
     this.currentPage.set(1); // Reset to first page when clearing search
-    
+
     // Remove location search parameters from URL
     this.router.navigate([], {
       relativeTo: this.route,
@@ -1193,7 +1197,7 @@ export class Cars implements OnInit, AfterViewInit {
   selectCity(city: string | LocationSuggestion): void {
     let cityName: string;
     let searchType: string;
-    
+
     if (typeof city === 'string') {
       cityName = city;
       searchType = this.locationSuggestionsService.isPincode(city) ? 'pincode' : 'location';
@@ -1201,14 +1205,14 @@ export class Cars implements OnInit, AfterViewInit {
       cityName = this.locationSuggestionsService.getFormattedLocation(city);
       searchType = 'location';
     }
-    
+
     this.locationSearchQuery.set(cityName);
     this.locationSearchType.set(searchType);
     this.isLocationSearchActive.set(true);
     // Keep dropdown open instead of closing it
     // this.closeLocationDropdown();
     this.currentPage.set(1);
-    
+
     // Update URL with location search
     this.router.navigate([], {
       relativeTo: this.route,
@@ -1225,7 +1229,7 @@ export class Cars implements OnInit, AfterViewInit {
     if (!this.isLocationDropdownOpen()) {
       this.isLocationDropdownOpen.set(true);
     }
-    
+
     // Trigger location suggestions search if query is long enough
     if (value && value.trim().length >= 1) { // Reduced from 2 to 1 for better responsiveness
       this.isLocationLoading.set(true);
@@ -1264,7 +1268,7 @@ export class Cars implements OnInit, AfterViewInit {
 
   private searchLocationModal(query: string): void {
     if (query.length < 3) return;
-    
+
     this.isLocationModalLoading.set(true);
     this.locationSuggestionsService.searchLocations(query).subscribe({
       next: (suggestions) => {
@@ -1282,17 +1286,17 @@ export class Cars implements OnInit, AfterViewInit {
   selectLocationFromModal(suggestion: LocationSuggestion): void {
     const cityName = this.locationSuggestionsService.getFormattedLocation(suggestion);
     const searchType = 'location';
-    
+
     this.locationSearchQuery.set(cityName);
     this.locationSearchType.set(searchType);
     this.isLocationSearchActive.set(true);
     this.selectedLocation.set(suggestion.name);
     this.selectedState.set(suggestion.state);
     this.currentPage.set(1);
-    
+
     // Close the modal
     this.closeLocationModal();
-    
+
     // Update URL with location search
     this.router.navigate([], {
       relativeTo: this.route,
@@ -1308,7 +1312,7 @@ export class Cars implements OnInit, AfterViewInit {
     this.brandFilter.set('');
     this.isBrandFilterActive.set(false);
     this.currentPage.set(1); // Reset to first page when clearing filter
-    
+
     // Remove brand filter parameters from URL
     this.router.navigate([], {
       relativeTo: this.route,
@@ -1323,7 +1327,7 @@ export class Cars implements OnInit, AfterViewInit {
     this.isLocationSearchActive.set(false);
     this.locationSearchQuery.set('');
     this.currentPage.set(1); // Reset to first page when clearing filter
-    
+
     // Remove location filter parameters from URL
     this.router.navigate([], {
       relativeTo: this.route,
@@ -1335,10 +1339,10 @@ export class Cars implements OnInit, AfterViewInit {
   applyFilters(): void {
     // Close the popup
     this.closeMobilePopups();
-    
+
     // Reset to first page when applying filters
     this.currentPage.set(1);
-    
+
     // The filtering logic is already handled by the computed properties
     // This method just closes the popup and resets pagination
   }
@@ -1353,7 +1357,7 @@ export class Cars implements OnInit, AfterViewInit {
     this.brandFilter.set('');
     this.isBrandFilterActive.set(false);
     this.currentPage.set(1); // Reset to first page when clearing search
-    
+
     // Remove all search parameters from URL
     this.router.navigate([], {
       relativeTo: this.route,
@@ -1371,7 +1375,7 @@ export class Cars implements OnInit, AfterViewInit {
     if (!this.isSearchActive() || !this.searchQuery()) {
       return '';
     }
-    
+
     const typeText = this.searchType() === 'pincode' ? 'Pincode' : 'Location';
     return `Searching by ${typeText}: "${this.searchQuery()}"`;
   }
@@ -1446,7 +1450,7 @@ export class Cars implements OnInit, AfterViewInit {
   private initAngularAnimations(): void {
     // Initialize animations using the animation service
     this.animationService.initAnimations(this.elementRef, this.renderer);
-    
+
     // Fallback: Ensure all animated elements are visible after a short delay
     setTimeout(() => {
       this.ensureElementsVisible();
@@ -1455,9 +1459,9 @@ export class Cars implements OnInit, AfterViewInit {
 
   private ensureElementsVisible(): void {
     if (!this.isBrowser()) return;
-    
+
     const animatedElements = this.elementRef.nativeElement.querySelectorAll('[data-animation]');
-    
+
     animatedElements.forEach((el: HTMLElement) => {
       if (el.classList.contains('animation-hidden')) {
         el.classList.remove('animation-hidden');
@@ -1470,12 +1474,12 @@ export class Cars implements OnInit, AfterViewInit {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event) {
     if (!this.isLocationDropdownOpen()) return;
-    
+
     const target = event.target as HTMLElement;
     const dropdown = this.elementRef.nativeElement.querySelector('.location-dropdown');
     const button = this.elementRef.nativeElement.querySelector('.location-search-input');
     const input = this.elementRef.nativeElement.querySelector('.location-search-input input');
-    
+
     // Don't close if clicking on dropdown, button, or input
     if (!dropdown?.contains(target) && !button?.contains(target) && !input?.contains(target)) {
       this.closeLocationDropdown();

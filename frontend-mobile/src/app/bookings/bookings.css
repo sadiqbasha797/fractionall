@@ -236,6 +236,124 @@
     pointer-events: none;
   }
   
+  /* Calendar Grid Styles */
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+  }
+  
+  .calendar-day-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    min-height: 2.5rem;
+  }
+  
+  .calendar-day-cell:hover:not(.disabled):not(.booked) {
+    background-color: rgba(59, 130, 246, 0.1);
+    transform: scale(1.05);
+  }
+  
+  .calendar-day-cell.available {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: #059669;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+  
+  .calendar-day-cell.available:hover {
+    background-color: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.5);
+  }
+  
+  .calendar-day-cell.booked-by-user {
+    background-color: #3b82f6;
+    color: white;
+    border: 1px solid #2563eb;
+  }
+  
+  .calendar-day-cell.booked-by-others {
+    background-color: #ef4444;
+    color: white;
+    border: 1px solid #dc2626;
+    cursor: not-allowed;
+  }
+  
+  .calendar-day-cell.blocked {
+    background-color: #f59e0b;
+    color: white;
+    border: 1px solid #d97706;
+    cursor: not-allowed;
+  }
+  
+  .calendar-day-cell.disabled {
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+  }
+  
+  .calendar-day-cell.empty {
+    background: transparent;
+    cursor: default;
+  }
+  
+  /* Booking Card Styles */
+  .booking-card {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid #d1d5db;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .booking-card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+  }
+  
+  /* Status Filter Dropdown */
+  .status-filter-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.25rem;
+    width: 12rem;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    z-index: 10;
+  }
+  
+  .status-filter-dropdown button {
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    color: #374151;
+    transition: background-color 0.15s ease-in-out;
+  }
+  
+  .status-filter-dropdown button:hover {
+    background-color: #f3f4f6;
+  }
+  
+  .status-filter-dropdown button:first-child {
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+  }
+  
+  .status-filter-dropdown button:last-child {
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+  }
+
   /* Animation Classes */
   @keyframes fadeIn {
     from { opacity: 0; }

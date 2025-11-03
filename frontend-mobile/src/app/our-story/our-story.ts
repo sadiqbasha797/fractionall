@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, AfterViewInit, ElementRef, Renderer2, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ElementRef, Renderer2, Inject, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { AnimationService } from '../services/animation.service';
 
@@ -13,6 +13,13 @@ import { AnimationService } from '../services/animation.service';
 })
 export class OurStoryComponent implements OnInit, AfterViewInit {
 
+  // Modal states
+  visionModal = signal<boolean>(false);
+  philosophyModal = signal<boolean>(false);
+  whyModal = signal<boolean>(false);
+  aheadModal = signal<boolean>(false);
+  founderModal = signal<boolean>(false);
+
   constructor(
     private animationService: AnimationService,
     private elRef: ElementRef,
@@ -22,6 +29,47 @@ export class OurStoryComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     // Component initialization
+  }
+
+  // Modal methods
+  openVisionModal() {
+    this.visionModal.set(true);
+  }
+
+  closeVisionModal() {
+    this.visionModal.set(false);
+  }
+
+  openPhilosophyModal() {
+    this.philosophyModal.set(true);
+  }
+
+  closePhilosophyModal() {
+    this.philosophyModal.set(false);
+  }
+
+  openWhyModal() {
+    this.whyModal.set(true);
+  }
+
+  closeWhyModal() {
+    this.whyModal.set(false);
+  }
+
+  openAheadModal() {
+    this.aheadModal.set(true);
+  }
+
+  closeAheadModal() {
+    this.aheadModal.set(false);
+  }
+
+  openFounderModal() {
+    this.founderModal.set(true);
+  }
+
+  closeFounderModal() {
+    this.founderModal.set(false);
   }
 
   ngAfterViewInit(): void {
